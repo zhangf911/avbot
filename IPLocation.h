@@ -5,6 +5,7 @@
 #if !defined(AFX_IPLOCATION_H__80D0E230_4815_4D01_9CCF_4DAF4DE175E8__INCLUDED_)
 #define AFX_IPLOCATION_H__80D0E230_4815_4D01_9CCF_4DAF4DE175E8__INCLUDED_
 
+#include <map>
 #include <list>
 
 #ifdef _WIN32
@@ -65,7 +66,7 @@ protected:
 	char* GetCountry(char * record);
 	char const * FindRecord(in_addr ip);
 	char* read_string(size_t offset);
-	bool MatchRecord(char const * pRecord, const char *exp_country, const char * exp_area, std::list<uint32_t> &country_matched,std::list<uint32_t> &area_matched);
+	bool MatchRecord(char const * pRecord, const char *exp_country,const char * exp_area, std::map<uint32_t,char*> &country_matched,std::map<uint32_t,char*> &area_matched);
 protected: //inline functions
 
 	uint32_t inline GetDWORD(size_t offset)

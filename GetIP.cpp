@@ -31,7 +31,7 @@ int main(int argc, char * argv[])
 
 		std::list<IP_regon> retips;
 
-		ipl.GetIPs(&retips,"美国","*");
+		ipl.GetIPs(&retips,"浙江省杭州市","浙江理工大学");
 
 		printf( "%d found \n",retips.size());
 	}
