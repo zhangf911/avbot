@@ -372,10 +372,11 @@ bool CIPLocation::MatchRecord( char const * pRecord, const char *exp_country,con
 	default:
 		match = match_exp( Get_String(parea), (char*)exp_area);
 		// update the matched area list
-		area_matched.insert(  std::pair<uint32_t,char*>(  (parea - m_file ) & 0xFFFFFF ,0)  );
-
+		if( match)
+			area_matched.insert(  std::pair<uint32_t,char*>(  (parea - m_file ) & 0xFFFFFF ,0)  );
+		else
+			return false;
 	}
-
 
 	return match;
 }

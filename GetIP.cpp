@@ -33,17 +33,19 @@ int main(int argc, char * argv[])
 //		printf("%s   %s\n",l.country,l.area);
 
 		std::list<IP_regon> retips;
-		char c[28]={0};
-		char a[28]={0};
-		printf("国家/地区:(支持通配符)");
 
-		scanf("%s",c);
-		printf("地区/详细地址:(支持通配符)");
-		scanf("%s",a);
+// 		char c[28]={0};
+// 		char a[28]={0};
+// 		printf("国家/地区:(支持通配符)");
+// 
+// 		scanf("%s",c);
+// 		printf("地区/详细地址:(支持通配符)");
+// 		scanf("%s",a);
 
-		//scanf( "%s",c);
+//		ipl.GetIPs(&retips, c,a);
 
-		ipl.GetIPs(&retips, c,a);
+		ipl.GetIPs(&retips,"*杭州*","*网吧*");
+		
 
 		printf( "%ld found , %d次比较\n",retips.size(),iii);
 	}
