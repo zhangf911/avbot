@@ -5,6 +5,7 @@
 
 #include <sys/types.h>
 #include <stddef.h>
+#include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -16,6 +17,7 @@ typedef	 DWORD	uint32_t;
 #else
 
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <netinet/in.h>
