@@ -37,11 +37,16 @@ struct IPLocation
 	char area[128];
 };
 
+struct IP_regon{
+	in_addr start;
+	in_addr end;
+};
+
 class CIPLocation
 {
 protected: // protected member
 	uint32_t m_filesize;
-	char* m_file;
+	char const * m_file;
 	char* m_curptr;
 	size_t m_first_record;
 	size_t m_last_record;
@@ -54,13 +59,13 @@ protected: // protected member
 #endif // _WIN32
 
 protected:
-	IPLocation GetIPLocation(char *ptr);
-	char* Get_String(char * p, char*out);
+	IPLocation GetIPLocation(char const *ptr);
+	char* Get_String(char const * p, char*out);
 	char* GetArea(char * record);
 	char* GetCountry(char * record);
-	char* FindRecord(in_addr ip);
+	char const * FindRecord(in_addr ip);
 	char* read_string(size_t offset);
-	bool MatchRecord( char * pRecord , const char *exp_country ,const char * exp_area ,std::list< uint32_t > &country_matched );
+	bool MatchRecord(char const * pRecord, const char *exp_country, const char * exp_area, std::list<uint32_t> &country_matched,std::list<uint32_t> &area_matched);
 protected: //inline functions
 
 	uint32_t inline GetDWORD(size_t offset)
@@ -88,7 +93,7 @@ public:
 	//************************************
 	IPLocation GetIPLocation(in_addr ip);
 
-	size_t GetIPs( std::list<int> * retips,const char *exp_country ,const char * exp_area);
+	size_t GetIPs(std::list<IP_regon> * retips, const char *exp_country, const char * exp_area);
 public:
 	CIPLocation(char*	memptr, size_t len);
 	CIPLocation(const char*	ipDateFile);

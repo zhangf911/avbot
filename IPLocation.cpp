@@ -32,7 +32,7 @@ typedef struct
 } RECORD_INDEX;
 #pragma pack()
 
-static uint32_t inline Get3BYTE3(char * var_ptr)
+static uint32_t inline Get3BYTE3(char const * var_ptr)
 {
 	uint32_t ret = 0;
 	memcpy(&ret, var_ptr, 3);
@@ -127,7 +127,7 @@ CIPLocation::CIPLocation(const char* ipDateFile)
 	m_backup_byfile = true;
 	close(m_ipfile);
 #endif // _WIN32
-	m_curptr = m_file;
+	m_curptr = (char*) m_file;
 	m_first_record = GetDWORD(0);
 	m_last_record = GetDWORD(4);
 }
@@ -165,7 +165,7 @@ static int IP_IN_regon(uint32_t ip, uint32_t ip1, uint32_t ip2)
 	return 0;
 }
 
-char * CIPLocation::FindRecord(in_addr ip)
+char const * CIPLocation::FindRecord(in_addr ip)
 {
 	//TODO: need faster implementation
 	size_t i = 0;
@@ -205,28 +205,28 @@ char * CIPLocation::FindRecord(in_addr ip)
 	return 0;
 }
 
-IPLocation CIPLocation::GetIPLocation(char *ptr)
+IPLocation CIPLocation::GetIPLocation(char const *ptr)
 {
 	IPLocation ret;
-	char * areaptr = 0;
+	char const * areaptr = 0;
 	switch (ptr[0])
 	{
 	case REDIRECT_MODE_1:
-		return GetIPLocation(m_file + ::Get3BYTE3(ptr + 1));
+		return GetIPLocation( (char const *)(m_file + ::Get3BYTE3(ptr + 1)));
 	case REDIRECT_MODE_2:
 		areaptr = ptr + 4;
 	default:
 		Get_String(ptr, ret.country);
 		if (!areaptr)
-			areaptr = ptr + strlen(ret.country) + 1;
+			areaptr = ptr + strlen(Get_String(ptr, ret.country)) + 1;
 	}
 	Get_String(areaptr, ret.area);
 	return ret;
 }
 
-char * CIPLocation::Get_String(char *p, char * out)
+char* CIPLocation::Get_String( char const * p, char*out )
 {
-	char *pp;
+	char const *pp;
 	switch (p[0])
 	{
 	case REDIRECT_MODE_1:
@@ -241,14 +241,15 @@ char * CIPLocation::Get_String(char *p, char * out)
 #ifndef _WIN32
 	code_convert(out, 128, pp, strlen(pp));
 #else
-	strcpy(out,pp);
+	if (out)
+		strcpy(out,pp);
 #endif
-	return out;
+	return (char*)pp;
 }
 
 IPLocation CIPLocation::GetIPLocation(in_addr ip)
 {
-	char * ptr = FindRecord(ip);
+	char const * ptr = FindRecord(ip);
 	if (!ptr)
 	{
 		throw("IP Record Not Found");
@@ -258,44 +259,95 @@ IPLocation CIPLocation::GetIPLocation(in_addr ip)
 
 static bool match_exp(char * input, const char * const exp)
 {
-
-	return false;
+	return !strncmp(input,exp,strlen(exp));
 }
 
-bool CIPLocation::MatchRecord(char * pRecord, const char *exp_country,
-		const char * exp_area, std::list<uint32_t> &country_matched)
+bool CIPLocation::MatchRecord(char const * pRecord, const char *exp_country,
+		const char * exp_area, std::list<uint32_t> &country_matched,std::list<uint32_t> &area_matched)
 {
 	bool match;
+	char const * parea = 0;
+	// gbk when _WIN32 and utf-8 when Linux
+	char strbuf[128];
 
 	// First , match the country field
-	switch (*pRecord)
+	if (  exp_country[0] == '*' && exp_country[1]==0)
 	{
-	case REDIRECT_MODE_1:
-		return MatchRecord(pRecord, exp_country, exp_country, country_matched);
-	case REDIRECT_MODE_2:
-		if (std::find(country_matched.begin(), country_matched.end(),
-				::Get3BYTE3(pRecord + 4)) != country_matched.end())
+		match = true;
+	}else
+	{
+		switch (*pRecord)
 		{
-			match = true;
+		case REDIRECT_MODE_1:
+			return MatchRecord( pRecord + ::Get3BYTE3( pRecord +1 ) , exp_country, exp_country, country_matched,area_matched);
+		case REDIRECT_MODE_2:
+			parea = pRecord + 4;
+			if (std::find(country_matched.begin(), country_matched.end(),
+				::Get3BYTE3(pRecord + 1) ) != country_matched.end())
+			{
+				match = true;
+			}
+			else
+			{
+				Get_String( pRecord, strbuf);		
+				match = match_exp( strbuf , exp_country);
+				if ( match)
+				{
+					country_matched.insert( country_matched.end(), ::Get3BYTE3( pRecord +1 ) );
+				}				
+			}
 			break;
+		default:
+			parea = pRecord + strlen(Get_String(pRecord,strbuf))+1;
+			match = match_exp( strbuf, exp_country);
 		}
+		if (!match)
+		{
+			return false;
+		}
+		// update the matched country list
+		country_matched.insert(country_matched.end(),::Get3BYTE3(pRecord + 4));
+	}
+
+	// then , match the area field
+
+	if (  exp_area[0] == '*' && exp_area[1]==0)
+	{
+		return true;
+	}
+
+	switch ( *parea )
+	{
+	case REDIRECT_MODE_2:
+	case REDIRECT_MODE_1:
+		if (std::find(area_matched.begin(),area_matched.end(),\
+			::Get3BYTE3( parea +1 ) ) != area_matched.end() )
+		{
+			return true;
+		} 
 		else
 		{
-			char out[128];
-			Get_String( pRecord, out );
-			pRecord = out;
+			Get_String( parea , strbuf );
+			match = match_exp( strbuf , exp_area);
+			if ( match)
+			{
+				area_matched.insert( area_matched.end(), ::Get3BYTE3( parea +1 ));
+			} 
+			else
+			{
+				return false;
+			}
 		}
+		break;
 	default:
-		match = match_exp(pRecord , exp_country);
+		Get_String(parea,strbuf);
+		match = match_exp( strbuf , exp_area);
 	}
-	// then , match the
-
-
 
 	return match;
 }
 
-size_t CIPLocation::GetIPs(std::list<int> * retips, const char *exp_country,
+size_t CIPLocation::GetIPs(std::list<IP_regon> * retips, const char *exp_country,
 		const char * exp_area)
 {
 	RECORD_INDEX * pindex;
@@ -303,17 +355,22 @@ size_t CIPLocation::GetIPs(std::list<int> * retips, const char *exp_country,
 	size_t i;
 	bool match;
 	std::list<uint32_t> country_matched; // matched country
+	std::list<uint32_t> area_matched; // matched country
+	pindex = (RECORD_INDEX*)(m_file + m_first_record );
 
 	for (i = m_first_record; i < m_last_record; i += 7)
 	{
-		pindex = (RECORD_INDEX *) (m_file + i);
+		pindex = (RECORD_INDEX*)(m_file + i );
 
-		char * pRecord = m_file + pindex->offset + 4;
+		char const * pRecord = m_file + pindex->offset + 4;
 
-		match = MatchRecord(pRecord, exp_country, exp_area, country_matched);
+		match = MatchRecord(pRecord, exp_country, exp_area, country_matched,area_matched);
 		if (match)
 		{
-			retips->insert(retips->end(), GetDWORD(pindex->offset));
+			IP_regon inst;
+			inst.start.s_addr = htonl( pindex->ip );
+			inst.end.s_addr = htonl( GetDWORD(pindex->offset));
+			retips->insert(retips->end(), inst);
 		}
 	}
 	return retips->size();
