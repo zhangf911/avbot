@@ -58,6 +58,7 @@ protected:
 	char* GetCountry(char * record);
 	char* FindRecord(in_addr ip);
 	char* read_string(size_t offset);
+	bool MatchRecord( char * pRecord , const char *exp_country ,const char * exp_area ,std::list< uint32_t > &country_matched );
 protected: //inline functions
 
 	uint32_t inline GetDWORD(size_t offset)
@@ -74,13 +75,6 @@ protected: //inline functions
 		ret &= 0xFFFFFF;
 		return to_hostending(ret);
 	}
-	uint32_t inline Get3BYTE3(char * var_ptr)
-	{
-		uint32_t ret = 0;
-		memcpy(&ret, var_ptr, 3);
-		return to_hostending(ret);
-	}
-
 
 public:
 	//************************************
@@ -90,12 +84,15 @@ public:
 	// Returns:   IPLocation
 	// Parameter: in_addr ip
 	//************************************
-	IPLocation GetIPLocation(in_addr ip);	
-	size_t GetIPs( std::list<int> * retips,char *exp);
+	IPLocation GetIPLocation(in_addr ip);
+	
+	size_t GetIPs( std::list<int> * retips,const char *exp_country ,const char * exp_area);
 public:
 	CIPLocation(char*	memptr, size_t len);
 	CIPLocation(char*	ipDateFile);
 	~CIPLocation();
+protected:
+
 };
 
 #endif // !defined(AFX_IPLOCATION_H__80D0E230_4815_4D01_9CCF_4DAF4DE175E8__INCLUDED_)
