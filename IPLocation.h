@@ -11,7 +11,9 @@
 
 #include <windows.h>
 typedef UINT32	uint32_t;
-
+#else
+#include <stdint.h>
+#include <netinet/in.h>
 #endif
 
 
@@ -80,16 +82,16 @@ public:
 	//************************************
 	// Method:    GetIPLocation
 	// FullName:  CIPLocation::GetIPLocation
-	// Access:    public 
+	// Access:    public
 	// Returns:   IPLocation
 	// Parameter: in_addr ip
 	//************************************
 	IPLocation GetIPLocation(in_addr ip);
-	
+
 	size_t GetIPs( std::list<int> * retips,const char *exp_country ,const char * exp_area);
 public:
 	CIPLocation(char*	memptr, size_t len);
-	CIPLocation(char*	ipDateFile);
+	CIPLocation(const char*	ipDateFile);
 	~CIPLocation();
 protected:
 

@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <io.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -19,16 +18,18 @@
 #include "IPLocation.h"
 
 #pragma pack(1)
-typedef struct{
-	uint32_t	ip;
-	struct _offset_{
-		char	_offset[3];
-		inline operator	size_t ()
+typedef struct
+{
+	uint32_t ip;
+	struct _offset_
+	{
+		char _offset[3];
+		inline operator size_t()
 		{
-			return ( ( *(uint32_t *) _offset) & 0xFFFFFF );
-		}		
-	}offset;
-}RECORD_INDEX;
+			return ((*(uint32_t *) _offset) & 0xFFFFFF);
+		}
+	} offset;
+} RECORD_INDEX;
 #pragma pack()
 
 static uint32_t inline Get3BYTE3(char * var_ptr)
@@ -49,27 +50,27 @@ static int code_convert(char *outbuf, size_t outlen, char *inbuf, size_t inlen)
 	iconv_t cd;
 	char **pin = &inbuf;
 	char **pout = &outbuf;
-	
+
 	cd = iconv_open("UTF-8", "GBK");
 	if (cd == 0)
 		return -1;
-	
+
 	memset(outbuf, '\0', outlen);
 	if (iconv(cd, pin, &inlen, pout, &outlen) == (size_t) -1)
 	{
 		return -1;
 	}
 	iconv_close(cd);
-	
+
 	return 0;
 }
 #endif
 
-CIPLocation::CIPLocation( char * memptr, size_t len )
+CIPLocation::CIPLocation(char * memptr, size_t len)
 {
 	m_file = memptr;
 	m_filesize = len;
-	
+
 	m_first_record = GetDWORD(0);
 	m_last_record = GetDWORD(4);
 	m_curptr = memptr;
@@ -81,18 +82,18 @@ CIPLocation::CIPLocation( char * memptr, size_t len )
 #endif
 }
 
-CIPLocation::CIPLocation(char* ipDateFile)
+CIPLocation::CIPLocation(const char* ipDateFile)
 {
 #ifndef _WIN32
-	int 
+	int
 #endif // _WIN32
-	m_ipfile = 
+			m_ipfile =
 #ifdef _WIN32
-	CreateFile(ipDateFile,GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
+			CreateFile(ipDateFile,GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
 #else
-	open(ipDateFile, O_RDONLY);
+			open(ipDateFile, O_RDONLY);
 #endif // _WIN32
-	if ( -1 == (int)m_ipfile )
+	if (-1 == (int) m_ipfile)
 	{
 		throw("File Open Failed!");
 	}
@@ -119,7 +120,7 @@ CIPLocation::CIPLocation(char* ipDateFile)
 
 	if (!m_file)
 	{
-		throw ("Creat File Mapping Failed!");
+		throw("Creat File Mapping Failed!");
 	}
 
 #ifndef _WIN32
@@ -152,14 +153,15 @@ CIPLocation::~CIPLocation()
 }
 
 static int IP_IN_regon(uint32_t ip, uint32_t ip1, uint32_t ip2)
-{	
-	if (  ip < ip1)
+{
+	if (ip < ip1)
 	{
 		return -1;
-	}else if ( ip > ip2 )
+	}
+	else if (ip > ip2)
 	{
 		return 1;
-	} 
+	}
 	return 0;
 }
 
@@ -167,35 +169,36 @@ char * CIPLocation::FindRecord(in_addr ip)
 {
 	//TODO: need faster implementation
 	size_t i = 0;
-	size_t l = 0 ;
+	size_t l = 0;
 	size_t r = (m_last_record - m_first_record) / 7;
 
 	ip.s_addr = ntohl(ip.s_addr);
 
-	RECORD_INDEX * pindex = ( RECORD_INDEX* ) (m_file + m_first_record);
+	RECORD_INDEX * pindex = (RECORD_INDEX*) (m_file + m_first_record);
 
-	for ( size_t tryed = 0 ; tryed < 50 ; tryed ++ )
+	for (size_t tryed = 0; tryed < 50; tryed++)
 	{
 #ifdef DEBUG
 		in_addr ip1,ip2;
 		ip1.s_addr = htonl( pindex[i].ip );
 		ip2.s_addr = htonl(GetDWORD( pindex[i].offset));
-		
+
 		printf("start ip is %s ", inet_ntoa(ip1));printf("end ip is %s\n",inet_ntoa(ip2));
 
 #endif
-		switch ( IP_IN_regon(ip.s_addr, pindex[i].ip, GetDWORD( pindex[i].offset)) )
+		switch (IP_IN_regon(ip.s_addr, pindex[i].ip, GetDWORD(pindex[i].offset)))
 		{
 		case 0:
-			return m_file + pindex[i].offset ;
-		case 1:			
+			return m_file + pindex[i].offset;
+		case 1:
 			l = i;
-			i +=  (r - i)/2;
-			if ( l == i)return 0;
+			i += (r - i) / 2;
+			if (l == i)
+				return 0;
 			break;
 		case -1:
 			r = i;
-			i -= ( i  -l) /2 ;			
+			i -= (i - l) / 2;
 			break;
 		}
 	}
@@ -227,7 +230,7 @@ char * CIPLocation::Get_String(char *p, char * out)
 	switch (p[0])
 	{
 	case REDIRECT_MODE_1:
-		pp = Get_String(m_file + ::Get3BYTE3(p + 1),out);
+		pp = Get_String(m_file + ::Get3BYTE3(p + 1), out);
 		break;
 	case REDIRECT_MODE_2:
 		pp = m_file + ::Get3BYTE3(p + 1);
@@ -248,61 +251,70 @@ IPLocation CIPLocation::GetIPLocation(in_addr ip)
 	char * ptr = FindRecord(ip);
 	if (!ptr)
 	{
-		throw ("IP Record Not Found");
+		throw("IP Record Not Found");
 	}
 	return GetIPLocation(ptr + 4);
 }
 
-static bool match_exp(char * input , const char  * const exp )
+static bool match_exp(char * input, const char * const exp)
 {
 
 	return false;
 }
 
-bool CIPLocation::MatchRecord( char * pRecord , const char *exp_country ,const char * exp_area ,std::list< uint32_t > &country_matched )
+bool CIPLocation::MatchRecord(char * pRecord, const char *exp_country,
+		const char * exp_area, std::list<uint32_t> &country_matched)
 {
 	bool match;
-	switch ( *pRecord )
+
+	// First , match the country field
+	switch (*pRecord)
 	{
 	case REDIRECT_MODE_1:
-		return MatchRecord(pRecord,exp_country,exp_country,country_matched);		
-	case REDIRECT_MODE_2:		
-		if ( std::find( country_matched.begin() ,country_matched.end(),::Get3BYTE3( pRecord +4 ) ) != country_matched.end() )
+		return MatchRecord(pRecord, exp_country, exp_country, country_matched);
+	case REDIRECT_MODE_2:
+		if (std::find(country_matched.begin(), country_matched.end(),
+				::Get3BYTE3(pRecord + 4)) != country_matched.end())
 		{
 			match = true;
-		}else
-		{
-
-			
+			break;
 		}
-		break;
+		else
+		{
+			char out[128];
+			Get_String( pRecord, out );
+			pRecord = out;
+		}
 	default:
-		match = match_exp( pRecord +4 , exp_country);
-	}	
+		match = match_exp(pRecord , exp_country);
+	}
+	// then , match the
+
+
+
 	return match;
 }
 
-
-size_t CIPLocation::GetIPs( std::list<int> * retips,const char *exp_country ,const char * exp_area)
+size_t CIPLocation::GetIPs(std::list<int> * retips, const char *exp_country,
+		const char * exp_area)
 {
 	RECORD_INDEX * pindex;
-	
-	size_t i ;
+
+	size_t i;
 	bool match;
-	std::list< uint32_t > country_matched; // matched country
-	
-	for ( i = m_first_record ; i < m_last_record ; i+=7)
+	std::list<uint32_t> country_matched; // matched country
+
+	for (i = m_first_record; i < m_last_record; i += 7)
 	{
-		pindex = (RECORD_INDEX *) ( m_file + i);
+		pindex = (RECORD_INDEX *) (m_file + i);
 
-		char * pRecord = m_file + pindex->offset +4 ;
+		char * pRecord = m_file + pindex->offset + 4;
 
-		match = MatchRecord( pRecord , exp_country , exp_area ,country_matched);
-		if ( match)
+		match = MatchRecord(pRecord, exp_country, exp_area, country_matched);
+		if (match)
 		{
-			retips
+			retips->insert(retips->end(), GetDWORD(pindex->offset));
 		}
-
 	}
-	return 0;	
+	return retips->size();
 }

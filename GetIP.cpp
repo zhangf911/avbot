@@ -4,19 +4,17 @@
 #include <stdio.h>
 #include "IPLocation.h"
 
-#include <fcntl.h>
-#include <io.h>
-
 int main(int argc, char * argv[])
 {
 	try
 	{
 		CIPLocation ipl("QQWry.Dat");
+
 //		in_addr p;
 // 		if (argc > 1)
 // 		{
 // 			p.s_addr = inet_addr(argv[1]);
-// 		} 
+// 		}
 // 		else
 // 		{
 // 			char  in[80];
@@ -24,9 +22,9 @@ int main(int argc, char * argv[])
 // 			scanf( "%s", in);
 // 			p.s_addr = inet_addr(in);
 // 		}
-		
+
 //		l = ipl.GetIPLocation(p);
-		ipl.GetIPs(0,"*ÎÂÖÝ*","*");
+		ipl.GetIPs(0,"*æ¸©å·ž*","*");
 
 /*		printf( "%s   %s\n",l.country,l.area);*/
 	}
