@@ -95,7 +95,7 @@ public:
 	//************************************
 	IPLocation & GetIPLocation(in_addr ip,IPLocation &);
 
-	size_t GetIPs(std::list<IP_regon> * retips, const char *exp_country, const char * exp_area);
+	size_t GetIPs(std::list<IP_regon> * retips, const char *_exp_country, const char * _exp_area);
 public:
 	CIPLocation(char*	memptr, size_t len);
 	CIPLocation(const char*	ipDateFile);

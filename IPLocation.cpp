@@ -285,10 +285,8 @@ IPLocation& CIPLocation::GetIPLocation(in_addr ip, IPLocation & l)
 	return l;
 }
 
-static bool match_exp(char * input, const char * const exp)
-{
-	return !memcmp(input,exp,strlen(exp));
-}
+#include "regular.h"
+
 bool CIPLocation::MatchRecord( char const * pRecord, const char *exp_country,const char * exp_area,
 							  std::map<uint32_t,char*> &country_matched,std::map<uint32_t,char*> &area_matched )
 {
@@ -297,8 +295,6 @@ bool CIPLocation::MatchRecord( char const * pRecord, const char *exp_country,con
 	char const * country;
 	std::map<uint32_t,char*>::iterator it;
 
-
-	// gbk when _WIN32 and utf-8 when Linux
 	// First , match the country field
 	if (  exp_country[0] == '*' && exp_country[1]==0)
 	{
@@ -308,7 +304,7 @@ bool CIPLocation::MatchRecord( char const * pRecord, const char *exp_country,con
 		switch (*pRecord)
 		{
 		case REDIRECT_MODE_1:
-			return MatchRecord( m_file + ::Get3BYTE3( pRecord +1 ) , exp_country, exp_country, country_matched,area_matched);
+			return MatchRecord( m_file + ::Get3BYTE3( pRecord +1 ) , exp_country, exp_area, country_matched,area_matched);
 		case REDIRECT_MODE_2:
 			parea = pRecord + 4;
 
@@ -320,20 +316,25 @@ bool CIPLocation::MatchRecord( char const * pRecord, const char *exp_country,con
 			}
 			else
 			{
-				match = match_exp( Get_String( pRecord ) , exp_country);
-				// update the matched country list
-				if (match)
-					country_matched.insert(std::pair<uint32_t,char*>(::Get3BYTE3(pRecord + 1),0));
+				return false ;
+// 				match = match_exp( Get_String( pRecord ) , exp_country);
+// 				// update the matched country list
+// 				if (match)
+// 					country_matched.insert(std::pair<uint32_t,char*>(::Get3BYTE3(pRecord + 1),0));
 			}
 			break;
 		default:
 			country = Get_String(pRecord);
-			match = match_exp( (char*)country, exp_country);
-			if (!match)
-			{
+			match = match_exp( (char*)country, (char*)exp_country);
+			if (match){
+				country_matched.insert( std::pair<uint32_t,char*>( country - m_file , 0 ));
+
+				parea = pRecord + strlen(country)+1;
+
+			}else{
 				return false;
 			}
-			parea = pRecord + strlen(country)+1;
+			
 		}
 
 	}
@@ -357,7 +358,7 @@ bool CIPLocation::MatchRecord( char const * pRecord, const char *exp_country,con
 		}
 		else
 		{
-			match = match_exp(Get_String(parea), exp_area);
+			match = match_exp(Get_String(parea),(char*) exp_area);
 			if ( match)
 			{
 				// update the matched area list
@@ -369,7 +370,7 @@ bool CIPLocation::MatchRecord( char const * pRecord, const char *exp_country,con
 		}
 		break;
 	default:
-		match = match_exp( Get_String(parea), exp_area);
+		match = match_exp( Get_String(parea), (char*)exp_area);
 		// update the matched area list
 		area_matched.insert(  std::pair<uint32_t,char*>(  (parea - m_file ) & 0xFFFFFF ,0)  );
 
@@ -398,11 +399,9 @@ size_t CIPLocation::GetIPs(std::list<IP_regon> * retips, const char *_exp_countr
 	utf8_gbk(exp_area, 128, (char*) _exp_area, strlen(_exp_area));
 
 #else
-	char *exp_country = _exp_country;
-	char *exp_area =_exp_area ;
-
+	#define exp_country _exp_country
+	#define exp_area _exp_area
 #endif
-
 
 	for (i = m_first_record; i < m_last_record; i += 7)
 	{
@@ -419,21 +418,19 @@ size_t CIPLocation::GetIPs(std::list<IP_regon> * retips, const char *_exp_countr
 
 			#ifndef _WIN32
 				IPLocation gbk;
-				GetIPLocation(m_file + pindex->offset + 4, gbk);
+				GetIPLocation(pRecord, gbk);
 
 				code_convert(inst.location.country, 128, gbk.country, strlen(gbk.country));
 				code_convert(inst.location.area, 128, gbk.area, strlen(gbk.area));
 			#else
-				GetIPLocation((char*) pindex,inst.location);
+				GetIPLocation(pRecord,inst.location);
 			#endif
 #ifdef DEBUG
 
-			printf( "start ip is %s ", inet_ntoa(inst.start));
-			printf( "end ip is %s , location : %s %s\n", inet_ntoa(inst.end),inst.location.country,inst.location.area);
+			printf( "%s to ", inet_ntoa(inst.start));
+			printf( "%s ,location : %s %s\n", inet_ntoa(inst.end),inst.location.country,inst.location.area);
 #endif
-
 			retips->insert(retips->end(), inst);
-
 
 		}
 	}
