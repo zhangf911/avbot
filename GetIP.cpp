@@ -30,11 +30,11 @@ int main(int argc, char * argv[])
 //		printf("%s   %s\n",l.country,l.area);
 
 		std::list<IP_regon> retips;
-		char c[28],a[80];
-		scanf( "%s.%s" ,c,a);
+		char c[28]={0};
+		scanf( "%s",c);
 
 //		ipl.GetIPs(&retips, "美国","加州");
-		ipl.GetIPs(&retips, c ,a);
+		ipl.GetIPs(&retips, c ,"*");
 
 		printf( "%ld found \n",retips.size());
 	}
