@@ -2,8 +2,18 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
+
 #include <sys/stat.h>
+#include <sys/types.h>
+
+#include <io.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "defs.h"	// Added by ClassView
 #include "IPLocation.h"
 
 #define REDIRECT_MODE_1 1
@@ -11,21 +21,58 @@
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
+#ifndef _WIN32
+static int code_convert(char *outbuf, size_t outlen, char *inbuf, size_t inlen)
+{
+	iconv_t cd;
+	char **pin = &inbuf;
+	char **pout = &outbuf;
+	
+	cd = iconv_open("UTF-8", "GBK");
+	if (cd == 0)
+		return -1;
+	
+	memset(outbuf, '\0', outlen);
+	if (iconv(cd, pin, &inlen, pout, &outlen) == (size_t) -1)
+	{
+		return -1;
+	}
+	iconv_close(cd);
+	
+	return 0;
+}
+#endif
 
-CIPLocation::CIPLocation(std::string ipDateFile)
+CIPLocation::CIPLocation( char * memptr, size_t len )
+{
+	m_file = memptr;
+	m_filesize = len;
+	
+	m_first_record = GetDWORD(0);
+	m_last_record = GetDWORD(4);
+	m_curptr = memptr;
+#ifdef _WIN32
+	m_filemap = NULL;
+	m_ipfile = INVALID_HANDLE_VALUE;
+#else
+	m_backup_byfile = false;
+#endif
+}
+
+CIPLocation::CIPLocation(char* ipDateFile)
 {
 #ifndef _WIN32
-	int
+	int 
 #endif // _WIN32
-	m_ipfile =
+	m_ipfile = 
 #ifdef _WIN32
-			CreateFile(ipDateFile.c_str(),GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
+	CreateFile(ipDateFile,GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
 #else
-			open(ipDateFile.c_str(), O_RDONLY);
+	open(ipDateFile, O_RDONLY);
 #endif // _WIN32
-	if (m_ipfile == (FILE_HANDLE) (-1))
+	if ( -1 == (int)m_ipfile )
 	{
-		throw std::string("File Open Failed!");
+		throw("File Open Failed!");
 	}
 
 #ifdef _WIN32
@@ -36,22 +83,25 @@ CIPLocation::CIPLocation(std::string ipDateFile)
 	m_filesize = fst.st_size;
 #endif // _WIN#32
 #ifdef _WIN32
-	m_filemap = CreateFileMapping(m_ipfile,0,PAGE_READONLY,0,m_filesize,0);
+	m_filemap = CreateFileMapping((HANDLE)m_ipfile,0,PAGE_READONLY,0,m_filesize,0);
 
 	if ( !m_filemap )
 	{
-		throw std::string("CreatFileMapping Failed!");
+		throw ("CreatFileMapping Failed!");
 	}
 
 	m_file = (char*)MapViewOfFile(m_filemap,FILE_MAP_READ,0,0,m_filesize);
 #else
 	m_file = (char*) mmap(0, m_filesize, PROT_READ, MAP_PRIVATE, m_ipfile, 0);
 #endif
+
 	if (!m_file)
 	{
-		throw std::string("Creat File Mapping Failed!");
+		throw ("Creat File Mapping Failed!");
 	}
+
 #ifndef _WIN32
+	m_backup_byfile = true;
 	close(m_ipfile);
 #endif // _WIN32
 	m_curptr = m_file;
@@ -62,11 +112,20 @@ CIPLocation::CIPLocation(std::string ipDateFile)
 CIPLocation::~CIPLocation()
 {
 #ifdef _WIN32
-	UnmapViewOfFile( m_file);
-	CloseHandle(m_filemap);
-	CloseHandle(m_ipfile);
+	if (m_filemap)
+	{
+		UnmapViewOfFile(m_file);
+		CloseHandle(m_filemap);
+	}
+	if (m_ipfile!= INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(m_ipfile);
+	}
 #else
-	munmap(m_file, m_filesize);
+	if (m_backup_byfile)
+	{
+		munmap(m_file, m_filesize);
+	}
 #endif // _WIN32
 }
 
@@ -116,7 +175,6 @@ IPLocation CIPLocation::GetIPLocation(char *ptr)
 {
 	IPLocation ret;
 	char * areaptr = 0;
-	char * outstr = new char[1024];
 	switch (ptr[0])
 	{
 	case REDIRECT_MODE_1:
@@ -124,46 +182,13 @@ IPLocation CIPLocation::GetIPLocation(char *ptr)
 	case REDIRECT_MODE_2:
 		areaptr = ptr + 4;
 	default:
-		ret.country = Get_String(ptr, outstr);
+		Get_String(ptr, ret.country);
 		if (!areaptr)
-			areaptr = ptr + ret.country.length() + 1;
+			areaptr = ptr + strlen(ret.country) + 1;
 	}
-	ret.area = Get_String(areaptr, outstr);
-	delete[] outstr;
+	Get_String(areaptr, ret.area);
 	return ret;
 }
-
-IPLocation CIPLocation::GetIPLocation(in_addr ip)
-{
-
-	char * ptr = FindRecord(ip);
-	if (!ptr)
-	{
-		throw std::string("Not Found");
-	}
-	return GetIPLocation(ptr + 4);
-}
-#ifndef _WIN32
-static int code_convert(char *outbuf, size_t outlen, char *inbuf, size_t inlen)
-{
-	iconv_t cd;
-	char **pin = &inbuf;
-	char **pout = &outbuf;
-
-	cd = iconv_open("UTF-8", "GBK");
-	if (cd == 0)
-		return -1;
-
-	memset(outbuf, '\0', outlen);
-	if (iconv(cd, pin, &inlen, pout, &outlen) == (size_t) -1)
-	{
-		return -1;
-	}
-	iconv_close(cd);
-
-	return 0;
-}
-#endif
 
 char * CIPLocation::Get_String(char *p, char * out)
 {
@@ -185,4 +210,26 @@ char * CIPLocation::Get_String(char *p, char * out)
 	strcpy(out,pp);
 #endif
 	return out;
+}
+
+IPLocation CIPLocation::GetIPLocation(in_addr ip)
+{
+	char * ptr = FindRecord(ip);
+	if (!ptr)
+	{
+		throw ("IP Record Not Found");
+	}
+	return GetIPLocation(ptr + 4);
+}
+
+bool match_exp(char * input , const std::string const & exp )
+{
+return false;
+
+}
+
+size_t CIPLocation::GetIPs( std::list<int> * retips,char *exp)
+{
+	
+	return 0;	
 }
