@@ -34,8 +34,7 @@ typedef struct
 
 static uint32_t inline Get3BYTE3(char const * var_ptr)
 {
-	uint32_t ret = 0;
-	memcpy(&ret, var_ptr, 3);
+	uint32_t ret = (*(uint32_t*)var_ptr) & 0xffffff;
 	return to_hostending(ret);
 }
 
@@ -242,7 +241,7 @@ char* CIPLocation::Get_String( char const * p, char*out )
 	code_convert(out, 128, pp, strlen(pp));
 #else
 	if (out)
-		strcpy(out,pp);
+		strncpy(out,pp,128);
 #endif
 	return (char*)pp;
 }
@@ -259,13 +258,18 @@ IPLocation CIPLocation::GetIPLocation(in_addr ip)
 
 static bool match_exp(char * input, const char * const exp)
 {
-	return !strncmp(input,exp,strlen(exp));
+	if (exp[0]==0)
+	{
+		MessageBox(0,"err","err",MB_OK);
+	}
+	return !memcmp(input,exp,4);
 }
 
 bool CIPLocation::MatchRecord(char const * pRecord, const char *exp_country,
 		const char * exp_area, std::list<uint32_t> &country_matched,std::list<uint32_t> &area_matched)
 {
 	bool match;
+	bool looped=false;
 	char const * parea = 0;
 	// gbk when _WIN32 and utf-8 when Linux
 	char strbuf[128];
@@ -279,7 +283,13 @@ bool CIPLocation::MatchRecord(char const * pRecord, const char *exp_country,
 		switch (*pRecord)
 		{
 		case REDIRECT_MODE_1:
-			return MatchRecord( pRecord + ::Get3BYTE3( pRecord +1 ) , exp_country, exp_country, country_matched,area_matched);
+// 			if (  looped   )
+// 				break;
+// 			looped = true;
+// 			pRecord += 
+
+			
+			return MatchRecord( m_file + ::Get3BYTE3( pRecord +1 ) , exp_country, exp_country, country_matched,area_matched);
 		case REDIRECT_MODE_2:
 			parea = pRecord + 4;
 			if (std::find(country_matched.begin(), country_matched.end(),
@@ -289,7 +299,7 @@ bool CIPLocation::MatchRecord(char const * pRecord, const char *exp_country,
 			}
 			else
 			{
-				Get_String( pRecord, strbuf);		
+				Get_String( pRecord , strbuf);		
 				match = match_exp( strbuf , exp_country);
 				if ( match)
 				{
@@ -306,7 +316,7 @@ bool CIPLocation::MatchRecord(char const * pRecord, const char *exp_country,
 			return false;
 		}
 		// update the matched country list
-		country_matched.insert(country_matched.end(),::Get3BYTE3(pRecord + 4));
+		country_matched.insert(country_matched.end(),::Get3BYTE3(pRecord + 1));
 	}
 
 	// then , match the area field
@@ -320,8 +330,7 @@ bool CIPLocation::MatchRecord(char const * pRecord, const char *exp_country,
 	{
 	case REDIRECT_MODE_2:
 	case REDIRECT_MODE_1:
-		if (std::find(area_matched.begin(),area_matched.end(),\
-			::Get3BYTE3( parea +1 ) ) != area_matched.end() )
+		if (std::find(area_matched.begin(),area_matched.end(),::Get3BYTE3( parea +1 ) ) != area_matched.end() )
 		{
 			return true;
 		} 
@@ -356,7 +365,6 @@ size_t CIPLocation::GetIPs(std::list<IP_regon> * retips, const char *exp_country
 	bool match;
 	std::list<uint32_t> country_matched; // matched country
 	std::list<uint32_t> area_matched; // matched country
-	pindex = (RECORD_INDEX*)(m_file + m_first_record );
 
 	for (i = m_first_record; i < m_last_record; i += 7)
 	{
@@ -364,13 +372,33 @@ size_t CIPLocation::GetIPs(std::list<IP_regon> * retips, const char *exp_country
 
 		char const * pRecord = m_file + pindex->offset + 4;
 
+//		if( i >= 5318657 )
+// 		{
+// 			MessageBox(0,"err","err",MB_OK);			
+// 			IP_regon inst;
+// 			inst.start.s_addr = htonl( pindex->ip );
+// 			inst.end.s_addr = htonl( GetDWORD(pindex->offset));
+// 			
+// 			printf( " found one match ! start ip is %s ", inet_ntoa(inst.start));
+// 			printf( "end ip is %s\n", inet_ntoa(inst.end));
+// 
+// 		}
+
 		match = MatchRecord(pRecord, exp_country, exp_area, country_matched,area_matched);
 		if (match)
 		{
 			IP_regon inst;
 			inst.start.s_addr = htonl( pindex->ip );
 			inst.end.s_addr = htonl( GetDWORD(pindex->offset));
+
+			printf( " found one match ! start ip is %s ", inet_ntoa(inst.start));
+			printf( "end ip is %s\n", inet_ntoa(inst.end));
+
+		
+
 			retips->insert(retips->end(), inst);
+
+
 		}
 	}
 	return retips->size();

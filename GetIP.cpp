@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
 
 		l = ipl.GetIPLocation(p);
 
-		printf("%s   %s",l.country,l.area);
+		printf("%s   %s\n",l.country,l.area);
 
 
 		std::list<IP_regon> retips;
