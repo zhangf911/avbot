@@ -346,9 +346,9 @@ static bool searchMatch(unsigned int& i, unsigned int& it, const char* str, cons
 
 	len_str = strlen(str);
 
-    for(si=i; cstr[si]!=NULL; si++)
+    for(si=i; cstr[si]!=0; si++)
 	{
-        for( it=si,j=0; (j < len_str)  && cstr[it]!=NULL && ( '?' == str[j] || (cstr[it] == str[j] ) ); j++)
+        for( it=si,j=0; (j < len_str)  && cstr[it]!=0 && ( '?' == str[j] || (cstr[it] == str[j] ) ); j++)
 			it++;
         if(j>= len_str)
 		{
@@ -363,48 +363,48 @@ int iii=0;
 static bool match_exp(char str[], char exp[])
 {
 	iii++;
-	
-    /// ¿Õ´®´¦Àí£¬¿Õ´®»òÕß ¡°**...*¡±¿ÉÒÔÆ¥Åä¿Õ´®
-    if(str[0]==NULL)
+
+    /// ï¿½Õ´ï¿½ï¿½ï¿½ï¿½?ï¿½Õ´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½**...*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½Õ´ï¿½
+    if(str[0]==0)
 	{
         int j;
         for(j=0; exp[j] && exp[j]=='*';)
             j++;
-        return exp[j]==NULL;
-    }else if(exp[0]==NULL)
+        return exp[j]==0;
+    }else if(exp[0]==0)
         return false;
-    /// Èç¹û exp ²»ÒÔ * ¿ªÊ¼£¬ÔòÏÈÆ¥Åä¿ªÊ¼²¿·Ö
+
     unsigned i, j, it, jt;
-    for(i=j=0; str[i]!=NULL&&exp[j]!=NULL&&exp[j]!='*'; i++,j++)
+    for(i=j=0; str[i]!=0&&exp[j]!=0&&exp[j]!='*'; i++,j++)
 	{
         if(exp[j]!='?' && str[i]!=exp[j])
             return false;
     }
-    if(str[i]==NULL)
+    if(str[i]==0)
 	{
         for(; exp[j] && exp[j]=='*';)
             j++;
-        return exp[j]==NULL;
-    }else if(exp[j]==NULL)
+        return exp[j]==0;
+    }else if(exp[j]==0)
         return false;
-    /// É¨Ãè ÒÔ * ¿ªÊ¼µÄ´®£¬½øÐÐÆ¥Åä
+
 	Xstring lastSubstr;
-    for(jt=j; exp[jt]!=NULL ; i=it,j=jt)
-	{ 
-        for(; exp[j]!=NULL && exp[j]=='*';)
+    for(jt=j; exp[jt]!=0 ; i=it,j=jt)
+	{
+        for(; exp[j]!=0 && exp[j]=='*';)
             j++;
-        if(exp[j]==NULL)
+        if(exp[j]==0)
             break;
-        for(jt=j; exp[jt]!=NULL && exp[jt]!='*';)
+        for(jt=j; exp[jt]!=0 && exp[jt]!='*';)
             jt++;
-        
+
 		Xstring tmp(&exp[j],&exp[jt]);
-		
+
         if(!searchMatch(i,it,tmp,str))
             return false;
         lastSubstr = tmp;
     }
-    /// ×îºóÒ»¸ö×Ó´®£¨expÖÐµÄ£©´¦Àí¡£
+
     if(exp[j-1]=='*')
         return true;
     for(i=strlen(str)- lastSubstr.length,j=0; j<lastSubstr.length; i++,j++)
@@ -460,7 +460,7 @@ bool CIPLocation::MatchRecord( char const * pRecord, const char *exp_country,con
 			}else{
 				return false;
 			}
-			
+
 		}
 
 	}
