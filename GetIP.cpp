@@ -2,38 +2,41 @@
 //
 
 #include <stdio.h>
+#include "defs.h"
 #include "IPLocation.h"
 
 int main(int argc, char * argv[])
 {
 	try
 	{
-		IPLocation l;
+//		IPLocation l;
 		CIPLocation ipl("QQWry.Dat");
 
-		in_addr p;
- 		if (argc > 1)
- 		{
- 			p.s_addr = inet_addr(argv[1]);
-		}
- 		else
- 		{
- 			char  in[80];
- 			printf("please inout IP address: ");
- 			scanf( "%s", in);
- 			p.s_addr = inet_addr(in);
- 		}
-
-		l = ipl.GetIPLocation(p);
-
-		printf("%s   %s\n",l.country,l.area);
-
+//		in_addr p;
+// 		if (argc > 1)
+// 		{
+// 			p.s_addr = inet_addr(argv[1]);
+//		}
+// 		else
+// 		{
+// 			char  in[80];
+// 			printf("please inout IP address: ");
+// 			scanf( "%s", in);
+// 			p.s_addr = inet_addr(in);
+// 		}
+//
+//		ipl.GetIPLocation(p,l);
+//
+//		printf("%s   %s\n",l.country,l.area);
 
 		std::list<IP_regon> retips;
+		char c[28],a[80];
+		scanf( "%s.%s" ,c,a);
 
-		ipl.GetIPs(&retips,"浙江省杭州市","浙江理工大学");
+//		ipl.GetIPs(&retips, "缇庡浗","鍔犲窞");
+		ipl.GetIPs(&retips, c ,a);
 
-		printf( "%d found \n",retips.size());
+		printf( "%ld found \n",retips.size());
 	}
 	catch ( char * e)
 	{

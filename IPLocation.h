@@ -41,6 +41,7 @@ struct IPLocation
 struct IP_regon{
 	in_addr start;
 	in_addr end;
+	IPLocation	location;
 };
 
 class CIPLocation
@@ -60,8 +61,8 @@ protected: // protected member
 #endif // _WIN32
 
 protected:
-	IPLocation GetIPLocation(char const *ptr);
-	char* Get_String(char const * p, char*out);
+	IPLocation & GetIPLocation(char const *ptr, IPLocation &);
+	char* Get_String(char const * p);
 	char* GetArea(char * record);
 	char* GetCountry(char * record);
 	char const * FindRecord(in_addr ip);
@@ -92,7 +93,7 @@ public:
 	// Returns:   IPLocation
 	// Parameter: in_addr ip
 	//************************************
-	IPLocation GetIPLocation(in_addr ip);
+	IPLocation & GetIPLocation(in_addr ip,IPLocation &);
 
 	size_t GetIPs(std::list<IP_regon> * retips, const char *exp_country, const char * exp_area);
 public:

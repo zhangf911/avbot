@@ -12,6 +12,8 @@
 #include <windows.h>
 #include <winsock.h>
 
+typedef  HANDLE FILE_HANDLE;
+
 #else
 
 #include <unistd.h>
