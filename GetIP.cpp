@@ -5,6 +5,9 @@
 #include "defs.h"
 #include "IPLocation.h"
 
+
+// just a demo  !
+extern int iii;
 int main(int argc, char * argv[])
 {
 	try
@@ -30,15 +33,19 @@ int main(int argc, char * argv[])
 //		printf("%s   %s\n",l.country,l.area);
 
 		std::list<IP_regon> retips;
-		//char c[28]={0};
+		char c[28]={0};
+		char a[28]={0};
+		printf("国家/地区:(支持通配符)");
+
+		scanf("%s",c);
+		printf("地区/详细地址:(支持通配符)");
+		scanf("%s",a);
+
 		//scanf( "%s",c);
 
-//		ipl.GetIPs(&retips, "缇庡浗","鍔犲窞");
-		ipl.GetIPs(&retips, "*美国*" ,"*");
+		ipl.GetIPs(&retips, c,a);
 
-		printf( "%ld found \n",retips.size());
-		std::map<int,int> p;
-		p.operator [](0);
+		printf( "%ld found , %d次比较\n",retips.size(),iii);
 	}
 	catch ( char * e)
 	{

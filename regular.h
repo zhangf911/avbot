@@ -1,5 +1,5 @@
 
-class string
+class Xstring
 {
 protected:
 	char*	m_data;
@@ -9,19 +9,19 @@ protected:
 		m_data = (char*)malloc( length +1);
 	}
 public:
-	string()
+	Xstring()
 	{
 		length = 64;
 		Allocate();
 	}
-	string( const  char* begin, const char * end )
+	Xstring( const  char* begin, const char * end )
 	{
 		length = end - begin;
 		Allocate();
 		memcpy(m_data,begin,length);
 		m_data[length] = 0;
 	}
-	~string()
+	~Xstring()
 	{
 		free(m_data);
 	}
@@ -29,13 +29,13 @@ public:
 	{
 		return (const char*)m_data;
 	}
-	operator =( const string & str)
+	Xstring & operator =( const Xstring & str)
 	{
 		length = str.length;
 		Allocate();
 		memcpy(m_data,str.m_data,length);
 		m_data[length] = 0;
-
+		return * this;
 	}
 public:
 	size_t	length;
@@ -60,9 +60,12 @@ static bool searchMatch(unsigned int& i, unsigned int& it, const char* str, cons
     }
     return false;
 }
+int iii=0;
 
 static bool match_exp(char str[], char exp[])
 {
+	iii++;
+	
     /// 空串处理，空串或者 “**...*”可以匹配空串
     if(str[0]==NULL)
 	{
@@ -87,7 +90,7 @@ static bool match_exp(char str[], char exp[])
     }else if(exp[j]==NULL)
         return false;
     /// 扫描 以 * 开始的串，进行匹配
-	string lastSubstr;
+	Xstring lastSubstr;
     for(jt=j; exp[jt]!=NULL ; i=it,j=jt)
 	{ 
         for(; exp[j]!=NULL && exp[j]=='*';)
@@ -97,7 +100,7 @@ static bool match_exp(char str[], char exp[])
         for(jt=j; exp[jt]!=NULL && exp[jt]!='*';)
             jt++;
         
-		string tmp(&exp[j],&exp[jt]);
+		Xstring tmp(&exp[j],&exp[jt]);
 		
         if(!searchMatch(i,it,tmp,str))
             return false;
