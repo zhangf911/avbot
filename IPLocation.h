@@ -14,17 +14,27 @@ struct IPLocation
 
 class CIPLocation
 {
-protected:
+protected: // protected member
 	uint32_t m_filesize;
 	char* m_file;
 	char* m_curptr;
 	size_t m_first_record;
 	size_t m_last_record;
 
+#ifdef _WIN32
+	HANDLE m_filemap;
+	HANDLE m_ipfile;
+#endif // _WIN32
+
 protected:
+	IPLocation GetIPLocation(char *ptr);
 	char* Get_String(char * p, char*out);
 	char* GetArea(char * record);
 	char* GetCountry(char * record);
+	char* FindRecord(in_addr ip);
+	char* read_string(size_t offset);
+protected: //inline functions
+
 	uint32_t inline GetDWORD(size_t offset)
 	{
 		uint32_t ret;
@@ -45,15 +55,10 @@ protected:
 		return to_hostending(ret);
 	}
 
-	char * FindRecord(in_addr ip);
-	char* read_string(size_t offset);
-#ifdef _WIN32
-	HANDLE m_filemap;
-	HANDLE m_ipfile;
-#endif // _WIN32
+
 public:
 	IPLocation GetIPLocation(in_addr ip);
-	IPLocation GetIPLocation(char *ptr);
+
 
 	CIPLocation(std::string ipDateFil);
 	virtual ~CIPLocation();

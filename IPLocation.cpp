@@ -4,8 +4,6 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include <arpa/inet.h>
-#include <iconv.h>
 #include "IPLocation.h"
 
 #define REDIRECT_MODE_1 1
@@ -19,7 +17,7 @@ CIPLocation::CIPLocation(std::string ipDateFile)
 #ifndef _WIN32
 	int
 #endif // _WIN32
-			m_ipfile =
+	m_ipfile =
 #ifdef _WIN32
 			CreateFile(ipDateFile.c_str(),GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
 #else
@@ -91,6 +89,7 @@ static bool IP_IN_regon(uint32_t ip, uint32_t ip1, uint32_t ip2)
 
 char * CIPLocation::FindRecord(in_addr ip)
 {
+	//TODO: need faster implementation
 	size_t i;
 
 	for (i = m_first_record; i < m_last_record; i += 7)

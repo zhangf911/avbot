@@ -21,6 +21,8 @@ typedef	 DWORD	uint32_t;
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <iconv.h>
 
 #define  FILE_HANDLE int
 
