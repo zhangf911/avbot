@@ -2,7 +2,17 @@
 //
 
 #include <stdio.h>
-#include "defs.h"
+#ifdef _WIN32
+#include <windows.h>
+#include <winsock.h>
+#else
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/syscall.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <iconv.h>
+#endif
 #include "IPLocation.h"
 
 
