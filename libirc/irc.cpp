@@ -1,13 +1,24 @@
 #include "irc.h"
 
-IrcClient::IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port):cb_(0),
+IrcClient::IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry):cb_(0),
 resolver_(io_service),socket_(io_service),
 user_(user),pwd_(user_pwd),
 server_(server),port_(port),
+retry_count_(max_retry),
+c_retry_cuont(max_retry),
 login_(false)
 {
-  
-    boost::asio::ip::tcp::resolver::query query(server,port);
+    connect();
+}
+
+IrcClient::~IrcClient()
+{
+
+}
+
+void IrcClient::connect()
+{
+    boost::asio::ip::tcp::resolver::query query(server_,port_);
     boost::system::error_code ec;
     boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver_.resolve(query,ec);
 
@@ -19,15 +30,15 @@ login_(false)
     }
     else
     {
+        login_=false;
+        socket_.cancel();
+        socket_.close();
+        retry_count_--;
+        relogin();
 #ifdef DEBUG
         std::cout << "Error: " << ec.message() << "\n";
 #endif
     }
-}
-
-IrcClient::~IrcClient()
-{
-
 }
 
 void IrcClient::oper(const std::string& user,const std::string& pwd)
@@ -46,21 +57,39 @@ void IrcClient::login(const privmsg_cb &cb)
 
 void IrcClient::join(const std::string& ch,const std::string &pwd)
 {
+    std::string msg;
+
+    pwd.empty()?msg="JOIN "+ch:msg="JOIN "+ch+" "+pwd;
+
     if (!login_)
     {
         boost::lock_guard<boost::recursive_mutex> guard(msg_queue_lock_);
-
-        if (pwd.empty())
-            msg_queue_.push_back("JOIN "+ch);
-        else
-            msg_queue_.push_back("JOIN "+ch+" "+pwd);
+        msg_queue_.push_back(msg);
     }else
     {
-        if (pwd.empty())
-            send_request("JOIN "+ch);
-        else
-            send_request("JOIN "+ch+" "+pwd);
+        send_request(msg);
+        boost::lock_guard<boost::recursive_mutex> guard(join_queue_lock_);
+        join_queue_.push_back(msg);
     }
+}
+
+void IrcClient::relogin()
+{
+
+    if (retry_count_<=0)
+    {
+        std::cout<<"Irc Server has offline!!!";
+        return;
+    }
+
+    boost::lock_guard<boost::recursive_mutex> guard1(msg_queue_lock_);
+    boost::lock_guard<boost::recursive_mutex> guard2(join_queue_lock_);
+    std::list<std::string>::iterator it=join_queue_.begin();
+    for (it;it!=join_queue_.end();it++)
+        msg_queue_.push_back(*it);
+    join_queue_.clear();
+    connect();
+
 }
 
 void IrcClient::process_request(std::size_t readed)
@@ -75,6 +104,8 @@ void IrcClient::process_request(std::size_t readed)
 #ifdef DEBUG
     std::cout << req;
 #endif
+
+process:
 
     if (req.substr(0,4)=="PING")
         send_request("PONG "+req.substr(6,req.length()-8));
@@ -123,8 +154,19 @@ void IrcClient::process_request(std::size_t readed)
         if (!pos)
             return;
 
-        m.msg=msg.substr(pos,msg.length()-2-pos);
+        msg=msg.substr(pos,msg.length()-2-pos);
 
+        pos=msg.find("\n")+1;
+
+        if (!pos)
+            m.msg=msg;
+        else
+        {
+            m.msg=msg.substr(0,pos);
+            req=msg.substr(pos);
+            cb_(m);
+            goto process;
+        }
         cb_(m);
     }
 
@@ -141,6 +183,11 @@ void IrcClient::handle_read_request(const boost::system::error_code& err, std::s
     }
     else if (err != boost::asio::error::eof)
     {
+        login_=false;
+        socket_.cancel();
+        socket_.close();
+        retry_count_--;
+        relogin();
 #ifdef DEBUG
         std::cout << "Error: " << err.message() << "\n";
 #endif
@@ -159,9 +206,14 @@ void IrcClient::handle_write_request(const boost::system::error_code& err, std::
     }    
     else    
     {
+        login_=false;
+        socket_.cancel();
+        socket_.close();
+        retry_count_--;
+        relogin();
 #ifdef DEBUG        
         std::cout << "Error: " << err.message() << "\n";
-#endif 
+#endif
     }
 }
 
@@ -176,17 +228,21 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
         send_request("USER "+user_+ " 0 * "+user_);
 
         login_=true;
-        
+        retry_count_=c_retry_cuont;
         if (msg_queue_.size())
         {
             boost::lock_guard<boost::recursive_mutex> guard(msg_queue_lock_);
             if (msg_queue_.size())
             {
                 std::list<std::string>::iterator it=msg_queue_.begin();
-                std::string join=*it;
-                msg_queue_.pop_front();
-                send_request(join);
+                for (it;it!=msg_queue_.end();it++)
+                {
+                    boost::lock_guard<boost::recursive_mutex> guard(join_queue_lock_);
+                    join_queue_.push_back(*it);  
+                    send_request(*it);
+                }
             }
+            msg_queue_.clear();
         }
         boost::asio::async_read_until(socket_, response_, "\r\n",
             boost::bind(&IrcClient::handle_read_request, this,
@@ -194,6 +250,11 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
     }
     else if (err != boost::asio::error::eof)
     {
+        login_=false;
+        socket_.cancel();
+        socket_.close();
+        retry_count_--;
+        relogin();
 #ifdef DEBUG
         std::cout << "Error: " << err.message() << "\n";
 #endif
@@ -207,7 +268,6 @@ void IrcClient::send_command(const std::string& cmd)
 
 void IrcClient::send_request(const std::string& msg)
 {
-    boost::system::error_code ec;
     std::ostream request_stream(&request_);
     request_stream << msg+"\r\n";
 
