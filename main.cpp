@@ -445,7 +445,12 @@ int main(int argc, char *argv[])
 
 	IrcClient ircclient(asio, ircnick);
 	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient)));
-	ircclient.join(std::string("#") + ircroom);
+	std::vector<std::string> rooms;
+	boost::split(rooms, ircroom, boost::is_any_of(","));
+	BOOST_FOREACH( std::string room , rooms)
+	{
+		ircclient.join(std::string("#") + room);
+	}
 
 	qqclient.start();
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient)));
