@@ -1,4 +1,4 @@
-
+#define ASIO_DISABLE_THREADS
 #include "irc.h"
 #include <string>
 #include <iostream>

@@ -63,12 +63,10 @@ void IrcClient::join(const std::string& ch,const std::string &pwd)
 
     if (!login_)
     {
-        boost::lock_guard<boost::recursive_mutex> guard(msg_queue_lock_);
         msg_queue_.push_back(msg);
     }else
     {
         send_request(msg);
-        boost::lock_guard<boost::recursive_mutex> guard(join_queue_lock_);
         join_queue_.push_back(msg);
     }
 }
@@ -82,8 +80,6 @@ void IrcClient::relogin()
         return;
     }
 
-    boost::lock_guard<boost::recursive_mutex> guard1(msg_queue_lock_);
-    boost::lock_guard<boost::recursive_mutex> guard2(join_queue_lock_);
     std::list<std::string>::iterator it=join_queue_.begin();
     for (it;it!=join_queue_.end();it++)
         msg_queue_.push_back(*it);
@@ -231,13 +227,11 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
         retry_count_=c_retry_cuont;
         if (msg_queue_.size())
         {
-            boost::lock_guard<boost::recursive_mutex> guard(msg_queue_lock_);
             if (msg_queue_.size())
             {
                 std::list<std::string>::iterator it=msg_queue_.begin();
                 for (it;it!=msg_queue_.end();it++)
                 {
-                    boost::lock_guard<boost::recursive_mutex> guard(join_queue_lock_);
                     join_queue_.push_back(*it);  
                     send_request(*it);
                 }

@@ -23,11 +23,12 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 */
 
 #pragma once
+#include <list>
+#include <string>
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/thread.hpp>
 
 struct IrcMsg
 {
@@ -73,8 +74,6 @@ private:
     bool                            login_;
     std::list<std::string>          msg_queue_;
     std::list<std::string>          join_queue_;
-    boost::recursive_mutex          msg_queue_lock_;
-    boost::recursive_mutex          join_queue_lock_;
     unsigned int                    retry_count_;
     const unsigned int              c_retry_cuont;
 };

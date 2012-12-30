@@ -4,7 +4,6 @@
  * @origal_author mathslinux <riegamaths@gmail.com>
  * 
  */
-
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/date_time.hpp>
@@ -59,8 +58,6 @@ public:
 	// 添加日志消息.
 	bool add_log(const std::wstring &groupid, const std::string &msg)
 	{
-		boost::mutex::scoped_lock l(m_mutex);
-
 		// 在qq群列表中查找已有的项目, 如果没找到则创建一个新的.
 		loglist::iterator finder = m_group_list.find(groupid);
 		if (m_group_list.find(groupid) == m_group_list.end())
@@ -161,7 +158,6 @@ protected:
 	}
 
 private:
-	boost::mutex m_mutex;
 	loglist m_group_list;
 	fs::wpath m_path;
 };
