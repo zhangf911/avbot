@@ -6,9 +6,9 @@ find_package(Threads)
 
 add_subdirectory(libwebqq)
 add_subdirectory(libirc)
+add_subdirectory(libxmpp)
 
 include_directories(${Boost_INCLUDE_DIRS})
-include_directories(lwqq/src/include/)
 
 add_executable(qqbot main.cpp)
 
