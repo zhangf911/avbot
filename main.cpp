@@ -376,6 +376,14 @@ fs::path configfilepath()
 	throw "not configfileexit";
 }
 
+#ifdef WIN32
+int daemon(int nochdir, int noclose)
+{
+	// nothing...
+	return -1;
+}
+#endif // WIN32
+
 int main(int argc, char *argv[])
 {
     std::string qqnumber, password;
@@ -388,13 +396,13 @@ int main(int argc, char *argv[])
 
     progname = fs::basename(argv[0]);
 
-    std::setlocale(LC_ALL, "");
+    setlocale(LC_ALL, "");
 
 	po::options_description desc("qqbot options");
 	desc.add_options()
 	    ( "version,v", "output version" )
 		( "help,h", "produce help message" )
-        ( "user,u", po::value<std::string>(&qqnumber), "QQ 号" )
+        ( "user,u", po::value<std::string>(&qqnumber), "QQ number" )
 		( "pwd,p", po::value<std::string>(&password), "password" )
 		( "logdir", po::value<std::string>(&logdir), "dir for logfile" )
 		( "daemon,d", po::value<bool>(&isdaemon), "go to background" )
@@ -413,7 +421,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	if (vm.size() ==0 ){
-		po::store(po::parse_config_file<char>(configfilepath().c_str(), desc), vm);
+		fs::path p = configfilepath();
+		po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
 		po::notify(vm);
 	}
 	if (vm.count("version"))

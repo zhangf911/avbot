@@ -25,6 +25,7 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 #pragma once
 #include <list>
 #include <string>
+#include <iostream>
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
