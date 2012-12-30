@@ -1,0 +1,31 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libirc", "libirc\libirc-vc2012.vcxproj", "{F1EEBF87-28F6-46BE-B91B-B3DEB03DA12E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libwebqq", "libwebqq\libwebqq-vc2012.vcxproj", "{0CE5AB2D-4A1B-43C7-9046-0FF48AB5B516}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qqbot", "qqbot-vc2012.vcxproj", "{E8A37839-F54D-4EE9-8BC3-BA2D192ED290}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F1EEBF87-28F6-46BE-B91B-B3DEB03DA12E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F1EEBF87-28F6-46BE-B91B-B3DEB03DA12E}.Debug|Win32.Build.0 = Debug|Win32
+		{F1EEBF87-28F6-46BE-B91B-B3DEB03DA12E}.Release|Win32.ActiveCfg = Release|Win32
+		{F1EEBF87-28F6-46BE-B91B-B3DEB03DA12E}.Release|Win32.Build.0 = Release|Win32
+		{0CE5AB2D-4A1B-43C7-9046-0FF48AB5B516}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0CE5AB2D-4A1B-43C7-9046-0FF48AB5B516}.Debug|Win32.Build.0 = Debug|Win32
+		{0CE5AB2D-4A1B-43C7-9046-0FF48AB5B516}.Release|Win32.ActiveCfg = Release|Win32
+		{0CE5AB2D-4A1B-43C7-9046-0FF48AB5B516}.Release|Win32.Build.0 = Release|Win32
+		{E8A37839-F54D-4EE9-8BC3-BA2D192ED290}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E8A37839-F54D-4EE9-8BC3-BA2D192ED290}.Debug|Win32.Build.0 = Debug|Win32
+		{E8A37839-F54D-4EE9-8BC3-BA2D192ED290}.Release|Win32.ActiveCfg = Release|Win32
+		{E8A37839-F54D-4EE9-8BC3-BA2D192ED290}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
