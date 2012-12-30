@@ -27,6 +27,8 @@ namespace po = boost::program_options;
 #include <time.h>
 #include <wchar.h>
 
+#include "xmpp.h"
+
 static std::string progname;
 
 fs::path configfilepath()
@@ -94,13 +96,12 @@ int main(int argc, char *argv[])
 		printf("qqbot version %s \n", "0.1");
 	}
 
-    if (isdaemon)
-		daemon(0, 0);
 
 	boost::asio::io_service asio;
-
-
     boost::asio::io_service::work work(asio);
+
+	xmpp xmppclient(asio, "qqbot@linuxapp.org", "qqbot2012");
+    	
     asio.run();
     return 0;
 }

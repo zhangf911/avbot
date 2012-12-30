@@ -19,10 +19,16 @@
 
 #ifndef XMPP_H
 #define XMPP_H
+#include <boost/asio.hpp>
 
 class xmpp
 {
-
+public:
+	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
+private:
+	boost::asio::io_service & m_asio;
+	std::string hostname;                                      // the host to connect
+	std::string user, password;
 };
 
 #endif // XMPP_H

@@ -16,5 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
+#include <boost/algorithm/string.hpp>
 #include "xmpp.h"
+
+using namespace boost::asio;
+
+xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd)
+  :password(xmpppasswd), m_asio(asio)
+{
+	std::vector<std::string> splited;
+	boost::split(splited, xmppuser, boost::is_any_of("@"));
+	user = splited[0];
+	hostname = splited[1];
+	//解析 xmppuser 获得服务器
+// 	boost::asio::ip::resolver_service<boost::asio::ip::v4()> resover;
+	ip::tcp::resolver	resolver(asio);
+	ip::tcp::resolver::query query(hostname);
+	
+
+
+}
