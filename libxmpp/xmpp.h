@@ -22,22 +22,40 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/stream.hpp>
+#include <iksemel.h>
+
+enum xmpp_state {
+	XMPP_SATE_DISCONNTECTED,
+	XMPP_SATE_CONNTECTED,
+	XMPP_SATE_REQTLS,
+	XMPP_SATE_REQEDTLS,
+	XMPP_SATE_AUTHED,
+};
 
 class xmpp
 {
+	xmpp_state m_xmppstate;
 public:
 	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
 
 private:
 	void cb_resolved(boost::shared_ptr<boost::asio::ip::tcp::resolver> resolver, boost::shared_ptr<boost::asio::ip::tcp::resolver::query> query, const boost::system::error_code & er, boost::asio::ip::tcp::resolver::iterator iterator);
 	void cb_connected(const boost::system::error_code & er);
-	void cb_ssl_connected(const boost::system::error_code & er);
+	void handle_firstread(const boost::system::error_code & er,size_t );
+	void handle_tlsprocessed(const boost::system::error_code & er,size_t );
+	void handle_tlswrite(const boost::system::error_code & er,size_t n);
+	
+	int cb_iks_hook(int type, iks *node);
 private:
 	boost::asio::io_service & m_asio;
-	boost::asio::ssl::context m_sslcontext;
-	boost::asio::ssl::stream<boost::asio::ip::tcp::socket>		m_socket; // the socket to the host
+	boost::asio::ssl::context	m_sslcontext;
+	boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;// the socket to the host
+	boost::asio::streambuf	m_buf;
 	std::string hostname;                                      // the host to connect
 	std::string user, password;
+	std::string m_jabber_sid;
+	iksparser* m_prs;
+	friend int cb_iks_hook(void *user_data, int type, iks *node);
 };
 
 #endif // XMPP_H

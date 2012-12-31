@@ -18,6 +18,7 @@ namespace po = boost::program_options;
 #include <boost/noncopyable.hpp>
 #include <boost/foreach.hpp>
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
 
 #include <fstream>
 #include <string.h>
@@ -69,7 +70,7 @@ int main(int argc, char *argv[])
 	desc.add_options()
 	    ( "version,v", "output version" )
 		( "help,h", "produce help message" )
-        ( "user,u", po::value<std::string>(&qqnumber), "QQ 号" )
+		( "user,u", po::value<std::string>(&qqnumber), "QQ 号" )
 		( "pwd,p", po::value<std::string>(&password), "password" )
 		( "logdir", po::value<std::string>(&logdir), "dir for logfile" )
 		( "daemon,d", po::value<bool>(&isdaemon), "go to background" )
@@ -100,8 +101,7 @@ int main(int argc, char *argv[])
 	boost::asio::io_service asio;
     boost::asio::io_service::work work(asio);
 
-	xmpp xmppclient(asio, "qqbot@linuxapp.org", "qqbot2012");
-    	
+	xmpp xl(asio, "qqbot@linuxapp.org", "qqbot2012");
     asio.run();
     return 0;
 }

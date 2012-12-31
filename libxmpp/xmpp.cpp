@@ -20,8 +20,16 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include "xmpp.h"
+#include "iksemel.h"
 
 using namespace boost::asio;
+
+int cb_iks_hook(void *user_data, int type, iks *node)
+{
+	xmpp * this_ = reinterpret_cast<xmpp*>(user_data);
+	return this_->cb_iks_hook(type, node);
+}
+
 
 void xmpp::cb_resolved(boost::shared_ptr<ip::tcp::resolver> resolver,
 	boost::shared_ptr<ip::tcp::resolver::query>	query,
@@ -32,31 +40,84 @@ void xmpp::cb_resolved(boost::shared_ptr<ip::tcp::resolver> resolver,
 		async_connect(m_socket.lowest_layer(),  iterator, boost::bind(&xmpp::cb_connected, this, placeholders::error) );
 }
 
-void xmpp::cb_connected(const boost::system::error_code& er)
+int xmpp::cb_iks_hook(int type, iks* node)
 {
-	if (!er){
-		m_socket.async_handshake(ssl::stream_base::client, boost::bind(&xmpp::cb_ssl_connected, this, placeholders::error));
+	if (type == IKS_NODE_START){
+		m_jabber_sid = iks_find_attrib (node, "id");
+		std::cout << "server return jabber id" << m_jabber_sid << std::endl;
+	}else if(type == IKS_NODE_NORMAL){
+		
 	}
+	return 0;
 }
 
-void xmpp::cb_ssl_connected(const boost::system::error_code& er)
+void xmpp::cb_connected(const boost::system::error_code& er)
 {
+	int ret;
+	m_prs = iks_stream_new(IKS_NS_CLIENT, this, &::cb_iks_hook);
+	ret = iks_connect_fd(m_prs, m_socket.next_layer().native_handle());
+	ret = iks_send_header(m_prs, hostname.c_str());
+	
+	m_xmppstate = XMPP_SATE_CONNTECTED;
+	//接收服务器返回的第一波数据，主要是 sid
+	m_socket.next_layer().async_read_some(m_buf.prepare(4096), boost::bind(&xmpp::handle_firstread,this,placeholders::error,placeholders::bytes_transferred));
+}
 
+void xmpp::handle_firstread ( const boost::system::error_code& er, size_t n)
+{
+	m_buf.commit(n);
+
+	iks_parse(m_prs,buffer_cast<const char*>(m_buf.data()), n, 0);
+	m_buf.consume(n);
+
+	m_xmppstate = XMPP_SATE_REQTLS;
+	iks_send_raw (m_prs, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>");
+	
+	//处理 proceed, 然后就可以 ssl.async_handshake 了.
+	m_socket.next_layer().async_read_some(m_buf.prepare(4096), boost::bind(&xmpp::handle_tlsprocessed,this,placeholders::error,placeholders::bytes_transferred));	
+}
+
+void xmpp::handle_tlsprocessed ( const boost::system::error_code& er, size_t n)
+{
+	m_buf.commit(n);
+	iks_parse(m_prs,buffer_cast<const char*>(m_buf.data()), n, 0);
+	m_buf.consume(n);
+	
+	m_socket.set_verify_mode(ssl::verify_none);
+	
+	m_socket.handshake(ssl::stream_base::client);
+	
+	
+	ikstack* iksstack =  iks_stack_new(1024, 4096);
+	iksid * sid = iks_id_new(iksstack, "qqbot@linuxapp.org/qqbot");
+	iks* node =  iks_make_auth(sid, password.c_str(), m_jabber_sid.c_str());
+
+	std::string xmlstr = iks_string (iks_stack (node), node);
+
+	async_write(m_socket, buffer(xmlstr.data(),xmlstr.length()), boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
+	
+	
+	// connect the recv function	m_socket.async_read_some(null_buffers(), boost::bind(iks_recv,m_prs, 0));
+	//接收服务器返回的第二波数据，主要是 starttls 后的 proceed
+	
+}
+
+void xmpp::handle_tlswrite ( const boost::system::error_code& er, size_t n )
+{
+	if(er)
+		std::cout << er.message() << std::endl;
 }
 
 
 xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd)
-  :password(xmpppasswd), m_asio(asio),  m_socket(asio, m_sslcontext), m_sslcontext(ssl::context::sslv23_client)
+	:m_xmppstate(XMPP_SATE_DISCONNTECTED), password(xmpppasswd), m_asio(asio),  m_socket(asio,m_sslcontext),m_sslcontext(asio,ssl::context::sslv23_client)
 {
 	std::vector<std::string> splited;
 	boost::split(splited, xmppuser, boost::is_any_of("@"));
 	user = splited[0];
 	hostname = splited[1];
-	//解析 xmppuser 获得服务器
+	//解析 xmppuser 获得服务器.
 	boost::shared_ptr<ip::tcp::resolver> resolver(new ip::tcp::resolver(asio));
-	boost::shared_ptr<ip::tcp::resolver::query> query(new ip::tcp::resolver::query(hostname, "5222"));
+	boost::shared_ptr<ip::tcp::resolver::query> query(new ip::tcp::resolver::query(hostname, "xmpp-client"));
 	resolver->async_resolve(*query, boost::bind(&xmpp::cb_resolved, this, resolver, query,  placeholders::error, boost::asio::placeholders::iterator));
-	
-
-
 }
