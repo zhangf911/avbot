@@ -20,13 +20,22 @@
 #ifndef XMPP_H
 #define XMPP_H
 #include <boost/asio.hpp>
+#include <boost/asio/ssl/context.hpp>
+#include <boost/asio/ssl/stream.hpp>
 
 class xmpp
 {
 public:
 	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
+
+private:
+	void cb_resolved(boost::shared_ptr<boost::asio::ip::tcp::resolver> resolver, boost::shared_ptr<boost::asio::ip::tcp::resolver::query> query, const boost::system::error_code & er, boost::asio::ip::tcp::resolver::iterator iterator);
+	void cb_connected(const boost::system::error_code & er);
+	void cb_ssl_connected(const boost::system::error_code & er);
 private:
 	boost::asio::io_service & m_asio;
+	boost::asio::ssl::context m_sslcontext;
+	boost::asio::ssl::stream<boost::asio::ip::tcp::socket>		m_socket; // the socket to the host
 	std::string hostname;                                      // the host to connect
 	std::string user, password;
 };
