@@ -79,28 +79,31 @@ void xmpp::handle_firstread ( const boost::system::error_code& er, size_t n)
 
 void xmpp::handle_tlsprocessed ( const boost::system::error_code& er, size_t n)
 {
+	// connect the recv function	m_socket.async_read_some(null_buffers(), boost::bind(iks_recv,m_prs, 0));
+	//接收服务器返回的第二波数据，主要是 starttls 后的 proceed
 	m_buf.commit(n);
 	iks_parse(m_prs,buffer_cast<const char*>(m_buf.data()), n, 0);
 	m_buf.consume(n);
 	
 	m_socket.set_verify_mode(ssl::verify_none);
 	
-	m_socket.handshake(ssl::stream_base::client);
-	
-	
+	m_socket.async_handshake(ssl::stream_base::client, boost::bind(&xmpp::handle_tlshandshake, this, placeholders::error));
+}
+
+void xmpp::handle_tlshandshake ( const boost::system::error_code& er)
+{
 	ikstack* iksstack =  iks_stack_new(1024, 4096);
 	iksid * sid = iks_id_new(iksstack, "qqbot@linuxapp.org/qqbot");
 	iks* node =  iks_make_auth(sid, password.c_str(), m_jabber_sid.c_str());
-
+	
 	std::string xmlstr = iks_string (iks_stack (node), node);
+	iks_stack_delete(iksstack);
+	iks_delete(node);
 
+	// 发送 jabber 登录包.
 	async_write(m_socket, buffer(xmlstr.data(),xmlstr.length()), boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
-	
-	
-	// connect the recv function	m_socket.async_read_some(null_buffers(), boost::bind(iks_recv,m_prs, 0));
-	//接收服务器返回的第二波数据，主要是 starttls 后的 proceed
-	
 }
+
 
 void xmpp::handle_tlswrite ( const boost::system::error_code& er, size_t n )
 {

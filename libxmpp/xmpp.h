@@ -43,8 +43,9 @@ private:
 	void cb_connected(const boost::system::error_code & er);
 	void handle_firstread(const boost::system::error_code & er,size_t );
 	void handle_tlsprocessed(const boost::system::error_code & er,size_t );
+	void handle_tlshandshake(const boost::system::error_code & er);
 	void handle_tlswrite(const boost::system::error_code & er,size_t n);
-	
+
 	int cb_iks_hook(int type, iks *node);
 private:
 	boost::asio::io_service & m_asio;
