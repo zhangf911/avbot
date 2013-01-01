@@ -45,13 +45,16 @@ private:
 	void handle_tlsprocessed(const boost::system::error_code & er,size_t );
 	void handle_tlshandshake(const boost::system::error_code & er);
 	void handle_tlswrite(const boost::system::error_code & er,size_t n);
-
+	void handle_tlsread(const boost::system::error_code & er,size_t n);
+	
 	int cb_iks_hook(int type, iks *node);
 private:
 	boost::asio::io_service & m_asio;
 	boost::asio::ssl::context	m_sslcontext;
 	boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;// the socket to the host
-	boost::asio::streambuf	m_buf;
+	boost::asio::streambuf	m_readbuf;
+	boost::asio::streambuf	m_writebuf;
+
 	std::string hostname;                                      // the host to connect
 	std::string user, password;
 	std::string m_jabber_sid;

@@ -60,30 +60,30 @@ void xmpp::cb_connected(const boost::system::error_code& er)
 	
 	m_xmppstate = XMPP_SATE_CONNTECTED;
 	//接收服务器返回的第一波数据，主要是 sid
-	m_socket.next_layer().async_read_some(m_buf.prepare(4096), boost::bind(&xmpp::handle_firstread,this,placeholders::error,placeholders::bytes_transferred));
+	m_socket.next_layer().async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_firstread,this,placeholders::error,placeholders::bytes_transferred));
 }
 
 void xmpp::handle_firstread ( const boost::system::error_code& er, size_t n)
 {
-	m_buf.commit(n);
+	m_readbuf.commit(n);
 
-	iks_parse(m_prs,buffer_cast<const char*>(m_buf.data()), n, 0);
-	m_buf.consume(n);
+	iks_parse(m_prs,buffer_cast<const char*>(m_readbuf.data()), n, 0);
+	m_readbuf.consume(n);
 
 	m_xmppstate = XMPP_SATE_REQTLS;
 	iks_send_raw (m_prs, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>");
 	
 	//处理 proceed, 然后就可以 ssl.async_handshake 了.
-	m_socket.next_layer().async_read_some(m_buf.prepare(4096), boost::bind(&xmpp::handle_tlsprocessed,this,placeholders::error,placeholders::bytes_transferred));	
+	m_socket.next_layer().async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_tlsprocessed,this,placeholders::error,placeholders::bytes_transferred));	
 }
 
 void xmpp::handle_tlsprocessed ( const boost::system::error_code& er, size_t n)
 {
 	// connect the recv function	m_socket.async_read_some(null_buffers(), boost::bind(iks_recv,m_prs, 0));
 	//接收服务器返回的第二波数据，主要是 starttls 后的 proceed
-	m_buf.commit(n);
-	iks_parse(m_prs,buffer_cast<const char*>(m_buf.data()), n, 0);
-	m_buf.consume(n);
+	m_readbuf.commit(n);
+	iks_parse(m_prs,buffer_cast<const char*>(m_readbuf.data()), n, 0);
+	m_readbuf.consume(n);
 	
 	m_socket.set_verify_mode(ssl::verify_none);
 	
@@ -101,16 +101,29 @@ void xmpp::handle_tlshandshake ( const boost::system::error_code& er)
 	iks_delete(node);
 
 	// 发送 jabber 登录包.
-	async_write(m_socket, buffer(xmlstr.data(),xmlstr.length()), boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
+	m_writebuf.sputn(xmlstr.data(),xmlstr.length());
+	async_write(m_socket, m_writebuf, boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
+	m_socket.async_read_some(m_writebuf.prepare(4096), boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
 }
-
 
 void xmpp::handle_tlswrite ( const boost::system::error_code& er, size_t n )
 {
+	m_writebuf.consume(n);
 	if(er)
 		std::cout << er.message() << std::endl;
 }
 
+void xmpp::handle_tlsread ( const boost::system::error_code& er, size_t n )
+{
+	m_readbuf.commit(n);
+	{
+		std::string buf;
+		buf.assign(buffer_cast<const char*>(m_readbuf.data()),0);
+		std::cout << buf << std::endl;
+	}
+	iks_parse(m_prs,buffer_cast<const char*>(m_readbuf.data()), n, 0);
+	m_readbuf.consume(n);
+}
 
 xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd)
 	:m_xmppstate(XMPP_SATE_DISCONNTECTED), password(xmpppasswd), m_asio(asio),  m_socket(asio,m_sslcontext),m_sslcontext(asio,ssl::context::sslv23_client)
