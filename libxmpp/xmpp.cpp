@@ -82,6 +82,11 @@ void xmpp::handle_tlsprocessed ( const boost::system::error_code& er, size_t n)
 	// connect the recv function	m_socket.async_read_some(null_buffers(), boost::bind(iks_recv,m_prs, 0));
 	//接收服务器返回的第二波数据，主要是 starttls 后的 proceed
 	m_readbuf.commit(n);
+	{
+		std::string buf;
+		buf.assign(buffer_cast<const char*>(m_readbuf.data()),n);
+		std::cout << buf << std::endl;
+	}
 	iks_parse(m_prs,buffer_cast<const char*>(m_readbuf.data()), n, 0);
 	m_readbuf.consume(n);
 	
@@ -102,8 +107,9 @@ void xmpp::handle_tlshandshake ( const boost::system::error_code& er)
 
 	// 发送 jabber 登录包.
 	m_writebuf.sputn(xmlstr.data(),xmlstr.length());
+	std::cout << xmlstr << std::endl;
 	async_write(m_socket, m_writebuf, boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
-	m_socket.async_read_some(m_writebuf.prepare(4096), boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
+	m_socket.async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_tlsread, this, placeholders::error, placeholders::bytes_transferred));
 }
 
 void xmpp::handle_tlswrite ( const boost::system::error_code& er, size_t n )
@@ -118,7 +124,7 @@ void xmpp::handle_tlsread ( const boost::system::error_code& er, size_t n )
 	m_readbuf.commit(n);
 	{
 		std::string buf;
-		buf.assign(buffer_cast<const char*>(m_readbuf.data()),0);
+		buf.assign(buffer_cast<const char*>(m_readbuf.data()),n);
 		std::cout << buf << std::endl;
 	}
 	iks_parse(m_prs,buffer_cast<const char*>(m_readbuf.data()), n, 0);
