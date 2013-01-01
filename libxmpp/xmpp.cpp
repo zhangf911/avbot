@@ -1,5 +1,4 @@
 /*
- * <one line to give the program's name and a brief idea of what it does.>
  * Copyright (C) 2012  微蔡 <microcai@fedoraproject.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,6 +18,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/format.hpp>
 #include "xmpp.h"
 #include "iksemel.h"
 
@@ -97,6 +97,12 @@ void xmpp::handle_tlsprocessed ( const boost::system::error_code& er, size_t n)
 
 void xmpp::handle_tlshandshake ( const boost::system::error_code& er)
 {
+	if(er)
+	{
+		std::cout << er.message() << std::endl;
+		return ;
+	}
+		
 	ikstack* iksstack =  iks_stack_new(1024, 4096);
 	iksid * sid = iks_id_new(iksstack, "qqbot@linuxapp.org/qqbot");
 	iks* node =  iks_make_auth(sid, password.c_str(), m_jabber_sid.c_str());
@@ -106,15 +112,21 @@ void xmpp::handle_tlshandshake ( const boost::system::error_code& er)
 	iks_delete(node);
 
 	// 发送 jabber 登录包.
-	m_writebuf.sputn(xmlstr.data(),xmlstr.length());
-	std::cout << xmlstr << std::endl;
-	async_write(m_socket, m_writebuf, boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
+	std::string streamnew = boost::str(
+		boost::format("<?xml version='1.0'?>"
+	"<stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='"
+	"%s' to='%s' version='1.0'>") % IKS_NS_CLIENT % hostname
+	);
+
+	async_write(m_socket, buffer(streamnew.data(),streamnew.length()), boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
 	m_socket.async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_tlsread, this, placeholders::error, placeholders::bytes_transferred));
+	
+// 	m_writebuf.sputn(xmlstr.data(),xmlstr.length());
+// 	std::cout << xmlstr << std::endl;
 }
 
 void xmpp::handle_tlswrite ( const boost::system::error_code& er, size_t n )
 {
-	m_writebuf.consume(n);
 	if(er)
 		std::cout << er.message() << std::endl;
 }
@@ -129,6 +141,8 @@ void xmpp::handle_tlsread ( const boost::system::error_code& er, size_t n )
 	}
 	iks_parse(m_prs,buffer_cast<const char*>(m_readbuf.data()), n, 0);
 	m_readbuf.consume(n);
+	
+	m_socket.async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_tlsread, this, placeholders::error, placeholders::bytes_transferred));
 }
 
 xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd)
