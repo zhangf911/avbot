@@ -46,6 +46,10 @@ qqbot 连通 IRC 和  QQ群，并能实时记录聊天信息。每日自动生�
 
 频道组用 ; 隔开。组成份间用,隔离。
 
+# 获得帮助
+
+我们在 IRC（irc.freenode.net ） 的 \#avplayer 频道。
+
 # thanks
 
 谢谢 神话群群主提供的代码和建议；Youku的谢总(女)贡献的IRC代码。
