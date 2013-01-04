@@ -1,7 +1,7 @@
 #include "irc.h"
 
-IrcClient::IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry):cb_(0),
-resolver_(io_service),socket_(io_service),
+IrcClient::IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry):
+cb_(0),resolver_(io_service),socket_(io_service),
 user_(user),pwd_(user_pwd),
 server_(server),port_(port),
 retry_count_(max_retry),
@@ -30,10 +30,6 @@ void IrcClient::connect()
     }
     else
     {
-        login_=false;
-        socket_.cancel();
-        socket_.close();
-        retry_count_--;
         relogin();
 #ifdef DEBUG
         std::cout << "Error: " << ec.message() << "\n";
@@ -47,7 +43,7 @@ void IrcClient::oper(const std::string& user,const std::string& pwd)
 }
 void IrcClient::chat(const std::string& whom,const std::string& msg)
 {
-    return send_request("PRIVMSG "+whom+" :"+msg);
+    send_request("PRIVMSG "+whom+" :"+msg);
 }
 
 void IrcClient::login(const privmsg_cb &cb)
@@ -62,9 +58,8 @@ void IrcClient::join(const std::string& ch,const std::string &pwd)
     pwd.empty()?msg="JOIN "+ch:msg="JOIN "+ch+" "+pwd;
 
     if (!login_)
-    {
         msg_queue_.push_back(msg);
-    }else
+    else
     {
         send_request(msg);
         join_queue_.push_back(msg);
@@ -74,48 +69,68 @@ void IrcClient::join(const std::string& ch,const std::string &pwd)
 void IrcClient::relogin()
 {
 
+    login_=false;
+    socket_.cancel();
+    socket_.close();
+    retry_count_--;
+
     if (retry_count_<=0)
     {
         std::cout<<"Irc Server has offline!!!";
         return;
     }
 
-    std::list<std::string>::iterator it=join_queue_.begin();
+    boost::thread::sleep(boost::get_system_time() + boost::posix_time::seconds(10));
+
+    std::vector<std::string>::iterator it=join_queue_.begin();
     for (it;it!=join_queue_.end();it++)
         msg_queue_.push_back(*it);
     join_queue_.clear();
+
     connect();
 
 }
 
-void IrcClient::process_request(std::size_t readed)
+void IrcClient::process_request(boost::asio::streambuf& buf)
 {
-    std::istream is(&response_);
 
+    std::istream is(&buf);
     is.unsetf(std::ios_base::skipws);
-
-    std::string req;
-    req.append(std::istream_iterator<char>(is), std::istream_iterator<char>());
+    std::string longreg;
+    longreg.append(std::istream_iterator<char>(is), std::istream_iterator<char>());
 
 #ifdef DEBUG
-    std::cout << req;
+    std::cout << longreg;
 #endif
 
-process:
-
-    if (req.substr(0,4)=="PING")
-        send_request("PONG "+req.substr(6,req.length()-8));
+    std::vector<std::string> vec;
+    std::vector<char> split;
+    split.push_back('\n');
+    boost::split(vec,longreg,boost::algorithm::is_any_of(split));
     
-    size_t pos=req.find(" PRIVMSG ")+1;
+    std::vector<std::string>::iterator it=vec.begin();
 
-    if (pos)
+    for (it;it!=vec.end();it++)
     {
+        std::string req=*it;
+
+        if (req.substr(0,4)=="PING")
+        {
+            send_request("PONG "+req.substr(6,req.length()-8));
+            continue;
+        }
+
+        size_t pos=req.find(" PRIVMSG ")+1;
+
+        if (!pos)
+            continue;
+
         std::string msg=req;
         IrcMsg m;
 
         pos=msg.find("!")+1;
         if (!pos)
-            return;
+            continue;
 
         m.whom=msg.substr(1,pos-2);
 
@@ -123,7 +138,7 @@ process:
 
         pos=msg.find(" PRIVMSG ")+1;
         if (!pos)
-            return;
+            continue;
 
         m.locate=msg.substr(0,pos-1);
 
@@ -132,15 +147,15 @@ process:
         pos=msg.find("PRIVMSG ")+1;
 
         if (!pos)
-            return;
+            continue;
 
         msg=msg.substr(strlen("PRIVMSG "));
 
         pos=msg.find(" ")+1;
 
         if (!pos)
-            return;
-        
+            continue;
+
         m.from=msg.substr(0,pos-1);
 
         msg=msg.substr(pos);
@@ -148,41 +163,26 @@ process:
         pos=msg.find(":")+1;
 
         if (!pos)
-            return;
+            continue;
 
-        msg=msg.substr(pos,msg.length()-2-pos);
+        m.msg=msg.substr(pos,msg.length()-2-pos);
 
-        pos=msg.find("\n")+1;
-
-        if (!pos)
-            m.msg=msg;
-        else
-        {
-            m.msg=msg.substr(0,pos);
-            req=msg.substr(pos);
-            cb_(m);
-            goto process;
-        }
         cb_(m);
     }
-
 }
 
 void IrcClient::handle_read_request(const boost::system::error_code& err, std::size_t readed)
 {
     if (!err)
     {
-        process_request(readed);
+        process_request(response_);
+
         boost::asio::async_read_until(socket_, response_, "\r\n",
             boost::bind(&IrcClient::handle_read_request, this,
             boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred));
     }
     else if (err != boost::asio::error::eof)
     {
-        login_=false;
-        socket_.cancel();
-        socket_.close();
-        retry_count_--;
         relogin();
 #ifdef DEBUG
         std::cout << "Error: " << err.message() << "\n";
@@ -202,10 +202,6 @@ void IrcClient::handle_write_request(const boost::system::error_code& err, std::
     }    
     else    
     {
-        login_=false;
-        socket_.cancel();
-        socket_.close();
-        retry_count_--;
         relogin();
 #ifdef DEBUG        
         std::cout << "Error: " << err.message() << "\n";
@@ -229,7 +225,7 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
         {
             if (msg_queue_.size())
             {
-                std::list<std::string>::iterator it=msg_queue_.begin();
+                std::vector<std::string>::iterator it=msg_queue_.begin();
                 for (it;it!=msg_queue_.end();it++)
                 {
                     join_queue_.push_back(*it);  
@@ -244,10 +240,6 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
     }
     else if (err != boost::asio::error::eof)
     {
-        login_=false;
-        socket_.cancel();
-        socket_.close();
-        retry_count_--;
         relogin();
 #ifdef DEBUG
         std::cout << "Error: " << err.message() << "\n";

@@ -23,13 +23,15 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 */
 
 #pragma once
-#include <list>
+#include <vector>
 #include <string>
 #include <iostream>
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
 
 struct IrcMsg
 {
@@ -51,7 +53,7 @@ private:
     void handle_write_request(const boost::system::error_code& err, std::size_t writed);
     void handle_connect_request(const boost::system::error_code& err);
     void send_request(const std::string& msg);
-    void process_request(std::size_t readed);
+    void process_request(boost::asio::streambuf& buf);
     void connect();
     void relogin();
 public:
@@ -73,8 +75,8 @@ private:
     std::string                     server_;
     std::string                     port_;
     bool                            login_;
-    std::list<std::string>          msg_queue_;
-    std::list<std::string>          join_queue_;
+    std::vector<std::string>        msg_queue_;
+    std::vector<std::string>        join_queue_;
     unsigned int                    retry_count_;
     const unsigned int              c_retry_cuont;
 };
