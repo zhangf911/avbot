@@ -69,10 +69,14 @@ void xmpp::handle_firstread ( const boost::system::error_code& er, size_t n)
 
 	iks_parse(m_prs,buffer_cast<const char*>(m_readbuf.data()), n, 0);
 	m_readbuf.consume(n);
+	if(m_jabber_sid.empty()){
+		m_socket.next_layer().async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_firstread,this,placeholders::error,placeholders::bytes_transferred));
+		return;
+	}
 
 	m_xmppstate = XMPP_SATE_REQTLS;
 	iks_send_raw (m_prs, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>");
-	
+
 	//处理 proceed, 然后就可以 ssl.async_handshake 了.
 	m_socket.next_layer().async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_tlsprocessed,this,placeholders::error,placeholders::bytes_transferred));	
 }
@@ -89,9 +93,9 @@ void xmpp::handle_tlsprocessed ( const boost::system::error_code& er, size_t n)
 	}
 	iks_parse(m_prs,buffer_cast<const char*>(m_readbuf.data()), n, 0);
 	m_readbuf.consume(n);
-	
+
 	m_socket.set_verify_mode(ssl::verify_none);
-	
+	m_xmppstate = XMPP_SATE_REQEDTLS;	
 	m_socket.async_handshake(ssl::stream_base::client, boost::bind(&xmpp::handle_tlshandshake, this, placeholders::error));
 }
 
@@ -102,7 +106,8 @@ void xmpp::handle_tlshandshake ( const boost::system::error_code& er)
 		std::cout << er.message() << std::endl;
 		return ;
 	}
-		
+	m_xmppstate = XMPP_SATE_TLSCONNECTED;	
+
 	ikstack* iksstack =  iks_stack_new(1024, 4096);
 	iksid * sid = iks_id_new(iksstack, "qqbot@linuxapp.org/qqbot");
 	iks* node =  iks_make_auth(sid, password.c_str(), m_jabber_sid.c_str());
@@ -120,9 +125,6 @@ void xmpp::handle_tlshandshake ( const boost::system::error_code& er)
 
 	async_write(m_socket, buffer(streamnew.data(),streamnew.length()), boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
 	m_socket.async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_tlsread, this, placeholders::error, placeholders::bytes_transferred));
-	
-// 	m_writebuf.sputn(xmlstr.data(),xmlstr.length());
-// 	std::cout << xmlstr << std::endl;
 }
 
 void xmpp::handle_tlswrite ( const boost::system::error_code& er, size_t n )
