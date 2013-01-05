@@ -38,7 +38,7 @@ public:
 	typedef std::map<std::wstring, ofstream_ptr> loglist;
 
 public:
-	qqlog() : m_path(L".")
+	qqlog() 
 	{}
 
 	~qqlog()
@@ -284,8 +284,12 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 		groupname = group->name;
 	buddy = group? group->get_Buddy_by_uin(who):NULL;
 	std::wstring nick = who;
-	if (buddy)
-		nick = buddy->nick;
+	if (buddy){
+		if (buddy->card.empty())
+			nick = buddy->nick;
+		else
+			nick = buddy->card;
+	}
 		
 	std::wstring message;
 	std::string ircmsg;
