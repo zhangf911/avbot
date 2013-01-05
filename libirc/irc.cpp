@@ -37,6 +37,33 @@ void IrcClient::connect()
     }
 }
 
+void IrcClient::connected()
+{
+    
+    if (!pwd_.empty())
+        send_request("PASS "+pwd_);
+
+    send_request("NICK "+user_);
+    send_request("USER "+user_+ " 0 * "+user_);
+
+    login_=true;
+    retry_count_=c_retry_cuont;
+    if (msg_queue_.size())
+    {
+        if (msg_queue_.size())
+        {
+            std::vector<std::string>::iterator it=msg_queue_.begin();
+            for (it;it!=msg_queue_.end();it++)
+            {
+                join_queue_.push_back(*it);  
+                send_request(*it);
+            }
+        }
+        msg_queue_.clear();
+    }
+    
+}
+
 void IrcClient::oper(const std::string& user,const std::string& pwd)
 {
     send_request("OPER "+user+" "+pwd);
@@ -96,17 +123,24 @@ void IrcClient::process_request(boost::asio::streambuf& buf)
 
     std::istream is(&buf);
     is.unsetf(std::ios_base::skipws);
-    std::string longreg;
+    std::string longreg(last_buf_);
     longreg.append(std::istream_iterator<char>(is), std::istream_iterator<char>());
 
 #ifdef DEBUG
     std::cout << longreg;
 #endif
 
+    size_t leave=longreg.rfind("\r\n")+2;
+
+    if (leave!=longreg.length())
+    {
+        last_buf_=longreg.substr(leave,longreg.length()-leave);
+        longreg=longreg.substr(0,leave);
+    }else
+        last_buf_.clear();
+
     std::vector<std::string> vec;
-    std::vector<char> split;
-    split.push_back('\n');
-    boost::split(vec,longreg,boost::algorithm::is_any_of(split));
+    boost::split(vec,longreg,boost::algorithm::is_any_of<char*>("\r\n"),boost::algorithm::token_compress_on);
     
     std::vector<std::string>::iterator it=vec.begin();
 
@@ -188,6 +222,7 @@ void IrcClient::handle_read_request(const boost::system::error_code& err, std::s
         std::cout << "Error: " << err.message() << "\n";
 #endif
     }
+
 }
 
 void IrcClient::handle_write_request(const boost::system::error_code& err, std::size_t bytewrited)
@@ -213,27 +248,8 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
 {
     if (!err)
     {
-        if (!pwd_.empty())
-            send_request("PASS "+pwd_);
+        connected();
 
-        send_request("NICK "+user_);
-        send_request("USER "+user_+ " 0 * "+user_);
-
-        login_=true;
-        retry_count_=c_retry_cuont;
-        if (msg_queue_.size())
-        {
-            if (msg_queue_.size())
-            {
-                std::vector<std::string>::iterator it=msg_queue_.begin();
-                for (it;it!=msg_queue_.end();it++)
-                {
-                    join_queue_.push_back(*it);  
-                    send_request(*it);
-                }
-            }
-            msg_queue_.clear();
-        }
         boost::asio::async_read_until(socket_, response_, "\r\n",
             boost::bind(&IrcClient::handle_read_request, this,
             boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred));
@@ -252,12 +268,21 @@ void IrcClient::send_command(const std::string& cmd)
     send_request(cmd);
 }
 
-void IrcClient::send_request(const std::string& msg)
+void IrcClient::send_data(const char* data,const size_t len)
 {
+    std::string msg;
+    msg.append(data,len);
+
     std::ostream request_stream(&request_);
-    request_stream << msg+"\r\n";
+    request_stream << msg;
 
     boost::asio::async_write(socket_, request_,
         boost::bind(&IrcClient::handle_write_request, this,
         boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+
+}
+void IrcClient::send_request(const std::string& msg)
+{
+    std::string data=msg+"\r\n";
+    send_data(data.c_str(),data.length());
 }

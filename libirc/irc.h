@@ -56,12 +56,15 @@ private:
     void process_request(boost::asio::streambuf& buf);
     void connect();
     void relogin();
+    void connected();
+
 public:
 
     void login(const privmsg_cb &cb);
     void join(const std::string& ch,const std::string &pwd="");
     void chat(const std::string& whom,const std::string& msg);
     void send_command(const std::string& cmd);
+    void send_data(const char* data,const size_t len);
     void oper(const std::string& user,const std::string& pwd);
 
 private:
@@ -74,6 +77,7 @@ private:
     std::string                     pwd_;
     std::string                     server_;
     std::string                     port_;
+    std::string                     last_buf_;
     bool                            login_;
     std::vector<std::string>        msg_queue_;
     std::vector<std::string>        join_queue_;
