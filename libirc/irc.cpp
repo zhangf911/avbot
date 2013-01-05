@@ -199,7 +199,7 @@ void IrcClient::process_request(boost::asio::streambuf& buf)
         if (!pos)
             continue;
 
-        m.msg=msg.substr(pos,msg.length()-2-pos);
+        m.msg=msg.substr(pos,msg.length()-pos);
 
         cb_(m);
     }
