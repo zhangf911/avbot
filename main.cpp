@@ -220,28 +220,26 @@ static void build_group(std::string chanelmapstring)
 
 
 // 简单的消息命令控制.
-static void qqbot_control(const std::string msg)
+static void qqbot_control(const std::string name, std::string cmd, webqq & qqclient, qqGroup & group)
 {
-	boost::regex ex("(.*)?说：(.*)");
-	boost::cmatch what;
-
-	if(boost::regex_match(msg.c_str(), what, ex))
+	boost::trim(cmd);
+	if (cmd == ".qqbot reload")
 	{
-		std::string name = what[1];
-		if (name == "水手(Jack)" || name == "Cai==天马博士")
-		{
-			std::string cmd = what[2];
-			boost::trim(cmd);
-			if (cmd == ".stop resend img")
-			{
-				resend_img = false;
-			}
-			else if (cmd == ".start resend img")
-			{
-				resend_img = true;
-			}
-		}
+		qqclient.update_group_detail(group);
 	}
+
+	if (name == "水手(Jack)" || name == "Cai==天马博士")
+	{
+		if (cmd == ".stop resend img")
+		{
+			resend_img = false;
+		}
+		else if (cmd == ".start resend img")
+		{
+			resend_img = true;
+		} 
+	}
+	
 }
 
 static void qq_msg_sended(const boost::system::error_code& ec)
@@ -269,7 +267,7 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient)
 				}
 			}else if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[1]=='c'){
 				//TODO, irc频道之间转发.
-				;
+				
 			}
 		}
 	}
@@ -291,11 +289,11 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 			nick = buddy->card;
 	}
 		
-	std::wstring message;
+	std::wstring message_nick, message;
 	std::string ircmsg;
 
-	message += nick;
-	message += L" 说：";
+	message_nick += nick;
+	message_nick += L" 说：";
 	
 	ircmsg = boost::str(boost::format("qq(%s): ") % wide_utf8(nick));
 
@@ -338,23 +336,22 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 		message += buf;
 	}
 	// 记录.
-	printf("%ls\n", message.c_str());
-	// qq消息控制.	
-	qqbot_control(wide_utf8(message));
+	printf("%ls%ls\n", message_nick.c_str(),  message.c_str());
+	if (!group)
+		return;
+	// qq消息控制.
+	qqbot_control(wide_utf8(buddy? buddy->nick:who), wide_utf8(message), qqclient, *group);
 
-	if (group)
-		logfile.add_log(group->qqnum, wide_utf8(message));
+	logfile.add_log(group->qqnum, wide_utf8(message_nick + message));
 	// send to irc
-	if (group)
-	{
-		std::string from = std::string("qq:") + wide_utf8(group->qqnum);
+	
+	std::string from = std::string("qq:") + wide_utf8(group->qqnum);
 
-	 	BOOST_FOREACH(std::string groupmember, find_group(from))
-		{
-			if (groupmember != from){
-				if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
-					ircclient.chat(std::string("#") + groupmember.substr(4), ircmsg);
-				}
+	BOOST_FOREACH(std::string groupmember, find_group(from))
+	{
+		if (groupmember != from){
+			if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
+				ircclient.chat(std::string("#") + groupmember.substr(4), ircmsg);
 			}
 		}
 	}
