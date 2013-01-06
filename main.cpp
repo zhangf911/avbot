@@ -395,8 +395,8 @@ int daemon(int nochdir, int noclose)
 
 int main(int argc, char *argv[])
 {
-    std::string qqnumber, password;
-    std::string ircnick, ircroom;
+    std::string qqnumber, qqpwd;
+    std::string ircnick, ircroom, ircpwd;
     std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
@@ -411,12 +411,13 @@ int main(int argc, char *argv[])
 	desc.add_options()
 	    ( "version,v", "output version" )
 		( "help,h", "produce help message" )
-        ( "user,u", po::value<std::string>(&qqnumber), "QQ number" )
-		( "pwd,p", po::value<std::string>(&password), "password" )
+        ( "qqnum,u", po::value<std::string>(&qqnumber), "QQ number" )
+		( "qqpwd,p", po::value<std::string>(&qqpwd), "QQ password" )
 		( "logdir", po::value<std::string>(&logdir), "dir for logfile" )
 		( "daemon,d", po::value<bool>(&isdaemon), "go to background" )
-		( "nick", po::value<std::string>(&ircnick), "irc nick" )
-		( "room", po::value<std::string>(&ircroom), "irc room" )
+		( "ircnick", po::value<std::string>(&ircnick), "irc nick" )
+		( "ircpwd", po::value<std::string>(&ircpwd), "irc password" )
+		( "rooms", po::value<std::string>(&ircroom), "irc room" )
 		( "map", po::value<std::string>(&chanelmap), "map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
 		;
 
@@ -455,9 +456,9 @@ int main(int argc, char *argv[])
 
 	boost::asio::io_service asio;
 
-	webqq qqclient(asio, qqnumber, password);
+	webqq qqclient(asio, qqnumber, qqpwd);
 
-	IrcClient ircclient(asio, ircnick);
+	IrcClient ircclient(asio, ircnick, ircpwd);
 	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient)));
 	std::vector<std::string> rooms;
 	boost::split(rooms, ircroom, boost::is_any_of(","));
