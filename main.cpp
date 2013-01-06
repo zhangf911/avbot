@@ -218,6 +218,11 @@ static void build_group(std::string chanelmapstring)
 	}
 }
 
+static void qq_msg_sended(const boost::system::error_code& ec)
+{
+	
+}
+
 
 // 简单的消息命令控制.
 static void qqbot_control(const std::string name, std::string cmd, webqq & qqclient, qqGroup & group)
@@ -226,6 +231,7 @@ static void qqbot_control(const std::string name, std::string cmd, webqq & qqcli
 	if (cmd == ".qqbot reload")
 	{
 		qqclient.update_group_detail(group);
+		qqclient.send_group_message(group, "群成员列表重加载", qq_msg_sended);
 	}
 
 	if (name == "水手(Jack)" || name == "Cai==天马博士")
@@ -239,11 +245,6 @@ static void qqbot_control(const std::string name, std::string cmd, webqq & qqcli
 			resend_img = true;
 		} 
 	}
-	
-}
-
-static void qq_msg_sended(const boost::system::error_code& ec)
-{
 	
 }
 
