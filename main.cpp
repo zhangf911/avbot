@@ -409,16 +409,16 @@ int main(int argc, char *argv[])
 
 	po::options_description desc("qqbot options");
 	desc.add_options()
-	    ( "version,v", "output version" )
-		( "help,h", "produce help message" )
-        ( "qqnum,u", po::value<std::string>(&qqnumber), "QQ number" )
-		( "qqpwd,p", po::value<std::string>(&qqpwd), "QQ password" )
-		( "logdir", po::value<std::string>(&logdir), "dir for logfile" )
-		( "daemon,d", po::value<bool>(&isdaemon), "go to background" )
-		( "ircnick", po::value<std::string>(&ircnick), "irc nick" )
-		( "ircpwd", po::value<std::string>(&ircpwd), "irc password" )
-		( "rooms", po::value<std::string>(&ircroom), "irc room" )
-		( "map", po::value<std::string>(&chanelmap), "map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
+	    ( "version,v",										"output version" )
+		( "help,h",											"produce help message" )
+		( "qqnum,u",	po::value<std::string>(&qqnumber),	"QQ number" )
+		( "qqpwd,p",	po::value<std::string>(&qqpwd),		"QQ password" )
+		( "logdir",		po::value<std::string>(&logdir),	"dir for logfile" )
+		( "daemon,d",	po::value<bool>(&isdaemon),			"go to background" )
+		( "ircnick",	po::value<std::string>(&ircnick),	"irc nick" )
+		( "ircpwd",		po::value<std::string>(&ircpwd),	"irc password" )
+		( "rooms",		po::value<std::string>(&ircroom),	"irc room" )
+		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
 		;
 
 	po::variables_map vm;
