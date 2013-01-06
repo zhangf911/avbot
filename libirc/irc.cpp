@@ -1,12 +1,7 @@
 #include "irc.h"
 
-IrcClient::IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry):
-cb_(0),resolver_(io_service),socket_(io_service),
-user_(user),pwd_(user_pwd),
-server_(server),port_(port),
-retry_count_(max_retry),
-c_retry_cuont(max_retry),
-login_(false)
+IrcClient::IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
+	:cb_(0),resolver_(io_service),socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
 {
     connect();
 }
