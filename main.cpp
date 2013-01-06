@@ -248,7 +248,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	
 }
 
-static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient)
+static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &ircclient)
 {
 	std::cout <<  pMsg.msg<< std::endl;
 
@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
 	webqq qqclient(asio, qqnumber, qqpwd);
 
 	IrcClient ircclient(asio, ircnick, ircpwd);
-	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient)));
+	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient)));
 	std::vector<std::string> rooms;
 	boost::split(rooms, ircroom, boost::is_any_of(","));
 	BOOST_FOREACH( std::string room , rooms)
