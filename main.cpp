@@ -225,16 +225,16 @@ static void qq_msg_sended(const boost::system::error_code& ec)
 
 
 // 简单的消息命令控制.
-static void qqbot_control(const std::string name, std::string cmd, webqq & qqclient, qqGroup & group)
+static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
 {
 	boost::trim(cmd);
 	if (cmd == ".qqbot reload")
 	{
-		qqclient.update_group_detail(group);
+		qqclient.update_group_member(group);
 		qqclient.send_group_message(group, "群成员列表重加载", qq_msg_sended);
 	}
 
-	if (name == "水手(Jack)" || name == "Cai==天马博士")
+	if (who.nick == L"水手(Jack)" || who.nick == L"Cai==天马博士")
 	{
 		if (cmd == ".stop resend img")
 		{
@@ -282,6 +282,12 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 	if (group)
 		groupname = group->name;
 	buddy = group? group->get_Buddy_by_uin(who):NULL;
+	if (group && !buddy && !group->memberlist.empty())
+	{
+		// need to update_group_detail
+		qqclient.update_group_member(*group);
+	}
+
 	std::wstring nick = who;
 	if (buddy){
 		if (buddy->card.empty())
@@ -341,7 +347,8 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 	if (!group)
 		return;
 	// qq消息控制.
-	qqbot_control(wide_utf8(buddy? buddy->nick:who), wide_utf8(message), qqclient, *group);
+	if (buddy)
+		qqbot_control(qqclient, *group, *buddy, wide_utf8(message));
 
 	logfile.add_log(group->qqnum, wide_utf8(message_nick + message));
 	// send to irc
