@@ -363,7 +363,7 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 					std::string forwarder = boost::str(boost::format("xmpp(%s)说：%s") % who % message);
 					qqclient.send_group_message(*group, forwarder , qq_msg_sended);
 					// log into
-					logfile.add_log(group->qqnum, std::string("[irc]") + forwarder );
+					logfile.add_log(group->qqnum, std::string("[xmpp]") + forwarder );
 				}
 			}else if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
 				//IRC
