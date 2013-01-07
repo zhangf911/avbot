@@ -22,45 +22,43 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/stream.hpp>
-#include <iksemel.h>
+#include <gloox/client.h>
+#include <gloox/messagehandler.h>
+#include <gloox/connectionlistener.h>
+#include <gloox/mucroomhandler.h>
+#include <gloox/connectionbase.h>
 
-enum xmpp_state {
-	XMPP_SATE_DISCONNTECTED,
-	XMPP_SATE_CONNTECTED,
-	XMPP_SATE_REQTLS,
-	XMPP_SATE_REQEDTLS,
-	XMPP_SATE_TLSCONNECTED,
-	XMPP_SATE_AUTHED,
-};
-
-class xmpp
+class xmpp : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler
 {
-	xmpp_state m_xmppstate;
 public:
 	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
-
+	void join(std::string roomjid);
+	void run();
 private:
-	void cb_resolved(boost::shared_ptr<boost::asio::ip::tcp::resolver> resolver, boost::shared_ptr<boost::asio::ip::tcp::resolver::query> query, const boost::system::error_code & er, boost::asio::ip::tcp::resolver::iterator iterator);
-	void cb_connected(const boost::system::error_code & er);
-	void handle_firstread(const boost::system::error_code & er,size_t );
-	void handle_tlsprocessed(const boost::system::error_code & er,size_t );
-	void handle_tlshandshake(const boost::system::error_code & er);
-	void handle_tlswrite(const boost::system::error_code & er,size_t n);
-	void handle_tlsread(const boost::system::error_code & er,size_t n);
-	
-	int cb_iks_hook(int type, iks *node);
+    virtual void handleMessage(const gloox::Message& msg, gloox::MessageSession* session = 0);
+
+    virtual void onConnect();
+    virtual void onDisconnect(gloox::ConnectionError e);
+    virtual bool onTLSConnect(const gloox::CertInfo& info);
+
+    virtual void handleMUCMessage(gloox::MUCRoom* room, const gloox::Message& msg, bool priv);
+    virtual void handleMUCParticipantPresence(gloox::MUCRoom* room, const gloox::MUCRoomParticipant participant, const gloox::Presence& presence);
+    virtual void handleMUCSubject(gloox::MUCRoom* room, const std::string& nick, const std::string& subject);
+    virtual void handleMUCError(gloox::MUCRoom* room, gloox::StanzaError error);
+    virtual void handleMUCInfo(gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm);
+    virtual void handleMUCInviteDecline(gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason);
+
+    virtual void handleMUCItems(gloox::MUCRoom* room, const gloox::Disco::ItemList& items);
+    virtual bool handleMUCRoomCreation(gloox::MUCRoom* room);
+
 private:
 	boost::asio::io_service & m_asio;
-	boost::asio::ssl::context	m_sslcontext;
-	boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;// the socket to the host
-	boost::asio::streambuf	m_readbuf;
-	boost::asio::streambuf	m_writebuf;
-
 	std::string hostname;                                      // the host to connect
 	std::string user, password;
-	std::string m_jabber_sid;
-	iksparser* m_prs;
-	friend int cb_iks_hook(void *user_data, int type, iks *node);
+	gloox::JID m_jid;
+	gloox::Client m_client;
+	std::vector<boost::shared_ptr<gloox::MUCRoom> >	m_rooms;
 };
+
 
 #endif // XMPP_H

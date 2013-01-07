@@ -397,6 +397,7 @@ int main(int argc, char *argv[])
 {
     std::string qqnumber, qqpwd;
     std::string ircnick, ircroom, ircpwd;
+    std::string xmppuser, xmpppwd, xmpproom;
     std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
@@ -417,7 +418,10 @@ int main(int argc, char *argv[])
 		( "daemon,d",	po::value<bool>       (&isdaemon),	"go to background" )
 		( "ircnick",	po::value<std::string>(&ircnick),	"irc nick" )
 		( "ircpwd",		po::value<std::string>(&ircpwd),	"irc password" )
-		( "rooms",		po::value<std::string>(&ircroom),	"irc room" )
+		( "ircrooms",	po::value<std::string>(&ircroom),	"irc room" )
+		( "xmppuser",	po::value<std::string>(&xmppuser),	"id for XMPP,  eg: (microcaicai@gmail.com)" )
+		( "xmpppwd",	po::value<std::string>(&xmpppwd),	"password for XMPP" )
+		( "xmpprooms",	po::value<std::string>(&xmpproom),	"xmpp rooms" )
 		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
 		;
 

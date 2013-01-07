@@ -101,7 +101,9 @@ int main(int argc, char *argv[])
     boost::asio::io_service::work work(asio);
 
 	xmpp xl(asio, "qqbot@linuxapp.org", "qqbot2012");
+	xl.join("avplayer@im.linuxapp.org");
+	xl.run();
     asio.run();
-    asio.poll();
+
     return 0;
 }
