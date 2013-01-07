@@ -131,7 +131,7 @@ public:
 	void end_lecture()
 	{
 		// 清空讲座群id.
-		m_lecture_groupid = "";
+		m_lecture_groupid = L"";
 		// 重置讲座文件指针.
 		m_lecture_file.reset();
 	}
@@ -302,7 +302,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 		{
 			std::string title = what[1];
 			if (title.empty()) return ;
-			if (!logfile.begin_lecture(group->qqnum, title))
+			if (!logfile.begin_lecture(group.qqnum, title))
 			{
 				printf("lecture failed!\n");
 			}
