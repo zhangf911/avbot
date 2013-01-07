@@ -66,6 +66,11 @@ void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error)
 	);
 }
 
+void xmpp_impl::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
+{
+	m_sig_room_message.connect(cb);
+}
+
 void xmpp_impl::handleMessage(const gloox::Message& stanza, gloox::MessageSession* session)
 {
 	std::cout <<  __func__ <<  std::endl;
@@ -116,12 +121,9 @@ void xmpp_impl::handleMUCItems(gloox::MUCRoom* room, const gloox::Disco::ItemLis
 
 }
 
-
 void xmpp_impl::handleMUCMessage(gloox::MUCRoom* room, const gloox::Message& msg, bool priv)
 {
-	std::cout <<  " -- " <<  room->name() <<  " -- "<<  room->nick() <<  " -- "
-	 <<  __func__ <<  "  " <<   msg.from().resource() <<  "  "  << 
-   msg.body()<<  std::endl;
+	m_sig_room_message(room->name(), msg.from().resource(), msg.body());
 }
 
 void xmpp_impl::handleMUCParticipantPresence(gloox::MUCRoom* room, const gloox::MUCRoomParticipant participant, const gloox::Presence& presence)

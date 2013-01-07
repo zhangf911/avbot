@@ -535,15 +535,23 @@ int main(int argc, char *argv[])
 
 	IrcClient ircclient(asio, ircnick, ircpwd);
 	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient)));
-	std::vector<std::string> rooms;
-	boost::split(rooms, ircroom, boost::is_any_of(","));
-	BOOST_FOREACH( std::string room , rooms)
+
+	qqclient.start();
+	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient)));
+	
+	std::vector<std::string> ircrooms;
+	boost::split(ircrooms, ircroom, boost::is_any_of(","));
+	BOOST_FOREACH( std::string room , ircrooms)
 	{
 		ircclient.join(std::string("#") + room);
 	}
 
-	qqclient.start();
-	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient)));
+	std::vector<std::string> xmpprooms;
+	boost::split(xmpprooms, xmpproom, boost::is_any_of(","));
+	BOOST_FOREACH( std::string room , xmpprooms)
+	{
+		xmppclient.join(room);
+	}	
 
     boost::asio::io_service::work work(asio);
     asio.run();

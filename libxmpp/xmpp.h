@@ -19,9 +19,10 @@
 #ifndef XMPP_H
 #define XMPP_H
 
+#include <string>
 #include <boost/scoped_ptr.hpp>
 #include <boost/asio.hpp>
-#include <string>
+#include <boost/function.hpp>
 
 namespace XMPP {
 	class xmpp_impl;
@@ -33,6 +34,7 @@ public:
 	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
 	void join(std::string roomjid);
 	~xmpp();
+	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);
 private:
 	boost::scoped_ptr<XMPP::xmpp_impl>		impl;
 };

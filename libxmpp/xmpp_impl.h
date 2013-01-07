@@ -25,6 +25,7 @@
 #include <gloox/connectionlistener.h>
 #include <gloox/mucroomhandler.h>
 #include <boost/scoped_ptr.hpp>
+#include <boost/signal.hpp>
 
 namespace XMPP {
 
@@ -33,6 +34,7 @@ class xmpp_impl : private gloox::MessageHandler, gloox::ConnectionListener, gloo
 public:
 	xmpp_impl(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
 	void join(std::string roomjid);
+	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);
 private:
     virtual void handleMessage(const gloox::Message& msg, gloox::MessageSession* session = 0);
 
@@ -59,6 +61,8 @@ private:
 	gloox::Client m_client;
 	std::vector<boost::shared_ptr<gloox::MUCRoom> >	m_rooms;
 	boost::scoped_ptr<boost::asio::ip::tcp::socket> m_asio_socket;
+	
+	boost::signal <void (std::string xmpproom, std::string who, std::string message)> m_sig_room_message;
 };
 
 }

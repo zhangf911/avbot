@@ -32,3 +32,8 @@ void xmpp::join(std::string roomjid)
 xmpp::~xmpp()
 {
 }
+
+void xmpp::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
+{
+	impl->on_room_message(cb);
+}
