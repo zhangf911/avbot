@@ -60,7 +60,6 @@ void xmpp_impl::join(std::string roomjid)
 void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error)
 {
 	m_client.recv(0);
-	std::cout << "on read" <<  std::endl;
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
 		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
 	);

@@ -341,8 +341,9 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &irc
 				
 			}else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
 			{
+				std::string forwarder = boost::str(boost::format("irc(%s)说：%s") % pMsg.whom % pMsg.msg);
 				//XMPP
-
+				xmppclient.send_room_message(groupmember.substr(5), forwarder);
 			}
 		}
 	}
@@ -372,12 +373,10 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 			}else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
 			{
 				//XMPP
-
 			}
 		}
 	}	
 }
-
 
 static void on_group_msg(std::wstring group_code, std::wstring who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
 {
@@ -573,9 +572,9 @@ int main(int argc, char *argv[])
 	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
-	
+
 	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
-		
+
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
 	BOOST_FOREACH( std::string room , ircrooms)
