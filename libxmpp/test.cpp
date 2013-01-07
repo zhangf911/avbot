@@ -102,8 +102,6 @@ int main(int argc, char *argv[])
 
 	xmpp xl(asio, "qqbot@linuxapp.org", "qqbot2012");
 	xl.join("avplayer@im.linuxapp.org");
-	xl.run();
     asio.run();
-
     return 0;
 }
