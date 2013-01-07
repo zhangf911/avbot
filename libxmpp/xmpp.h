@@ -35,6 +35,7 @@ public:
 	void join(std::string roomjid);
 	~xmpp();
 	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);
+	void send_room_message(std::string xmpproom, std::string message);
 private:
 	boost::scoped_ptr<XMPP::xmpp_impl>		impl;
 };

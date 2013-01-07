@@ -71,6 +71,17 @@ void xmpp_impl::on_room_message(boost::function<void (std::string xmpproom, std:
 	m_sig_room_message.connect(cb);
 }
 
+void xmpp_impl::send_room_message(std::string xmpproom, std::string message)
+{
+	//查找啊.
+	BOOST_FOREACH(boost::shared_ptr<gloox::MUCRoom> room, m_rooms)
+	{
+		if ( room->name() == xmpproom ){
+			room->send(message);
+		}
+	}	
+}
+
 void xmpp_impl::handleMessage(const gloox::Message& stanza, gloox::MessageSession* session)
 {
 	std::cout <<  __func__ <<  std::endl;

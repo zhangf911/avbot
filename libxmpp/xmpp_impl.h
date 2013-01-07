@@ -35,6 +35,8 @@ public:
 	xmpp_impl(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
 	void join(std::string roomjid);
 	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);
+	void send_room_message(std::string xmpproom, std::string message);
+
 private:
     virtual void handleMessage(const gloox::Message& msg, gloox::MessageSession* session = 0);
 

@@ -37,3 +37,8 @@ void xmpp::on_room_message(boost::function<void (std::string xmpproom, std::stri
 {
 	impl->on_room_message(cb);
 }
+
+void xmpp::send_room_message(std::string xmpproom, std::string message)
+{
+	impl->send_room_message(xmpproom, message);
+}

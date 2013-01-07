@@ -318,7 +318,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 
 }
 
-static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &ircclient)
+static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &ircclient, xmpp& xmppclient)
 {
 	std::cout <<  pMsg.msg<< std::endl;
 
@@ -336,15 +336,50 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &irc
 					// log into
 					logfile.add_log(group->qqnum, std::string("[irc]") + forwarder );
 				}
-			}else if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[1]=='c'){
+			}else if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
 				//TODO, irc频道之间转发.
 				
+			}else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
+			{
+				//XMPP
+
 			}
 		}
 	}
 }
 
-static void on_group_msg(std::wstring group_code, std::wstring who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient)
+static void om_xmpp_message(std::string xmpproom, std::string who, std::string message, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
+{
+	std::string from = std::string("xmpp:") + xmpproom;
+	//log to logfile?
+	BOOST_FOREACH(std::string groupmember, find_group(from))
+	{
+		if (groupmember != from){
+			if (groupmember[0]=='q' && groupmember[1]=='q')
+			{
+				qqGroup* group = qqclient.get_Group_by_qq(utf8_wide(groupmember.substr(3)));
+				if (group){
+					std::string forwarder = boost::str(boost::format("xmpp(%s)说：%s") % who % message);
+					qqclient.send_group_message(*group, forwarder , qq_msg_sended);
+					// log into
+					logfile.add_log(group->qqnum, std::string("[irc]") + forwarder );
+				}
+			}else if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
+				//IRC
+				std::string formatedmessage = boost::str(boost::format("xmpp(%s)说: %s") % who % message);
+				ircclient.chat( std::string("#") + groupmember.substr(4), formatedmessage ); ;
+
+			}else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
+			{
+				//XMPP
+
+			}
+		}
+	}	
+}
+
+
+static void on_group_msg(std::wstring group_code, std::wstring who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
 {
 	qqBuddy * buddy = NULL;
 	qqGroup * group = qqclient.get_Group_by_gid(group_code);
@@ -530,15 +565,17 @@ int main(int argc, char *argv[])
 
 	boost::asio::io_service asio;
 
-	webqq qqclient(asio, qqnumber, qqpwd);
-	xmpp	xmppclient(asio, xmppuser, xmpppwd);
-
-	IrcClient ircclient(asio, ircnick, ircpwd);
-	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient)));
-
+	webqq		qqclient(asio, qqnumber, qqpwd);
 	qqclient.start();
-	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient)));
+	xmpp		xmppclient(asio, xmppuser, xmpppwd);
+	IrcClient	ircclient(asio, ircnick, ircpwd);
+
+	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+
+	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 	
+	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+		
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
 	BOOST_FOREACH( std::string room , ircrooms)
