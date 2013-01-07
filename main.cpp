@@ -59,11 +59,12 @@ public:
 	bool add_log(const std::wstring &groupid, const std::string &msg)
 	{
 		// 在qq群列表中查找已有的项目, 如果没找到则创建一个新的.
+		ofstream_ptr file_ptr;
 		loglist::iterator finder = m_group_list.find(groupid);
 		if (m_group_list.find(groupid) == m_group_list.end())
 		{
 			// 创建文件.
-			ofstream_ptr file_ptr = create_file(groupid);
+			file_ptr = create_file(groupid);
 
 			m_group_list[groupid] = file_ptr;
 			finder = m_group_list.find(groupid);
@@ -73,7 +74,7 @@ public:
 		if (!fs::exists(fs::path(make_filename(make_path(groupid)))))
 		{
 			// 创建文件.
-			ofstream_ptr file_ptr = create_file(groupid);
+			file_ptr = create_file(groupid);
 			if (finder->second->is_open())
 				finder->second->close();	// 关闭原来的文件.
 			// 重置为新的文件.
@@ -81,15 +82,58 @@ public:
 		}
 
 		// 得到文件指针.
-		ofstream_ptr &file_ptr = finder->second;
+		file_ptr = finder->second;
 
 		// 构造消息, 添加消息时间头.
 		std::string data = "<p>" + current_time() + " " + msg + "</p>\n";
+		// 写入聊天消息.
 		file_ptr->write(data.c_str(), data.length());
 		// 刷新写入缓冲, 实时写到文件.
 		file_ptr->flush();
 
+		file_ptr = m_lecture_file;
+		if (file_ptr && m_lecture_groupid == groupid)
+		{
+			// 写入聊天消息.
+			file_ptr->write(data.c_str(), data.length());
+			// 刷新写入缓冲, 实时写到文件.
+			file_ptr->flush();
+		}
+
 		return true;
+	}
+
+	// 开始讲座
+	bool begin_lecture(const std::wstring &groupid, const std::string &title)
+	{
+		// 已经打开讲座, 乱调用API, 返回失败!
+		if (m_lecture_file) return false;
+
+		// 构造讲座文件生成路径.
+		std::string save_path = make_path(groupid) + "/" + title + ".html";
+
+		// 创建文件.
+		m_lecture_file.reset(new std::ofstream(save_path.c_str(), 
+			fs::exists(save_path) ? std::ofstream::app : std::ofstream::out));
+		if (m_lecture_file->bad() || m_lecture_file->fail())
+		{
+			std::cerr << "create file " << save_path.c_str() << " failed!" << std::endl;
+			return false;
+		}
+
+		// 保存讲座群的id.
+		m_lecture_groupid = groupid;
+
+		return true;
+	}
+
+	// 讲座结束.
+	void end_lecture()
+	{
+		// 清空讲座群id.
+		m_lecture_groupid = "";
+		// 重置讲座文件指针.
+		m_lecture_file.reset();
 	}
 
 protected:
@@ -158,6 +202,8 @@ protected:
 	}
 
 private:
+	ofstream_ptr m_lecture_file;
+	std::wstring m_lecture_groupid;
 	loglist m_group_list;
 	fs::wpath m_path;
 };
@@ -228,24 +274,47 @@ static void qq_msg_sended(const boost::system::error_code& ec)
 static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
 {
 	boost::trim(cmd);
-	if (cmd == ".qqbot reload")
-	{
-		qqclient.update_group_member(group);
-		qqclient.send_group_message(group, "群成员列表重加载", qq_msg_sended);
-	}
 
 	if (who.nick == L"水手(Jack)" || who.nick == L"Cai==天马博士")
 	{
-		if (cmd == ".stop resend img")
+		// 转发图片处理.
+		if (cmd == ".qqbot start image")
+		{
+			resend_img = true;
+		}
+
+		if (cmd == ".qqbot stop image")
 		{
 			resend_img = false;
 		}
-		else if (cmd == ".start resend img")
+
+		// 重新加载群成员列表.
+		if (cmd == ".qqbot reload")
 		{
-			resend_img = true;
-		} 
+			qqclient.update_group_member(group);
+			qqclient.send_group_message(group, "群成员列表重加载", qq_msg_sended);
+		}
+
+		// 开始讲座记录.
+		boost::regex ex(".qqbot begin class ?\"(.*)?\"");
+		boost::cmatch what;
+		if(boost::regex_match(cmd.c_str(), what, ex))
+		{
+			std::string title = what[1];
+			if (title.empty()) return ;
+			if (!logfile.begin_lecture(group->qqnum, title))
+			{
+				printf("lecture failed!\n");
+			}
+		}
+
+		// 停止讲座记录.
+		if (cmd == ".qqbot end class")
+		{
+			logfile.end_lecture();
+		}
 	}
-	
+
 }
 
 static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &ircclient)
