@@ -28,6 +28,7 @@ namespace po = boost::program_options;
 #include "libirc/irc.h"
 #include "libwebqq/webqq.h"
 #include "utf8/utf8.h"
+#include "libxmpp/xmpp.h"
 
 #define QQBOT_VERSION "0.0.1"
 
@@ -530,6 +531,7 @@ int main(int argc, char *argv[])
 	boost::asio::io_service asio;
 
 	webqq qqclient(asio, qqnumber, qqpwd);
+	xmpp	xmppclient(asio, xmppuser, xmpppwd);
 
 	IrcClient ircclient(asio, ircnick, ircpwd);
 	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient)));

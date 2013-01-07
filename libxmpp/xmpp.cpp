@@ -28,3 +28,7 @@ void xmpp::join(std::string roomjid)
 {
 	impl->join(roomjid);
 }
+
+xmpp::~xmpp()
+{
+}

@@ -32,6 +32,7 @@ class xmpp
 public:
 	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
 	void join(std::string roomjid);
+	~xmpp();
 private:
 	boost::scoped_ptr<XMPP::xmpp_impl>		impl;
 };
