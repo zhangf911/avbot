@@ -88,6 +88,12 @@ void xmpp_impl::handleMessage(const gloox::Message& stanza, gloox::MessageSessio
     m_client.send( msg );
 }
 
+void xmpp_impl::handleMUCMessage(gloox::MUCRoom* room, const gloox::Message& msg, bool priv)
+{
+	if (msg.from().resource() != room->nick())
+		m_sig_room_message(room->name(), msg.from().resource(), msg.body());
+}
+
 bool xmpp_impl::onTLSConnect(const gloox::CertInfo& info)
 {
 	return true;
@@ -131,10 +137,6 @@ void xmpp_impl::handleMUCItems(gloox::MUCRoom* room, const gloox::Disco::ItemLis
 
 }
 
-void xmpp_impl::handleMUCMessage(gloox::MUCRoom* room, const gloox::Message& msg, bool priv)
-{
-	m_sig_room_message(room->name(), msg.from().resource(), msg.body());
-}
 
 void xmpp_impl::handleMUCParticipantPresence(gloox::MUCRoom* room, const gloox::MUCRoomParticipant participant, const gloox::Presence& presence)
 {

@@ -461,10 +461,15 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 
 	BOOST_FOREACH(std::string groupmember, find_group(from))
 	{
-		if (groupmember != from){
-			if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
-				ircclient.chat(std::string("#") + groupmember.substr(4), ircmsg);
-			}
+		if (groupmember == from)
+			continue;
+
+		if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
+			ircclient.chat(std::string("#") + groupmember.substr(4), ircmsg);
+		}else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
+		{
+			//XMPP
+			xmppclient.send_room_message(groupmember.substr(5), ircmsg);
 		}
 	}
 }
