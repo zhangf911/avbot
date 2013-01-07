@@ -89,7 +89,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	if (vm.size() ==0 ){
-		po::store(po::parse_config_file<char>(configfilepath().c_str(), desc), vm);
 		po::notify(vm);
 	}
 	if (vm.count("version"))
@@ -103,5 +102,6 @@ int main(int argc, char *argv[])
 
 	xmpp xl(asio, "qqbot@linuxapp.org", "qqbot2012");
     asio.run();
+    asio.poll();
     return 0;
 }

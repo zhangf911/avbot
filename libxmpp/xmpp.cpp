@@ -78,14 +78,18 @@ void xmpp::handle_firstread ( const boost::system::error_code& er, size_t n)
 	iks_send_raw (m_prs, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>");
 
 	//处理 proceed, 然后就可以 ssl.async_handshake 了.
-	m_socket.next_layer().async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_tlsprocessed,this,placeholders::error,placeholders::bytes_transferred));	
+	boost::asio::async_read_until(m_socket.next_layer(), m_readbuf,
+		"<proceed xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>",
+		boost::bind(
+			&xmpp::handle_tlsprocessed,this,placeholders::error,placeholders::bytes_transferred
+		)
+	);	
 }
 
 void xmpp::handle_tlsprocessed ( const boost::system::error_code& er, size_t n)
 {
 	// connect the recv function	m_socket.async_read_some(null_buffers(), boost::bind(iks_recv,m_prs, 0));
 	//接收服务器返回的第二波数据，主要是 starttls 后的 proceed
-	m_readbuf.commit(n);
 	{
 		std::string buf;
 		buf.assign(buffer_cast<const char*>(m_readbuf.data()),n);
@@ -118,19 +122,20 @@ void xmpp::handle_tlshandshake ( const boost::system::error_code& er)
 
 	// 发送 jabber 登录包.
 	std::string streamnew = boost::str(
-		boost::format("<?xml version='1.0'?>"
-	"<stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='"
-	"%s' to='%s' version='1.0'>") % IKS_NS_CLIENT % hostname
+		boost::format("<?xml version=\'1.0\'?>"
+	"<stream:stream xmlns:stream=\'http://etherx.jabber.org/streams\' xmlns=\'"
+	"%s\' to=\'%s\' version=\'1.0\'>") % IKS_NS_CLIENT % hostname
 	);
 
 	async_write(m_socket, buffer(streamnew.data(),streamnew.length()), boost::bind(&xmpp::handle_tlswrite, this, placeholders::error, placeholders::bytes_transferred));
+
 	m_socket.async_read_some(m_readbuf.prepare(4096), boost::bind(&xmpp::handle_tlsread, this, placeholders::error, placeholders::bytes_transferred));
 }
 
 void xmpp::handle_tlswrite ( const boost::system::error_code& er, size_t n )
 {
 	if(er)
-		std::cout << er.message() << std::endl;
+		std::cerr << "ssl error:" <<  er.message() << std::endl;
 }
 
 void xmpp::handle_tlsread ( const boost::system::error_code& er, size_t n )
