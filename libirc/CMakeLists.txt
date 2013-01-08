@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(libirc)
 
-find_package(Boost 1.46 REQUIRED COMPONENTS date_time system)
+find_package(Boost 1.48 REQUIRED COMPONENTS date_time system)
 
 include_directories(${Boost_INCLUDE_DIRS})
 

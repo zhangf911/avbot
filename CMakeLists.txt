@@ -6,7 +6,7 @@ set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_STATIC_RUNTIME    ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-find_package(Boost 1.46 REQUIRED COMPONENTS date_time filesystem system program_options regex)
+find_package(Boost 1.48 REQUIRED COMPONENTS date_time filesystem system program_options regex)
 
 find_package(Threads)
 

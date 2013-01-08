@@ -1,4 +1,4 @@
-find_package(Boost 1.46 REQUIRED COMPONENTS date_time regex signals thread)
+find_package(Boost 1.48 REQUIRED COMPONENTS date_time regex signals system)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
