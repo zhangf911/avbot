@@ -56,6 +56,7 @@ private:
     void process_request(boost::asio::streambuf& buf);
     void connect();
     void relogin();
+    void relogin_delayed();
     void connected();
 	void dnsresolved(const boost::system::error_code & ec, const boost::asio::ip::tcp::resolver::iterator &endpoint_iterator);
 public:
@@ -68,7 +69,8 @@ public:
     void oper(const std::string& user,const std::string& pwd);
 
 private:
-    boost::asio::ip::tcp::resolver  resolver_;
+	boost::asio::io_service &io_service;
+	boost::asio::ip::tcp::resolver  resolver_;
     boost::asio::ip::tcp::socket    socket_;
     boost::asio::streambuf          request_;
     boost::asio::streambuf          response_;

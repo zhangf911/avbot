@@ -1,7 +1,20 @@
 #include "irc.h"
 
-IrcClient::IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
-	:cb_(0),resolver_(io_service),socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
+static void timeout(boost::asio::deadline_timer *t, boost::function<void()> cb)
+{
+	delete t;
+	cb();
+}
+
+static void delayedcall(boost::asio::io_service &io_service, int sec, boost::function<void()> cb)
+{
+	boost::asio::deadline_timer *t = new boost::asio::deadline_timer(io_service, boost::posix_time::seconds(sec));
+	t->async_wait(boost::bind(&timeout, t, cb));
+}
+
+
+IrcClient::IrcClient(boost::asio::io_service &_io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
+	:io_service(_io_service), cb_(0),resolver_(io_service),socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
 {
     connect();
 }
@@ -100,18 +113,19 @@ void IrcClient::relogin()
 
     if (retry_count_<=0)
     {
-        std::cout<<"Irc Server has offline!!!";
+        std::cout<<"Irc Server has offline!!!"<<  std::endl;;
         return;
     }
+    std::cout << "retry in 10s..." <<  std::endl;
+    delayedcall(io_service, 10, boost::bind(&IrcClient::relogin_delayed, this));
+}
 
-    boost::thread::sleep(boost::get_system_time() + boost::posix_time::seconds(10));
-
-    for (std::vector<std::string>::iterator it=join_queue_.begin();it!=join_queue_.end();it++)
-        msg_queue_.push_back(*it);
-    join_queue_.clear();
-
-    connect();
-
+void IrcClient::relogin_delayed()
+{
+	for (std::vector<std::string>::iterator it=join_queue_.begin();it!=join_queue_.end();it++)
+		msg_queue_.push_back(*it);
+	join_queue_.clear();
+	connect();
 }
 
 void IrcClient::process_request(boost::asio::streambuf& buf)
