@@ -1,6 +1,11 @@
 project(gloox)
 
 find_package(OpenSSL REQUIRED)
+find_package(ZLIB )
+
+if(ZLIB_FOUND)
+	add_definitions(-DHAVE_ZLIB)
+endif()
 
 include_directories(${OpenSSL_INCLUDE_DIRS})
 
