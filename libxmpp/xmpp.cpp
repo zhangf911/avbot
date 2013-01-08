@@ -20,13 +20,15 @@
 #include "xmpp_impl.h"
 
 xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd)
-  : impl(new XMPP::xmpp_impl(asio, xmppuser, xmpppasswd))
 {
+	if (!xmppuser.empty() && !xmpppasswd.empty())
+		impl.reset(new XMPP::xmpp_impl(asio, xmppuser, xmpppasswd));
 }
 
 void xmpp::join(std::string roomjid)
 {
-	impl->join(roomjid);
+	if (impl)
+		impl->join(roomjid);
 }
 
 xmpp::~xmpp()
@@ -35,10 +37,12 @@ xmpp::~xmpp()
 
 void xmpp::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
 {
-	impl->on_room_message(cb);
+	if (impl)
+		impl->on_room_message(cb);
 }
 
 void xmpp::send_room_message(std::string xmpproom, std::string message)
 {
-	impl->send_room_message(xmpproom, message);
+	if (impl)
+		impl->send_room_message(xmpproom, message);
 }

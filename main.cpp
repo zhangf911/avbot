@@ -592,7 +592,7 @@ int main(int argc, char *argv[])
 	BOOST_FOREACH( std::string room , xmpprooms)
 	{
 		xmppclient.join(room);
-	}	
+	}
 
     boost::asio::io_service::work work(asio);
     asio.run();
