@@ -1,3 +1,4 @@
+#include <boost/make_shared.hpp>
 #include "irc.h"
 
 static void timeout(boost::asio::deadline_timer *t, boost::function<void()> cb)
@@ -14,7 +15,7 @@ static void delayedcall(boost::asio::io_service &io_service, int sec, boost::fun
 
 
 IrcClient::IrcClient(boost::asio::io_service &_io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
-	:io_service(_io_service), cb_(0),resolver_(io_service),socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
+	:io_service(_io_service), cb_(0), socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
 {
     connect();
 }
@@ -24,7 +25,7 @@ IrcClient::~IrcClient()
 
 }
 
-void IrcClient::dnsresolved(const boost::system::error_code & ec, const boost::asio::ip::tcp::resolver::iterator &endpoint_iterator)
+void IrcClient::dnsresolved(const boost::system::error_code & ec, const boost::asio::ip::tcp::resolver::iterator &endpoint_iterator, boost::shared_ptr<boost::asio::ip::tcp::resolver>  resolver)
 {
     if (!ec)
     {
@@ -44,8 +45,10 @@ void IrcClient::dnsresolved(const boost::system::error_code & ec, const boost::a
 void IrcClient::connect()
 {
     boost::asio::ip::tcp::resolver::query query(server_,port_);
-    resolver_.async_resolve(query,
-		boost::bind(&IrcClient::dnsresolved, this , boost::asio::placeholders::error, boost::asio::placeholders::iterator));
+ 	boost::shared_ptr<boost::asio::ip::tcp::resolver>  resolver(new boost::asio::ip::tcp::resolver(io_service));
+
+    resolver->async_resolve(query,
+		boost::bind(&IrcClient::dnsresolved, this , boost::asio::placeholders::error, boost::asio::placeholders::iterator, resolver));
 }
 
 void IrcClient::connected()
