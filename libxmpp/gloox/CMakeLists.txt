@@ -110,3 +110,6 @@ gloox/xhtmlim.cpp
 
 add_library(gloox STATIC ${GLOOX_SRC})
 target_link_libraries(gloox  ${OPENSSL_LIBRARIES})
+if(UNIX)
+	target_link_libraries(gloox -pthread)
+endif()
