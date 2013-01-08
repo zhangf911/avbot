@@ -1,18 +1,16 @@
 #include <boost/make_shared.hpp>
 #include "irc.h"
 
-static void timeout(boost::asio::deadline_timer *t, boost::function<void()> cb)
+static void timeout(boost::shared_ptr<boost::asio::deadline_timer> t, boost::function<void()> cb)
 {
-	delete t;
 	cb();
 }
 
 static void delayedcall(boost::asio::io_service &io_service, int sec, boost::function<void()> cb)
 {
-	boost::asio::deadline_timer *t = new boost::asio::deadline_timer(io_service, boost::posix_time::seconds(sec));
+	boost::shared_ptr<boost::asio::deadline_timer> t( new boost::asio::deadline_timer(io_service, boost::posix_time::seconds(sec)));
 	t->async_wait(boost::bind(&timeout, t, cb));
 }
-
 
 IrcClient::IrcClient(boost::asio::io_service &_io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
 	:io_service(_io_service), cb_(0), socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
