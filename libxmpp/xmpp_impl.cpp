@@ -115,7 +115,6 @@ void xmpp_impl::onDisconnect(gloox::ConnectionError e)
 
 void xmpp_impl::handleMUCError(gloox::MUCRoom* room, gloox::StanzaError error)
 {
-	error;
 	std::cout <<  __func__ <<  std::endl;
 }
 
