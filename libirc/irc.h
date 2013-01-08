@@ -57,7 +57,7 @@ private:
     void connect();
     void relogin();
     void connected();
-
+	void dnsresolved(const boost::system::error_code & ec, const boost::asio::ip::tcp::resolver::iterator &endpoint_iterator);
 public:
 
     void login(const privmsg_cb &cb);

@@ -11,12 +11,8 @@ IrcClient::~IrcClient()
 
 }
 
-void IrcClient::connect()
+void IrcClient::dnsresolved(const boost::system::error_code & ec, const boost::asio::ip::tcp::resolver::iterator &endpoint_iterator)
 {
-    boost::asio::ip::tcp::resolver::query query(server_,port_);
-    boost::system::error_code ec;
-    boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver_.resolve(query,ec);
-
     if (!ec)
     {
         boost::asio::async_connect(socket_, endpoint_iterator,
@@ -30,6 +26,13 @@ void IrcClient::connect()
         std::cout << "Error: " << ec.message() << "\n";
 #endif
     }
+}
+
+void IrcClient::connect()
+{
+    boost::asio::ip::tcp::resolver::query query(server_,port_);
+    resolver_.async_resolve(query,
+		boost::bind(&IrcClient::dnsresolved, this , boost::asio::placeholders::error, boost::asio::placeholders::iterator));
 }
 
 void IrcClient::connected()
@@ -47,8 +50,7 @@ void IrcClient::connected()
     {
         if (msg_queue_.size())
         {
-            std::vector<std::string>::iterator it=msg_queue_.begin();
-            for (it;it!=msg_queue_.end();it++)
+            for (std::vector<std::string>::iterator it=msg_queue_.begin();it!=msg_queue_.end();it++)
             {
                 join_queue_.push_back(*it);  
                 send_request(*it);
@@ -104,8 +106,7 @@ void IrcClient::relogin()
 
     boost::thread::sleep(boost::get_system_time() + boost::posix_time::seconds(10));
 
-    std::vector<std::string>::iterator it=join_queue_.begin();
-    for (it;it!=join_queue_.end();it++)
+    for (std::vector<std::string>::iterator it=join_queue_.begin();it!=join_queue_.end();it++)
         msg_queue_.push_back(*it);
     join_queue_.clear();
 
@@ -135,11 +136,9 @@ void IrcClient::process_request(boost::asio::streambuf& buf)
         last_buf_.clear();
 
     std::vector<std::string> vec;
-    boost::split(vec,longreg,boost::algorithm::is_any_of<char*>("\r\n"),boost::algorithm::token_compress_on);
-    
-    std::vector<std::string>::iterator it=vec.begin();
+    boost::split(vec,longreg,boost::algorithm::is_any_of("\r\n"),boost::algorithm::token_compress_on);
 
-    for (it;it!=vec.end();it++)
+    for (std::vector<std::string>::iterator it=vec.begin();it!=vec.end();it++)
     {
         std::string req=*it;
 
