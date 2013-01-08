@@ -22,8 +22,10 @@ qqbot 连通 IRC、XMPP 和  QQ群，并能实时记录聊天信息。每日自�
 	make -j8
 # 编译依赖
 
-依赖 gloox（XMPP）和 boost。 boost 要 1.48 以上。
-	
+依赖 boost。 boost 要 1.48 以上。
+
+gloox 已经通过 bundle 的形式包含了，不需要外部依赖了。
+
 # 使用
 
 读取配置文件 /etc/qqbotrc
