@@ -68,7 +68,7 @@ gloox 已经通过 bundle 的形式包含了，不需要外部依赖了。
 
 # 获得帮助
 
-我们在 IRC（irc.freenode.net ） 的 \#avplayer 频道。
+我们在 IRC（irc.freenode.net ） 的 \#avplayer 频道。 QQ群 3597082
 
 # thanks
 
