@@ -364,7 +364,7 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 			{
 				qqGroup* group = qqclient.get_Group_by_qq(utf8_wide(groupmember.substr(3)));
 				if (group){
-					std::string forwarder = boost::str(boost::format("xmpp(%s)说：%s") % who % message);
+					std::string forwarder = boost::str(boost::format("(%s)说：%s") % who % message);
 					qqclient.send_group_message(*group, forwarder , qq_msg_sended);
 					// log into
 					logfile.add_log(group->qqnum, std::string("[xmpp]") + forwarder );
