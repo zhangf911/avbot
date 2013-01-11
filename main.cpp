@@ -390,12 +390,6 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 	if (group)
 		groupname = group->name;
 	buddy = group? group->get_Buddy_by_uin(who):NULL;
-	if (group && !buddy && !group->memberlist.empty())
-	{
-		// need to update_group_detail
-		qqclient.update_group_member(*group);
-	}
-
 	std::wstring nick = who;
 	if (buddy){
 		if (buddy->card.empty())
