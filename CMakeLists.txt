@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 project(qqbot)
-
 #SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_STATIC_RUNTIME    ON)
@@ -22,3 +21,4 @@ target_link_libraries(qqbot libwebqq libirc libxmpp)
 target_link_libraries(qqbot ${Boost_LIBRARIES} -pthread)
 
 install(TARGETS qqbot RUNTIME DESTINATION bin)
+add_subdirectory(lisp)

@@ -16,6 +16,7 @@ namespace po = boost::program_options;
 #include <boost/format.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <fstream>
 #include <string.h>
@@ -29,6 +30,7 @@ namespace po = boost::program_options;
 #include "libwebqq/webqq.h"
 #include "utf8/utf8.h"
 #include "libxmpp/xmpp.h"
+#include "lisp/process.hpp"
 
 #define QQBOT_VERSION "0.0.1"
 
@@ -219,6 +221,8 @@ static bool resend_img = false;
 
 static std::string progname;
 
+boost::shared_ptr<av::process> lisp;
+
 /*
  * 用来配置是否是在一个组里的，一个组里的群和irc频道相互转发.
  */
@@ -274,13 +278,35 @@ static void qq_msg_sended(const boost::system::error_code& ec)
 	
 }
 
+void output(webqq & qqclient, qqGroup & group, std::string str) 
+{
+    std::cout << str << std::endl;
+    if(*str.begin() != '?') {
+        qqclient.send_group_message(group, str, qq_msg_sended);
+    }
+}
+
+static void lisp_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
+{
+    if(who.nick == L"hyq") 
+    {
+        boost::regex ex(".run (.*)");
+        boost::cmatch what;
+        if(boost::regex_match(cmd.c_str(), what, ex))
+        {
+            std::string progs = what[1];
+            if (progs.empty()) return ;
+            lisp->run(progs);
+        }
+    } 
+}
 
 // 简单的消息命令控制.
 static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
 {
-	boost::trim(cmd);
-
-	if (who.nick == L"水手(Jack)" || who.nick == L"Cai==天马博士")
+	
+    boost::trim(cmd);
+    if (who.nick == L"水手(Jack)" || who.nick == L"Cai==天马博士")
 	{
 		// 转发图片处理.
 		if (cmd == ".qqbot start image")
@@ -384,6 +410,15 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 
 static void on_group_msg(std::wstring group_code, std::wstring who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
 {
+    
+    if(!lisp->hasStart()) {
+        lisp->start(boost::bind(
+                      output, 
+                      boost::ref(qqclient), 
+                      boost::ref(*qqclient.get_Group_by_gid(group_code)),
+                      _1));
+    }
+    
 	qqBuddy * buddy = NULL;
 	qqGroup * group = qqclient.get_Group_by_gid(group_code);
 	std::wstring	groupname = group_code;
@@ -397,6 +432,8 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 		else
 			nick = buddy->card;
 	}
+	
+
 		
 	std::wstring message_nick, message;
 	std::string ircmsg;
@@ -408,6 +445,8 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 
 	BOOST_FOREACH(qqMsg qqmsg, msg)
 	{
+        if (buddy)
+            lisp_control(qqclient, *group, *buddy, wide_utf8(qqmsg.text));
 		std::wstring buf;
 		switch (qqmsg.type)
 		{
@@ -566,12 +605,17 @@ int main(int argc, char *argv[])
 		daemon(0, 0);
 
 	boost::asio::io_service asio;
+   
+
 
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	qqclient.start();
 	xmpp		xmppclient(asio, xmppuser, xmpppwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
-
+    
+    lisp.reset(new av::process(asio,
+                boost::filesystem::path("/usr/lib64/clozurecl/lx86cl64")));
+    
 	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
@@ -591,6 +635,7 @@ int main(int argc, char *argv[])
 	{
 		xmppclient.join(room);
 	}
+	
 
     boost::asio::io_service::work work(asio);
     asio.run();
