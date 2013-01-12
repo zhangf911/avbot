@@ -4,7 +4,16 @@ project(qqbot)
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_STATIC_RUNTIME    ON)
 
-find_package(Boost 1.48 REQUIRED COMPONENTS date_time filesystem system program_options regex)
+find_package(Boost 1.48 COMPONENTS date_time filesystem system program_options regex)
+
+if(NOT Boost_FOUND)
+	set(Boost_USE_STATIC_LIBS        OFF)
+	set(Boost_USE_STATIC_RUNTIME    OFF)
+	find_package(Boost 1.48 COMPONENTS date_time filesystem system program_options regex)
+	if(NOT Boost_FOUND )
+		message(FATAL_ERROR "need boost >= 1.48")
+	endif()
+endif()
 
 find_package(Threads)
 
@@ -21,3 +30,7 @@ target_link_libraries(qqbot libwebqq libirc libxmpp)
 target_link_libraries(qqbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS qqbot RUNTIME DESTINATION bin)
+
+if( NOT Boost_USE_STATIC_RUNTIME )
+	message(STATUS "dynamic link to boost is not recomanded")
+endif()
