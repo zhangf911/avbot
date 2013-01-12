@@ -19,6 +19,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_executable(qqbot main.cpp)
 
 target_link_libraries(qqbot libwebqq libirc libxmpp)
-target_link_libraries(qqbot ${Boost_LIBRARIES} -pthread)
+target_link_libraries(qqbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS qqbot RUNTIME DESTINATION bin)
