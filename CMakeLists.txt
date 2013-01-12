@@ -12,6 +12,7 @@ find_package(Threads)
 add_subdirectory(libwebqq)
 add_subdirectory(libirc)
 add_subdirectory(libxmpp)
+add_subdirectory(lisp)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -21,4 +22,3 @@ target_link_libraries(qqbot libwebqq libirc libxmpp)
 target_link_libraries(qqbot ${Boost_LIBRARIES} -pthread)
 
 install(TARGETS qqbot RUNTIME DESTINATION bin)
-add_subdirectory(lisp)
