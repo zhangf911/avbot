@@ -31,7 +31,6 @@ namespace po = boost::program_options;
 #include "libxmpp/xmpp.h"
 
 #include "logger.hpp"
-#include "process.hpp"
 
 #define QQBOT_VERSION "0.0.1"
 
