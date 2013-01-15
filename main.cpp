@@ -157,6 +157,8 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &irc
 		std::string vc = boost::trim_copy(pMsg.msg);
 		if(vc[0] == '.' && vc[1]=='v' && vc[2]=='c' && vc[3] == ' ')
 			qqclient.login_withvc(vc.substr(4));
+		qqneedvc = false;
+		return;
 	}
 	
 	BOOST_FOREACH(std::string groupmember, find_group(from))
