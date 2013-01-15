@@ -223,6 +223,7 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
     { // count the message.
         std::string w_ = boost::locale::conv::utf_to_utf<char>(who);
         cnt.increace(w_);
+        cnt.save();
     }
 	qqBuddy * buddy = NULL;
 	qqGroup * group = qqclient.get_Group_by_gid(group_code);
