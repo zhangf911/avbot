@@ -17,6 +17,7 @@ namespace po = boost::program_options;
 #include <boost/noncopyable.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/locale.hpp>
 
 #include <fstream>
 #include <string.h>
@@ -30,7 +31,7 @@ namespace po = boost::program_options;
 #include "libwebqq/webqq.h"
 #include "utf8/utf8.h"
 #include "libxmpp/xmpp.h"
-
+#include "counter.h"
 
 #include "logger.hpp"
 
@@ -42,6 +43,8 @@ static bool resend_img = false;
 static bool qqneedvc = false;
 static std::string progname;
 static std::string ircvercodechannel;
+
+counter cnt;
 
 /*
  * 用来配置是否是在一个组里的，一个组里的群和irc频道相互转发.
@@ -217,8 +220,10 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 
 static void on_group_msg(std::wstring group_code, std::wstring who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
 {
-
-    
+    { // count the message.
+        std::string w_ = boost::locale::conv::utf_to_utf<char>(who);
+        cnt.increace(w_);
+    }
 	qqBuddy * buddy = NULL;
 	qqGroup * group = qqclient.get_Group_by_gid(group_code);
 	std::wstring	groupname = group_code;
@@ -391,9 +396,13 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	if (vm.size() ==0 ){
-		fs::path p = configfilepath();
-		po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
-		po::notify(vm);
+        try {
+            fs::path p = configfilepath();
+            po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
+            po::notify(vm);
+        } catch(char* e) {
+            std::cerr << e << std::endl;
+        }
 	}
 	if (vm.count("version"))
 	{
