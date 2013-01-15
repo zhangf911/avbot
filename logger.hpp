@@ -1,5 +1,7 @@
 
 #pragma once
+#include <string>
+#include "utf8/utf8.h"
 
 class qqlog : public boost::noncopyable
 {
@@ -15,6 +17,9 @@ public:
 	{}
 
 public:
+	std::string log_path(){
+ 		return wide_utf8( m_path.wstring() );
+	}
 	// 设置日志保存路径.
 	void log_path(const std::wstring &path)
 	{

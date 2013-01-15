@@ -41,7 +41,7 @@ static qqlog logfile;
 static bool resend_img = false;
 static bool qqneedvc = false;
 static std::string progname;
-
+static std::string ircvercodechannel;
 
 /*
  * 用来配置是否是在一个组里的，一个组里的群和irc频道相互转发.
@@ -313,11 +313,12 @@ void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqclient, I
 {
 	const char * data = boost::asio::buffer_cast<const char*>(imgbuf);
 	size_t	imgsize = boost::asio::buffer_size(imgbuf);
-	std::ofstream	img("test.jpeg",std::ios::binary|std::ios::out);
+	fs::path imgpath = fs::path(logfile.log_path()) / "vercode.jpeg";
+	std::ofstream	img(imgpath.c_str(),std::ios::binary|std::ios::out);
 	img.write(data,imgsize);
 	qqneedvc = true;
 	// send to xmpp and irc
-	ircclient.chat("#avplayer","输入qq验证码");
+	ircclient.chat(std::string("#") + ircvercodechannel,"输入qq验证码");
 }
 
 static fs::path configfilepath()
@@ -431,6 +432,7 @@ int main(int argc, char *argv[])
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
+	ircvercodechannel = ircrooms[0];
 	BOOST_FOREACH( std::string room , ircrooms)
 	{
 		ircclient.join(std::string("#") + room);
