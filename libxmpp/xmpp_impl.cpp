@@ -90,7 +90,7 @@ void xmpp_impl::handleMessage(const gloox::Message& stanza, gloox::MessageSessio
 
 void xmpp_impl::handleMUCMessage(gloox::MUCRoom* room, const gloox::Message& msg, bool priv)
 {
-	if (msg.from().resource() != room->nick())
+	if (!msg.from().resource().empty() && msg.from().resource() != room->nick())
 		m_sig_room_message(room->name(), msg.from().resource(), msg.body());
 }
 
