@@ -39,7 +39,7 @@ namespace po = boost::program_options;
 
 static qqlog logfile;
 static bool resend_img = false;
-
+static bool qqneedvc = false;
 static std::string progname;
 
 
@@ -151,6 +151,13 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &irc
 	std::cout <<  pMsg.msg<< std::endl;
 
 	std::string from = std::string("irc:") + pMsg.from.substr(1);
+
+	//验证码check
+	if(qqneedvc){
+		std::string vc = boost::trim_copy(pMsg.msg);
+		if(vc[0] == '.' && vc[1]=='v' && vc[2]=='c' && vc[3] == ' ')
+			qqclient.login_withvc(vc.substr(4));
+	}
 	
 	BOOST_FOREACH(std::string groupmember, find_group(from))
 	{
@@ -300,6 +307,17 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 	}
 }
 
+void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
+{
+	const char * data = boost::asio::buffer_cast<const char*>(imgbuf);
+	size_t	imgsize = boost::asio::buffer_size(imgbuf);
+	std::ofstream	img("test.jpeg",std::ios::binary|std::ios::out);
+	img.write(data,imgsize);
+	qqneedvc = true;
+	// send to xmpp and irc
+	ircclient.chat("#avplayer","输入qq验证码");
+}
+
 fs::path configfilepath()
 {
 	if (fs::exists(fs::path(progname) / "qqbotrc"))
@@ -397,16 +415,17 @@ int main(int argc, char *argv[])
    
 
 
-	webqq		qqclient(asio, qqnumber, qqpwd);
-	qqclient.start();
 	xmpp		xmppclient(asio, xmppuser, xmpppwd);
+	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
-    
-	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
-
-	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 
 	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+
+	qqclient.on_verify_code(boost::bind(on_verify_code,_1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+	qqclient.start();
+	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
