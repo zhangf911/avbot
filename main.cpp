@@ -320,7 +320,7 @@ void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqclient, I
 	ircclient.chat("#avplayer","输入qq验证码");
 }
 
-fs::path configfilepath()
+static fs::path configfilepath()
 {
 	if (fs::exists(fs::path(progname) / "qqbotrc"))
 		return fs::path(progname) / "qqbotrc";
