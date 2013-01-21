@@ -235,9 +235,9 @@ void IrcClient::handle_read_request(const boost::system::error_code& err, std::s
 }
 
 void IrcClient::handle_write_request(const boost::system::error_code& err, std::size_t bytewrited)
-{    
-    if (!err)    
-    {		
+{
+    if (!err)
+	{
         request_.consume(bytewrited);		
         if (request_.size())			
             boost::asio::async_write(socket_,

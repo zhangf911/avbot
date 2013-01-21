@@ -6,5 +6,8 @@ build/
 *.so
 .*
 !.gitignore
+*~
+*.kde*
+
 
 
