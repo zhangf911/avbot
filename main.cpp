@@ -29,6 +29,7 @@ namespace po = boost::program_options;
 
 #include "libirc/irc.h"
 #include "libwebqq/webqq.h"
+#include "libwebqq/url.hpp"
 #include "utf8/utf8.h"
 #include "libxmpp/xmpp.h"
 #include "counter.h"
@@ -271,7 +272,10 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 				buf = boost::str(boost::wformat(
 				L"<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" > ")
 				% qqmsg.cface);
-				std::string imgurl = boost::str(boost::format("http://w.qq.com/cgi-bin/get_group_pic?pic=%s")				% wide_utf8(qqmsg.cface));
+				std::string imgurl = boost::str(
+					boost::format("http://w.qq.com/cgi-bin/get_group_pic?pic=%s")
+						% url_encode(wide_utf8(qqmsg.cface))
+				);
 				if (resend_img){
 					//TODO send it
 					qqclient.send_group_message(group_code, imgurl, qq_msg_sended);
