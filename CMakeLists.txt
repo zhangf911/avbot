@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(qqbot)
 #SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(Boost_USE_STATIC_LIBS        ON)
-set(Boost_USE_STATIC_RUNTIME    ON)
+option(Boost_USE_STATIC_LIBS        ON)
+option(Boost_USE_STATIC_RUNTIME    ON)
 
 find_package(Boost 1.48 COMPONENTS date_time filesystem system program_options regex)
 
