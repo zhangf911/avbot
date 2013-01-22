@@ -273,7 +273,7 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 				L"<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" > ")
 				% qqmsg.cface);
 				std::string imgurl = boost::str(
-					boost::format("http://w.qq.com/cgi-bin/get_group_pic?pic=%s")
+					boost::format(" http://w.qq.com/cgi-bin/get_group_pic?pic=%s ")
 						% url_encode(wide_utf8(qqmsg.cface))
 				);
 				if (resend_img){
