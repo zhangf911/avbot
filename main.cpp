@@ -286,7 +286,7 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 	}
 
 	// 统计发言.
-	cnt.increace(message_nick);
+	cnt.increace(wide_utf8(message_nick));
 	cnt.save();
 
 	// 记录.
@@ -299,7 +299,7 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 
 	logfile.add_log(group->qqnum, wide_utf8(message_nick + message));
 	// send to irc
-	
+
 	std::string from = std::string("qq:") + wide_utf8(group->qqnum);
 
 	BOOST_FOREACH(std::string groupmember, find_group(from))
@@ -307,9 +307,11 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 		if (groupmember == from)
 			continue;
 
-		if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
+		if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c')
+		{
 			ircclient.chat(std::string("#") + groupmember.substr(4), ircmsg);
-		}else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
+		}
+		else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
 		{
 			//XMPP
 			xmppclient.send_room_message(groupmember.substr(5), ircmsg);
@@ -398,21 +400,26 @@ int main(int argc, char *argv[])
 		std::cerr <<  desc <<  std::endl;
 		return 1;
 	}
-	if (vm.size() ==0 ){
-        try {
-            fs::path p = configfilepath();
-            po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
-            po::notify(vm);
-        } catch(char* e) {
-            std::cerr << e << std::endl;
-        }
+	if (vm.size() ==0 )
+	{
+		try
+		{
+			fs::path p = configfilepath();
+			po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
+			po::notify(vm);
+		}
+		catch(char* e)
+		{
+			std::cerr << e << std::endl;
+		}
 	}
 	if (vm.count("version"))
 	{
 		printf("qqbot version %s \n", QQBOT_VERSION);
 	}
 	
-	if (!logdir.empty()){
+	if (!logdir.empty())
+	{
 		if (!fs::exists(logdir))
 			fs::create_directory(logdir);
 	}
@@ -427,8 +434,6 @@ int main(int argc, char *argv[])
 		daemon(0, 0);
 
 	boost::asio::io_service asio;
-   
-
 
 	xmpp		xmppclient(asio, xmppuser, xmpppwd);
 	webqq		qqclient(asio, qqnumber, qqpwd);
@@ -440,7 +445,6 @@ int main(int argc, char *argv[])
 	qqclient.on_verify_code(boost::bind(on_verify_code,_1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 	qqclient.start();
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
-
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
@@ -456,7 +460,6 @@ int main(int argc, char *argv[])
 	{
 		xmppclient.join(room);
 	}
-	
 
     boost::asio::io_service::work work(asio);
     asio.run();
