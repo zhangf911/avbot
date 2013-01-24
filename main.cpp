@@ -286,7 +286,7 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 	}
 
 	// 统计发言.
-	cnt.increace(wide_utf8(message_nick));
+	cnt.increace(wide_utf8(nick));
 	cnt.save();
 
 	// 记录.
