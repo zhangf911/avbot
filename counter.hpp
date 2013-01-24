@@ -36,7 +36,7 @@ public:
 		}
 	}
 
-	void increace(std::string& qq)
+	void increace(std::string qq)
 	{
 		boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 		boost::get<0>(map_[qq]) ++ ;
