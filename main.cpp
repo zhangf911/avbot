@@ -32,20 +32,19 @@ namespace po = boost::program_options;
 #include "libwebqq/url.hpp"
 #include "utf8/utf8.h"
 #include "libxmpp/xmpp.h"
-#include "counter.h"
 
+#include "counter.hpp"
 #include "logger.hpp"
 
 #define QQBOT_VERSION "0.0.1"
 
 
-static qqlog logfile;
-static bool resend_img = false;
-static bool qqneedvc = false;
+static qqlog logfile;			// 用于记录日志文件.
+static counter cnt;				// 用于统计发言信息.
+static bool resend_img = false;	// 用于标识是否转发图片url.
+static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
 static std::string progname;
 static std::string ircvercodechannel;
-
-counter cnt;
 
 /*
  * 用来配置是否是在一个组里的，一个组里的群和irc频道相互转发.
@@ -221,27 +220,21 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 
 static void on_group_msg(std::wstring group_code, std::wstring who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
 {
-    { // count the message.
-        std::string w_ = boost::locale::conv::utf_to_utf<char>(who);
-        cnt.increace(w_);
-        cnt.save();
-    }
-	qqBuddy * buddy = NULL;
-	qqGroup * group = qqclient.get_Group_by_gid(group_code);
-	std::wstring	groupname = group_code;
+	qqBuddy *buddy = NULL;
+	qqGroup *group = qqclient.get_Group_by_gid(group_code);
+	std::wstring groupname = group_code;
 	if (group)
 		groupname = group->name;
-	buddy = group? group->get_Buddy_by_uin(who):NULL;
+	buddy = group ? group->get_Buddy_by_uin(who) : NULL;
 	std::wstring nick = who;
-	if (buddy){
+	if (buddy)
+	{
 		if (buddy->card.empty())
 			nick = buddy->nick;
 		else
 			nick = buddy->card;
 	}
-	
 
-		
 	std::wstring message_nick, message;
 	std::string ircmsg;
 
@@ -291,6 +284,11 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 		}
 		message += buf;
 	}
+
+	// 统计发言.
+	cnt.increace(message_nick);
+	cnt.save();
+
 	// 记录.
 	printf("%ls%ls\n", message_nick.c_str(),  message.c_str());
 	if (!group)
