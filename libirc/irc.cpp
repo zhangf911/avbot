@@ -108,8 +108,8 @@ void IrcClient::relogin()
 {
 
     login_=false;
-    socket_.cancel();
-    socket_.close();
+    boost::system::error_code ec;
+    socket_.close(ec);
     retry_count_--;
 
     if (retry_count_<=0)
@@ -117,7 +117,9 @@ void IrcClient::relogin()
         std::cout<<"Irc Server has offline!!!"<<  std::endl;;
         return;
     }
+
     std::cout << "retry in 10s..." <<  std::endl;
+
     delayedcall(io_service, 10, boost::bind(&IrcClient::relogin_delayed, this));
 }
 
