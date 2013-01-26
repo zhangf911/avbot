@@ -9,7 +9,7 @@ find_package(Boost 1.48 COMPONENTS date_time filesystem system program_options r
 if(NOT Boost_FOUND)
 	set(Boost_USE_STATIC_LIBS        OFF)
 	set(Boost_USE_STATIC_RUNTIME    OFF)
-	find_package(Boost 1.48 COMPONENTS date_time filesystem system program_options regex)
+	find_package(Boost 1.48 REQUIRED COMPONENTS date_time filesystem system program_options regex)
 	if(NOT Boost_FOUND )
 		message(FATAL_ERROR "need boost >= 1.48")
 	endif()
