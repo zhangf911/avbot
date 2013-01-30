@@ -4,6 +4,10 @@
  * @origal_author mathslinux <riegamaths@gmail.com>
  * 
  */
+#include <string>
+#include <algorithm>
+#include <vector>
+
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/date_time.hpp>
@@ -38,6 +42,10 @@ namespace po = boost::program_options;
 
 #define QQBOT_VERSION "0.0.1"
 
+static void qq_msg_sended(const boost::system::error_code& ec)
+{
+
+}
 
 static qqlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.
@@ -45,46 +53,73 @@ static bool resend_img = false;	// 用于标识是否转发图片url.
 static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
 static std::string progname;
 static std::string ircvercodechannel;
+class messagegroup;
+static std::vector<messagegroup>	messagegroups;
 
-/*
- * 用来配置是否是在一个组里的，一个组里的群和irc频道相互转发.
- */
-static std::vector< std::vector<std::string> > channelgroups;
+class messagegroup {
+	webqq*		qq_;
+	xmpp*		xmpp_;
+	IrcClient*	irc_;
+	// 组号.
+	std::vector<std::string> channels;
 
-static bool in_group(const std::vector<std::string> & group, std::string id)
-{
-	BOOST_FOREACH(const std::string & i ,  group)
-	{
-		if (i == id )
-			return true;
+public:
+	messagegroup(webqq * _qq, xmpp * _xmpp, IrcClient * _irc)
+	:qq_(_qq),xmpp_(_xmpp),irc_(_irc){}
+
+	void add_channel(std::string);
+	void add_channel(std::vector<std::string> groups){
+		//std::copy(channels,groups);
+		channels = groups;
 	}
-	return false;
-}
+
+	bool in_group(std::string ch){
+		return std::find(channels.begin(),channels.end(),ch)!=channels.end();
+	}
+	void broadcast(std::string message);
+	void forwardmessage(std::string from, std::string message){
+		BOOST_FOREACH(std::string groupmember, channels)
+	 	{
+			if (groupmember == from)
+			{
+				std::wstring qqnum = utf8_wide(groupmember.substr(3));
+				logfile.add_log(qqnum, message);
+				continue;
+			}
+
+			if (groupmember.substr(0,3) == "irc")
+			{
+				irc_->chat(std::string("#") + groupmember.substr(4), message);
+			}
+			else if (groupmember.substr(0,4) == "xmpp")
+			{
+				//XMPP
+				xmpp_->send_room_message(groupmember.substr(5), message);
+			}else if (groupmember.substr(0,2)=="qq" )
+			{
+				std::wstring qqnum = utf8_wide(groupmember.substr(3));
+				logfile.add_log(qqnum, message);
+				qq_->send_group_message(qqnum, message, qq_msg_sended);
+			}
+		}
+	}
+};
 
 /*
  * 查找同组的其他聊天室和qq群.
  */
-static std::vector<std::string> & find_group(std::string id)
+static messagegroup * find_group(std::string id)
 {
-	static std::vector<std::string> empty;
-	BOOST_FOREACH(std::vector<std::string> & g ,  channelgroups)
+	BOOST_FOREACH(messagegroup & g ,  messagegroups)
 	{
-		if (in_group(g, id))
-			return g;
+		if (g.in_group(id))
+			return &g;
 	}
-	return empty;
-}
-
-static bool same_group(std::string id1, std::string id2)
-{
-	std::vector< std::string > g1 = find_group(id1);
-	if (g1.empty())
-		return false;
-	return in_group(g1, id2);
+	return NULL;
 }
 
 //从命令行或者配置文件读取组信息.
-static void build_group(std::string chanelmapstring)
+static void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmppclient, IrcClient &ircclient)
 {
 	std::vector<std::string> gs;
 	boost::split(gs, chanelmapstring, boost::is_any_of(";"));
@@ -92,15 +127,11 @@ static void build_group(std::string chanelmapstring)
 	{
 		std::vector<std::string> group;
 	 	boost::split(group, pergroup, boost::is_any_of(","));
-	 	channelgroups.push_back(group);
+		messagegroup g(&qqclient,&xmppclient,&ircclient);
+		g.add_channel(group);
+		messagegroups.push_back(g);
 	}
 }
-
-static void qq_msg_sended(const boost::system::error_code& ec)
-{
-	
-}
-
 
 // 简单的消息命令控制.
 static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
@@ -163,29 +194,11 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &irc
 		qqneedvc = false;
 		return;
 	}
-	
-	BOOST_FOREACH(std::string groupmember, find_group(from))
-	{
-		if (groupmember != from){
-			if (groupmember[0]=='q' && groupmember[1]=='q')
-			{
-				qqGroup* group = qqclient.get_Group_by_qq(utf8_wide(groupmember.substr(3)));
-				if (group){
-					std::string forwarder = boost::str(boost::format("%s 说：%s") % pMsg.whom % pMsg.msg);
-					qqclient.send_group_message(*group, forwarder , qq_msg_sended);
-					// log into
-					logfile.add_log(group->qqnum, std::string("[irc]") + forwarder );
-				}
-			}else if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
-				//TODO, irc频道之间转发.
-				
-			}else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
-			{
-				std::string forwarder = boost::str(boost::format("irc(%s)说：%s") % pMsg.whom % pMsg.msg);
-				//XMPP
-				xmppclient.send_room_message(groupmember.substr(5), forwarder);
-			}
-		}
+
+	messagegroup* groups =  find_group(from);
+	if(groups){
+		std::string forwarder = boost::str(boost::format("%s 说：%s") % pMsg.whom % pMsg.msg);
+		groups->forwardmessage(from,forwarder);
 	}
 }
 
@@ -193,29 +206,11 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 {
 	std::string from = std::string("xmpp:") + xmpproom;
 	//log to logfile?
-	BOOST_FOREACH(std::string groupmember, find_group(from))
-	{
-		if (groupmember != from){
-			if (groupmember[0]=='q' && groupmember[1]=='q')
-			{
-				qqGroup* group = qqclient.get_Group_by_qq(utf8_wide(groupmember.substr(3)));
-				if (group){
-					std::string forwarder = boost::str(boost::format("(%s)说：%s") % who % message);
-					qqclient.send_group_message(*group, forwarder , qq_msg_sended);
-					// log into
-					logfile.add_log(group->qqnum, std::string("[xmpp]") + forwarder );
-				}
-			}else if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c'){
-				//IRC
-				std::string formatedmessage = boost::str(boost::format("xmpp(%s)说: %s") % who % message);
-				ircclient.chat( std::string("#") + groupmember.substr(4), formatedmessage ); ;
-
-			}else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
-			{
-				//XMPP
-			}
-		}
-	}	
+	messagegroup* groups =  find_group(from);
+	if(groups){
+		std::string forwarder = boost::str(boost::format("(%s)说：%s") % who % message);
+		groups->forwardmessage(from,forwarder);
+	}
 }
 
 static void on_group_msg(std::wstring group_code, std::wstring who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
@@ -302,20 +297,9 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 
 	std::string from = std::string("qq:") + wide_utf8(group->qqnum);
 
-	BOOST_FOREACH(std::string groupmember, find_group(from))
-	{
-		if (groupmember == from)
-			continue;
-
-		if (groupmember[0]=='i' && groupmember[1]=='r'&&groupmember[2]=='c')
-		{
-			ircclient.chat(std::string("#") + groupmember.substr(4), ircmsg);
-		}
-		else if (groupmember[0]=='x' && groupmember[1]=='m'&&groupmember[2]=='p'&&groupmember[3]=='p')
-		{
-			//XMPP
-			xmppclient.send_room_message(groupmember.substr(5), ircmsg);
-		}
+	messagegroup* groups =  find_group(from);
+	if(groups){
+		groups->forwardmessage(from,ircmsg);
 	}
 }
 
@@ -430,8 +414,6 @@ int main(int argc, char *argv[])
 	if (! logdir.empty())
 		logfile.log_path(logdir);
 
-	build_group(chanelmap);
-
     if (isdaemon)
 		daemon(0, 0);
 
@@ -441,6 +423,8 @@ int main(int argc, char *argv[])
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
 
+	build_group(chanelmap,qqclient,xmppclient,ircclient);
+		
 	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 
