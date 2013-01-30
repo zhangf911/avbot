@@ -1,7 +1,6 @@
 /**
  * @file   main.cpp
  * @author microcai <microcaicai@gmail.com>
- * @origal_author mathslinux <riegamaths@gmail.com>
  * 
  */
 #include <string>
