@@ -80,11 +80,7 @@ public:
 		BOOST_FOREACH(std::string groupmember, channels)
 	 	{
 			if (groupmember == from)
-			{
-				std::wstring qqnum = utf8_wide(groupmember.substr(3));
-				logfile.add_log(qqnum, message);
 				continue;
-			}
 
 			if (groupmember.substr(0,3) == "irc")
 			{
@@ -297,6 +293,7 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 	std::string from = std::string("qq:") + wide_utf8(group->qqnum);
 
 	messagegroup* groups =  find_group(from);
+	
 	if(groups){
 		groups->forwardmessage(from,ircmsg);
 	}
