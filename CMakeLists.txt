@@ -17,6 +17,8 @@ endif()
 
 find_package(Threads)
 
+add_definitions(-DBOOST_ASIO_SEPARATE_COMPILATION=1)
+
 add_subdirectory(libwebqq)
 add_subdirectory(libirc)
 add_subdirectory(libxmpp)
@@ -24,7 +26,7 @@ add_subdirectory(libxmpp)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-add_executable(qqbot main.cpp)
+add_executable(qqbot main.cpp asio_impl.cpp)
 
 target_link_libraries(qqbot libwebqq libirc libxmpp)
 target_link_libraries(qqbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
