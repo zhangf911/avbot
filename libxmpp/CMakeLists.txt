@@ -17,3 +17,7 @@ else()
 target_link_libraries(libxmpp -lgloox)
 endif()
 
+if(ENABLE_TEST)
+	add_executable(test test.cpp)
+	target_link_libraries(test libasio libxmpp)
+endif()
