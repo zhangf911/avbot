@@ -407,8 +407,10 @@ int main(int argc, char *argv[])
 	setenv("TZ","Asia/Shanghai",1);
 
 	// 设置日志自动记录目录.
-	if (! logdir.empty())
+	if (! logdir.empty()){
 		logfile.log_path(logdir);
+		chdir(logdir.c_str());
+	}
 
     if (isdaemon)
 		daemon(0, 0);
