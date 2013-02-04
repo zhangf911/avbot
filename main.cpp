@@ -38,6 +38,7 @@ namespace po = boost::program_options;
 
 #include "counter.hpp"
 #include "logger.hpp"
+#include "auto_question.hpp"
 
 #define QQBOT_VERSION "0.0.1"
 
@@ -50,6 +51,7 @@ static qqlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.
 static bool resend_img = false;	// 用于标识是否转发图片url.
 static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
+static auto_question question;	// 用于自动向新人问候.
 static std::string progname;
 static std::string ircvercodechannel;
 class messagegroup;
@@ -164,6 +166,22 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 			{
 				printf("lecture failed!\n");
 			}
+		}
+		
+		// 向新人问候.
+		ex.set_expression(".qqbot newbee ?(.*)?");
+		if(boost::regex_match(cmd.c_str(), what, ex))
+		{
+			std::string nick = what[1];
+			
+			if (nick.empty())
+				return;
+				
+			auto_question::value_qq_list list;			
+			list.push_back(nick);
+			
+			questioin.add_to_list(list);
+			questioin.on_handle_message(group, qqclient);
 		}
 
 		// 停止讲座记录.
