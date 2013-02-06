@@ -180,8 +180,8 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 			auto_question::value_qq_list list;			
 			list.push_back(nick);
 			
-			questioin.add_to_list(list);
-			questioin.on_handle_message(group, qqclient);
+			question.add_to_list(list);
+			question.on_handle_message(group, qqclient);
 		}
 
 		// 停止讲座记录.
