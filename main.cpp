@@ -39,6 +39,8 @@ namespace po = boost::program_options;
 #include "counter.hpp"
 #include "logger.hpp"
 
+#include "auto_question.hpp"
+
 #define QQBOT_VERSION "0.0.1"
 
 static void qq_msg_sended(const boost::system::error_code& ec)
@@ -50,6 +52,7 @@ static qqlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.
 static bool resend_img = false;	// 用于标识是否转发图片url.
 static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
+static auto_question question;	// 自动问问题.
 static std::string progname;
 static std::string ircvercodechannel;
 class messagegroup;
@@ -131,8 +134,10 @@ static void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmp
 // 简单的消息命令控制.
 static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
 {
-	
+	boost::regex ex;
+	boost::cmatch what;
     boost::trim(cmd);
+
     if (who.nick == L"水手(Jack)" || who.nick == L"Cai==天马博士")
 	{
 		// 转发图片处理.
@@ -153,9 +158,9 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 			qqclient.send_group_message(group, "群成员列表重加载", qq_msg_sended);
 		}
 
-		// 开始讲座记录.
-		boost::regex ex(".qqbot begin class ?\"(.*)?\"");
-		boost::cmatch what;
+		// 开始讲座记录.	
+		ex.set_expression(".qqbot begin class ?\"(.*)?\"");
+		
 		if(boost::regex_match(cmd.c_str(), what, ex))
 		{
 			std::string title = what[1];
@@ -171,8 +176,23 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 		{
 			logfile.end_lecture();
 		}
+		
+		// 向新人问候.
+		ex.set_expression(".qqbot newbee ?(.*)?");
+		if(boost::regex_match(cmd.c_str(), what, ex))
+		{
+			std::string nick = what[1];
+			
+			if (nick.empty())
+				return;
+				
+			auto_question::value_qq_list list;			
+			list.push_back(nick);
+			
+			question.add_to_list(list);
+			question.on_handle_message(group, qqclient);
+		}
 	}
-
 }
 
 static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &ircclient, xmpp& xmppclient)
