@@ -98,7 +98,8 @@ public:
 				
 				std::wstring qqnum = utf8_wide(chatgroupmember.substr(3));
 				logfile.add_log(qqnum, message);
-				qq_->send_group_message(*qq_->get_Group_by_qq(qqnum), message, qq_msg_sended);
+				if(qq_->get_Group_by_qq(qqnum))
+					qq_->send_group_message(*qq_->get_Group_by_qq(qqnum), message, qq_msg_sended);
 			}
 		}
 	}
