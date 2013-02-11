@@ -80,24 +80,25 @@ public:
 	}
 	void broadcast(std::string message);
 	void forwardmessage(std::string from, std::string message){
-		BOOST_FOREACH(std::string groupmember, channels)
+		BOOST_FOREACH(std::string chatgroupmember, channels)
 	 	{
-			if (groupmember == from)
+			if (chatgroupmember == from)
 				continue;
 
-			if (groupmember.substr(0,3) == "irc")
+			if (chatgroupmember.substr(0,3) == "irc")
 			{
-				irc_->chat(std::string("#") + groupmember.substr(4), message);
+				irc_->chat(std::string("#") + chatgroupmember.substr(4), message);
 			}
-			else if (groupmember.substr(0,4) == "xmpp")
+			else if (chatgroupmember.substr(0,4) == "xmpp")
 			{
 				//XMPP
-				xmpp_->send_room_message(groupmember.substr(5), message);
-			}else if (groupmember.substr(0,2)=="qq" )
+				xmpp_->send_room_message(chatgroupmember.substr(5), message);
+			}else if (chatgroupmember.substr(0,2)=="qq" )
 			{
-				std::wstring qqnum = utf8_wide(groupmember.substr(3));
+				
+				std::wstring qqnum = utf8_wide(chatgroupmember.substr(3));
 				logfile.add_log(qqnum, message);
-				qq_->send_group_message(qqnum, message, qq_msg_sended);
+				qq_->send_group_message(*qq_->get_Group_by_qq(qqnum), message, qq_msg_sended);
 			}
 		}
 	}
