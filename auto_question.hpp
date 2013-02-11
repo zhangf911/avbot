@@ -33,7 +33,7 @@
 
 #include "libwebqq/webqq.h"
 
-void qq_msg_send_callback(const boost::system::error_code& ec)
+static void qq_msg_send_callback(const boost::system::error_code& ec)
 {
 	// nothing to do
 }
