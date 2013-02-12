@@ -335,21 +335,25 @@ void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqclient, I
 
 static fs::path configfilepath()
 {
-	if (fs::exists(fs::path(progname) / "qqbotrc"))
-		return fs::path(progname) / "qqbotrc";
-	if (getenv("USERPROFILE"))
-	{
-		if (fs::exists(fs::path(getenv("USERPROFILE")) / ".qqbotrc"))
-			return fs::path(getenv("USERPROFILE")) / ".qqbotrc";
+	if ( fs::exists ( fs::path ( progname ) / "qqbotrc" ) )
+		return fs::path ( progname ) / "qqbotrc";
+
+	if ( getenv ( "USERPROFILE" ) ) {
+		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc" ) )
+			return fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc";
 	}
-	if (getenv("HOME")){
-		if (fs::exists(fs::path(getenv("HOME")) / ".qqbotrc"))
-			return fs::path(getenv("HOME")) / ".qqbotrc";
+
+	if ( getenv ( "HOME" ) ) {
+		if ( fs::exists ( fs::path ( getenv ( "HOME" ) ) / ".qqbotrc" ) )
+			return fs::path ( getenv ( "HOME" ) ) / ".qqbotrc";
 	}
-        if (fs::exists("./qqbotrc/.qqbotrc"))
-                return fs::path("./qqbotrc/.qqbotrc");
-	if (fs::exists("/etc/qqbotrc"))
-		return fs::path("/etc/qqbotrc");
+
+	if ( fs::exists ( "./qqbotrc/.qqbotrc" ) )
+		return fs::path ( "./qqbotrc/.qqbotrc" );
+
+	if ( fs::exists ( "/etc/qqbotrc" ) )
+		return fs::path ( "/etc/qqbotrc" );
+
 	throw "not configfileexit";
 }
 
