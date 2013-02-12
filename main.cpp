@@ -374,8 +374,6 @@ int main(int argc, char *argv[])
 	std::string logdir;
 	std::string chanelmap;
 
-    bool isdaemon=false;
-
     progname = fs::basename(argv[0]);
 
     setlocale(LC_ALL, "");
@@ -384,10 +382,10 @@ int main(int argc, char *argv[])
 	desc.add_options()
 	    ( "version,v",										"output version" )
 		( "help,h",											"produce help message" )
+		( "daemon,d",										"go to background" )
 		( "qqnum,u",	po::value<std::string>(&qqnumber),	"QQ number" )
 		( "qqpwd,p",	po::value<std::string>(&qqpwd),		"QQ password" )
 		( "logdir",		po::value<std::string>(&logdir),	"dir for logfile" )
-		( "daemon,d",	po::value<bool>       (&isdaemon),	"go to background" )
 		( "ircnick",	po::value<std::string>(&ircnick),	"irc nick" )
 		( "ircpwd",		po::value<std::string>(&ircpwd),	"irc password" )
 		( "ircrooms",	po::value<std::string>(&ircroom),	"irc room" )
@@ -438,7 +436,7 @@ int main(int argc, char *argv[])
 		chdir(logdir.c_str());
 	}
 
-    if (isdaemon)
+    if (vm.count("daemon"))
 		daemon(0, 0);
 
 	boost::asio::io_service asio;
