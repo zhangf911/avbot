@@ -1,0 +1,3 @@
+[submodule "libwebqq/avhttp"]
+	path = libwebqq/avhttp
+	url = git@github.com:avplayer/avhttp.git
