@@ -140,8 +140,14 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	boost::cmatch what;
     boost::trim(cmd);
 
-    if (who.nick == L"水手(Jack)" || who.nick == L"Cai==天马博士")
+    if (who.mflag == 21 || who.mflag == 85 || who.uin == group.owner )
 	{
+		if (cmd == ".qqbot relogin")
+		{
+			qqclient.get_ioservice().post(
+				boost::bind(&webqq::login,qqclient)
+			);
+		}
 		// 转发图片处理.
 		if (cmd == ".qqbot start image")
 		{
