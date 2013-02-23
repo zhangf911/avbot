@@ -21,7 +21,7 @@ namespace po = boost::program_options;
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/locale.hpp>
-
+#include <boost/lambda/lambda.hpp>
 #include <fstream>
 #include <string.h>
 #include <stdlib.h>
@@ -42,11 +42,6 @@ namespace po = boost::program_options;
 #include "auto_question.hpp"
 
 #define QQBOT_VERSION "0.0.1"
-
-static void qq_msg_sended(const boost::system::error_code& ec)
-{
-
-}
 
 static qqlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.
@@ -99,7 +94,7 @@ public:
 				std::wstring qqnum = utf8_wide(chatgroupmember.substr(3));
 				logfile.add_log(qqnum, message);
 				if(qq_->get_Group_by_qq(qqnum))
-					qq_->send_group_message(*qq_->get_Group_by_qq(qqnum), message, qq_msg_sended);
+					qq_->send_group_message(*qq_->get_Group_by_qq(qqnum), message, boost::lambda::constant(0) == 0);
 			}
 		}
 	}
@@ -148,6 +143,11 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 				boost::bind(&webqq::login,qqclient)
 			);
 		}
+		
+		if( cmd == ".qqbot ping")
+		{
+			qqclient.send_group_message(group, "我还活着", boost::lambda::constant(0) == 0  );
+		}
 		// 转发图片处理.
 		if (cmd == ".qqbot start image")
 		{
@@ -162,8 +162,8 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 		// 重新加载群成员列表.
 		if (cmd == ".qqbot reload")
 		{
-			qqclient.update_group_member(group);
-			qqclient.send_group_message(group, "群成员列表重加载", qq_msg_sended);
+			qqclient.get_ioservice().post(boost::bind(&webqq::update_group_member, qqclient, group));
+			qqclient.send_group_message(group, "群成员列表重加载", boost::lambda::constant(0) == 0);
 		}
 
 		// 开始讲座记录.	
@@ -289,7 +289,7 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 				);
 				if (resend_img){
 					//TODO send it
-					qqclient.send_group_message(group_code, imgurl, qq_msg_sended);
+					qqclient.send_group_message(group_code, imgurl, boost::lambda::constant(0) == 0);
 				}
 				ircmsg += imgurl;
 			}break;
