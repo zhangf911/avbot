@@ -22,14 +22,9 @@ endif()
 
 find_package(Threads)
 
-add_definitions(-DBOOST_ASIO_SEPARATE_COMPILATION=1)
-
-add_library(asio STATIC asio_impl.cpp)
-
 add_subdirectory(libwebqq)
 add_subdirectory(libirc)
 add_subdirectory(libxmpp)
-
 
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -37,7 +32,6 @@ add_executable(qqbot main.cpp)
 
 target_link_libraries(qqbot webqq irc xmpp)
 target_link_libraries(qqbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(qqbot asio)
 install(TARGETS qqbot RUNTIME DESTINATION bin)
 
 if( NOT Boost_USE_STATIC_RUNTIME )
