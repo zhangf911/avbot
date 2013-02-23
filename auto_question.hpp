@@ -79,12 +79,12 @@ protected:
 	void load_question()
 	{
 		std::fstream file(_filename.c_str(), std::ios_base::in);
-		char question[512 + 1], answer[512 + 1];
+		std::string question, answer;
 		
 		while (file.good())
 		{
-			file.getline(question, 512);
-			file.getline(answer, 512);
+			std::getline(file, question);
+			std::getline(file, answer);
 			
 			if (strlen(question) == 0)
 			{
