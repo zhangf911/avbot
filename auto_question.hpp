@@ -86,7 +86,7 @@ protected:
 			std::getline(file, question);
 			std::getline(file, answer);
 			
-			if (strlen(question) == 0)
+			if (question.empty())
 			{
 				continue;
 			}
