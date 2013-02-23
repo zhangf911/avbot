@@ -73,6 +73,7 @@ public:
 	void on_handle_message(qqGroup& group, webqq& qqclient)
 	{
 		handle_question(group, qqclient);
+		_process_count.clear();
 	}
 	
 protected:
