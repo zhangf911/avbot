@@ -252,11 +252,8 @@ namespace gloox
 
   bool OpenSSLServer::privateInit()
   {
-    SSL_CTX_set_tmp_rsa_callback( m_ctx, tmp_rsa_callback );
-    SSL_CTX_set_tmp_dh_callback( m_ctx, tmp_dh_callback );
-    SSL_CTX_set_tmp_ecdh( m_ctx, EC_KEY_new_by_curve_name( NID_sect163r2 ) );
-    SSL_CTX_set_options( m_ctx, SSL_OP_CIPHER_SERVER_PREFERENCE );
-    return true;
+    // fixme, since we don't use server, just return false. openssl failed here
+    return false;
   }
 
 }
