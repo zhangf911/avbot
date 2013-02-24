@@ -163,7 +163,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 		// 重新加载群成员列表.
 		if (cmd == ".qqbot reload")
 		{
-			qqclient.get_ioservice().post(boost::bind(&webqq::update_group_member, qqclient, group));
+			qqclient.get_ioservice().post(boost::bind(&webqq::update_group_member, qqclient, boost::ref(group)));
 			qqclient.send_group_message(group, "群成员列表重加载", boost::lambda::constant(0) == 0);
 		}
 
