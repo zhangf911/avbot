@@ -135,7 +135,12 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	boost::cmatch what;
     boost::trim(cmd);
 
-    if (who.mflag == 21 || who.mflag == 85 || who.uin == group.owner )
+	if( cmd == ".qqbot ping")
+	{
+		qqclient.send_group_message(group, "我还活着", boost::lambda::constant(0) == 0  );
+	}
+
+	if (who.mflag == 21 || who.mflag == 85 || who.uin == group.owner )
 	{
 		if (cmd == ".qqbot relogin")
 		{
@@ -144,10 +149,6 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 			);
 		}
 		
-		if( cmd == ".qqbot ping")
-		{
-			qqclient.send_group_message(group, "我还活着", boost::lambda::constant(0) == 0  );
-		}
 		// 转发图片处理.
 		if (cmd == ".qqbot start image")
 		{
