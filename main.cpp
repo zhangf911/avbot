@@ -140,7 +140,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 		qqclient.send_group_message(group, "我还活着", boost::lambda::constant(0) == 0  );
 	}
 
-	if (who.mflag == 21 || who.mflag == 85 || who.uin == group.owner )
+	if ((who.mflag & 21) == 21 || who.uin == group.owner )
 	{
 		if (cmd == ".qqbot relogin")
 		{
