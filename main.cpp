@@ -134,6 +134,16 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	boost::regex ex;
 	boost::cmatch what;
     boost::trim(cmd);
+	
+	if( cmd == ".qqbot help")
+	{
+		qqclient.send_group_message(group,
+			"可用的命令\n\t.qqbot help\n\t.qqbot ping\n\t.qqbot relogin\n\t.qqbot reload\n"
+			"\t.qqbot start imgage\t.qqbot stop image\n"
+			"\t.qqbot begin class XXX\t.qqbot end class\n"
+			"\t.qqbot newbee SB",
+							  boost::lambda::constant(0) == 0  );
+	}
 
 	if( cmd == ".qqbot ping")
 	{
