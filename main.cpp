@@ -159,6 +159,10 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 			);
 		}
 		
+		if ( cmd == ".qqbot exit")
+		{
+			exit(0);
+		}
 		// 转发图片处理.
 		if (cmd == ".qqbot start image")
 		{
