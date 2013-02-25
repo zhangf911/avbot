@@ -441,7 +441,7 @@ int main(int argc, char *argv[])
 	if (vm.count("version"))
 	{
 		printf("qqbot version %s (%s %s) \n", QQBOT_VERSION, __DATE__, __TIME__);
-        exit(EXIT_SUCCESS);
+		exit(EXIT_SUCCESS);
 	}
 	
 	if (!logdir.empty())
