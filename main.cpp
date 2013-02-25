@@ -41,7 +41,9 @@ namespace po = boost::program_options;
 
 #include "auto_question.hpp"
 
-#define QQBOT_VERSION "0.0.1"
+#ifndef QQBOT_VERSION
+#define QQBOT_VERSION "unknow"
+#endif
 
 static qqlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.

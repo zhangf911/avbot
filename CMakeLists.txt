@@ -28,6 +28,7 @@ add_subdirectory(libxmpp)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
+add_definitions(-DQQBOT_VERSION=\"2.2\")
 add_executable(qqbot main.cpp)
 
 target_link_libraries(qqbot webqq irc xmpp)
