@@ -440,7 +440,7 @@ int main(int argc, char *argv[])
 	}
 	if (vm.count("version"))
 	{
-		printf("qqbot version %s \n", QQBOT_VERSION);
+		printf("qqbot version %s (%s) \n", QQBOT_VERSION, __DATE__);
         exit(EXIT_SUCCESS);
 	}
 	
