@@ -1,4 +1,5 @@
 #include <boost/make_shared.hpp>
+#include <boost/foreach.hpp>
 #include "irc.h"
 
 static void timeout(boost::shared_ptr<boost::asio::deadline_timer> t, boost::function<void()> cb)
@@ -15,6 +16,7 @@ static void delayedcall(boost::asio::io_service &io_service, int sec, boost::fun
 IrcClient::IrcClient(boost::asio::io_service &_io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
 	:io_service(_io_service), cb_(0), socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
 {
+    response_.prepare(512*1024);
     connect();
 }
 
@@ -60,18 +62,14 @@ void IrcClient::connected()
 
     login_=true;
     retry_count_=c_retry_cuont;
-    if (msg_queue_.size())
+
+    BOOST_FOREACH(std::string& str,msg_queue_)
     {
-        if (msg_queue_.size())
-        {
-            for (std::vector<std::string>::iterator it=msg_queue_.begin();it!=msg_queue_.end();it++)
-            {
-                join_queue_.push_back(*it);  
-                send_request(*it);
-            }
-        }
-        msg_queue_.clear();
+        join_queue_.push_back(str);
+        send_request(str);
     }
+    
+    msg_queue_.clear();
     
 }
 
@@ -79,6 +77,7 @@ void IrcClient::oper(const std::string& user,const std::string& pwd)
 {
     send_request("OPER "+user+" "+pwd);
 }
+
 void IrcClient::chat(const std::string& whom,const std::string& msg)
 {
     send_request("PRIVMSG "+whom+" :"+msg);
@@ -125,8 +124,8 @@ void IrcClient::relogin()
 
 void IrcClient::relogin_delayed()
 {
-	for (std::vector<std::string>::iterator it=join_queue_.begin();it!=join_queue_.end();it++)
-		msg_queue_.push_back(*it);
+    BOOST_FOREACH (std::string& str,join_queue_)
+		msg_queue_.push_back(str);
 	join_queue_.clear();
 	connect();
 }
@@ -155,10 +154,8 @@ void IrcClient::process_request(boost::asio::streambuf& buf)
     std::vector<std::string> vec;
     boost::split(vec,longreg,boost::algorithm::is_any_of("\r\n"),boost::algorithm::token_compress_on);
 
-    for (std::vector<std::string>::iterator it=vec.begin();it!=vec.end();it++)
+    BOOST_FOREACH (std::string& req,vec)
     {
-        std::string req=*it;
-
         if (req.substr(0,4)=="PING")
         {
             send_request("PONG "+req.substr(6,req.length()-8));
