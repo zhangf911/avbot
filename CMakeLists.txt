@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(qqbot)
+project(avbot)
 #SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 option(ENABLE_STATIC "link to boost staticaly" ON)
 option(ENABLE_TEST "build xmpp test" OFF)
@@ -29,11 +29,11 @@ add_subdirectory(libxmpp)
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_definitions(-DQQBOT_VERSION=\"2.2\")
-add_executable(qqbot main.cpp)
+add_executable(avbot main.cpp)
 
-target_link_libraries(qqbot webqq irc xmpp)
-target_link_libraries(qqbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-install(TARGETS qqbot RUNTIME DESTINATION bin)
+target_link_libraries(avbot webqq irc xmpp)
+target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+install(TARGETS avbot RUNTIME DESTINATION bin)
 
 if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
