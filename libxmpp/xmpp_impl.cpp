@@ -33,42 +33,36 @@
 using namespace XMPP;
 
 xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver)
-	:password(xmpppasswd), m_asio(asio), m_jid(xmppuser+"/avqqbot"), m_client(m_jid, xmpppasswd)
+	:io_service(asio), m_jid(xmppuser+"/avqqbot"), m_client(m_jid, xmpppasswd)
 {
-	std::vector<std::string> splited;
-	boost::split(splited, xmppuser, boost::is_any_of("@"));
-	user = splited[0];
-	hostname = splited[1];
-
 	m_client.registerConnectionListener(this);
 	m_client.registerMessageHandler(this);
 	
 	if(!xmppserver.empty()){
-		splited.clear();
+		std::vector<std::string> splited;
 		// 设定服务器.
 		boost::split(splited, xmppserver, boost::is_any_of(":"));
-		std::string port = "5222";
+		m_client.setServer(splited[0]);
 		if(splited.size() == 2)
-			port = splited[1];
-		
-		m_client.setConnectionImpl(
-			new gloox::ConnectionTCPClient( & m_client , m_client.logInstance() , splited[0] , boost::lexical_cast<int>(port))
-		);	
+			m_client.setPort(boost::lexical_cast<int>(splited[1]));
 	}
-	m_asio.post(boost::bind(&xmpp_impl::cb_handle_connecting, this));
+	io_service.post(boost::bind(&xmpp_impl::cb_handle_connecting, this));
 }
 
 void xmpp_impl::cb_handle_connecting()
 {
-	m_client.connect(false);
-	m_asio.post(boost::bind(&xmpp_impl::cb_handle_connected, this));
+	if(m_client.connect(false))
+		io_service.post(boost::bind(&xmpp_impl::cb_handle_connected, this));
+	else{
+		std::cerr << "unable to connect to xmpp server" << std::endl;
+	}
 }
 
 void xmpp_impl::cb_handle_connected()
 {
 	gloox::ConnectionTCPClient* con = static_cast<gloox::ConnectionTCPClient*>(m_client.connectionImpl());
 
-	m_asio_socket.reset( new boost::asio::ip::tcp::socket(m_asio,boost::asio::ip::tcp::v4(), con->socket()));
+	m_asio_socket.reset( new boost::asio::ip::tcp::socket(io_service,boost::asio::ip::tcp::v4(), con->socket()));
 
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
 		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
@@ -89,7 +83,7 @@ void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error)
 	gloox::ConnectionTCPClient* con = static_cast<gloox::ConnectionTCPClient*>(m_client.connectionImpl());
 
 	if(!m_asio_socket->is_open()){
-		m_asio_socket.reset( new boost::asio::ip::tcp::socket(m_asio,boost::asio::ip::tcp::v4(), con->socket()));	
+		m_asio_socket.reset( new boost::asio::ip::tcp::socket(io_service,boost::asio::ip::tcp::v4(), con->socket()));	
 	}
 
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 

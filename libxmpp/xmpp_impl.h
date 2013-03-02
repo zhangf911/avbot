@@ -58,9 +58,7 @@ private:
 	void cb_handle_connected();
 	void cb_handle_asio_read(const boost::system::error_code & error);
 private:
-	boost::asio::io_service & m_asio;
-	std::string hostname;                                      // the host to connect
-	std::string user, password;
+	boost::asio::io_service & io_service;
 	gloox::JID m_jid;
 	gloox::Client m_client;
 	std::vector<boost::shared_ptr<gloox::MUCRoom> >	m_rooms;
