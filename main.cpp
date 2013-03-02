@@ -240,7 +240,7 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &irc
 		std::string forwarder = boost::str(boost::format("%s 说：%s") % pMsg.whom % pMsg.msg);
 		groups->forwardmessage(from,forwarder);
 	}
-	if(pMsg.msg == ".qqbot exit"){
+	if(boost::trim_copy(pMsg.msg) == ".qqbot exit"){
 		exit(0);
 	}
 }
