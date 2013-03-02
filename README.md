@@ -12,6 +12,16 @@ avbot 连通 IRC、XMPP 和  QQ群，并能实时记录聊天信息。每日自�
 ### 将XMPP聊天室消息转发到QQ群和IRC
 ### QQ图片转成 url 链接给 IRC和XMPP聊天室
 
+# 代码克隆办法
+
+
+	git clone git://github.com/avplayer/avbot.github
+	cd avbot
+	git submodule init
+	git submodule update
+
+因为使用了　submodule 引入　avhttp , 故而需要使用　git submodule update 来更新　avhttp
+
 # 编译办法
 
 项目使用 cmake 编译。编译办法很简单
