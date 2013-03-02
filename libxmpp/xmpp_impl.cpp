@@ -61,6 +61,13 @@ void xmpp_impl::join(std::string roomjid)
 void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error)
 {
 	m_client.recv(0);
+	
+	gloox::ConnectionTCPClient* con = static_cast<gloox::ConnectionTCPClient*>(m_client.connectionImpl());
+
+	if(!m_asio_socket->is_open()){
+		m_asio_socket.reset( new boost::asio::ip::tcp::socket(m_asio,boost::asio::ip::tcp::v4(), con->socket()));	
+	}
+
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
 		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
 	);
