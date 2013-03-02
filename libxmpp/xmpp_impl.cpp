@@ -55,18 +55,21 @@ xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::s
 			new gloox::ConnectionTCPClient( & m_client , m_client.logInstance() , splited[0] , boost::lexical_cast<int>(port))
 		);	
 	}
-	m_asio.post(boost::bind(&xmpp_impl::cb_handle_connect, this));
+	m_asio.post(boost::bind(&xmpp_impl::cb_handle_connecting, this));
 }
 
-void xmpp_impl::cb_handle_connect()
+void xmpp_impl::cb_handle_connecting()
 {
 	m_client.connect(false);
+	m_asio.post(boost::bind(&xmpp_impl::cb_handle_connected, this));
+}
 
+void xmpp_impl::cb_handle_connected()
+{
 	gloox::ConnectionTCPClient* con = static_cast<gloox::ConnectionTCPClient*>(m_client.connectionImpl());
 
 	m_asio_socket.reset( new boost::asio::ip::tcp::socket(m_asio,boost::asio::ip::tcp::v4(), con->socket()));
-	//use asio :)
-	//boost::asio::async_read();
+
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
 		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
 	);
