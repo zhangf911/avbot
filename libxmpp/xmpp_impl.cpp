@@ -26,11 +26,13 @@
 #include <gloox/mucroom.h>
 #include <gloox/connectiontcpclient.h>
 
+#include <boost/lexical_cast.hpp>
+
 #include "xmpp_impl.h"
 
 using namespace XMPP;
 
-xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd)
+xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver)
 	:password(xmpppasswd), m_asio(asio), m_jid(xmppuser+"/avqqbot"), m_client(m_jid, xmpppasswd)
 {
 	std::vector<std::string> splited;
@@ -40,7 +42,26 @@ xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::s
 
 	m_client.registerConnectionListener(this);
 	m_client.registerMessageHandler(this);
+	
+	if(!xmppserver.empty()){
+		splited.clear();
+		// 设定服务器.
+		boost::split(splited, xmppserver, boost::is_any_of(":"));
+		std::string port = "5222";
+		if(splited.size() == 2)
+			port = splited[1];
+		
+		m_client.setConnectionImpl(
+			new gloox::ConnectionTCPClient( & m_client , m_client.logInstance() , splited[0] , boost::lexical_cast<int>(port))
+		);	
+	}
+	m_asio.post(boost::bind(&xmpp_impl::cb_handle_connect, this));
+}
+
+void xmpp_impl::cb_handle_connect()
+{
 	m_client.connect(false);
+
 	gloox::ConnectionTCPClient* con = static_cast<gloox::ConnectionTCPClient*>(m_client.connectionImpl());
 
 	m_asio_socket.reset( new boost::asio::ip::tcp::socket(m_asio,boost::asio::ip::tcp::v4(), con->socket()));

@@ -240,6 +240,9 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &irc
 		std::string forwarder = boost::str(boost::format("%s 说：%s") % pMsg.whom % pMsg.msg);
 		groups->forwardmessage(from,forwarder);
 	}
+	if(pMsg.msg == ".qqbot exit"){
+		exit(0);
+	}
 }
 
 static void om_xmpp_message(std::string xmpproom, std::string who, std::string message, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
@@ -392,7 +395,7 @@ int main(int argc, char *argv[])
 {
     std::string qqnumber, qqpwd;
     std::string ircnick, ircroom, ircpwd;
-    std::string xmppuser, xmpppwd, xmpproom;
+    std::string xmppuser, xmppserver, xmpppwd, xmpproom;
     std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
@@ -413,6 +416,7 @@ int main(int argc, char *argv[])
 		( "ircpwd",		po::value<std::string>(&ircpwd),	"irc password" )
 		( "ircrooms",	po::value<std::string>(&ircroom),	"irc room" )
 		( "xmppuser",	po::value<std::string>(&xmppuser),	"id for XMPP,  eg: (microcaicai@gmail.com)" )
+		( "xmppserver",	po::value<std::string>(&xmppserver),	"server to connect for XMPP,  eg: (xmpp.l.google.com)" )
 		( "xmpppwd",	po::value<std::string>(&xmpppwd),	"password for XMPP" )
 		( "xmpprooms",	po::value<std::string>(&xmpproom),	"xmpp rooms" )
 		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
@@ -465,7 +469,7 @@ int main(int argc, char *argv[])
 
 	boost::asio::io_service asio;
 
-	xmpp		xmppclient(asio, xmppuser, xmpppwd);
+	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver);
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
 

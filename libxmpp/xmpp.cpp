@@ -19,10 +19,10 @@
 #include "xmpp.h"
 #include "xmpp_impl.h"
 
-xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd)
+xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver)
 {
 	if (!xmppuser.empty() && !xmpppasswd.empty())
-		impl.reset(new XMPP::xmpp_impl(asio, xmppuser, xmpppasswd));
+		impl.reset(new XMPP::xmpp_impl(asio, xmppuser, xmpppasswd, xmppserver));
 }
 
 void xmpp::join(std::string roomjid)

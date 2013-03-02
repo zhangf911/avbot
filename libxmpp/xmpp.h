@@ -31,7 +31,7 @@ namespace XMPP {
 class xmpp
 {
 public:
-	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
+	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver);
 	void join(std::string roomjid);
 	~xmpp();
 	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);

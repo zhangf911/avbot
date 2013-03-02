@@ -32,7 +32,7 @@ namespace XMPP {
 class xmpp_impl : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler
 {
 public:
-	xmpp_impl(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd);
+	xmpp_impl(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver);
 	void join(std::string roomjid);
 	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);
 	void send_room_message(std::string xmpproom, std::string message);
@@ -54,6 +54,7 @@ private:
     virtual void handleMUCItems(gloox::MUCRoom* room, const gloox::Disco::ItemList& items);
     virtual bool handleMUCRoomCreation(gloox::MUCRoom* room);
 
+	void cb_handle_connect();
 	void cb_handle_asio_read(const boost::system::error_code & error);
 private:
 	boost::asio::io_service & m_asio;
