@@ -22,6 +22,7 @@ branches:
 notifications:
   recipients:
     - microcaicai@gmail.com
+    - jack.wgm@gmail.com
   email:
     on_success: change
     on_failure: always

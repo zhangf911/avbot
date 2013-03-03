@@ -25,6 +25,7 @@ find_package(Threads)
 add_subdirectory(libwebqq)
 add_subdirectory(libirc)
 add_subdirectory(libxmpp)
+add_subdirectory(libpop3)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -38,3 +39,4 @@ install(TARGETS avbot RUNTIME DESTINATION bin)
 if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
 endif()
+
