@@ -444,6 +444,10 @@ int main(int argc, char *argv[])
 			std::cerr << e << std::endl;
 		}
 	}
+
+	if (vm.count("daemon"))
+		daemon(0, 1);
+		
 	if (vm.count("version"))
 	{
 		printf("qqbot version %s (%s %s) \n", QQBOT_VERSION, __DATE__, __TIME__);
@@ -463,9 +467,6 @@ int main(int argc, char *argv[])
 		logfile.log_path(logdir);
 		chdir(logdir.c_str());
 	}
-
-    if (vm.count("daemon"))
-		daemon(0, 0);
 
 	boost::asio::io_service asio;
 
