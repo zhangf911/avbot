@@ -33,7 +33,6 @@ namespace po = boost::program_options;
 #include "libirc/irc.h"
 #include "libwebqq/webqq.h"
 #include "libwebqq/url.hpp"
-#include "utf8/utf8.h"
 #include "libxmpp/xmpp.h"
 
 #include "counter.hpp"
@@ -93,10 +92,10 @@ public:
 			}else if (chatgroupmember.substr(0,2)=="qq" )
 			{
 				
-				std::wstring qqnum = utf8_wide(chatgroupmember.substr(3));
+				std::string qqnum = chatgroupmember.substr(3);
 				logfile.add_log(qqnum, message);
 				if(qq_->get_Group_by_qq(qqnum))
-					qq_->send_group_message(*qq_->get_Group_by_qq(qqnum), message, boost::lambda::constant(0) == 0);
+					qq_->send_group_message(*qq_->get_Group_by_qq(qqnum), message, boost::lambda::constant(0));
 			}
 		}
 	}
@@ -256,15 +255,15 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 	}
 }
 
-static void on_group_msg(std::wstring group_code, std::wstring who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
+static void on_group_msg(std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
 {
 	qqBuddy *buddy = NULL;
 	qqGroup *group = qqclient.get_Group_by_gid(group_code);
-	std::wstring groupname = group_code;
+	std::string groupname = group_code;
 	if (group)
 		groupname = group->name;
 	buddy = group ? group->get_Buddy_by_uin(who) : NULL;
-	std::wstring nick = who;
+	std::string nick = who;
 	if (buddy)
 	{
 		if (buddy->card.empty())
@@ -273,39 +272,39 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 			nick = buddy->card;
 	}
 
-	std::wstring message_nick, message;
+	std::string message_nick, message;
 	std::string ircmsg;
 
 	message_nick += nick;
-	message_nick += L" 说：";
+	message_nick += " 说：";
 	
-	ircmsg = boost::str(boost::format("qq(%s): ") % wide_utf8(nick));
+	ircmsg = boost::str(boost::format("qq(%s): ") % nick);
 
 	BOOST_FOREACH(qqMsg qqmsg, msg)
 	{
-      	std::wstring buf;
+      	std::string buf;
 		switch (qqmsg.type)
 		{
 			case qqMsg::LWQQ_MSG_TEXT:
 			{
 				buf = qqmsg.text;
-				ircmsg += wide_utf8(buf);
+				ircmsg += buf;
 				if (!buf.empty()) {
-					boost::replace_all(buf, L"&", L"&amp;");
-					boost::replace_all(buf, L"<", L"&lt;");
-					boost::replace_all(buf, L">", L"&gt;");
-					boost::replace_all(buf, L"  ", L"&nbsp;");
+					boost::replace_all(buf, "&", "&amp;");
+					boost::replace_all(buf, "<", "&lt;");
+					boost::replace_all(buf, ">", "&gt;");
+					boost::replace_all(buf, "  ", "&nbsp;");
 				}
 			}
 			break;
 			case qqMsg::LWQQ_MSG_CFACE:			
 			{
-				buf = boost::str(boost::wformat(
-				L"<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" > ")
+				buf = boost::str(boost::format(
+				"<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" > ")
 				% qqmsg.cface);
 				std::string imgurl = boost::str(
 					boost::format(" http://w.qq.com/cgi-bin/get_group_pic?pic=%s ")
-						% url_encode(wide_utf8(qqmsg.cface))
+						% url_encode(qqmsg.cface)
 				);
 				if (resend_img){
 					//TODO send it
@@ -315,30 +314,30 @@ static void on_group_msg(std::wstring group_code, std::wstring who, const std::v
 			}break;
 			case qqMsg::LWQQ_MSG_FACE:
 			{
-				buf = boost::str(boost::wformat(
-					L"<img src=\"http://0.web.qstatic.com/webqqpic/style/face/%d.gif\" >") % qqmsg.face);
-				ircmsg += wide_utf8(buf);
+				buf = boost::str(boost::format(
+					"<img src=\"http://0.web.qstatic.com/webqqpic/style/face/%d.gif\" >") % qqmsg.face);
+				ircmsg += buf;
 			}break;
 		}
 		message += buf;
 	}
 
 	// 统计发言.
-	cnt.increace(wide_utf8(nick));
+	cnt.increace(nick);
 	cnt.save();
 
 	// 记录.
-	printf("%ls%ls\n", message_nick.c_str(),  message.c_str());
+	printf("%s%s\n", message_nick.c_str(),  message.c_str());
 	if (!group)
 		return;
 	// qq消息控制.
 	if (buddy)
-		qqbot_control(qqclient, *group, *buddy, wide_utf8(message));
+		qqbot_control(qqclient, *group, *buddy, message);
 
-	logfile.add_log(group->qqnum, wide_utf8(message_nick + message));
+	logfile.add_log(group->qqnum, message_nick + message);
 	// send to irc
 
-	std::string from = std::string("qq:") + wide_utf8(group->qqnum);
+	std::string from = std::string("qq:") + group->qqnum;
 
 	messagegroup* groups =  find_group(from);
 	

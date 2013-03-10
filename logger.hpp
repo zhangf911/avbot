@@ -1,13 +1,12 @@
 
 #pragma once
 #include <string>
-#include "utf8/utf8.h"
 
 class qqlog : public boost::noncopyable
 {
 public:
 	typedef boost::shared_ptr<std::ofstream> ofstream_ptr;
-	typedef std::map<std::wstring, ofstream_ptr> loglist;
+	typedef std::map<std::string, ofstream_ptr> loglist;
 
 public:
 	qqlog() 
@@ -18,7 +17,7 @@ public:
 
 public:
 	std::string log_path(){
- 		return wide_utf8( m_path.wstring() );
+ 		return  m_path.string() ;
 	}
 	// 设置日志保存路径.
 	void log_path(const std::wstring &path)
@@ -28,10 +27,10 @@ public:
 	// 设置日志保存路径.
 	void log_path(const std::string &path)
 	{
-		m_path = utf8_wide(path);
+		m_path = path;
 	}
 	// 添加日志消息.
-	bool add_log(const std::wstring &groupid, const std::string &msg)
+	bool add_log(const std::string &groupid, const std::string &msg)
 	{
 		// 在qq群列表中查找已有的项目, 如果没找到则创建一个新的.
 		ofstream_ptr file_ptr;
@@ -79,7 +78,7 @@ public:
 	}
 
 	// 开始讲座
-	bool begin_lecture(const std::wstring &groupid, const std::string &title)
+	bool begin_lecture(const std::string &groupid, const std::string &title)
 	{
 		// 已经打开讲座, 乱调用API, 返回失败!
 		if (m_lecture_file) return false;
@@ -110,7 +109,7 @@ public:
 	void end_lecture()
 	{
 		// 清空讲座群id.
-		m_lecture_groupid = L"";
+		m_lecture_groupid.clear();
 		// 重置讲座文件指针.
 		m_lecture_file.reset();
 	}
@@ -118,7 +117,7 @@ public:
 protected:
 
 	// 构造路径.
-	std::string make_path(const std::wstring &groupid) const
+	std::string make_path(const std::string &groupid) const
 	{
 		return (m_path / groupid).string();
 	}
@@ -135,7 +134,7 @@ protected:
 	}
 
 	// 创建对应的日志文件, 返回日志文件指针.
-	ofstream_ptr create_file(const std::wstring &groupid) const
+	ofstream_ptr create_file(const std::string &groupid) const
 	{
 		// 生成对应的路径.
 		std::string save_path = make_path(groupid);
@@ -182,8 +181,8 @@ protected:
 
 private:
 	ofstream_ptr m_lecture_file;
-	std::wstring m_lecture_groupid;
+	std::string m_lecture_groupid;
 	loglist m_group_list;
-	fs::wpath m_path;
+	fs::path m_path;
 };
 
