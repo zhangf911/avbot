@@ -29,7 +29,7 @@ add_subdirectory(libpop3)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-add_definitions(-DQQBOT_VERSION=\"2.2\")
+add_definitions(-DQQBOT_VERSION=\"3.0-pre1\")
 add_executable(avbot main.cpp)
 
 target_link_libraries(avbot webqq irc xmpp)
