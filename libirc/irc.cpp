@@ -1,17 +1,8 @@
 #include <boost/make_shared.hpp>
 #include <boost/foreach.hpp>
+#include "boost/timedcall.hpp"
+
 #include "irc.h"
-
-static void timeout(boost::shared_ptr<boost::asio::deadline_timer> t, boost::function<void()> cb)
-{
-	cb();
-}
-
-static void delayedcall(boost::asio::io_service &io_service, int sec, boost::function<void()> cb)
-{
-	boost::shared_ptr<boost::asio::deadline_timer> t( new boost::asio::deadline_timer(io_service, boost::posix_time::seconds(sec)));
-	t->async_wait(boost::bind(&timeout, t, cb));
-}
 
 IrcClient::IrcClient(boost::asio::io_service &_io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
 	:io_service(_io_service), cb_(0), socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
@@ -106,20 +97,20 @@ void IrcClient::join(const std::string& ch,const std::string &pwd)
 void IrcClient::relogin()
 {
 
-    login_=false;
-    boost::system::error_code ec;
-    socket_.close(ec);
-    retry_count_--;
+	login_=false;
+	boost::system::error_code ec;
+	socket_.close(ec);
+	retry_count_--;
 
-    if (retry_count_<=0)
-    {
-        std::cout<<"Irc Server has offline!!!"<<  std::endl;;
-        return;
-    }
+	if (retry_count_<=0)
+	{
+		std::cout<<"Irc Server has offline!!!"<<  std::endl;;
+		return;
+	}
 
-    std::cout << "retry in 10s..." <<  std::endl;
+	std::cout << "retry in 10s..." <<  std::endl;
 
-    delayedcall(io_service, 10, boost::bind(&IrcClient::relogin_delayed, this));
+	boost::delayedcallsec(io_service, 10, boost::bind(&IrcClient::relogin_delayed, this));
 }
 
 void IrcClient::relogin_delayed()
