@@ -22,12 +22,14 @@ endif()
 
 find_package(Threads)
 
+include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR})
+
 add_subdirectory(libwebqq)
 add_subdirectory(libirc)
 add_subdirectory(libxmpp)
 add_subdirectory(libpop3)
 
-include_directories(${Boost_INCLUDE_DIRS})
 
 add_definitions(-DQQBOT_VERSION=\"3.0-pre1\")
 add_executable(avbot main.cpp)
