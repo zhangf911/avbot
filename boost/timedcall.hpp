@@ -11,9 +11,10 @@ template<class timeunit>
 class base_delayedcall{
 public:
 	template<typename handler>
-	base_delayedcall(boost::asio::io_service &_io_service, int timeunitcount, handler _cb)
+	base_delayedcall(boost::asio::io_service &_io_service, int timeunitcount, BOOST_ASIO_MOVE_ARG(handler) _cb)
 		:io_service(_io_service),t( new boost::asio::deadline_timer(io_service, timeunit(timeunitcount)))
 	{
+	    BOOST_ASIO_WAIT_HANDLER_CHECK(handler, _cb) type_check;
 		cb = _cb;
 		t->async_wait(*this);
 	}
