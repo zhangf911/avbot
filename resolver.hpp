@@ -3,8 +3,6 @@
 
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
-#include "boost/coro/coro.hpp"
-#include "boost/coro/yield.hpp"
 
 namespace boost {
 
@@ -18,7 +16,7 @@ public:
 	typedef typename Protocol::endpoint endpoint_type;
 public:
 	template<class Handler>
-	resolver(boost::asio::io_service & _io_service, const query & _query, std::vector<endpoint_type>& _hosts, Handler _handler )
+	resolver(boost::asio::io_service & _io_service, const query & _query, std::vector<endpoint_type>& _hosts, BOOST_ASIO_MOVE_ARG(Handler) _handler )
 		:io_service(_io_service), m_resolver( new resolver_type(io_service) ), hosts(_hosts), handler(_handler)
 	{
 		m_resolver->async_resolve(_query, * this);
