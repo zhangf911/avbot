@@ -16,7 +16,7 @@ public:
 	typedef typename Protocol::endpoint endpoint_type;
 public:
 	template<class Handler>
-	resolver(boost::asio::io_service & _io_service, const query & _query, std::vector<endpoint_type>& _hosts, BOOST_ASIO_MOVE_ARG(Handler) _handler )
+	resolver(boost::asio::io_service & _io_service, const query & _query, boost::shared_ptr<std::vector<endpoint_type> > _hosts, BOOST_ASIO_MOVE_ARG(Handler) _handler )
 		:io_service(_io_service), m_resolver( new resolver_type(io_service) ), hosts(_hosts), handler(_handler)
 	{
 		m_resolver->async_resolve(_query, * this);
@@ -26,14 +26,14 @@ public:
 	{
 		for(iterator end;endpoint != end;endpoint++)
 		{
-			hosts.push_back(*endpoint);
+			hosts->push_back(*endpoint);
 		}
 		io_service.post(boost::asio::detail::bind_handler(handler, ec));
 	}
 private:
 	boost::asio::io_service&			io_service;
 	boost::shared_ptr<resolver_type>	m_resolver;
-	std::vector<endpoint_type>&			hosts;
+	boost::shared_ptr<std::vector<endpoint_type> > hosts;
 	boost::function<void(const boost::system::error_code & ec)>	handler;	
 };
 
