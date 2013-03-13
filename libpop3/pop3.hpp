@@ -14,7 +14,7 @@ class pop3 : boost::coro::coroutine {
 public:
 	pop3(boost::asio::io_service & _io_service, std::string user, std::string passwd)
 		:io_service(_io_service), m_socket(new boost::asio::ip::tcp::socket(io_service)),
-		i(0), m_user(user), m_passwd(passwd)
+		i(0), m_user(user), m_passwd(passwd), hosts( new std::vector<boost::asio::ip::tcp::endpoint>() )
 	{
 		io_service.post(*this);
 	}
@@ -24,10 +24,12 @@ public:
 	{
 		using namespace boost::asio::ip;
 		tcp::endpoint endpoint;
+		std::string		line;
+		std::istream	inbuffer(m_streambuf.get());
 		reenter(this)
 		{
 			do{
-				hosts.clear();
+				hosts->clear();
 				// 延时 100ms
 				_yield ::boost::delayedcallms(io_service,100, *this);
 				// dns 解析.
@@ -42,9 +44,9 @@ public:
 
 			do{
 				// 一个一个尝试链接.
-				endpoint = hosts[i++];
+				endpoint = (*hosts)[i++];
 				_yield m_socket->async_connect(endpoint, *this);
-			}while(ec && i < hosts.size());
+			}while(ec && i < hosts->size());
 
 			// 没连接上？　重试不　？
 			if(ec){
@@ -55,6 +57,7 @@ public:
 			
 			// "+OK QQMail POP3 Server v1.0 Service Ready(QQMail v2.0)"
 			_yield	boost::asio::async_read_until(*m_socket,*m_streambuf,"\n",*this);
+			inbuffer >> line;
 
 			// 发送用户名.
 			_yield m_socket->async_write_some(boost::asio::buffer(std::string("user ")+ m_user +"\n"), *this);
@@ -87,7 +90,7 @@ private:
 	boost::shared_ptr<boost::asio::ip::tcp::socket>	m_socket;
 	boost::shared_ptr<boost::asio::streambuf>	m_streambuf;
 	// resolved hosts to connect
-	std::vector<boost::asio::ip::tcp::endpoint> hosts;
+	boost::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint> > hosts;
 };
 
 #include  "boost/coro/unyield.hpp"
