@@ -12,10 +12,10 @@
 # undef reenter
 #endif
 
-#ifdef coyield
-# undef coyield
+#ifdef _yield
+# undef _yield
 #endif
 
-#ifdef cofork
-# undef cofork
+#ifdef _fork
+# undef _fork
 #endif
