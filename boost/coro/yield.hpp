@@ -14,10 +14,10 @@
 # define reenter(c) CORO_REENTER(c)
 #endif
 
-#ifndef coyield
-# define coyield CORO_YIELD
+#ifndef _yield
+# define _yield CORO_YIELD
 #endif
 
-#ifndef cofork
-# define cofork CORO_FORK
+#ifndef _fork
+# define _fork CORO_FORK
 #endif

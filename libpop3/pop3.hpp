@@ -29,13 +29,13 @@ public:
 			do{
 				hosts.clear();
 				// 延时 100ms
-				coyield ::boost::delayedcallms(io_service,100, *this);
+				_yield ::boost::delayedcallms(io_service,100, *this);
 				// dns 解析.
-				coyield ::boost::resolver<tcp>(io_service,tcp::resolver::query("pop.qq.com","110"),hosts, *this);
+				_yield ::boost::resolver<tcp>(io_service,tcp::resolver::query("pop.qq.com","110"),hosts, *this);
 
 				// 失败了延时 10s
 				if(ec)
-					coyield ::boost::delayedcallsec(io_service,10, *this);
+					_yield ::boost::delayedcallsec(io_service,10, *this);
 			}while(ec);// dns解析到成功为止!
 
 			i = 0;
@@ -43,7 +43,7 @@ public:
 			do{
 				// 一个一个尝试链接.
 				endpoint = hosts[i++];
-				coyield m_socket->async_connect(endpoint, *this);
+				_yield m_socket->async_connect(endpoint, *this);
 			}while(ec && i < hosts.size());
 
 			// 没连接上？　重试不　？
@@ -52,7 +52,30 @@ public:
 				return;
 			}
 			// 好了，连接上了.
-			coyield m_socket->async_write_some(boost::asio::buffer(std::string("user ")+ m_user), *this);
+			
+			// "+OK QQMail POP3 Server v1.0 Service Ready(QQMail v2.0)"
+			_yield	boost::asio::async_read_until(*m_socket,*m_streambuf,"\n",*this);
+
+			// 发送用户名.
+			_yield m_socket->async_write_some(boost::asio::buffer(std::string("user ")+ m_user +"\n"), *this);
+
+			// 接受返回状态.
+			_yield	boost::asio::async_read_until(*m_socket,*m_streambuf,"\n",*this);
+			// 解析是不是　OK.
+
+			// 发送密码.
+			_yield m_socket->async_write_some(boost::asio::buffer(std::string("pass ")+ m_passwd+"\n"), *this);
+
+			// 接受返回状态.
+			_yield	boost::asio::async_read_until(*m_socket,*m_streambuf,"\n",*this);
+			// 解析是不是　OK.
+
+			// 完成登录. 开始接收邮件.
+			
+			// 发送　list 命令.
+			
+			
+
 		}
 	}
 private:
@@ -62,6 +85,7 @@ private:
 	std::string m_user,m_passwd;
 	// 必须是可拷贝的，所以只能用共享指针.
 	boost::shared_ptr<boost::asio::ip::tcp::socket>	m_socket;
+	boost::shared_ptr<boost::asio::streambuf>	m_streambuf;
 	// resolved hosts to connect
 	std::vector<boost::asio::ip::tcp::endpoint> hosts;
 };
