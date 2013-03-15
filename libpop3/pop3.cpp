@@ -77,14 +77,14 @@ static std::pair<std::string,std::string>
 	select_best_mailcontent(mailcontent & thismail)
 {
 	typedef std::pair<std::string,std::string> mc;
-	BOOST_FOREACH(mc &v, thismail.content)
+	BOOST_FOREACH(mc &v, thismail.contents)
 	{
 		// 从 v.first aka contenttype 找到编码.
 		std::string mimetype = find_mimetype(v.first);
 		if( mimetype == "text/plain")
 			return v;
 	}
-	BOOST_FOREACH(mc &v, thismail.content)
+	BOOST_FOREACH(mc &v, thismail.contents)
 	{
 		// 从 v.first aka contenttype 找到编码.
 		std::string mimetype = find_mimetype(v.first);
@@ -94,7 +94,12 @@ static std::pair<std::string,std::string>
 	return std::make_pair("","");
 }
 
-static void decode_mail(boost::asio::io_service & io_service, mailcontent thismail)
+static void broadcast_signal(boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, mailcontent thismail)
+{
+	(*sig_gotmail)(thismail);
+}
+
+static void decode_mail(boost::asio::io_service & io_service, boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, mailcontent thismail)
 {
  	std::cout << "邮件内容begin" << std::endl;
 
@@ -108,12 +113,11 @@ static void decode_mail(boost::asio::io_service & io_service, mailcontent thisma
 
 	{
 		// 从 v.first aka contenttype 找到编码.
-		std::string charset = find_charset(mc.first);
-		std::string contentcecoded = boost::base64_decode(mc.second);
-		std::string content = ansi_utf8(contentcecoded, charset);
-		std::cout << content << std::endl;
+		thismail.content = ansi_utf8(boost::base64_decode(mc.second), find_charset(mc.first));
 	}
- 	std::cout << "邮件内容end" << std::endl;
+	std::cout << "邮件内容end" << std::endl;
+
+	io_service.post(boost::bind(broadcast_signal,sig_gotmail,thismail));
 }
 
 void pop3::process_mail ( std::istream& mail )
@@ -205,16 +209,16 @@ void pop3::process_mail ( std::istream& mail )
 			case 6:
 				if(state==3 && line == "."){
 					state = 0;
-					thismail.content.push_back(std::make_pair(contenttype,content));
+					thismail.contents.push_back(std::make_pair(contenttype,content));
 					content.clear();
 				}else if( state == 6 && line == std::string("--")+ boundary ){
 					state = 5;
-					thismail.content.push_back(std::make_pair(contenttype,content));
+					thismail.contents.push_back(std::make_pair(contenttype,content));
 					content.clear();
 				}else if ( state == 6 && line == std::string("--") + boundary + "--")
 				{
 					state = 8;
-					thismail.content.push_back(std::make_pair(contenttype,content));
+					thismail.contents.push_back(std::make_pair(contenttype,content));
 					content.clear();
 				}else{
 					//读取 content.
@@ -239,7 +243,7 @@ void pop3::process_mail ( std::istream& mail )
 		std::getline ( mail, line );
 	}
 	// 处理　base64 编码的邮件内容.
-	io_service.post(boost::bind(decode_mail, boost::ref(io_service), thismail));
+	io_service.post(boost::bind(decode_mail, boost::ref(io_service), m_sig_gotmail, thismail));
 }
 
 

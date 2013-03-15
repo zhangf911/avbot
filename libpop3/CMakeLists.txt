@@ -1,4 +1,4 @@
-find_package(Boost 1.48 COMPONENTS regex system locale)
+find_package(Boost 1.48 COMPONENTS regex signals system locale)
 
 add_library(pop3 pop3.cpp)
 add_executable(test test.cpp)
