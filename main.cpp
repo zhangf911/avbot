@@ -75,7 +75,11 @@ public:
 	bool in_group(std::string ch){
 		return std::find(channels.begin(),channels.end(),ch)!=channels.end();
 	}
-	void broadcast(std::string message);
+
+	void broadcast(std::string message){
+		forwardmessage("",message);
+	}
+
 	void forwardmessage(std::string from, std::string message){
 		BOOST_FOREACH(std::string chatgroupmember, channels)
 	 	{
