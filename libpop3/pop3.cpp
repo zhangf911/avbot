@@ -105,6 +105,7 @@ static void decode_mail(boost::asio::io_service & io_service, boost::shared_ptr<
 
 	thismail.from = base64inlinedecode( thismail.from );
 	thismail.to = base64inlinedecode( thismail.to );
+	thismail.subject = base64inlinedecode( thismail.subject );
 	std::cout << "发件人:";
 	std::cout << thismail.from ;
 	std::cout << std::endl;
