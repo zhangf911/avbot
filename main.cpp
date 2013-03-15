@@ -220,7 +220,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	}
 }
 
-static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &ircclient, xmpp& xmppclient)
+static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient)
 {
 	std::cout <<  pMsg.msg<< std::endl;
 
@@ -245,7 +245,7 @@ static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient, IrcClient &irc
 	}
 }
 
-static void om_xmpp_message(std::string xmpproom, std::string who, std::string message, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
+static void om_xmpp_message(std::string xmpproom, std::string who, std::string message)
 {
 	std::string from = std::string("xmpp:") + xmpproom;
 	//log to logfile?
@@ -256,7 +256,7 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 	}
 }
 
-static void on_group_msg(std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
+static void on_group_msg(std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient)
 {
 	qqBuddy *buddy = NULL;
 	qqGroup *group = qqclient.get_Group_by_gid(group_code);
@@ -328,7 +328,7 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	cnt.save();
 
 	// 记录.
-	printf("%s%s\n", message_nick.c_str(),  message.c_str());
+	std::printf("%s%s\n", message_nick.c_str(),  message.c_str());
 	if (!group)
 		return;
 	// qq消息控制.
@@ -482,12 +482,12 @@ int main(int argc, char *argv[])
 
 	build_group(chanelmap,qqclient,xmppclient,ircclient);
 
-	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
-	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3));
+	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient)));
 
 	qqclient.on_verify_code(boost::bind(on_verify_code,_1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 	qqclient.login();
-	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient)));
 
 	pop3client.connect_gotmail(boost::bind(on_mail,_1));
 
