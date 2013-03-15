@@ -7,9 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-
-#ifndef COROUTINE_HPP
-#define COROUTINE_HPP
+#pragma once
 
 namespace boost {
 	namespace coro {
@@ -90,4 +88,3 @@ private:
 # define CORO_FORK CORO_FORK_IMPL(__LINE__)
 #endif // defined(_MSC_VER)
 
-#endif // COROUTINE_HPP
