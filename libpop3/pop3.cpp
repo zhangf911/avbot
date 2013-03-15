@@ -1,14 +1,48 @@
+
+#include <boost/locale.hpp>
+
 #include <boost/bind.hpp>
 #include <boost/regex.hpp>
 #include <boost/foreach.hpp>
 
+#include "boost/base64.hpp"
 #include "pop3.hpp"
 
-static void decode_mail(mailcontent thismail)
+inline std::string ansi_utf8(std::string const &source, const std::string &characters = "GB2312")
+{
+	std::string destination;
+
+	destination = boost::locale::conv::between(source, "UTF-8", characters);
+
+	return destination;
+}
+
+static std::string base64inlinedecode(std::string str)
+{
+	boost::cmatch what;
+	//=?gb2312?B?UVHTys/ktq/MrA==?=<newsletter-noreply@qq.com>
+	boost::regex ex("=\\??([a-z0-9]*)?\\?B\\??([a-zA-Z0-9\\+=/]*)?\\?=?(.*)?");
+	if(boost::regex_match(str.c_str(), what, ex))
+	{
+		std::string charset = what[1];
+		boost::to_upper(charset);
+		std::string encoded = what[2];
+		std::string left = what[3];
+		std::cout << left;
+		return ansi_utf8(boost::base64_decode(encoded), charset) + left;
+	}
+	return str;
+}
+
+static void decode_mail(boost::asio::io_service & io_service, mailcontent thismail)
 {
  	std::cout << "邮件内容begin" << std::endl;
 	
+	std::cout << "发件人:" << base64inlinedecode( thismail.from) << std::endl;
+	
 	typedef std::pair<std::string,std::string> mc;
+	
+	
 	BOOST_FOREACH(mc &v, thismail.content)
 	{
 		std::cout << v.second << std::endl;
@@ -66,11 +100,11 @@ void pop3::process_mail ( std::istream& mail )
 				boost::to_lower ( val );
 
 				if ( key == "from" ) {
-					thismail.from = val;
+					thismail.from = kv[1];
 				} else if ( key == "to" ) {
-					thismail.to = val;
+					thismail.to = kv[1];
 				} else if ( key == "subject" ) {
-					thismail.subject = val;
+					thismail.subject = kv[1];
 				} else if ( key == "content-type" ) {
 					// 检查是不是　MIME　类型的.
 					if ( boost::trim_copy ( val ) == "multipart/alternative;" ) {
@@ -139,7 +173,7 @@ void pop3::process_mail ( std::istream& mail )
 		std::getline ( mail, line );
 	}
 	// 处理　base64 编码的邮件内容.
-	io_service.post(boost::bind(decode_mail, thismail));
+	io_service.post(boost::bind(decode_mail, boost::ref(io_service), thismail));
 }
 
 
