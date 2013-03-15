@@ -30,11 +30,10 @@ add_subdirectory(libirc)
 add_subdirectory(libxmpp)
 add_subdirectory(libpop3)
 
-
 add_definitions(-DQQBOT_VERSION=\"3.0-pre1\")
 add_executable(avbot main.cpp)
 
-target_link_libraries(avbot webqq irc xmpp)
+target_link_libraries(avbot webqq irc xmpp pop3)
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 install(TARGETS avbot RUNTIME DESTINATION bin)
 

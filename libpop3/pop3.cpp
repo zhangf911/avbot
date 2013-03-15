@@ -1,87 +1,70 @@
-#include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
+#include <boost/regex.hpp>
 
 #include "pop3.hpp"
 
-static fs::path configfilepath()
+void pop3::process_mail ( std::istream& mail )
 {
-	if ( getenv ( "USERPROFILE" ) ) {
-		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc" ) )
-			return fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc";
-	}
+	int state = 0;
+	mailcontent thismail;
+	std::string	contenttype;
+	std::string content;
 
-	if ( getenv ( "HOME" ) ) {
-		if ( fs::exists ( fs::path ( getenv ( "HOME" ) ) / ".qqbotrc" ) )
-			return fs::path ( getenv ( "HOME" ) ) / ".qqbotrc";
-	}
+	// 以行为单位解析
+	while ( !mail.eof() ) {
+		std::string line;
+		std::string key, val;
+		std::vector<std::string> kv;
+		std::getline ( mail, line );
+		std::stringstream	linestream ( line );
 
-	if ( fs::exists ( "./qqbotrc/.qqbotrc" ) )
-		return fs::path ( "./qqbotrc/.qqbotrc" );
+		switch ( state ) {
+			case 0:
+			case 2:
 
-	if ( fs::exists ( "/etc/qqbotrc" ) )
-		return fs::path ( "/etc/qqbotrc" );
+				if ( line == "\r" ) {
+					state = 3;
+					break;
+				}
 
-	throw "not configfileexit";
-}
+				boost::split ( kv, line, boost::algorithm::is_any_of ( ":" ) );
+				key = kv[0];
+				val = kv[1];
+				boost::to_lower ( key );
+				boost::to_lower ( val );
 
-int main(int argc, char * argv[])
-{
-    std::string qqnumber, qqpwd;
-    std::string ircnick, ircroom, ircpwd;
-    std::string xmppuser, xmppserver, xmpppwd, xmpproom;
-    std::string cfgfile;
-	std::string logdir;
-	std::string chanelmap;
+				if ( key == "from" ) {
+					thismail.from = val;
+				} else if ( key == "to" ) {
+					thismail.to = val;
+				} else if ( key == "subject" ) {
+					thismail.subject = val;
+				} else if ( key == "content-type" ) {
+					// 检查是不是　MIME　类型的.
+					if ( boost::trim_copy ( val ) == "multipart/alternative;" ) {
+						//是　MIME 类型的.
+						state = 1;
+						//进入　boundary 设定.
+					} else {
+						// 记录 content-type
+						//thismail.content.push_back(std::make_pair(""));
+						contenttype = val;
+						state = 2;
+					}
+				}
 
-    setlocale(LC_ALL, "");
+				break;
+			case 1:
+				//boundary=XXX
+				break;
+			case 3:
 
-	po::options_description desc("qqbot options");
-	desc.add_options()
-	    ( "version,v",										"output version" )
-		( "help,h",											"produce help message" )
-		( "daemon,d",										"go to background" )
-		( "qqnum,u",	po::value<std::string>(&qqnumber),	"QQ number" )
-		( "qqpwd,p",	po::value<std::string>(&qqpwd),		"QQ password" )
-		( "logdir",		po::value<std::string>(&logdir),	"dir for logfile" )
-		( "ircnick",	po::value<std::string>(&ircnick),	"irc nick" )
-		( "ircpwd",		po::value<std::string>(&ircpwd),	"irc password" )
-		( "ircrooms",	po::value<std::string>(&ircroom),	"irc room" )
-		( "xmppuser",	po::value<std::string>(&xmppuser),	"id for XMPP,  eg: (microcaicai@gmail.com)" )
-		( "xmppserver",	po::value<std::string>(&xmppserver),	"server to connect for XMPP,  eg: (xmpp.l.google.com)" )
-		( "xmpppwd",	po::value<std::string>(&xmpppwd),	"password for XMPP" )
-		( "xmpprooms",	po::value<std::string>(&xmpproom),	"xmpp rooms" )
-		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
-		;
-
-	po::variables_map vm;
-	po::store(po::parse_command_line(argc, argv, desc), vm);
-	po::notify(vm);
-
-	if (vm.count("help"))
-	{
-		std::cerr <<  desc <<  std::endl;
-		return 1;
-	}
-	if (vm.size() ==0 )
-	{
-		try
-		{
-			fs::path p = configfilepath();
-			po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
-			po::notify(vm);
-		}
-		catch(char* e)
-		{
-			std::cerr << e << std::endl;
+				//读取 content.
+				if ( line != ".\r" )
+					content += line;
 		}
 	}
 
-	
-	boost::asio::io_service asio;
-	boost::asio::io_service::work work(asio);
-
-	pop3 p(asio, qqnumber, qqpwd);
-    asio.run();
+	std::cout << "邮件内容begin" << std::endl;
+	std::cout << ::boost::asio::buffer_cast<const char*> ( m_streambuf->data() ) << std::endl;
+	std::cout << "邮件内容end" << std::endl;
 }
