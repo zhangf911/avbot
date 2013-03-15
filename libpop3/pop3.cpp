@@ -65,6 +65,35 @@ static std::string find_charset(std::string contenttype)
 	return "UTF-8"; // default to utf8
 }
 
+static std::string find_mimetype(std::string contenttype)
+{
+	std::vector<std::string> splited;
+	boost::split(splited, contenttype, boost::is_any_of("; "));
+	return splited[0].empty()? splited[1]:splited[0];
+}
+
+// 有　text/plain　的就选　text/plain, 没的才选　text/html
+static std::pair<std::string,std::string>
+	select_best_mailcontent(mailcontent & thismail)
+{
+	typedef std::pair<std::string,std::string> mc;
+	BOOST_FOREACH(mc &v, thismail.content)
+	{
+		// 从 v.first aka contenttype 找到编码.
+		std::string mimetype = find_mimetype(v.first);
+		if( mimetype == "text/plain")
+			return v;
+	}
+	BOOST_FOREACH(mc &v, thismail.content)
+	{
+		// 从 v.first aka contenttype 找到编码.
+		std::string mimetype = find_mimetype(v.first);
+		if( mimetype == "text/html")
+			return v;
+	}
+	return std::make_pair("","");
+}
+
 static void decode_mail(boost::asio::io_service & io_service, mailcontent thismail)
 {
  	std::cout << "邮件内容begin" << std::endl;
@@ -75,13 +104,12 @@ static void decode_mail(boost::asio::io_service & io_service, mailcontent thisma
 	std::cout << thismail.from ;
 	std::cout << std::endl;
 
-	typedef std::pair<std::string,std::string> mc;
-	
-	BOOST_FOREACH(mc &v, thismail.content)
+	std::pair<std::string,std::string> mc = select_best_mailcontent(thismail);
+
 	{
 		// 从 v.first aka contenttype 找到编码.
-		std::string charset = find_charset(v.first);
-		std::string contentcecoded = boost::base64_decode(v.second);
+		std::string charset = find_charset(mc.first);
+		std::string contentcecoded = boost::base64_decode(mc.second);
 		std::string content = ansi_utf8(contentcecoded, charset);
 		std::cout << content << std::endl;
 	}
