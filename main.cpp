@@ -347,7 +347,12 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	}
 }
 
-void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
+static void on_mail(mailcontent mail)
+{
+	
+}
+
+static void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
 {
 	const char * data = boost::asio::buffer_cast<const char*>(imgbuf);
 	size_t	imgsize = boost::asio::buffer_size(imgbuf);
@@ -473,15 +478,18 @@ int main(int argc, char *argv[])
 	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver);
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
+	pop3	pop3client(asio, qqnumber, qqpwd);
 
 	build_group(chanelmap,qqclient,xmppclient,ircclient);
-		
+
 	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 
 	qqclient.on_verify_code(boost::bind(on_verify_code,_1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 	qqclient.login();
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
+
+	pop3client.connect_gotmail(boost::bind(on_mail,_1));
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));

@@ -1,7 +1,7 @@
 find_package(Boost 1.48 COMPONENTS regex signals system locale)
 
 add_library(pop3 pop3.cpp)
-add_executable(test test.cpp)
-target_link_libraries(test pop3)
+target_link_libraries(pop3 ${Boost_LIBRARIES})
 
-target_link_libraries(test ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
+add_executable(test test.cpp)
+target_link_libraries(test pop3 ${CMAKE_THREAD_LIBS_INIT} )
