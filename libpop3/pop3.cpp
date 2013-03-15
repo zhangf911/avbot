@@ -265,8 +265,8 @@ restart:
 
 		do {
 			hosts->clear();
-			// 延时 100ms
-			_yield ::boost::delayedcallms ( io_service, 100, boost::bind ( *this, ec, 0 ) );
+			// 延时 60s
+			_yield ::boost::delayedcallsec( io_service, 60, boost::bind ( *this, ec, 0 ) );
 			// dns 解析.
 			_yield ::boost::resolver<ip::tcp> ( io_service, ip::tcp::resolver::query ( "pop.qq.com", "110" ), hosts, *this );
 
