@@ -11,7 +11,7 @@ before_install:
   - git submodule update
 
 before_script:
-  cmake .
+  cmake -DENABLE_STATIC=OFF .
 
 script:
   make
