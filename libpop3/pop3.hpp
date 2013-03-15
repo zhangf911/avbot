@@ -13,7 +13,6 @@
 #include "boost/resolver.hpp"
 #include "boost/timedcall.hpp"
 
-
 struct mailcontent{
 	std::string		from;
 	std::string		to;
@@ -21,8 +20,6 @@ struct mailcontent{
 	// (content-type)/(base64 encoded content) pair of content
 	std::vector< std::pair<std::string, std::string> > content;
 };
-
-
 
 class pop3 : boost::coro::coroutine {
 public:
@@ -176,7 +173,7 @@ restart:
 	}
 private:
 	void process_mail(std::istream &mail);
-private:	
+private:
 	int i;
 	::boost::asio::io_service & io_service;
 
