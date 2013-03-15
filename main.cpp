@@ -488,7 +488,6 @@ int main(int argc, char *argv[])
 	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver);
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
-	pop3	pop3client(asio, qqnumber, qqpwd);
 
 	build_group(chanelmap,qqclient,xmppclient,ircclient);
 
@@ -499,7 +498,7 @@ int main(int argc, char *argv[])
 	qqclient.login();
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient)));
 
-	pop3client.connect_gotmail(boost::bind(on_mail,_1, boost::ref(qqclient)));
+	{pop3(asio, qqnumber, qqpwd).connect_gotmail(boost::bind(on_mail,_1, boost::ref(qqclient)));}
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));

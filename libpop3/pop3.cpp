@@ -266,13 +266,13 @@ restart:
 		do {
 			hosts->clear();
 			// 延时 60s
-			_yield ::boost::delayedcallsec( io_service, 60, boost::bind ( *this, ec, 0 ) );
+			_yield ::boost::delayedcallsec( io_service, 60, boost::bind(*this, ec, 0) );
 			// dns 解析.
 			_yield ::boost::resolver<ip::tcp> ( io_service, ip::tcp::resolver::query ( "pop.qq.com", "110" ), hosts, *this );
 
 			// 失败了延时 10s
 			if ( ec )
-				_yield ::boost::delayedcallsec ( io_service, 10, boost::bind ( *this, ec, 0 ) );
+				_yield ::boost::delayedcallsec ( io_service, 10, boost::bind(*this, ec, 0) );
 		} while ( ec ); // dns解析到成功为止!
 
 		i = 0;
