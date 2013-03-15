@@ -403,7 +403,8 @@ restart:
 		// 处理完毕.
 		_yield async_write ( *m_socket, buffer ( "quit\n" ), *this );
 		_yield ::boost::delayedcallsec ( io_service, 1, boost::bind ( *this, ec, 0 ) );
-		m_socket->shutdown ( ip::tcp::socket::shutdown_both );
+		if(m_socket->is_open())
+			m_socket->shutdown ( ip::tcp::socket::shutdown_both );
 		_yield ::boost::delayedcallsec ( io_service, 1, boost::bind ( *this, ec, 0 ) );
 		m_socket.reset();
 		std::cout << "邮件处理完毕" << std::endl;
