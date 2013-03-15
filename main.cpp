@@ -347,9 +347,15 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	}
 }
 
-static void on_mail(mailcontent mail)
+static void on_mail(mailcontent mail, webqq & qqclient)
 {
-	
+	BOOST_FOREACH(messagegroup & g ,  messagegroups)
+	{
+		g.broadcast(boost::str(
+			boost::format("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s")
+			% mail.from % mail.to % mail.subject % mail.content
+		));
+	}
 }
 
 static void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient)
@@ -489,7 +495,7 @@ int main(int argc, char *argv[])
 	qqclient.login();
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient)));
 
-	pop3client.connect_gotmail(boost::bind(on_mail,_1));
+	pop3client.connect_gotmail(boost::bind(on_mail,_1, boost::ref(qqclient)));
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
