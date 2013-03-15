@@ -8,44 +8,82 @@
 #include "boost/base64.hpp"
 #include "pop3.hpp"
 
-inline std::string ansi_utf8(std::string const &source, const std::string &characters = "GB2312")
+static inline std::string ansi_utf8(std::string const &source, const std::string &characters = "GB18030")
 {
-	std::string destination;
+	return boost::locale::conv::between(source, "UTF-8", characters);
+}
 
-	destination = boost::locale::conv::between(source, "UTF-8", characters);
-
-	return destination;
+template<typename strIerator, typename Char>
+static std::string endmark(strIerator & s,strIerator e, Char delim)
+{
+	std::string str;
+	while( s !=  e && *s != delim){
+		str.append(1,*s);
+		s++;
+	}
+	return str;
 }
 
 static std::string base64inlinedecode(std::string str)
 {
-	boost::cmatch what;
-	//=?gb2312?B?UVHTys/ktq/MrA==?=<newsletter-noreply@qq.com>
-	boost::regex ex("=\\??([a-z0-9]*)?\\?B\\??([a-zA-Z0-9\\+=/]*)?\\?=?(.*)?");
-	if(boost::regex_match(str.c_str(), what, ex))
+	std::string result;
+	std::string::iterator p = str.begin();
+	while(p!=str.end())
 	{
-		std::string charset = what[1];
-		boost::to_upper(charset);
-		std::string encoded = what[2];
-		std::string left = what[3];
-		std::cout << left;
-		return ansi_utf8(boost::base64_decode(encoded), charset) + left;
+		if( *p == '=' && *(p+1)=='?') // 进入　base64 模式
+		{
+			p+=2;
+			std::string charset = endmark(p,str.end(),'?');
+			p+=3; // skip "?B?"
+			std::string base64encoded = endmark(p,str.end(),'?');
+			result.append(ansi_utf8(boost::base64_decode(base64encoded), charset));
+			p+=2; // skip ?=
+		}else{
+			result.append(1,*p);
+			p++;
+		}
 	}
-	return str;
+	return result;
+}
+
+static std::string find_charset(std::string contenttype)
+{
+	boost::cmatch what;
+	//charset="xxx"
+	std::size_t p =  contenttype.find("charset=");
+	if( p != contenttype.npos )
+	{
+		std::string charset = contenttype.substr(p).c_str();
+		boost::regex ex("charset=?(.*)?");
+		if(boost::regex_match(charset.c_str(), what, ex))
+		{
+			std::string charset = what[1];
+			boost::trim_if(charset,boost::is_any_of(" \""));
+			return charset;
+		}
+	}
+	return "UTF-8"; // default to utf8
 }
 
 static void decode_mail(boost::asio::io_service & io_service, mailcontent thismail)
 {
  	std::cout << "邮件内容begin" << std::endl;
-	
-	std::cout << "发件人:" << base64inlinedecode( thismail.from) << std::endl;
-	
+
+	thismail.from = base64inlinedecode( thismail.from );
+	thismail.to = base64inlinedecode( thismail.to );
+	std::cout << "发件人:";
+	std::cout << thismail.from ;
+	std::cout << std::endl;
+
 	typedef std::pair<std::string,std::string> mc;
-	
 	
 	BOOST_FOREACH(mc &v, thismail.content)
 	{
-		std::cout << v.second << std::endl;
+		// 从 v.first aka contenttype 找到编码.
+		std::string charset = find_charset(v.first);
+		std::string contentcecoded = boost::base64_decode(v.second);
+		std::string content = ansi_utf8(contentcecoded, charset);
+		std::cout << content << std::endl;
 	}
  	std::cout << "邮件内容end" << std::endl;
 }
