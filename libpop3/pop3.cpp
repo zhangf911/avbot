@@ -301,7 +301,7 @@ restart:
 		}
 
 		// 发送用户名.
-		_yield m_socket->async_write_some ( buffer ( std::string ( "user " ) + m_user + "\n" ), *this );
+		_yield m_socket->async_write_some ( buffer ( std::string ( "user " ) + m_mailaddr + "\n" ), *this );
 		if(ec) goto restart;
 		// 接受返回状态.
 		m_streambuf.reset ( new streambuf );

@@ -30,10 +30,14 @@ public:
 public:
 	pop3(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver)
 		:io_service(_io_service),
-		m_user(user), m_passwd(passwd),
+		m_mailaddr(user), m_passwd(passwd),
 		m_mailserver(_mailserver),
 		m_sig_gotmail(new on_gotmail_signal())
 	{
+		if(m_mailserver.empty()) // 自动从　mailaddress 获得.
+		{
+			m_mailserver =  std::string("pop.") + m_mailaddr.substr(m_mailaddr.find_last_of("@")+1);
+		}
 		io_service.post(boost::asio::detail::bind_handler(*this, boost::system::error_code(), 0));
 	}
 
@@ -49,7 +53,7 @@ private:
 	int i;
 	::boost::asio::io_service & io_service;
 
-	std::string m_user,m_passwd,m_mailserver;
+	std::string m_mailaddr,m_passwd,m_mailserver;
 	// 必须是可拷贝的，所以只能用共享指针.
 	boost::shared_ptr<boost::asio::ip::tcp::socket>	m_socket;
 	boost::shared_ptr<boost::asio::streambuf>	m_streambuf;
