@@ -6,6 +6,7 @@
 #include <boost/regex.hpp>
 #include <boost/foreach.hpp>
 
+#include "boost/connector.hpp"
 #include "boost/base64.hpp"
 #include "boost/coro/yield.hpp"
 #include "pop3.hpp"
@@ -264,33 +265,21 @@ void pop3::operator() ( const boost::system::error_code& ec, std::size_t length 
 
 	reenter ( this ) {
 restart:
-		m_socket.reset();
+		m_socket.reset( new ip::tcp::socket(io_service) );
 
 		do {
-			hosts->clear();
 			// 延时 60s
 			_yield ::boost::delayedcallsec( io_service, 60, boost::bind(*this, ec, 0) );
-			// dns 解析.
-			_yield ::boost::resolver<ip::tcp> ( io_service, ip::tcp::resolver::query ( "pop.qq.com", "110" ), hosts, *this );
+
+			// dns 解析并连接.
+			_yield boost::async_connect(*m_socket, ip::tcp::resolver::query ( "pop.qq.com", "110" ), *this);
 
 			// 失败了延时 10s
 			if ( ec )
 				_yield ::boost::delayedcallsec ( io_service, 10, boost::bind(*this, ec, 0) );
-		} while ( ec ); // dns解析到成功为止!
+		} while ( ec ); // 尝试到连接成功为止!
 
 		i = 0;
-
-		do {
-			// 一个一个尝试链接.
-			endpoint = ( *hosts ) [i++];
-			m_socket.reset ( new ip::tcp::socket ( io_service ) );
-			_yield m_socket->async_connect ( endpoint, *this );
-		} while ( ec && i < hosts->size() );
-
-		// 没连接上？　重试不　？
-		if ( ec ) {
-			goto restart;
-		}
 
 		// 好了，连接上了.
 		m_streambuf.reset ( new streambuf );
