@@ -14,9 +14,8 @@ typedef	boost::archive::iterators::transform_width<
 std::string base64_decode(std::string str)
 {
 	// convert base64 characters to binary values
-	std::string result;
-	result.assign(base64Iterator(str.begin()) , base64Iterator(str.end()));
-	return result;
+	std::string result(base64Iterator(str.begin()) , base64Iterator(str.end()));
+	return result.c_str();
 }
 
 }
