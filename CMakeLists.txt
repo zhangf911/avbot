@@ -30,7 +30,7 @@ add_subdirectory(libirc)
 add_subdirectory(libxmpp)
 add_subdirectory(libpop3)
 
-add_definitions(-DQQBOT_VERSION=\"3.0-pre1\")
+add_definitions(-DQQBOT_VERSION=\"3.0\")
 add_executable(avbot main.cpp)
 
 target_link_libraries(avbot webqq irc xmpp pop3)

@@ -1,5 +1,5 @@
 Name:       avbot
-Version:    2.3
+Version:    3.0
 Release:    1%{?dist}
 Summary:    The qq/irc/xmpp protocol bridge bot by avplayer.org
 License:    GPLv2+
