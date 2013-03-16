@@ -287,8 +287,6 @@ restart:
 				_yield ::boost::delayedcallsec ( io_service, 10, boost::bind(*this, ec, 0) );
 		} while ( ec ); // 尝试到连接成功为止!
 
-		i = 0;
-
 		// 好了，连接上了.
 		m_streambuf.reset ( new streambuf );
 		// "+OK QQMail POP3 Server v1.0 Service Ready(QQMail v2.0)"

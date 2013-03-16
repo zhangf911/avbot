@@ -50,7 +50,6 @@ public:
 private:
 	void process_mail(std::istream &mail);
 private:
-	int i;
 	::boost::asio::io_service & io_service;
 
 	std::string m_mailaddr,m_passwd,m_mailserver;
