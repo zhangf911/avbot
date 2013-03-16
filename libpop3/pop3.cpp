@@ -280,7 +280,7 @@ restart:
 			_yield ::boost::delayedcallsec( io_service, 60, boost::bind(*this, ec, 0) );
 
 			// dns 解析并连接.
-			_yield boost::async_connect(*m_socket, ip::tcp::resolver::query ( "pop.qq.com", "110" ), *this);
+			_yield boost::async_connect(*m_socket, ip::tcp::resolver::query(m_mailserver, "110"), *this);
 
 			// 失败了延时 10s
 			if ( ec )
