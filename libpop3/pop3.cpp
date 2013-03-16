@@ -175,6 +175,8 @@ void pop3::process_mail ( std::istream& mail )
 				}
 				//　进入解析.
 				boost::split ( kv, line, boost::algorithm::is_any_of ( ":" ) );
+				if( kv.size() != 2) // unknow extensions
+					break;
 				key = kv[0];
 				val = kv[1];
 				boost::to_lower ( key );
