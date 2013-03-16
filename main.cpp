@@ -502,6 +502,7 @@ int main(int argc, char *argv[])
 	qqclient.login();
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient)));
 
+	if(!mailaddr.empty())
 	{pop3(asio, mailaddr, mailpasswd, mailserver).connect_gotmail(boost::bind(on_mail,_1, boost::ref(qqclient)));}
 
 	std::vector<std::string> ircrooms;
