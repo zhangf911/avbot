@@ -406,14 +406,22 @@ static void inputread(const boost::system::error_code & ec, std::size_t length,
 					  boost::shared_ptr<boost::asio::streambuf> inputbuffer, webqq & qqclient )
 {
 	std::istream input(inputbuffer.get());
-	//验证码check
+	std::string line;
+	std::getline(input,line);
+
+		//验证码check
 	if(qqneedvc){
-		std::string vc;
-		std::getline(input,vc);
-		boost::trim(vc);
-		qqclient.login_withvc(vc);
+		boost::trim(line);
+		qqclient.login_withvc(line);
 		qqneedvc = false;
 		return;
+	}else{
+		BOOST_FOREACH(messagegroup & g ,  messagegroups)
+		{
+			g.broadcast(boost::str(
+				boost::format("来自 avbot 命令行的消息: %s") % line
+			));
+		}
 	}
 	boost::asio::async_read_until(*stdin, *inputbuffer, '\n', boost::bind(inputread , _1,_2, stdin, inputbuffer, boost::ref(qqclient)));
 }
