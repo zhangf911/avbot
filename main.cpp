@@ -356,8 +356,8 @@ static void on_mail(mailcontent mail, webqq & qqclient)
 	BOOST_FOREACH(messagegroup & g ,  messagegroups)
 	{
 		g.broadcast(boost::str(
-			boost::format("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s")
-			% mail.from % mail.to % mail.subject % mail.content
+			boost::format("[QQ邮件] 主题：【%s】%s")
+			%  mail.subject % mail.content
 		));
 	}
 }

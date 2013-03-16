@@ -30,6 +30,7 @@ static std::string base64inlinedecode(std::string str)
 {
 	std::string result;
 	std::string::iterator p = str.begin();
+	bool qout = false;
 	while(p!=str.end())
 	{
 		if( *p == '=' && *(p+1)=='?') // 进入　base64 模式
@@ -40,6 +41,8 @@ static std::string base64inlinedecode(std::string str)
 			std::string base64encoded = endmark(p,str.end(),'?');
 			result.append(ansi_utf8(boost::base64_decode(base64encoded), charset));
 			p+=2; // skip ?=
+		}else if( *p=='\"'){
+			p++;
 		}else{
 			result.append(1,*p);
 			p++;
