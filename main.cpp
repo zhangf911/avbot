@@ -489,6 +489,30 @@ int main(int argc, char *argv[])
 
 	boost::asio::io_service asio;
 
+	if( qqnumber.empty() )
+	{
+		std::cerr << "请设置qq号码和密码" << std::cerr;
+		exit(1);
+	}
+
+	if( ircnick.empty() )
+	{
+		std::cerr << "请设置irc昵称" << std::cerr;
+		exit(1);
+	}
+
+	if( ircroom.empty() )
+	{
+		std::cerr << "请设置irc频道" << std::cerr;
+		exit(1);
+	}
+
+	if(chanelmap.empty())
+	{
+		std::cerr << "请使用　--map　设置设置频道映射" << std::cerr;
+		exit(1);
+	}
+
 	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver);
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
