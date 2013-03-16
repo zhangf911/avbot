@@ -119,8 +119,12 @@ static void decode_mail(boost::asio::io_service & io_service, boost::shared_ptr<
 	std::pair<std::string,std::string> mc = select_best_mailcontent(thismail);
 
 	{
-		// 从 v.first aka contenttype 找到编码.
-		thismail.content = ansi_utf8(boost::base64_decode(mc.second), find_charset(mc.first));
+		if(thismail.content_encoding == "base64"){
+			// 从 v.first aka contenttype 找到编码.
+			thismail.content = ansi_utf8(boost::base64_decode(mc.second), find_charset(mc.first));
+		}else{ // 7bit decoding
+			thismail.content = ansi_utf8(mc.second, find_charset(mc.first));
+		}
 	}
 	std::cout << "邮件内容end" << std::endl;
 
@@ -197,6 +201,8 @@ void pop3::process_mail ( std::istream& mail )
 							state = 1;
 						}
 					}
+				} else if ( key == "content-transfer-encoding" ){
+					thismail.content_encoding = val;
 				}
 
 				break;

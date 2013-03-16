@@ -16,6 +16,7 @@ struct mailcontent{
 	std::string		from;
 	std::string		to;
 	std::string		subject;
+	std::string		content_encoding; // base64 or 7bit
 	// (content-type)/(base64 encoded content) pair of content
 	std::vector< std::pair<std::string, std::string> > contents;
 	// the matched or the so called, the best selected content type
