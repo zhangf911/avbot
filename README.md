@@ -12,6 +12,12 @@ avbot 连通 IRC、XMPP 和  QQ群，并能实时记录聊天信息。每日自�
 ### 将XMPP聊天室消息转发到QQ群和IRC
 ### QQ图片转成 url 链接给 IRC和XMPP聊天室
 
+# rpm 包
+
+为了方便群主，我特意为　CentOS6/RHEL6　准备了 RPM 包。该　RPM 是精通链接的boost，因此并不需要系统里升级 boost 库。
+
+等啥，到　https://sourceforge.net/projects/avbot/files/rpm/x86_64/ 　下载安装吧
+
 # 代码克隆办法
 
 
