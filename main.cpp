@@ -414,6 +414,7 @@ int main(int argc, char *argv[])
     std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
+	std::string mailaddr,mailpasswd,mailserver;
 
     progname = fs::basename(argv[0]);
 
@@ -435,6 +436,9 @@ int main(int argc, char *argv[])
 		( "xmpppwd",	po::value<std::string>(&xmpppwd),	"password for XMPP" )
 		( "xmpprooms",	po::value<std::string>(&xmpproom),	"xmpp rooms" )
 		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
+		( "mail",		po::value<std::string>(&mailaddr),	"fetch mail from this address")
+		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
+		( "mailserver",	po::value<std::string>(&mailserver),"password of mail")
 		;
 
 	po::variables_map vm;
@@ -498,7 +502,7 @@ int main(int argc, char *argv[])
 	qqclient.login();
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient)));
 
-	{pop3(asio, qqnumber, qqpwd).connect_gotmail(boost::bind(on_mail,_1, boost::ref(qqclient)));}
+	{pop3(asio, mailaddr, mailpasswd, mailserver).connect_gotmail(boost::bind(on_mail,_1, boost::ref(qqclient)));}
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
