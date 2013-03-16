@@ -1,5 +1,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/foreach.hpp>
+
+#include "boost/connector.hpp"
 #include "boost/timedcall.hpp"
 
 #include "irc.h"
@@ -16,30 +18,13 @@ IrcClient::~IrcClient()
 
 }
 
-void IrcClient::dnsresolved(const boost::system::error_code & ec, const boost::asio::ip::tcp::resolver::iterator &endpoint_iterator, boost::shared_ptr<boost::asio::ip::tcp::resolver>  resolver)
-{
-    if (!ec)
-    {
-        boost::asio::async_connect(socket_, endpoint_iterator,
-            boost::bind(&IrcClient::handle_connect_request, this,
-            boost::asio::placeholders::error));
-    }
-    else
-    {
-        relogin();
-#ifdef DEBUG
-        std::cout << "Error: " << ec.message() << "\n";
-#endif
-    }
-}
-
 void IrcClient::connect()
 {
     boost::asio::ip::tcp::resolver::query query(server_,port_);
  	boost::shared_ptr<boost::asio::ip::tcp::resolver>  resolver(new boost::asio::ip::tcp::resolver(io_service));
 
-    resolver->async_resolve(query,
-		boost::bind(&IrcClient::dnsresolved, this , boost::asio::placeholders::error, boost::asio::placeholders::iterator, resolver));
+	boost::async_connect(socket_, query, boost::bind(&IrcClient::handle_connect_request, this,
+            boost::asio::placeholders::error) );
 }
 
 void IrcClient::connected()
@@ -255,7 +240,8 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
     }
     else if (err != boost::asio::error::eof)
     {
-        relogin();
+		io_service.post( boost::bind(&IrcClient::relogin, this));
+
 #ifdef DEBUG
         std::cout << "Error: " << err.message() << "\n";
 #endif
