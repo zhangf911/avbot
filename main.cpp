@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
 
 	boost::asio::io_service asio;
 
-	if( qqnumber.empty() )
+	if( qqnumber.empty() || qqpwd.empty() )
 	{
 		std::cerr << "请设置qq号码和密码" << std::cerr;
 		exit(1);
