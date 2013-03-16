@@ -17,8 +17,8 @@ struct my_connect_condition{
 		const boost::system::error_code& ec,
 		Iterator next)
 	{
-		if (ec) std::cout << "Error: " << ec.message() << std::endl;
-		std::cout << "Trying: " << next->endpoint() << std::endl;
+// 		if (ec) std::cout << "Error: " << ec.message() << std::endl;
+// 		std::cout << "Trying: " << next->endpoint() << std::endl;
 		return next;
 	}
 };
