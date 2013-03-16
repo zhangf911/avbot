@@ -20,10 +20,8 @@ IrcClient::~IrcClient()
 
 void IrcClient::connect()
 {
-    boost::asio::ip::tcp::resolver::query query(server_,port_);
- 	boost::shared_ptr<boost::asio::ip::tcp::resolver>  resolver(new boost::asio::ip::tcp::resolver(io_service));
-
-	boost::async_connect(socket_, query, boost::bind(&IrcClient::handle_connect_request, this,
+	using namespace boost::asio::ip;
+	boost::async_connect(socket_, tcp::resolver::query(server_,port_), boost::bind(&IrcClient::handle_connect_request, this,
             boost::asio::placeholders::error) );
 }
 
