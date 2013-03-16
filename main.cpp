@@ -224,7 +224,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	}
 }
 
-static void irc_message_got(const IrcMsg pMsg,  webqq & qqclient)
+static void on_irc_message(const IrcMsg pMsg,  webqq & qqclient)
 {
 	std::cout <<  pMsg.msg<< std::endl;
 
@@ -372,6 +372,7 @@ static void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqcl
 	qqneedvc = true;
 	// send to xmpp and irc
 	ircclient.chat(std::string("#") + ircvercodechannel,"输入qq验证码");
+	std::cerr << "请输入验证码" ;
 }
 
 static fs::path configfilepath()
@@ -397,6 +398,26 @@ static fs::path configfilepath()
 
 	throw "not configfileexit";
 }
+
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+
+static void inputread(const boost::system::error_code & ec, std::size_t length,
+					  boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin,
+					  boost::shared_ptr<boost::asio::streambuf> inputbuffer, webqq & qqclient )
+{
+	std::istream input(inputbuffer.get());
+	//验证码check
+	if(qqneedvc){
+		std::string vc;
+		std::getline(input,vc);
+		boost::trim(vc);
+		qqclient.login_withvc(vc);
+		qqneedvc = false;
+		return;
+	}
+	boost::asio::async_read_until(*stdin, *inputbuffer, '\n', boost::bind(inputread , _1,_2, stdin, inputbuffer, boost::ref(qqclient)));
+}
+#endif
 
 #ifdef WIN32
 int daemon(int nochdir, int noclose)
@@ -520,7 +541,7 @@ int main(int argc, char *argv[])
 	build_group(chanelmap,qqclient,xmppclient,ircclient);
 
 	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3));
-	ircclient.login(boost::bind(&irc_message_got, _1, boost::ref(qqclient)));
+	ircclient.login(boost::bind(&on_irc_message, _1, boost::ref(qqclient)));
 
 	qqclient.on_verify_code(boost::bind(on_verify_code,_1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 	qqclient.login();
@@ -545,6 +566,11 @@ int main(int argc, char *argv[])
 	}
 
     boost::asio::io_service::work work(asio);
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+	boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin(new boost::asio::posix::stream_descriptor(asio, 0));
+	boost::shared_ptr<boost::asio::streambuf> inputbuffer(new boost::asio::streambuf);
+	boost::asio::async_read_until(*stdin, *inputbuffer, '\n', boost::bind(inputread , _1,_2, stdin, inputbuffer, boost::ref(qqclient)));
+#endif
     asio.run();
     return 0;
 }
