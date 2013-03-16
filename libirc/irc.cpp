@@ -21,8 +21,8 @@ IrcClient::~IrcClient()
 void IrcClient::connect()
 {
 	using namespace boost::asio::ip;
-	boost::async_connect(socket_, tcp::resolver::query(server_,port_), boost::bind(&IrcClient::handle_connect_request, this,
-            boost::asio::placeholders::error) );
+	boost::async_connect(socket_, tcp::resolver::query(server_,port_),
+			boost::bind(&IrcClient::handle_connect_request, this, boost::asio::placeholders::error) );
 }
 
 void IrcClient::connected()
@@ -240,9 +240,9 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
     {
 		io_service.post( boost::bind(&IrcClient::relogin, this));
 
-#ifdef DEBUG
-        std::cout << "Error: " << err.message() << "\n";
-#endif
+// #ifdef DEBUG
+        std::cerr << "irc: connect error: " << err.message() << std::endl;
+// #endif
     }
 }
 
