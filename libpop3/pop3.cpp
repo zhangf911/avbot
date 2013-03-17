@@ -276,8 +276,10 @@ restart:
 		m_socket.reset( new ip::tcp::socket(io_service) );
 
 		do {
+#ifndef DEBUG
 			// 延时 60s
 			_yield ::boost::delayedcallsec( io_service, 60, boost::bind(*this, ec, 0) );
+#endif
 
 			// dns 解析并连接.
 			_yield boost::async_connect(*m_socket, ip::tcp::resolver::query(m_mailserver, "110"), *this);
