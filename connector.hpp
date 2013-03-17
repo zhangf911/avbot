@@ -4,7 +4,10 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
-#include <boost/concept_check.hpp>
+
+#ifdef BOOST_ENABLE_SSL
+#include <boost/asio/ssl.hpp>
+#endif
 
 #include "boost/coro/yield.hpp"
 
@@ -227,11 +230,30 @@ private:
 // 	void resolve();
 // 	void handshake();
 // };
-// 
-// class proxy_ssl : public proxy_base{
-// public:
-// 	void resolve();
-// 	void handshake();
-// };
+//
+
+#ifdef BOOST_ENABLE_SSL
+
+// SSL 连接过程. 支持透过代理发起　SSL 连接哦!
+class proxy_ssl : public detail::proxy_base{
+public:
+	proxy_ssl(boost::asio::s)
+	{
+		
+	}
+
+private:
+	virtual void _resolve(handler_type handler, proxychain subchain){
+		// 递归调用　avconnect 传递到下一层.
+		boost::async_avconnect(subchain, handler);
+	}
+
+	virtual void _handshake(handler_type handler, proxychain subchain ){
+		// 调用　ssl 的　async_handshake
+	}
+
+};
+
+#endif
 
 }
