@@ -28,7 +28,7 @@ public:
 	typedef void result_type;
 	typedef boost::signal< void (mailcontent thismail) > on_gotmail_signal;
 public:
-	pop3(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver)
+	pop3(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver="")
 		:io_service(_io_service),
 		m_mailaddr(user), m_passwd(passwd),
 		m_mailserver(_mailserver),
