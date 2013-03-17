@@ -18,6 +18,6 @@ target_link_libraries(xmpp -lgloox)
 endif()
 
 if(ENABLE_TEST)
-	add_executable(test test.cpp)
-	target_link_libraries(test asio xmpp)
+	add_executable(xmpptest test.cpp)
+	target_link_libraries(xmpptest asio xmpp)
 endif()
