@@ -19,5 +19,5 @@ endif()
 
 if(ENABLE_TEST)
 	add_executable(xmpptest test.cpp)
-	target_link_libraries(xmpptest asio xmpp)
+	target_link_libraries(xmpptest xmpp)
 endif()
