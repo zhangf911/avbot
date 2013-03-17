@@ -63,27 +63,6 @@ class proxychain;
 
 namespace detail {
 	
-	class proxy_base {
-	public:
-		typedef boost::function< void (const boost::system::error_code&) > handler_type;
-	public:
-		template<class Handler>
-		void resolve(Handler handler){
-			_resolve(handler_type(handler));
-		}
-		
-		template<class Handler>
-		void handshake(Handler handler){
-			_handshake(handler_type(handler));
-		}
-
-		virtual ~proxy_base(){}
-
-	private:
-		virtual void _resolve(handler_type) = 0;
-		virtual void _handshake(handler_type) = 0;
-	};
-
 	struct proxychain_adder{
 		proxychain_adder( proxychain & _chain)
 			:chain(&_chain)
@@ -91,34 +70,102 @@ namespace detail {
 		}
 
 		template<class Proxy>
-		proxychain_adder & operator()(const Proxy & proxy );
+		proxychain_adder operator()(const Proxy & proxy );
+
+		operator proxychain& (){
+			return *chain;
+		}
+		operator proxychain ();
+
 	private:
 		proxychain * chain;
 	};
 
 }
 
+namespace detail {
+	class proxy_base;
+}
+
 class proxychain {
 public:
-	detail::proxy_base * front();
+	proxychain(boost::asio::io_service& _io):io_(_io){}
+
+	detail::proxy_base * front(){
+		return m_chain.front().get();
+	}
+	
+	// 克隆一个自己，然后弹出第一个元素.
+	// 也就是克隆一个少一个元素的 proxychain
+	proxychain clone_poped(){
+		proxychain p(*this);
+		p.m_chain.erase(p.m_chain.begin());
+		return p;
+	}
+
 	detail::proxychain_adder add_proxy(){
 		return detail::proxychain_adder(*this);
 	}
-private:
-	void add_proxy(detail::proxy_base * proxy){
-		chain.push_back(boost::shared_ptr<detail::proxy_base>(proxy) );
+
+	template<class Proxy>
+	proxychain  add_proxy(const Proxy & proxy)
+	{
+		// 拷贝构造一个新的.
+		detail::proxy_base * newproxy = new Proxy(proxy);
+		add_proxy_base(newproxy);
+		return *this;
 	}
+
+	boost::asio::io_service& get_io_service(){
+		return io_;
+	}
+private:
+	void add_proxy_base(detail::proxy_base * proxy){
+		m_chain.push_back(boost::shared_ptr<detail::proxy_base>(proxy) );
+	}
+private:
+	boost::asio::io_service&	io_;
+	std::vector<boost::shared_ptr<detail::proxy_base> > m_chain;
+
 	friend class detail::proxychain_adder;
-	std::vector<boost::shared_ptr<detail::proxy_base> > chain;
 };
 
+namespace detail{
+	class proxy_base {
+	public:
+		typedef boost::function< void (const boost::system::error_code&) > handler_type;
+	public:
+		template<class Handler>
+		void resolve(Handler handler, proxychain subchain){
+			_resolve(handler_type(handler), subchain);
+		}
+		
+		template<class Handler>
+		void handshake(Handler handler,proxychain subchain){
+			_handshake(handler_type(handler), subchain);
+		}
+
+		virtual ~proxy_base(){}
+
+	private:
+		virtual void _resolve(handler_type, proxychain subchain) = 0;
+		virtual void _handshake(handler_type, proxychain subchain) = 0;
+	};
+}
+
 template<class Proxy>
-detail::proxychain_adder& detail::proxychain_adder::operator()( const Proxy & proxy )
+detail::proxychain_adder detail::proxychain_adder::operator()( const Proxy & proxy )
 {
 	// 拷贝构造一个新的.
 	proxy_base * newproxy = new Proxy(proxy);
-	chain->add_proxy(newproxy);
+	chain->add_proxy_base(newproxy);
 	return *this;
+}
+
+inline
+detail::proxychain_adder::operator proxychain()
+{
+	return *chain;
 }
 
 // 带　proxy 执行连接.
@@ -126,28 +173,25 @@ class async_avconnect :coro::coroutine{
 public:
 	typedef void result_type; // for boost::bind_handler
 public:
-	template<class Socket, class Handler>
-	async_avconnect(Socket & socket,proxychain proxy_chain, BOOST_ASIO_MOVE_ARG(Handler) _handler)
+	template<class Handler>
+	async_avconnect(const proxychain &proxy_chain, BOOST_ASIO_MOVE_ARG(Handler) _handler)
 		:proxy_chain_(new proxychain(proxy_chain))
 	{
-		
+		proxy_chain_->get_io_service().post(boost::bind(*this,boost::system::error_code()));
 	}
 
-	template<class Socket>
 	void operator()(const boost::system::error_code & ec)//, typename Socket::protocol_type::resolver::iterator begin, Socket & socket, boost::shared_ptr<typename Socket::protocol_type::resolver> resolver)
 	{
 		reenter(this)
 		{
 			// resolve
-			_yield proxy_chain_->front()->resolve(boost::bind(*this,_1));
-			_yield proxy_chain_->front()->handshake(*this);
-			// handshake
-			io_service.post(asio::detail::bind_handler(handler,ec));
+			_yield proxy_chain_->front()->resolve(*this, proxy_chain_->clone_poped());
+			_yield proxy_chain_->front()->handshake(*this, proxy_chain_->clone_poped());
+			proxy_chain_->get_io_service().post(asio::detail::bind_handler(handler,ec));
 		}
 	}
 private:
 	boost::shared_ptr<proxychain>								proxy_chain_;
-	boost::asio::io_service&									io_service;
 	boost::function<void(const boost::system::error_code & ec)>	handler;
 };
 
@@ -158,17 +202,20 @@ public:
 	typedef boost::asio::ip::tcp::socket socket;
 
 	proxy_tcp(socket &_socket,const query & _query)
-		:socket_(_socket), query_(_query)
+		:socket_(_socket), query_(_query) , _io(_socket.get_io_service())
 	{
 	}
 private:
-	void _resolve(handler_type handler){
-		socket_.get_io_service().post(boost::asio::detail::bind_handler(handler, boost::system::error_code()));
+	virtual void _resolve(handler_type handler, proxychain subchain){
+		//handler(boost::system::error_code());
+		_io.post(boost::asio::detail::bind_handler(handler, boost::system::error_code()));
 	}
 
-	void _handshake(handler_type handler){
+	virtual void _handshake(handler_type handler, proxychain subchain ){
 		boost::async_connect(socket_, query_, handler);
 	}
+
+	boost::asio::io_service&	_io;
 	socket&		socket_;
 	const query	query_;
 };

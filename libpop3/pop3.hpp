@@ -36,7 +36,10 @@ public:
 	{
 		if(m_mailserver.empty()) // 自动从　mailaddress 获得.
 		{
-			m_mailserver =  std::string("pop.") + m_mailaddr.substr(m_mailaddr.find_last_of("@")+1);
+			if( m_mailaddr.find("@") == std::string::npos)
+				m_mailserver = "pop.qq.com"; // 如果　邮箱是 qq 号码（没@），就默认使用 pop.qq.com .
+			else
+				m_mailserver =  std::string("pop.") + m_mailaddr.substr(m_mailaddr.find_last_of("@")+1);
 		}
 		io_service.post(boost::asio::detail::bind_handler(*this, boost::system::error_code(), 0));
 	}
