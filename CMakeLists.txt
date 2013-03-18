@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(avbot)
+project(avbot CXX)
 #SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 option(ENABLE_STATIC "link to boost staticaly" ON)
 option(ENABLE_TEST "build xmpp/pop3 test" OFF)
