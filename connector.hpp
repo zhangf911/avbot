@@ -209,12 +209,12 @@ public:
 	{
 	}
 private:
-	virtual void _resolve(handler_type handler, proxychain subchain){
+	void _resolve(handler_type handler, proxychain subchain){
 		//handler(boost::system::error_code());
 		socket_.get_io_service().post(boost::asio::detail::bind_handler(handler, boost::system::error_code()));
 	}
 
-	virtual void _handshake(handler_type handler, proxychain subchain ){
+	void _handshake(handler_type handler, proxychain subchain ){
 		boost::async_connect(socket_, query_, handler);
 	}
 
@@ -236,18 +236,22 @@ private:
 // SSL 连接过程. 支持透过代理发起　SSL 连接哦!
 class proxy_ssl : public detail::proxy_base{
 public:
-	proxy_ssl(boost::asio::s)
+	typedef boost::asio::ip::tcp tcp;
+	typedef tcp::resolver::query query;
+	typedef tcp::socket socket;
+
+	proxy_ssl(boost::asio::ssl::stream<tcp> &stream, query _query)
 	{
 		
 	}
 
 private:
-	virtual void _resolve(handler_type handler, proxychain subchain){
+	void _resolve(handler_type handler, proxychain subchain){
 		// 递归调用　avconnect 传递到下一层.
 		boost::async_avconnect(subchain, handler);
 	}
 
-	virtual void _handshake(handler_type handler, proxychain subchain ){
+	void _handshake(handler_type handler, proxychain subchain ){
 		// 调用　ssl 的　async_handshake
 	}
 
