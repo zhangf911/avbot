@@ -260,6 +260,8 @@ static void om_xmpp_message(std::string xmpproom, std::string who, std::string m
 	}
 }
 
+static bool logqqnumber = false;
+
 static void on_group_msg(std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient)
 {
 	qqBuddy *buddy = NULL;
@@ -281,6 +283,10 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	std::string ircmsg;
 
 	message_nick += nick;
+	if (logqqnumber)
+	{
+		message_nick += buddy? std::string(boost::str(boost::format("[%s]") % buddy->qqnum)):"";
+	}
 	message_nick += " 说：";
 	
 	ircmsg = boost::str(boost::format("qq(%s): ") % nick);
@@ -468,6 +474,7 @@ int main(int argc, char *argv[])
 		( "mail",		po::value<std::string>(&mailaddr),	"fetch mail from this address")
 		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
 		( "mailserver",	po::value<std::string>(&mailserver),"password of mail")
+		( "logqqnumber",po::value<bool>(&logqqnumber)->default_value(false),"let qqlog contain qqnumber")
 		;
 
 	po::variables_map vm;
