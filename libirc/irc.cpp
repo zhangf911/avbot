@@ -1,7 +1,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/foreach.hpp>
 
-#include "boost/connector.hpp"
+#include "avproxy.hpp"
 #include "boost/timedcall.hpp"
 
 #include "irc.h"
@@ -21,7 +21,7 @@ IrcClient::~IrcClient()
 void IrcClient::connect()
 {
 	using namespace boost::asio::ip;
-	boost::async_connect(socket_, tcp::resolver::query(server_,port_),
+	avproxy::async_connect(socket_, tcp::resolver::query(server_,port_),
 			boost::bind(&IrcClient::handle_connect_request, this, boost::asio::placeholders::error) );
 }
 

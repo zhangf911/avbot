@@ -6,9 +6,10 @@
 #include <boost/regex.hpp>
 #include <boost/foreach.hpp>
 
-#include "boost/connector.hpp"
 #include "boost/base64.hpp"
 #include "boost/coro/yield.hpp"
+
+#include "avproxy.hpp"
 #include "pop3.hpp"
 
 static inline std::string ansi_utf8(std::string const &source, const std::string &characters = "GB18030")
@@ -282,8 +283,8 @@ restart:
 #endif
 
 			// dns 解析并连接.
- 			_yield boost::async_avconnect(
- 				boost::proxychain(io_service).add_proxy(boost::proxy_tcp(*m_socket, ip::tcp::resolver::query(m_mailserver, "110"))),
+ 			_yield avproxy::async_avconnect(
+ 				avproxy::proxychain(io_service).add_proxy(avproxy::proxy_tcp(*m_socket, ip::tcp::resolver::query(m_mailserver, "110"))),
  				*this);
 
 			// 失败了延时 10s

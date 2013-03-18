@@ -24,6 +24,7 @@ find_package(Threads)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(avproxy/include)
 
 add_subdirectory(libwebqq)
 add_subdirectory(libirc)
