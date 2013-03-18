@@ -3,4 +3,4 @@
 	url = git://github.com/avplayer/avhttp.git
 [submodule "avproxy"]
 	path = avproxy
-	url = git://github.com:avplayer/avproxy.git
+	url = git://github.com/avplayer/avproxy.git
