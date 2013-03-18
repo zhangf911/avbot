@@ -5,7 +5,7 @@ find_package(ICU )
 
 add_library(pop3 pop3.cpp)
 target_link_libraries(pop3 ${Boost_LIBRARIES})
-if(ICU_FOUND)
+if(ICU_FOUND AND ENABLE_STATIC )
 	target_link_libraries(pop3 ${ICU_LIBRARIES})
 endif()
 
