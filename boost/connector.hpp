@@ -178,7 +178,7 @@ public:
 public:
 	template<class Handler>
 	async_avconnect(const proxychain &proxy_chain, BOOST_ASIO_MOVE_ARG(Handler) _handler)
-		:proxy_chain_(new proxychain(proxy_chain))
+		:proxy_chain_(new proxychain(proxy_chain)), handler(_handler)
 	{
 		proxy_chain_->get_io_service().post(boost::bind(*this,boost::system::error_code()));
 	}
