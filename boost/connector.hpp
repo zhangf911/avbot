@@ -205,20 +205,19 @@ public:
 	typedef boost::asio::ip::tcp::socket socket;
 
 	proxy_tcp(socket &_socket,const query & _query)
-		:socket_(_socket), query_(_query) , _io(_socket.get_io_service())
+		:socket_(_socket), query_(_query)
 	{
 	}
 private:
 	virtual void _resolve(handler_type handler, proxychain subchain){
 		//handler(boost::system::error_code());
-		_io.post(boost::asio::detail::bind_handler(handler, boost::system::error_code()));
+		socket_.get_io_service().post(boost::asio::detail::bind_handler(handler, boost::system::error_code()));
 	}
 
 	virtual void _handshake(handler_type handler, proxychain subchain ){
 		boost::async_connect(socket_, query_, handler);
 	}
 
-	boost::asio::io_service&	_io;
 	socket&		socket_;
 	const query	query_;
 };
