@@ -21,7 +21,7 @@ IrcClient::~IrcClient()
 void IrcClient::connect()
 {
 	using namespace boost::asio::ip;
-	avproxy::async_connect(socket_, tcp::resolver::query(server_,port_),
+	avproxy::async_proxyconnect(avproxy::autoproxychain(socket_, tcp::resolver::query(server_,port_)),
 			boost::bind(&IrcClient::handle_connect_request, this, boost::asio::placeholders::error) );
 }
 
