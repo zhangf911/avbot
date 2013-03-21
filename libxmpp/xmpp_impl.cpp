@@ -54,11 +54,22 @@ xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::s
 
 	avproxy::proxy::tcp::query query(m_client.server(), boost::lexical_cast<std::string>(m_client.port()));
 	avproxy::async_proxyconnect(avproxy::autoproxychain(*m_asio_socket, query), 
-		boost::bind(&xmpp_impl::cb_handle_connecting, this));
+		boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
 }
 
-void xmpp_impl::cb_handle_connecting()
+void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
 {
+	if (ec)
+	{
+		// 重试.
+		m_asio_socket.reset(new boost::asio::ip::tcp::socket(io_service));
+
+		avproxy::proxy::tcp::query query(m_client.server(), boost::lexical_cast<std::string>(m_client.port()));
+		avproxy::async_proxyconnect(avproxy::autoproxychain(*m_asio_socket, query), 
+			boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
+		return ;
+	}
+
 	gloox::ConnectionTCPClient* con = new gloox::ConnectionTCPClient(& m_client, m_client.logInstance(), m_client.server(), m_client.port() );
 
 	m_client.setConnectionImpl(con);
@@ -90,10 +101,6 @@ void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error)
 	m_client.recv(0);
 	
 	gloox::ConnectionTCPClient* con = static_cast<gloox::ConnectionTCPClient*>(m_client.connectionImpl());
-
-	if(!m_asio_socket->is_open()){
-		m_asio_socket.reset( new boost::asio::ip::tcp::socket(io_service,boost::asio::ip::tcp::v4(), con->socket()));	
-	}
 
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
 		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)

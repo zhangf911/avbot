@@ -54,7 +54,7 @@ private:
     virtual void handleMUCItems(gloox::MUCRoom* room, const gloox::Disco::ItemList& items);
     virtual bool handleMUCRoomCreation(gloox::MUCRoom* room);
 
-	void cb_handle_connecting();
+	void cb_handle_connecting(const boost::system::error_code & ec);
 	void cb_handle_connected();
 	void cb_handle_asio_read(const boost::system::error_code & error);
 private:
