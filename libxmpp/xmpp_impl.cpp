@@ -51,8 +51,13 @@ xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::s
 	}
 
 	m_asio_socket.reset(new boost::asio::ip::tcp::socket(io_service));
+	std::string xmppclientport ;
+	if (m_client.port() == -1)
+		xmppclientport = "xmpp-client";
+	else
+		xmppclientport = boost::lexical_cast<std::string>(m_client.port());
 
-	avproxy::proxy::tcp::query query(m_client.server(), boost::lexical_cast<std::string>(m_client.port()));
+	avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
 	avproxy::async_proxyconnect(avproxy::autoproxychain(*m_asio_socket, query), 
 		boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
 }
@@ -61,10 +66,18 @@ void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
 {
 	if (ec)
 	{
+		std::cerr <<  "xmpp服务器链接错误:" <<  ec.message() <<  std::endl;
 		// 重试.
 		m_asio_socket.reset(new boost::asio::ip::tcp::socket(io_service));
 
-		avproxy::proxy::tcp::query query(m_client.server(), boost::lexical_cast<std::string>(m_client.port()));
+		std::string xmppclientport ;
+		if (m_client.port() == -1)
+			xmppclientport = "xmpp-client";
+		else
+			xmppclientport = boost::lexical_cast<std::string>(m_client.port());
+
+		avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
+	
 		avproxy::async_proxyconnect(avproxy::autoproxychain(*m_asio_socket, query), 
 			boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
 		return ;
@@ -72,8 +85,9 @@ void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
 
 	gloox::ConnectionTCPClient* con = new gloox::ConnectionTCPClient(& m_client, m_client.logInstance(), m_client.server(), m_client.port() );
 
-	m_client.setConnectionImpl(con);
 	con->setSocket(m_asio_socket->native_handle());
+	con->connect();
+	m_client.setConnectionImpl(con);
 
 	if(m_client.connect(false))
 		io_service.post(boost::bind(&xmpp_impl::cb_handle_connected, this));
@@ -84,6 +98,8 @@ void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
 
 void xmpp_impl::cb_handle_connected()
 {
+	m_client.handleConnect(m_client.connectionImpl());
+
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
 		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
 	);
@@ -99,8 +115,12 @@ void xmpp_impl::join(std::string roomjid)
 void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error)
 {
 	m_client.recv(0);
-	
+
 	gloox::ConnectionTCPClient* con = static_cast<gloox::ConnectionTCPClient*>(m_client.connectionImpl());
+
+	if(!m_asio_socket->is_open()){
+		m_asio_socket.reset( new boost::asio::ip::tcp::socket(io_service,boost::asio::ip::tcp::v4(), con->socket()));	
+	}
 
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
 		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
