@@ -54,7 +54,13 @@ void IrcClient::oper(const std::string& user,const std::string& pwd)
 
 void IrcClient::chat(const std::string& whom,const std::string& msg)
 {
-    send_request("PRIVMSG "+whom+" :"+msg);
+	std::vector<std::string> msgs;
+	boost::split(msgs, msg, boost::is_any_of("\r\n"));
+	BOOST_FOREACH(std::string _msg,  msgs)
+	{
+		if (_msg.length() > 1)
+			send_request("PRIVMSG "+whom+" :"+_msg);
+	}
 }
 
 void IrcClient::login(const privmsg_cb &cb)
