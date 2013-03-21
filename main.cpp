@@ -524,8 +524,6 @@ int main(int argc, char *argv[])
 	}
 
 	boost::asio::io_service asio;
-	
-	std::cout <<  qqnumber <<  qqpwd <<  std::endl;
 
 	if( qqnumber.empty()|| qqpwd.empty() )
 	{
