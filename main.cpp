@@ -467,14 +467,14 @@ int main(int argc, char *argv[])
 		( "ircpwd",		po::value<std::string>(&ircpwd),	"irc password" )
 		( "ircrooms",	po::value<std::string>(&ircroom),	"irc room" )
 		( "xmppuser",	po::value<std::string>(&xmppuser),	"id for XMPP,  eg: (microcaicai@gmail.com)" )
-		( "xmppserver",	po::value<std::string>(&xmppserver),	"server to connect for XMPP,  eg: (xmpp.l.google.com)" )
+		( "xmppserver",	po::value<std::string>(&xmppserver),"server to connect for XMPP,  eg: (xmpp.l.google.com)" )
 		( "xmpppwd",	po::value<std::string>(&xmpppwd),	"password for XMPP" )
 		( "xmpprooms",	po::value<std::string>(&xmpproom),	"xmpp rooms" )
 		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
 		( "mail",		po::value<std::string>(&mailaddr),	"fetch mail from this address")
 		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
 		( "mailserver",	po::value<std::string>(&mailserver),"password of mail")
-		( "logqqnumber",po::value<bool>(&logqqnumber)->default_value(false),"let qqlog contain qqnumber")
+		( "logqqnumber",po::value<bool>(&logqqnumber),		"let qqlog contain qqnumber")
 		;
 
 	po::variables_map vm;
@@ -524,28 +524,30 @@ int main(int argc, char *argv[])
 	}
 
 	boost::asio::io_service asio;
+	
+	std::cout <<  qqnumber <<  qqpwd <<  std::endl;
 
-	if( qqnumber.empty() || qqpwd.empty() )
+	if( qqnumber.empty()|| qqpwd.empty() )
 	{
-		std::cerr << "请设置qq号码和密码" << std::cerr;
+		std::cerr << "请设置qq号码和密码" << std::endl;
 		exit(1);
 	}
 
 	if( ircnick.empty() )
 	{
-		std::cerr << "请设置irc昵称" << std::cerr;
+		std::cerr << "请设置irc昵称" << std::endl;
 		exit(1);
 	}
 
 	if( ircroom.empty() )
 	{
-		std::cerr << "请设置irc频道" << std::cerr;
+		std::cerr << "请设置irc频道" << std::endl;
 		exit(1);
 	}
 
 	if(chanelmap.empty())
 	{
-		std::cerr << "请使用　--map　设置设置频道映射" << std::cerr;
+		std::cerr << "请使用　--map　设置设置频道映射" << std::endl;
 		exit(1);
 	}
 
