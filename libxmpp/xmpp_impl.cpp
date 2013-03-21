@@ -24,9 +24,12 @@
 #include <boost/asio.hpp>
 #include <gloox/message.h>
 #include <gloox/mucroom.h>
+#include <gloox/connectiontcpbase.h>
 #include <gloox/connectiontcpclient.h>
 
 #include <boost/lexical_cast.hpp>
+
+#include "avproxy/avproxy.hpp"
 
 #include "xmpp_impl.h"
 
@@ -46,11 +49,21 @@ xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::s
 		if(splited.size() == 2)
 			m_client.setPort(boost::lexical_cast<int>(splited[1]));
 	}
-	io_service.post(boost::bind(&xmpp_impl::cb_handle_connecting, this));
+
+	m_asio_socket.reset(new boost::asio::ip::tcp::socket(io_service));
+
+	avproxy::proxy::tcp::query query(m_client.server(), boost::lexical_cast<std::string>(m_client.port()));
+	avproxy::async_proxyconnect(avproxy::autoproxychain(*m_asio_socket, query), 
+		boost::bind(&xmpp_impl::cb_handle_connecting, this));
 }
 
 void xmpp_impl::cb_handle_connecting()
 {
+	gloox::ConnectionTCPClient* con = new gloox::ConnectionTCPClient(& m_client, m_client.logInstance(), m_client.server(), m_client.port() );
+
+	m_client.setConnectionImpl(con);
+	con->setSocket(m_asio_socket->native_handle());
+
 	if(m_client.connect(false))
 		io_service.post(boost::bind(&xmpp_impl::cb_handle_connected, this));
 	else{
@@ -60,10 +73,6 @@ void xmpp_impl::cb_handle_connecting()
 
 void xmpp_impl::cb_handle_connected()
 {
-	gloox::ConnectionTCPClient* con = static_cast<gloox::ConnectionTCPClient*>(m_client.connectionImpl());
-
-	m_asio_socket.reset( new boost::asio::ip::tcp::socket(io_service,boost::asio::ip::tcp::v4(), con->socket()));
-
 	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
 		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
 	);
