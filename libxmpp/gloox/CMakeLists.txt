@@ -10,7 +10,6 @@ endif()
 include_directories(${OpenSSL_INCLUDE_DIRS})
 
 SET( GLOOX_SRC
-gloox/adhoc.cpp
 gloox/amp.cpp
 gloox/annotations.cpp
 gloox/attention.cpp
@@ -25,13 +24,9 @@ gloox/component.cpp
 gloox/compressiondefault.cpp
 gloox/compressionzlib.cpp
 gloox/connectionbosh.cpp
-gloox/connectionhttpproxy.cpp
-gloox/connectionsocks5proxy.cpp
 gloox/connectiontcpbase.cpp
 gloox/connectiontcpclient.cpp
-gloox/connectiontcpserver.cpp
 gloox/connectiontls.cpp
-gloox/connectiontlsserver.cpp
 gloox/dataform.cpp
 gloox/dataformfieldcontainer.cpp
 gloox/dataformfield.cpp
@@ -92,13 +87,8 @@ gloox/stanzaextensionfactory.cpp
 gloox/subscription.cpp
 gloox/tag.cpp
 gloox/tlsdefault.cpp
-gloox/tlsgnutlsbase.cpp
-gloox/tlsgnutlsclientanon.cpp
-gloox/tlsgnutlsclient.cpp
-gloox/tlsgnutlsserveranon.cpp
 gloox/tlsopensslbase.cpp
 gloox/tlsopensslclient.cpp
-gloox/tlsopensslserver.cpp
 gloox/tlsschannel.cpp
 gloox/uniquemucroom.cpp
 gloox/util.cpp

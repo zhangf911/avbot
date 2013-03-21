@@ -62,7 +62,7 @@ namespace gloox
       case VerifyingServer:
 #ifdef HAVE_OPENSSL
 #ifndef __SYMBIAN32__
-        m_impl = new OpenSSLServer( th );
+//         m_impl = new OpenSSLServer( th );
 #endif
 #endif
         break;
