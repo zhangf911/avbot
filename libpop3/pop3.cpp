@@ -158,7 +158,8 @@ void pop3::process_mail ( std::istream& mail )
 				}else
 					break;
 			case 1: // 解析　　XXX:XXX　文件头选项对.
-			case 5: // MIME 子头，以 ------=_NextPart_51407E7E_09141558_64FF918C 的形式起始.
+state_5:                                                    // MIME 子头，以 ------=_NextPart_51407E7E_09141558_64FF918C 的形式起始.
+			case 5:
 				if (line == "" ){ // 空行终止文件头.
 					if( state == 1 )
 						if(boundary.empty()){ //进入非MIME格式的邮件正文处理.
@@ -174,6 +175,7 @@ void pop3::process_mail ( std::istream& mail )
 				if( state == 5 && line == std::string("--") + boundary + "--"){
 					state = 7 ; //MIME 结束.
 				}
+				std::cout <<  "processing line:" <<  line <<  std::endl;
 				//　进入解析.
 				boost::split ( kv, line, boost::algorithm::is_any_of ( ":" ) );
 				if( kv.size() != 2) // unknow extensions
@@ -249,9 +251,14 @@ void pop3::process_mail ( std::istream& mail )
 				}
 				break;
 			case 7: // charset = ??
+			if (line[0]!='\t')
+			{
+				state = 5;
+				goto state_5;
+			}else{
 				contenttype += line;
 				state = 5;
-				break;
+			}break;
 			case 8:
 				break;
 		}
