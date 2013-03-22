@@ -175,7 +175,6 @@ state_5:                                                    // MIME 子头，以
 				if( state == 5 && line == std::string("--") + boundary + "--"){
 					state = 7 ; //MIME 结束.
 				}
-				std::cout <<  "processing line:" <<  line <<  std::endl;
 				//　进入解析.
 				boost::split ( kv, line, boost::algorithm::is_any_of ( ":" ) );
 				if( kv.size() != 2) // unknow extensions
@@ -391,11 +390,11 @@ restart:
 			_yield	async_read_until ( *m_socket, *m_streambuf, "\r\n.\r\n", *this );
 			// 然后将邮件内容给处理.
 			process_mail ( inbuffer );
+#if 0
 			// 删除邮件啦.
 			msg = boost::str ( boost::format ( "dele %s\r\n" ) %  maillist[0] );
 			_yield m_socket->async_write_some ( buffer ( msg ), *this );
 
-			maillist.erase ( maillist.begin() );
 			// 获得　+OK
 			m_streambuf.reset ( new streambuf );
 			_yield	async_read_until ( *m_socket, *m_streambuf, "\n", *this );
@@ -408,6 +407,9 @@ restart:
 				// but 如果是连接出问题那还是要重启的.
 				if(ec) goto restart;
 			}
+# endif
+			maillist.erase ( maillist.begin() );
+
 		}
 
 		// 处理完毕.

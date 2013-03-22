@@ -15,7 +15,7 @@ endif()
 
 if( ENABLE_TEST )
 add_definitions(-DDEBUG)
-add_executable(pop3test test.cpp)
-target_link_libraries(pop3test pop3 ${CMAKE_THREAD_LIBS_INIT} )
+add_executable(pop3test test.cpp pop3.cpp)
+target_link_libraries(pop3test ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
 
 endif()
