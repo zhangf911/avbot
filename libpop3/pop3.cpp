@@ -390,7 +390,7 @@ restart:
 			_yield	async_read_until ( *m_socket, *m_streambuf, "\r\n.\r\n", *this );
 			// 然后将邮件内容给处理.
 			process_mail ( inbuffer );
-#if 0
+#if 1
 			// 删除邮件啦.
 			msg = boost::str ( boost::format ( "dele %s\r\n" ) %  maillist[0] );
 			_yield m_socket->async_write_some ( buffer ( msg ), *this );
