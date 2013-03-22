@@ -25,38 +25,18 @@ void my_cb(const IrcMsg pMsg)
 
 }
 
-void input_func(void* p)
-{
-
-    while(true)
-    {
-        char buf[512]={0};    
-        int i=0;
-        while((buf[i++]=cin.get())!='\n');
-        {
-            
-            buf[--i]='\0';
-            char *msg=(char*)malloc((strlen(buf)*2)+1);
-            //n2u(buf,strlen(buf),msg,(strlen(buf)*2)+1);
-            IrcClient* pClient=(IrcClient*)p;
-            pClient->chat("#avplayer",msg);
-            free(msg);
-        }
-    }
-
-}
-
 int
 main(int argc, char **argv) 
 {
+	boost::asio::io_service io_service;
 
-    IrcClient client(my_cb,"irc.freenode.net","6667");
-    client.login("qqbothaha","#avplayer");
-    boost::thread t(boost::bind(&input_func,&client));
+    IrcClient client(io_service, "testbot123", "", "localhost" );
+    client.login(my_cb);
+    client.join("#avplayer");
 
-    while (1)
-    {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-    }
+//     boost::thread t(boost::bind(&input_func,&client));
+
+	io_service.run();
+
 	return 0;
 }

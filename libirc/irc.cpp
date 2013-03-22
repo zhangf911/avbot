@@ -98,6 +98,8 @@ void IrcClient::relogin()
 	}
 
 	std::cout << "retry in 10s..." <<  std::endl;
+	socket_.close();
+// 	socket_.open(boost::asio::ip::tcp::);
 
 	boost::delayedcallsec(io_service, 10, boost::bind(&IrcClient::relogin_delayed, this));
 }
