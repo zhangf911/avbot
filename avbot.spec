@@ -1,5 +1,5 @@
 Name:       avbot
-Version:    3.2.1
+Version:    3.2.2
 Release:    1%{?dist}
 Summary:    The qq/irc/xmpp protocol bridge bot by avplayer.org
 License:    GPLv2+
@@ -11,7 +11,7 @@ BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: cmake
 
-Requires: libssl zlib libgcc
+Requires: openssl zlib libgcc
 
 %description
 The qq/irc/xmpp protocol bridge bot by avplayer.org
