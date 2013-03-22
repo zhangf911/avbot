@@ -1,0 +1,30 @@
+
+3.2.2
+	* fixed many bugs
+
+3.2.1
+	* bug fix
+	* XMPP async connect fix
+
+3.1.1
+	* bug fix
+
+3.1
+	* socks5_proxy support
+3.0
+	* avbot 现在包含了一个POP3客户端，可以到指定(--mailaddr参数指定)的邮箱获取邮件，并将邮件贴到群聊天里。
+	* 改进的WebQQ协议处理，更稳定，更少下线时间
+	* 支持通过标准输入直接输入验证码，不再需要通过IRC频道输入验证码
+	* 大量的代码改进，使用协程优化了WebQQ登录过程的处理，使用协程优化了IRC连接处理
+
+2.3
+	* bug fix
+2.0
+	* add support for XMPP protocol
+
+1.0
+	* qqbot works for WebQQ and IRC protocol
+0.1
+	* tech-preview
+	* many copy & paste from lwqq
+	* only WebQQ supported. can log chat to html
