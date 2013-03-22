@@ -120,7 +120,7 @@ static void decode_mail(boost::asio::io_service & io_service, boost::shared_ptr<
 	std::pair<std::string,std::string> mc = select_best_mailcontent(thismail);
 
 	{
-		if(thismail.content_encoding == "base64"){
+		if(boost::trim_copy(thismail.content_encoding) == "base64"){
 			// 从 v.first aka contenttype 找到编码.
 			thismail.content = ansi_utf8(boost::base64_decode(mc.second), find_charset(mc.first));
 		}else{ // 7bit decoding

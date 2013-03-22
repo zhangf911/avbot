@@ -34,6 +34,7 @@ int main(int argc, char * argv[])
     std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
+	std::string mailaddr,mailpasswd,mailserver;
 
     setlocale(LC_ALL, "");
 
@@ -42,17 +43,9 @@ int main(int argc, char * argv[])
 	    ( "version,v",										"output version" )
 		( "help,h",											"produce help message" )
 		( "daemon,d",										"go to background" )
-		( "qqnum,u",	po::value<std::string>(&qqnumber),	"QQ number" )
-		( "qqpwd,p",	po::value<std::string>(&qqpwd),		"QQ password" )
-		( "logdir",		po::value<std::string>(&logdir),	"dir for logfile" )
-		( "ircnick",	po::value<std::string>(&ircnick),	"irc nick" )
-		( "ircpwd",		po::value<std::string>(&ircpwd),	"irc password" )
-		( "ircrooms",	po::value<std::string>(&ircroom),	"irc room" )
-		( "xmppuser",	po::value<std::string>(&xmppuser),	"id for XMPP,  eg: (microcaicai@gmail.com)" )
-		( "xmppserver",	po::value<std::string>(&xmppserver),	"server to connect for XMPP,  eg: (xmpp.l.google.com)" )
-		( "xmpppwd",	po::value<std::string>(&xmpppwd),	"password for XMPP" )
-		( "xmpprooms",	po::value<std::string>(&xmpproom),	"xmpp rooms" )
-		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
+		( "mail",		po::value<std::string>(&mailaddr),	"fetch mail from this address")
+		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
+		( "mailserver",	po::value<std::string>(&mailserver),"password of mail")
 		;
 
 	po::variables_map vm;
@@ -82,6 +75,6 @@ int main(int argc, char * argv[])
 	boost::asio::io_service asio;
 	boost::asio::io_service::work work(asio);
 
-	pop3 p(asio, qqnumber, qqpwd);
+	pop3 p(asio, mailaddr, mailpasswd, mailserver);
     asio.run();
 }
