@@ -9,6 +9,8 @@
 3.2.1
 	* bug fix
 	* XMPP async connect fix
+3.2
+	* irc support multi line message support
 
 3.1.1
 	* bug fix
