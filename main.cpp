@@ -486,7 +486,7 @@ int main(int argc, char *argv[])
 		std::cerr <<  desc <<  std::endl;
 		return 1;
 	}
-	if (vm.size() ==0 )
+	if (vm.size() ==0 || (vm.size() ==1 && vm.count("daemon")))
 	{
 		try
 		{
@@ -582,9 +582,11 @@ int main(int argc, char *argv[])
 
     boost::asio::io_service::work work(asio);
 #ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
-	boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin(new boost::asio::posix::stream_descriptor(asio, 0));
-	boost::shared_ptr<boost::asio::streambuf> inputbuffer(new boost::asio::streambuf);
-	boost::asio::async_read_until(*stdin, *inputbuffer, '\n', boost::bind(inputread , _1,_2, stdin, inputbuffer, boost::ref(qqclient)));
+	if (!vm.count("daemon")){
+		boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin(new boost::asio::posix::stream_descriptor(asio, 0));
+		boost::shared_ptr<boost::asio::streambuf> inputbuffer(new boost::asio::streambuf);
+		boost::asio::async_read_until(*stdin, *inputbuffer, '\n', boost::bind(inputread , _1,_2, stdin, inputbuffer, boost::ref(qqclient)));
+	}
 #endif
     asio.run();
     return 0;
