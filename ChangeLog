@@ -1,3 +1,7 @@
+3.3
+	* pull in upstream avproxy that add http_proxy support.
+	* allow to have signel  -d command line option to run as daemon
+	* disable stdin process when run in daemon mode
 
 3.2.2
 	* fixed many bugs
