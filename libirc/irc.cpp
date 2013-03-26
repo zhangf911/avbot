@@ -226,8 +226,9 @@ void IrcClient::handle_write_request(const boost::system::error_code& err, std::
 			if (bytewrited)
 				request_.consume(bytewrited);
 			if (request_.size()){
-				std::getline(req, line);
 				_yield boost::delayedcallms(io_service, 450, boost::bind(&IrcClient::handle_write_request, this, boost::system::error_code(), 0, coro));
+				std::getline(req, line);
+				line.append("\n");
 				boost::asio::async_write(socket_,
 					boost::asio::buffer(line),
 					boost::bind(&IrcClient::handle_write_request, this, _1, _2, coro)
