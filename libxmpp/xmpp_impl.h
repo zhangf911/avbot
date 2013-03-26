@@ -62,13 +62,19 @@ private:
 private:  // for asio callback
 	void cb_handle_connecting(const boost::system::error_code & ec);
 	void cb_handle_connected();
-	void cb_handle_asio_read(const boost::system::error_code & error);
+	void cb_handle_asio_read(const boost::system::error_code & error, std::size_t bytes_transferred);
+	void cb_handle_asio_write(const boost::system::error_code & error, std::size_t bytes_transferred);
+
+private: // for gloox::ConnectionTCPClient
+    virtual bool send(const std::string& data);
+
 private:
 	boost::asio::io_service & io_service;
 	gloox::JID m_jid;
 	gloox::Client m_client;
 	std::vector<boost::shared_ptr<gloox::MUCRoom> >	m_rooms;
 	boost::scoped_ptr<boost::asio::ip::tcp::socket> m_asio_socket;
+	boost::asio::streambuf							m_readbuf;
 	
 	boost::signal <void (std::string xmpproom, std::string who, std::string message)> m_sig_room_message;
 };

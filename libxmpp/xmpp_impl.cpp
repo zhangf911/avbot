@@ -103,8 +103,8 @@ void xmpp_impl::cb_handle_connected()
 {
 	m_client.handleConnect(this);
 
-	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
-		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
+	m_asio_socket->async_read_some(m_readbuf.prepare(8192),
+		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
 	);
 }
 
@@ -115,17 +115,38 @@ void xmpp_impl::join(std::string roomjid)
 	m_rooms.push_back(room);
 }
 
-void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error)
+void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
-	m_client.recv(0);
-
-	if(!m_asio_socket->is_open()){
-		m_asio_socket.reset( new boost::asio::ip::tcp::socket(io_service,boost::asio::ip::tcp::v4(), this->socket()));
+	if (error){
+		m_client.handleDisconnect(this, gloox::ConnStreamClosed);
+	}else{
+		m_readbuf.commit(bytes_transferred);
+		std::string data(boost::asio::buffer_cast<const char*>(m_readbuf.data()), m_readbuf.size());
+		m_client.handleReceivedData(this, data);
+		m_readbuf.consume(m_readbuf.size());
+		m_asio_socket->async_read_some(m_readbuf.prepare(8102), 
+		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
+		);
 	}
+}
 
-	m_asio_socket->async_read_some(boost::asio::null_buffers(), 
-		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error)
-	);
+void xmpp_impl::cb_handle_asio_write(const boost::system::error_code& error, std::size_t bytes_transferred)
+{
+	if (error)
+		m_client.handleDisconnect(this,  gloox::ConnStreamError);
+}
+
+bool xmpp_impl::send(const std::string& data)
+{
+	if (m_asio_socket->is_open()){
+		// write to socket
+		m_asio_socket->async_write_some(boost::asio::buffer(data),
+			boost::bind(&xmpp_impl::cb_handle_asio_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
+		);
+		return true;
+	}
+	m_client.handleDisconnect(this,  gloox::ConnStreamClosed);
+	return false;	
 }
 
 void xmpp_impl::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
