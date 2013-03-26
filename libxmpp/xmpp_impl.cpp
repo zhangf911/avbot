@@ -62,7 +62,7 @@ void xmpp_impl::start()
 		xmppclientport = boost::lexical_cast<std::string>(m_client.port());
 
 	avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
-	avproxy::async_proxyconnect(avproxy::autoproxychain(*m_asio_socket, query), 
+	avproxy::async_proxy_connect(avproxy::autoproxychain(*m_asio_socket, query), 
 		boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
 }
 
@@ -82,7 +82,7 @@ void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
 
 		avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
 	
-		avproxy::async_proxyconnect(avproxy::autoproxychain(*m_asio_socket, query), 
+		avproxy::async_proxy_connect(avproxy::autoproxychain(*m_asio_socket, query), 
 			boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
 		return ;
 	}

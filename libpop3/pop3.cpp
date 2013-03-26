@@ -289,7 +289,7 @@ restart:
 #endif
 
 			// dns 解析并连接.
- 			_yield avproxy::async_proxyconnect(
+			_yield avproxy::async_proxy_connect(
 				avproxy::autoproxychain(*m_socket, ip::tcp::resolver::query(m_mailserver, "110")),
  				*this);
 
