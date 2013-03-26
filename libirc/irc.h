@@ -54,7 +54,11 @@ private:
     void handle_read_request(const boost::system::error_code& err, std::size_t readed);
 	void handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro);
     void handle_connect_request(const boost::system::error_code& err);
-    void send_request(const std::string& msg);
+    void send_request(const std::string& msg){
+		std::string data=msg+"\r\n";
+		send_data(data.c_str(),data.length());
+	}
+    void send_data(const char* data,const size_t len);
     void process_request(boost::asio::streambuf& buf);
     void connect();
     void relogin();
@@ -65,8 +69,7 @@ public:
     void login(const privmsg_cb &cb);
     void join(const std::string& ch,const std::string &pwd="");
     void chat(const std::string& whom,const std::string& msg);
-    void send_command(const std::string& cmd);
-    void send_data(const char* data,const size_t len);
+    void send_command(const std::string& cmd){send_request(cmd);}
     void oper(const std::string& user,const std::string& pwd);
 
 private:

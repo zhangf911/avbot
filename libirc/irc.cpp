@@ -250,11 +250,6 @@ void IrcClient::handle_connect_request(const boost::system::error_code& err)
     }
 }
 
-void IrcClient::send_command(const std::string& cmd)
-{
-    send_request(cmd);
-}
-
 void IrcClient::send_data(const char* data,const size_t len)
 {
     std::string msg;
@@ -270,10 +265,4 @@ void IrcClient::send_data(const char* data,const size_t len)
 			boost::bind(&IrcClient::handle_write_request, this,
 				boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred, boost::coro::coroutine()));
 	}
-}
-
-void IrcClient::send_request(const std::string& msg)
-{
-    std::string data=msg+"\r\n";
-    send_data(data.c_str(),data.length());
 }
