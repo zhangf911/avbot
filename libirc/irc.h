@@ -49,6 +49,20 @@ class IrcClient
 {
 public:
     IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd="",const std::string& server="irc.freenode.net", const std::string& port="6667",const unsigned int max_retry_count=1000);
+
+public:
+    void login(const privmsg_cb &cb){
+		cb_=cb;
+	}
+    void join(const std::string& ch,const std::string &pwd="");
+    void chat(const std::string& whom,const std::string& msg);
+    void send_command(const std::string& cmd){
+		send_request(cmd);
+	}
+	void oper(const std::string& user,const std::string& pwd){
+		send_request("OPER "+user+" "+pwd);
+	}
+
 private:
     void handle_read_request(const boost::system::error_code& err, std::size_t readed);
 	void handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro);
@@ -63,13 +77,6 @@ private:
     void relogin();
     void relogin_delayed();
     void connected();
-public:
-
-    void login(const privmsg_cb &cb);
-    void join(const std::string& ch,const std::string &pwd="");
-    void chat(const std::string& whom,const std::string& msg);
-    void send_command(const std::string& cmd){send_request(cmd);}
-    void oper(const std::string& user,const std::string& pwd);
 
 private:
 	boost::asio::io_service &io_service;
