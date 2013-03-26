@@ -118,7 +118,7 @@ void IrcClient::process_request(boost::asio::streambuf& buf)
     std::istream is(&buf);
     is.unsetf(std::ios_base::skipws);
 
-    while ( req.clear(), std::getline(is, req), ! req.empty())
+    while ( req.clear(), std::getline(is, req), ( !is.eof() && ! req.empty()))
     {
         if (req.substr(0,4)=="PING")
         {
