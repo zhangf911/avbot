@@ -35,7 +35,7 @@
 using namespace XMPP;
 
 xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver)
-  : gloox::ConnectionTCPClient(&m_client, *this,"localhost"),
+	:gloox::ConnectionBase(&m_client),
    io_service(asio), m_jid(xmppuser+"/avqqbot"), m_client(m_jid, xmpppasswd)
 {
 	m_client.registerConnectionListener(this);
@@ -86,9 +86,6 @@ void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
 			boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
 		return ;
 	}
-
-	this->setSocket(m_asio_socket->native_handle());
-	this->connect();
 
 	m_client.setConnectionImpl(this);
 
@@ -148,6 +145,38 @@ bool xmpp_impl::send(const std::string& data)
 	m_client.handleDisconnect(this,  gloox::ConnStreamClosed);
 	return false;	
 }
+
+gloox::ConnectionError xmpp_impl::connect()
+{
+
+}
+
+gloox::ConnectionError xmpp_impl::receive()
+{
+
+}
+
+gloox::ConnectionBase* xmpp_impl::newInstance() const
+{
+
+}
+
+gloox::ConnectionError xmpp_impl::recv(int timeout)
+{
+
+}
+
+void xmpp_impl::getStatistics(long int& totalIn, long int& totalOut)
+{
+
+}
+
+void xmpp_impl::disconnect()
+{
+
+}
+
+
 
 void xmpp_impl::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
 {

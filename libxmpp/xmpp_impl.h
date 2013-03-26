@@ -32,7 +32,7 @@
 
 namespace XMPP {
 
-class xmpp_impl : private gloox::LogSink, gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler, gloox::ConnectionTCPClient
+class xmpp_impl : private gloox::LogSink, gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler, gloox::ConnectionBase
 {
 public:
 	xmpp_impl(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver);
@@ -67,6 +67,12 @@ private:  // for asio callback
 
 private: // for gloox::ConnectionTCPClient
     virtual bool send(const std::string& data);
+    virtual gloox::ConnectionError connect();
+    virtual void disconnect();
+    virtual void getStatistics(long int& totalIn, long int& totalOut);
+    virtual gloox::ConnectionError receive();
+    virtual gloox::ConnectionError recv(int timeout = -1);
+    virtual ConnectionBase* newInstance() const;
 
 private:
 	boost::asio::io_service & io_service;
