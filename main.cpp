@@ -508,12 +508,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if(chanelmap.empty())
-	{
-		std::cerr << "请使用　--map　设置设置频道映射" << std::endl;
-		exit(1);
-	}
-
 	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver);
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
