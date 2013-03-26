@@ -49,7 +49,6 @@ class IrcClient
 {
 public:
     IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd="",const std::string& server="irc.freenode.net", const std::string& port="6667",const unsigned int max_retry_count=1000);
-    ~IrcClient();
 private:
     void handle_read_request(const boost::system::error_code& err, std::size_t readed);
 	void handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro);

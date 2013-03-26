@@ -13,11 +13,6 @@ IrcClient::IrcClient(boost::asio::io_service &_io_service,const std::string& use
     connect();
 }
 
-IrcClient::~IrcClient()
-{
-
-}
-
 void IrcClient::connect()
 {
 	using namespace boost::asio::ip;
