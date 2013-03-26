@@ -33,6 +33,8 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "boost/coro/coro.hpp"
+
 struct IrcMsg
 {
     std::string whom;
@@ -50,7 +52,7 @@ public:
     ~IrcClient();
 private:
     void handle_read_request(const boost::system::error_code& err, std::size_t readed);
-    void handle_write_request(const boost::system::error_code& err, std::size_t writed);
+	void handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro = boost::coro::coroutine());
     void handle_connect_request(const boost::system::error_code& err);
     void send_request(const std::string& msg);
     void process_request(boost::asio::streambuf& buf);
@@ -83,4 +85,5 @@ private:
     std::vector<std::string>        join_queue_;
     unsigned int                    retry_count_;
     const unsigned int              c_retry_cuont;
+    bool insending;
 };

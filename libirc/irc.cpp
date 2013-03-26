@@ -3,11 +3,12 @@
 
 #include "avproxy.hpp"
 #include "boost/timedcall.hpp"
+#include "boost/coro/yield.hpp"
 
 #include "irc.h"
 
 IrcClient::IrcClient(boost::asio::io_service &_io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
-	:io_service(_io_service), cb_(0), socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false)
+	:io_service(_io_service), cb_(0), socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false), insending(false)
 {
     response_.prepare(512*1024);
     connect();
@@ -213,23 +214,35 @@ void IrcClient::handle_read_request(const boost::system::error_code& err, std::s
     }
 }
 
-void IrcClient::handle_write_request(const boost::system::error_code& err, std::size_t bytewrited)
+void IrcClient::handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro)
 {
-    if (!err)
+	std::istream  req(&request_);
+	std::string line;
+
+	reenter(&coro)
 	{
-        request_.consume(bytewrited);		
-        if (request_.size())			
-            boost::asio::async_write(socket_,
-            request_,
-            boost::bind(&IrcClient::handle_write_request, this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)); 
-    }    
-    else    
-    {
-        relogin();
-#ifdef DEBUG        
-        std::cout << "Error: " << err.message() << "\n";
-#endif
-    }
+		if (!err)
+		{
+			if (bytewrited)
+				request_.consume(bytewrited);
+			if (request_.size()){
+				std::getline(req, line);
+				_yield boost::delayedcallms(io_service, 450, boost::bind(&IrcClient::handle_write_request, this, boost::system::error_code(), 0, coro));
+				boost::asio::async_write(socket_,
+					boost::asio::buffer(line),
+					boost::bind(&IrcClient::handle_write_request, this, _1, _2, coro)
+				);
+			}else{
+				insending = false;
+			}
+		} else {
+			insending = false;
+			relogin();
+	#ifdef DEBUG        
+			std::cout << "Error: " << err.message() << "\n";
+	#endif
+		}	
+	}
 }
 
 void IrcClient::handle_connect_request(const boost::system::error_code& err)
@@ -265,11 +278,15 @@ void IrcClient::send_data(const char* data,const size_t len)
     std::ostream request_stream(&request_);
     request_stream << msg;
 
-    boost::asio::async_write(socket_, request_,
-        boost::bind(&IrcClient::handle_write_request, this,
-        boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+    if (!insending){
+		insending = true;
 
+		boost::asio::async_write(socket_, request_,
+			boost::bind(&IrcClient::handle_write_request, this,
+				boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred, boost::coro::coroutine()));
+	}
 }
+
 void IrcClient::send_request(const std::string& msg)
 {
     std::string data=msg+"\r\n";
