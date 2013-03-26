@@ -30,11 +30,9 @@ main(int argc, char **argv)
 {
 	boost::asio::io_service io_service;
 
-    IrcClient client(io_service, "testbot123", "", "localhost" );
+    IrcClient client(io_service, "testbot123", "" );
     client.login(my_cb);
-    client.join("#avplayer");
-
-//     boost::thread t(boost::bind(&input_func,&client));
+    client.join("#avplayertest");
 
 	io_service.run();
 

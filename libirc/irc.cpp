@@ -10,7 +10,6 @@
 IrcClient::IrcClient(boost::asio::io_service &_io_service,const std::string& user,const std::string& user_pwd,const std::string& server, const std::string& port,const unsigned int max_retry)
 	:io_service(_io_service), cb_(0), socket_(io_service),user_(user),pwd_(user_pwd),server_(server),port_(port),retry_count_(max_retry),c_retry_cuont(max_retry),login_(false), insending(false)
 {
-    response_.prepare(512*1024);
     connect();
 }
 
@@ -114,29 +113,12 @@ void IrcClient::relogin_delayed()
 
 void IrcClient::process_request(boost::asio::streambuf& buf)
 {
+    std::string req;
 
     std::istream is(&buf);
     is.unsetf(std::ios_base::skipws);
-    std::string longreg(last_buf_);
-    longreg.append(std::istream_iterator<char>(is), std::istream_iterator<char>());
 
-#ifdef DEBUG
-    std::cout << longreg;
-#endif
-
-    size_t leave=longreg.rfind("\r\n")+2;
-
-    if (leave!=longreg.length())
-    {
-        last_buf_=longreg.substr(leave,longreg.length()-leave);
-        longreg=longreg.substr(0,leave);
-    }else
-        last_buf_.clear();
-
-    std::vector<std::string> vec;
-    boost::split(vec,longreg,boost::algorithm::is_any_of("\r\n"),boost::algorithm::token_compress_on);
-
-    BOOST_FOREACH (std::string& req,vec)
+    while (std::getline(is, req), ! req.empty())
     {
         if (req.substr(0,4)=="PING")
         {
@@ -206,11 +188,11 @@ void IrcClient::handle_read_request(const boost::system::error_code& err, std::s
         std::cout << "Error: " << err.message() << "\n";
 #endif
 	}else{
-		process_request(response_);
-
         boost::asio::async_read_until(socket_, response_, "\r\n",
-            boost::bind(&IrcClient::handle_read_request, this,
-            boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred));
+            boost::bind(&IrcClient::handle_read_request, this, _1, _2)
+		);
+
+        process_request(response_);
     }
 }
 
@@ -223,16 +205,19 @@ void IrcClient::handle_write_request(const boost::system::error_code& err, std::
 	{
 		if (!err)
 		{
-			if (bytewrited)
-				request_.consume(bytewrited);
 			if (request_.size()){
 				_yield boost::delayedcallms(io_service, 450, boost::bind(&IrcClient::handle_write_request, this, boost::system::error_code(), 0, coro));
 				std::getline(req, line);
-				line.append("\n");
-				boost::asio::async_write(socket_,
-					boost::asio::buffer(line),
-					boost::bind(&IrcClient::handle_write_request, this, _1, _2, coro)
-				);
+				if (line.length() > 1){
+					line.append("\n");
+					boost::asio::async_write(socket_,
+						boost::asio::buffer(line),
+						boost::bind(&IrcClient::handle_write_request, this, _1, _2, boost::coro::coroutine())
+					
+					);
+				}else{
+					boost::delayedcallms(io_service, 5, boost::bind(&IrcClient::handle_write_request, this, boost::system::error_code(), 0, boost::coro::coroutine()));
+				}
 			}else{
 				insending = false;
 			}
@@ -282,7 +267,7 @@ void IrcClient::send_data(const char* data,const size_t len)
     if (!insending){
 		insending = true;
 
-		boost::asio::async_write(socket_, request_,
+		boost::asio::async_write(socket_, boost::asio::null_buffers(),
 			boost::bind(&IrcClient::handle_write_request, this,
 				boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred, boost::coro::coroutine()));
 	}

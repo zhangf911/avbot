@@ -52,7 +52,7 @@ public:
     ~IrcClient();
 private:
     void handle_read_request(const boost::system::error_code& err, std::size_t readed);
-	void handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro = boost::coro::coroutine());
+	void handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro);
     void handle_connect_request(const boost::system::error_code& err);
     void send_request(const std::string& msg);
     void process_request(boost::asio::streambuf& buf);
@@ -79,7 +79,6 @@ private:
     std::string                     pwd_;
     std::string                     server_;
     std::string                     port_;
-    std::string                     last_buf_;
     bool                            login_;
     std::vector<std::string>        msg_queue_;
     std::vector<std::string>        join_queue_;
