@@ -99,7 +99,6 @@ void IrcClient::relogin()
 
 	std::cout << "retry in 10s..." <<  std::endl;
 	socket_.close();
-// 	socket_.open(boost::asio::ip::tcp::);
 
 	boost::delayedcallsec(io_service, 10, boost::bind(&IrcClient::relogin_delayed, this));
 }
@@ -197,22 +196,21 @@ void IrcClient::process_request(boost::asio::streambuf& buf)
 
 void IrcClient::handle_read_request(const boost::system::error_code& err, std::size_t readed)
 {
-    if (!err)
+    if (err)
     {
-        process_request(response_);
+		response_.consume(response_.size());
+		request_.consume(request_.size());
+        relogin();
+#ifdef DEBUG
+        std::cout << "Error: " << err.message() << "\n";
+#endif
+	}else{
+		process_request(response_);
 
         boost::asio::async_read_until(socket_, response_, "\r\n",
             boost::bind(&IrcClient::handle_read_request, this,
             boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred));
     }
-    else if (err != boost::asio::error::eof)
-    {
-        relogin();
-#ifdef DEBUG
-        std::cout << "Error: " << err.message() << "\n";
-#endif
-    }
-
 }
 
 void IrcClient::handle_write_request(const boost::system::error_code& err, std::size_t bytewrited)
