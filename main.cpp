@@ -45,6 +45,15 @@ namespace po = boost::program_options;
 #define QQBOT_VERSION "unknow"
 #endif
 
+static fs::path configfilepath();
+
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+
+static void inputread(const boost::system::error_code &, std::size_t,
+					  boost::shared_ptr<boost::asio::posix::stream_descriptor>,
+					  boost::shared_ptr<boost::asio::streambuf>, webqq &  );
+#endif
+
 static qqlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.
 static bool resend_img = false;	// 用于标识是否转发图片url.
@@ -52,6 +61,7 @@ static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
 static auto_question question;	// 自动问问题.
 static std::string progname;
 static std::string ircvercodechannel;
+
 class messagegroup;
 static std::vector<messagegroup>	messagegroups;
 
@@ -140,20 +150,27 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	boost::regex ex;
 	boost::cmatch what;
     boost::trim(cmd);
-	
+    
+    messagegroup* chanelgroup = find_group(std::string("qq:") + group.qqnum);
+    boost::function<void(std::string)> msg_sender;
+
+    if (chanelgroup){
+		msg_sender = boost::bind(&messagegroup::broadcast, chanelgroup,  _1);
+	}else{
+		msg_sender = boost::bind(static_cast<void (webqq::*)(std::string, std::string, boost::function<void (const boost::system::error_code& ec)>)>(& webqq::send_group_message), &qqclient, group.gid, _1, boost::lambda::constant(0));
+	}
+
 	if( cmd == ".qqbot help")
 	{
-		qqclient.send_group_message(group,
-			"可用的命令\n\t.qqbot help\n\t.qqbot ping\n\t.qqbot relogin\n\t.qqbot reload\n"
+		msg_sender("可用的命令\n\t.qqbot help\n\t.qqbot ping\n\t.qqbot relogin\n\t.qqbot reload\n"
 			"\t.qqbot start imgage\t\n.qqbot stop image\n"
 			"\t.qqbot begin class XXX\t\n.qqbot end class\n"
-			"\t.qqbot newbee SB",
-							  boost::lambda::constant(0) == 0  );
+			"\t.qqbot newbee SB");
 	}
 
 	if( cmd == ".qqbot ping")
 	{
-		qqclient.send_group_message(group, "我还活着", boost::lambda::constant(0) == 0  );
+		msg_sender("我还活着");
 	}
 
 	if ((who.mflag & 21) == 21 || who.uin == group.owner )
@@ -184,7 +201,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 		if (cmd == ".qqbot reload")
 		{
 			qqclient.get_ioservice().post(boost::bind(&webqq::update_group_member, qqclient, boost::ref(group)));
-			qqclient.send_group_message(group, "群成员列表重加载", boost::lambda::constant(0) == 0);
+			msg_sender("群成员列表重加载");
 		}
 
 		// 开始讲座记录.	
@@ -219,7 +236,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 			list.push_back(nick);
 			
 			question.add_to_list(list);
-			question.on_handle_message(group, qqclient);
+			question.on_handle_message( msg_sender );
 		}
 	}
 }
@@ -381,58 +398,6 @@ static void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqcl
 	std::cerr << "请输入验证码" ;
 }
 
-static fs::path configfilepath()
-{
-	if ( fs::exists ( fs::path ( progname ) / "qqbotrc" ) )
-		return fs::path ( progname ) / "qqbotrc";
-
-	if ( getenv ( "USERPROFILE" ) ) {
-		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc" ) )
-			return fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc";
-	}
-
-	if ( getenv ( "HOME" ) ) {
-		if ( fs::exists ( fs::path ( getenv ( "HOME" ) ) / ".qqbotrc" ) )
-			return fs::path ( getenv ( "HOME" ) ) / ".qqbotrc";
-	}
-
-	if ( fs::exists ( "./qqbotrc/.qqbotrc" ) )
-		return fs::path ( "./qqbotrc/.qqbotrc" );
-
-	if ( fs::exists ( "/etc/qqbotrc" ) )
-		return fs::path ( "/etc/qqbotrc" );
-
-	throw "not configfileexit";
-}
-
-#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
-
-static void inputread(const boost::system::error_code & ec, std::size_t length,
-					  boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin,
-					  boost::shared_ptr<boost::asio::streambuf> inputbuffer, webqq & qqclient )
-{
-	std::istream input(inputbuffer.get());
-	std::string line;
-	std::getline(input,line);
-
-		//验证码check
-	if(qqneedvc){
-		boost::trim(line);
-		qqclient.login_withvc(line);
-		qqneedvc = false;
-		return;
-	}else{
-		BOOST_FOREACH(messagegroup & g ,  messagegroups)
-		{
-			g.broadcast(boost::str(
-				boost::format("来自 avbot 命令行的消息: %s") % line
-			));
-		}
-	}
-	boost::asio::async_read_until(*stdin, *inputbuffer, '\n', boost::bind(inputread , _1,_2, stdin, inputbuffer, boost::ref(qqclient)));
-}
-#endif
-
 #ifdef WIN32
 int daemon(int nochdir, int noclose)
 {
@@ -591,3 +556,56 @@ int main(int argc, char *argv[])
     asio.run();
     return 0;
 }
+
+static fs::path configfilepath()
+{
+	if ( fs::exists ( fs::path ( progname ) / "qqbotrc" ) )
+		return fs::path ( progname ) / "qqbotrc";
+
+	if ( getenv ( "USERPROFILE" ) ) {
+		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc" ) )
+			return fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc";
+	}
+
+	if ( getenv ( "HOME" ) ) {
+		if ( fs::exists ( fs::path ( getenv ( "HOME" ) ) / ".qqbotrc" ) )
+			return fs::path ( getenv ( "HOME" ) ) / ".qqbotrc";
+	}
+
+	if ( fs::exists ( "./qqbotrc/.qqbotrc" ) )
+		return fs::path ( "./qqbotrc/.qqbotrc" );
+
+	if ( fs::exists ( "/etc/qqbotrc" ) )
+		return fs::path ( "/etc/qqbotrc" );
+
+	throw "not configfileexit";
+}
+
+
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+
+static void inputread(const boost::system::error_code & ec, std::size_t length,
+					  boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin,
+					  boost::shared_ptr<boost::asio::streambuf> inputbuffer, webqq & qqclient )
+{
+	std::istream input(inputbuffer.get());
+	std::string line;
+	std::getline(input,line);
+
+		//验证码check
+	if(qqneedvc){
+		boost::trim(line);
+		qqclient.login_withvc(line);
+		qqneedvc = false;
+		return;
+	}else{
+		BOOST_FOREACH(messagegroup & g ,  messagegroups)
+		{
+			g.broadcast(boost::str(
+				boost::format("来自 avbot 命令行的消息: %s") % line
+			));
+		}
+	}
+	boost::asio::async_read_until(*stdin, *inputbuffer, '\n', boost::bind(inputread , _1,_2, stdin, inputbuffer, boost::ref(qqclient)));
+}
+#endif

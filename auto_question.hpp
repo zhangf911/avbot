@@ -33,11 +33,6 @@
 
 #include "libwebqq/webqq.h"
 
-static void qq_msg_send_callback(const boost::system::error_code& ec)
-{
-	// nothing to do
-}
-
 class auto_question : public boost::noncopyable
 {
 public:
@@ -70,9 +65,10 @@ public:
 		}
 	}
 	
-	void on_handle_message(qqGroup& group, webqq& qqclient)
+	template<class Msgsender>
+	void on_handle_message(Msgsender msgsender)
 	{
-		handle_question(group, qqclient);
+		handle_question(msgsender);
 		_process_count.clear();
 	}
 	
@@ -99,8 +95,8 @@ protected:
 		
 		_questioin_count = _question.size();
 	}
-	
-	void handle_question(qqGroup& group, webqq& qqclient)
+	template<class Msgsender>
+	void handle_question(Msgsender msgsender)
 	{
 		boost::asio::io_service io;
 		std::map<std::string, int>::iterator iter;
@@ -111,7 +107,8 @@ protected:
 			std::string str_msg = boost::str(boost::format("@%1% 你好,欢迎你加入本群.请先回答以下问题:\n%2%谢谢\n") % iter->first % str_msg_body);
 			
 			std::cout << str_msg << std::endl;
-			qqclient.send_group_message(group, str_msg, qq_msg_send_callback);
+			
+			msgsender(str_msg);
 			
 			io.reset();
 			boost::asio::deadline_timer timer(io, boost::posix_time::seconds(1));
