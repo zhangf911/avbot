@@ -10,7 +10,7 @@
   This software is distributed without any warranty.
 */
 
-
+#include <stdlib.h>
 #include "amp.h"
 #include "tag.h"
 #include "util.h"
