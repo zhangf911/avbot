@@ -6,6 +6,7 @@
 	* broadcast the .qqbot command result
 	* --xmppnick to set the nick
 	* auto rename the nick when nick conflict occurs
+	* add new command .qqbot version
 
 3.2.2
 	* fixed many bugs
