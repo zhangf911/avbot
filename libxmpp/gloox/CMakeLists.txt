@@ -75,9 +75,6 @@ gloox/sha.cpp
 gloox/shim.cpp
 gloox/simanager.cpp
 gloox/siprofileft.cpp
-gloox/socks5bytestream.cpp
-gloox/socks5bytestreammanager.cpp
-gloox/socks5bytestreamserver.cpp
 gloox/softwareversion.cpp
 gloox/stanza.cpp
 gloox/stanzaextensionfactory.cpp

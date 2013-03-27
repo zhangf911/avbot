@@ -18,7 +18,6 @@
 #include "connectionbase.h"
 #include "tlsbase.h"
 #include "compressionbase.h"
-#include "connectiontcpclient.h"
 #include "disco.h"
 #include "messagesessionhandler.h"
 #include "tag.h"

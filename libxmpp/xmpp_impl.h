@@ -25,7 +25,7 @@
 #include <gloox/messagehandler.h>
 #include <gloox/connectionlistener.h>
 #include <gloox/mucroomhandler.h>
-#include <gloox/connectiontcpclient.h>
+#include <gloox/connectionbase.h>
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/signal.hpp>
