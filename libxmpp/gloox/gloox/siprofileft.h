@@ -15,7 +15,6 @@
 #define SIPROFILEFT_H__
 
 #include "iqhandler.h"
-#include "socks5bytestreammanager.h"
 #include "siprofilehandler.h"
 #include "sihandler.h"
 #include "simanager.h"
@@ -175,8 +174,7 @@ namespace gloox
        * @note If you passed a SIManager and/or SOCKS5BytestreamManager and/or InBandBytestreamManager
        * to SIProfileFT's constructor, these objects will @b not be deleted on desctruction of SIProfileFT.
        */
-      SIProfileFT( ClientBase* parent, SIProfileFTHandler* sipfth, SIManager* manager = 0,
-                   SOCKS5BytestreamManager* s5Manager = 0 );
+      SIProfileFT( ClientBase* parent, SIProfileFTHandler* sipfth, SIManager* manager = 0);
 
       /**
        * Virtual destructor.
@@ -259,13 +257,6 @@ namespace gloox
        * Removes the previously registered file transfer request handler.
        */
       void removeSIProfileFTHandler() { m_handler = 0; }
-
-      /**
-       * Sets a list of StreamHosts that will be used for subsequent SOCKS5 bytestream requests.
-       * @note At least one StreamHost is required.
-       * @param hosts A list of StreamHosts.
-       */
-      void setStreamHosts( StreamHostList hosts );
 
       /**
        * Adds one StreamHost to the list of SOCKS5 StreamHosts.

@@ -19,8 +19,6 @@
 #include "dataform.h"
 #include "inbandbytestream.h"
 #include "oob.h"
-#include "socks5bytestream.h"
-#include "socks5bytestreammanager.h"
 
 #include <cstdlib>
 #include <map>
@@ -28,10 +26,8 @@
 namespace gloox
 {
 
-  SIProfileFT::SIProfileFT( ClientBase* parent, SIProfileFTHandler* sipfth, SIManager* manager,
-                            SOCKS5BytestreamManager* s5Manager )
-    : m_parent( parent ), m_manager( manager ), m_handler( sipfth ),
-      m_socks5Manager( s5Manager ), m_delManager( false ),
+  SIProfileFT::SIProfileFT( ClientBase* parent, SIProfileFTHandler* sipfth, SIManager* manager)
+    : m_parent( parent ), m_manager( manager ), m_handler( sipfth ), m_delManager( false ),
       m_delS5Manager( false )
   {
     if( !m_manager )
@@ -165,12 +161,6 @@ namespace gloox
       m_socks5Manager->rejectSOCKS5Bytestream( bs->sid(), StanzaErrorServiceUnavailable );
 
     dispose( bs );
-  }
-
-  void SIProfileFT::setStreamHosts( StreamHostList hosts )
-  {
-    if( m_socks5Manager )
-      m_socks5Manager->setStreamHosts( hosts );
   }
 
   void SIProfileFT::addStreamHost( const JID& jid, const std::string& host, int port )

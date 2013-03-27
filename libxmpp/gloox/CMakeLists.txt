@@ -74,7 +74,6 @@ gloox/search.cpp
 gloox/sha.cpp
 gloox/shim.cpp
 gloox/simanager.cpp
-gloox/siprofileft.cpp
 gloox/softwareversion.cpp
 gloox/stanza.cpp
 gloox/stanzaextensionfactory.cpp
