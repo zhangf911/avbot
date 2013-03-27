@@ -14,7 +14,6 @@ gloox/amp.cpp
 gloox/annotations.cpp
 gloox/attention.cpp
 gloox/base64.cpp
-gloox/bookmarkstorage.cpp
 gloox/capabilities.cpp
 gloox/chatstate.cpp
 gloox/chatstatefilter.cpp
@@ -31,14 +30,11 @@ gloox/dataformitem.cpp
 gloox/dataformreported.cpp
 gloox/delayeddelivery.cpp
 gloox/disco.cpp
-gloox/dns.cpp
 gloox/error.cpp
 gloox/eventdispatcher.cpp
 gloox/featureneg.cpp
 gloox/flexoff.cpp
 gloox/gloox.cpp
-gloox/gpgencrypted.cpp
-gloox/gpgsigned.cpp
 gloox/inbandbytestream.cpp
 gloox/instantmucroom.cpp
 gloox/iq.cpp

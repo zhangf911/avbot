@@ -98,6 +98,7 @@ void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
 
 void xmpp_impl::cb_handle_connected()
 {
+	m_state = gloox::StateConnected;
 	m_client.handleConnect(this);
 
 	m_asio_socket->async_read_some(m_readbuf.prepare(8192),
@@ -148,7 +149,7 @@ bool xmpp_impl::send(const std::string& data)
 
 gloox::ConnectionError xmpp_impl::connect()
 {
-	BOOST_ASSERT(1);
+	return m_asio_socket->is_open() ?  gloox::ConnNoError: gloox::ConnNotConnected;
 }
 
 gloox::ConnectionError xmpp_impl::receive()
