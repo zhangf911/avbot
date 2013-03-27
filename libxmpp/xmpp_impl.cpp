@@ -237,7 +237,7 @@ static std::string randomname(std::string m_xmppnick)
 void xmpp_impl::handleMUCError(gloox::MUCRoom* room, gloox::StanzaError error)
 {
 	std::cout <<  __func__ <<  std::endl;
-	if (error = gloox::StanzaErrorConflict)
+	if (error == gloox::StanzaErrorConflict)
 	{
 		// 出现名字冲突，使用一个随机名字.
 		room->setNick(randomname(m_xmppnick));
