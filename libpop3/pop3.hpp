@@ -9,7 +9,6 @@
 #include <boost/format.hpp>
 #include "boost/coro/coro.hpp"
 
-#include "boost/resolver.hpp"
 #include "boost/timedcall.hpp"
 
 struct mailcontent{
