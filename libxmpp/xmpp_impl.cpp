@@ -54,16 +54,19 @@ xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::s
 
 void xmpp_impl::start()
 {
-	m_asio_socket.reset(new boost::asio::ip::tcp::socket(io_service));
-	std::string xmppclientport ;
-	if (m_client.port() == -1)
-		xmppclientport = "xmpp-client";
-	else
-		xmppclientport = boost::lexical_cast<std::string>(m_client.port());
+	if (state() == gloox::StateDisconnected){
+		m_asio_socket.reset(new boost::asio::ip::tcp::socket(io_service));
+		std::string xmppclientport ;
+		if (m_client.port() == -1)
+			xmppclientport = "xmpp-client";
+		else
+			xmppclientport = boost::lexical_cast<std::string>(m_client.port());
 
-	avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
-	avproxy::async_proxy_connect(avproxy::autoproxychain(*m_asio_socket, query), 
-		boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
+		avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
+		avproxy::async_proxy_connect(avproxy::autoproxychain(*m_asio_socket, query), 
+			boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
+		m_state = gloox::StateConnecting;
+	}
 }
 
 void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
@@ -175,10 +178,8 @@ void xmpp_impl::getStatistics(long int& totalIn, long int& totalOut)
 
 void xmpp_impl::disconnect()
 {
-
+	m_state = gloox::StateDisconnected;
 }
-
-
 
 void xmpp_impl::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
 {
