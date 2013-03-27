@@ -24,9 +24,6 @@ gloox/component.cpp
 gloox/compressiondefault.cpp
 gloox/compressionzlib.cpp
 gloox/connectionbosh.cpp
-gloox/connectiontcpbase.cpp
-gloox/connectiontcpclient.cpp
-gloox/connectiontls.cpp
 gloox/dataform.cpp
 gloox/dataformfieldcontainer.cpp
 gloox/dataformfield.cpp

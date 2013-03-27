@@ -148,17 +148,18 @@ bool xmpp_impl::send(const std::string& data)
 
 gloox::ConnectionError xmpp_impl::connect()
 {
-
+	BOOST_ASSERT(1);
 }
 
 gloox::ConnectionError xmpp_impl::receive()
 {
-
+	BOOST_ASSERT(1);
 }
 
 gloox::ConnectionBase* xmpp_impl::newInstance() const
 {
-
+	const gloox::ConnectionBase* ret = this;
+	return (gloox::ConnectionBase*)(ret);
 }
 
 gloox::ConnectionError xmpp_impl::recv(int timeout)
