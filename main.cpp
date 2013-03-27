@@ -162,15 +162,26 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 
 	if( cmd == ".qqbot help")
 	{
-		msg_sender("可用的命令\n\t.qqbot help\n\t.qqbot ping\n\t.qqbot relogin\n\t.qqbot reload\n"
-			"\t.qqbot start imgage\t\n.qqbot stop image\n"
-			"\t.qqbot begin class XXX\t\n.qqbot end class\n"
-			"\t.qqbot newbee SB");
+        qqclient.get_ioservice().post(
+            boost::bind(msg_sender, "可用的命令\n"
+						"\t.qqbot help\n"
+						"\t.qqbot version\n"
+						"\t.qqbot ping\n"
+						"\t.qqbot relogin\n\t.qqbot reload\n"
+                        "\t.qqbot start imgage\t\n.qqbot stop image\n"
+                        "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
+                        "\t.qqbot newbee SB")
+        );
 	}
 
 	if( cmd == ".qqbot ping")
 	{
 		msg_sender("我还活着");
+	}
+	
+	if( cmd == ".qqbot version")
+	{
+		msg_sender(boost::str(boost::format("我的版本是 %s") % QQBOT_VERSION) );
 	}
 
 	if ((who.mflag & 21) == 21 || who.uin == group.owner )
@@ -181,7 +192,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 				boost::bind(&webqq::login,qqclient)
 			);
 		}
-		
+
 		if ( cmd == ".qqbot exit")
 		{
 			exit(0);

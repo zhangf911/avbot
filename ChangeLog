@@ -4,6 +4,8 @@
 	* disable stdin process when run in daemon mode
 	* limit the IRC msg send rate
 	* broadcast the .qqbot command result
+	* --xmppnick to set the nick
+	* auto rename the nick when nick conflict occurs
 
 3.2.2
 	* fixed many bugs
