@@ -191,17 +191,21 @@ void IrcClient::handle_write_request(const boost::system::error_code& err, std::
 		if (!err)
 		{
 			if (request_.size()){
-				_yield boost::delayedcallms(io_service, 450, boost::bind(&IrcClient::handle_write_request, this, boost::system::error_code(), 0, coro));
 				std::getline(req, line);
 				if (line.length() > 1){
+
 					line.append("\n");
-					boost::asio::async_write(socket_,
-						boost::asio::buffer(line),
-						boost::bind(&IrcClient::handle_write_request, this, _1, _2, boost::coro::coroutine())
+
+					_yield  boost::asio::async_write(socket_, boost::asio::buffer(line),
+							boost::bind(&IrcClient::handle_write_request, this, _1, _2, coro)
 					);
+
+					boost::delayedcallms(io_service, 450, boost::bind(&IrcClient::handle_write_request, this, boost::system::error_code(), 0,  boost::coro::coroutine()));
+
 				}else{
-					boost::delayedcallms(io_service, 5, boost::bind(&IrcClient::handle_write_request, this, boost::system::error_code(), 0, boost::coro::coroutine()));
+					_yield boost::delayedcallms(io_service, 5, boost::bind(&IrcClient::handle_write_request, this, boost::system::error_code(), 0,coro));
 				}
+
 			}else{
 				insending = false;
 			}
