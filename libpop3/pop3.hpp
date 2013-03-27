@@ -27,21 +27,7 @@ public:
 	typedef void result_type;
 	typedef boost::signal< void (mailcontent thismail) > on_gotmail_signal;
 public:
-	pop3(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver="")
-		:io_service(_io_service),
-		m_mailaddr(user), m_passwd(passwd),
-		m_mailserver(_mailserver),
-		m_sig_gotmail(new on_gotmail_signal())
-	{
-		if(m_mailserver.empty()) // 自动从　mailaddress 获得.
-		{
-			if( m_mailaddr.find("@") == std::string::npos)
-				m_mailserver = "pop.qq.com"; // 如果　邮箱是 qq 号码（没@），就默认使用 pop.qq.com .
-			else
-				m_mailserver =  std::string("pop.") + m_mailaddr.substr(m_mailaddr.find_last_of("@")+1);
-		}
-		io_service.post(boost::asio::detail::bind_handler(*this, boost::system::error_code(), 0));
-	}
+	pop3(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver="");
 
 	void operator()(const boost::system::error_code & ec, std::size_t length =0);
 
@@ -50,7 +36,8 @@ public:
 		m_sig_gotmail->connect(slot);
 	}
 private:
-	void process_mail(std::istream &mail);
+	template<class Handler>
+	void process_mail(std::istream &mail, Handler handler);
 private:
 	::boost::asio::io_service & io_service;
 

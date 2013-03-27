@@ -101,12 +101,13 @@ static std::pair<std::string,std::string>
 	return std::make_pair("","");
 }
 
-static void broadcast_signal(boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, mailcontent thismail)
+static void broadcast_signal(boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, mailcontent thismail, boost::function<void()> handler)
 {
 	(*sig_gotmail)(thismail);
+	handler();
 }
 
-static void decode_mail(boost::asio::io_service & io_service, boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, mailcontent thismail)
+static void decode_mail(boost::asio::io_service & io_service, boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, mailcontent thismail, boost::function<void()> handler)
 {
  	std::cout << "邮件内容begin" << std::endl;
 
@@ -129,10 +130,11 @@ static void decode_mail(boost::asio::io_service & io_service, boost::shared_ptr<
 	}
 	std::cout << "邮件内容end" << std::endl;
 
-	io_service.post(boost::bind(broadcast_signal,sig_gotmail,thismail));
+	io_service.post(boost::bind(broadcast_signal,sig_gotmail,thismail, handler));
 }
 
-void pop3::process_mail ( std::istream& mail )
+template<class Handler>
+void pop3::process_mail(std::istream &mail, Handler handler)
 {
 	int state = 0;
 	mailcontent thismail;
@@ -265,7 +267,7 @@ state_5:                                                    // MIME 子头，以
 		std::getline ( mail, line );
 	}
 	// 处理　base64 编码的邮件内容.
-	io_service.post(boost::bind(decode_mail, boost::ref(io_service), m_sig_gotmail, thismail));
+	io_service.post(boost::bind(decode_mail, boost::ref(io_service), m_sig_gotmail, thismail, boost::function<void()>(handler)));
 }
 
 void pop3::operator() ( const boost::system::error_code& ec, std::size_t length )
@@ -389,7 +391,7 @@ restart:
 			// 获取邮件内容，邮件一单行的 . 结束.
 			_yield	async_read_until ( *m_socket, *m_streambuf, "\r\n.\r\n", *this );
 			// 然后将邮件内容给处理.
-			process_mail ( inbuffer );
+			_yield process_mail ( inbuffer ,  boost::bind(*this, ec, 0));
 #if 1
 			// 删除邮件啦.
 			msg = boost::str ( boost::format ( "dele %s\r\n" ) %  maillist[0] );
@@ -423,5 +425,20 @@ restart:
 		_yield ::boost::delayedcallsec ( io_service, 30, boost::bind ( *this, ec, 0 ) );
 		goto restart;
 	}
+}
+
+pop3::pop3(boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver) :io_service(_io_service),
+    m_mailaddr(user), m_passwd(passwd),
+    m_mailserver(_mailserver),
+    m_sig_gotmail(new on_gotmail_signal())
+{
+    if(m_mailserver.empty()) // 自动从　mailaddress 获得.
+    {
+        if( m_mailaddr.find("@") == std::string::npos)
+            m_mailserver = "pop.qq.com"; // 如果　邮箱是 qq 号码（没@），就默认使用 pop.qq.com .
+        else
+            m_mailserver =  std::string("pop.") + m_mailaddr.substr(m_mailaddr.find_last_of("@")+1);
+    }
+    io_service.post(boost::asio::detail::bind_handler(*this, boost::system::error_code(), 0));
 }
 
