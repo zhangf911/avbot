@@ -22,6 +22,7 @@ namespace po = boost::program_options;
 #include <boost/shared_ptr.hpp>
 #include <boost/locale.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <locale.h>
 #include <fstream>
 #include <string.h>
 #include <stdlib.h>
