@@ -39,16 +39,15 @@ include_directories(avproxy/include)
 add_subdirectory(libwebqq)
 add_subdirectory(libirc)
 add_subdirectory(libxmpp)
-add_subdirectory(libpop3)
+add_subdirectory(libmailexchange)
 
-add_definitions(-DQQBOT_VERSION=\"3.3\")
+add_definitions(-DQQBOT_VERSION=\"3.4\")
 add_executable(avbot main.cpp)
 
-target_link_libraries(avbot webqq irc xmpp pop3)
+target_link_libraries(avbot webqq irc xmpp mailexchange)
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 install(TARGETS avbot RUNTIME DESTINATION bin)
 
 if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
 endif()
-
