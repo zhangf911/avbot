@@ -34,9 +34,8 @@
 
 using namespace XMPP;
 
-xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver)
-	:gloox::ConnectionBase(&m_client),
-   io_service(asio), m_jid(xmppuser+"/avqqbot"), m_client(m_jid, xmpppasswd)
+xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick)
+:gloox::ConnectionBase(&m_client), io_service(asio), m_jid(xmppuser+"/"+xmppnick), m_client(m_jid, xmpppasswd), m_xmppnick(xmppnick)
 {
 	m_client.registerConnectionListener(this);
 	m_client.registerMessageHandler(this);
@@ -111,7 +110,7 @@ void xmpp_impl::cb_handle_connected()
 
 void xmpp_impl::join(std::string roomjid)
 {
-	gloox::JID roomnick(roomjid+"/qqbot");//"avplayer@im.linuxapp.org";
+	gloox::JID roomnick(roomjid+"/" + m_xmppnick);//"avplayer@im.linuxapp.org";
 	boost::shared_ptr<gloox::MUCRoom> room( new  gloox::MUCRoom(&m_client, roomnick, this));
 	m_rooms.push_back(room);
 }
@@ -230,15 +229,25 @@ void xmpp_impl::onDisconnect(gloox::ConnectionError e)
 	boost::delayedcallsec(io_service, 10, boost::bind(&xmpp_impl::start, this));
 }
 
+static std::string randomname(std::string m_xmppnick)
+{
+	return boost::str(boost::format("%s%X") % m_xmppnick % random());
+}
+
 void xmpp_impl::handleMUCError(gloox::MUCRoom* room, gloox::StanzaError error)
 {
 	std::cout <<  __func__ <<  std::endl;
+	if (error = gloox::StanzaErrorConflict)
+	{
+		// 出现名字冲突，使用一个随机名字.
+		room->setNick(randomname(m_xmppnick));
+		room->join();
+	}
 }
 
 void xmpp_impl::handleMUCInfo(gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm)
 {
 	std::cout <<  __func__ <<  std::endl;
-
 }
 
 void xmpp_impl::handleMUCInviteDecline(gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason)

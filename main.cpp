@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
 {
     std::string qqnumber, qqpwd;
     std::string ircnick, ircroom, ircpwd;
-    std::string xmppuser, xmppserver, xmpppwd, xmpproom;
+    std::string xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick;
     std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
@@ -435,10 +435,11 @@ int main(int argc, char *argv[])
 		( "xmppserver",	po::value<std::string>(&xmppserver),"server to connect for XMPP,  eg: (xmpp.l.google.com)" )
 		( "xmpppwd",	po::value<std::string>(&xmpppwd),	"password for XMPP" )
 		( "xmpprooms",	po::value<std::string>(&xmpproom),	"xmpp rooms" )
+		( "xmppnick",	po::value<std::string>(&xmpproom),	"nick in xmpp rooms" )	
 		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
 		( "mail",		po::value<std::string>(&mailaddr),	"fetch mail from this address")
 		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
-		( "mailserver",	po::value<std::string>(&mailserver),"password of mail")
+		( "mailserver",	po::value<std::string>(&mailserver),"pop server of mail,  default to pop.[domain]")
 		( "logqqnumber",po::value<bool>(&logqqnumber),		"let qqlog contain qqnumber")
 		;
 
@@ -508,7 +509,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver);
+	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver, xmppnick);
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
 
