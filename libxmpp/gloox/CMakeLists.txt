@@ -73,7 +73,6 @@ gloox/rostermanager.cpp
 gloox/search.cpp
 gloox/sha.cpp
 gloox/shim.cpp
-gloox/simanager.cpp
 gloox/softwareversion.cpp
 gloox/stanza.cpp
 gloox/stanzaextensionfactory.cpp
@@ -82,7 +81,6 @@ gloox/tag.cpp
 gloox/tlsdefault.cpp
 gloox/tlsopensslbase.cpp
 gloox/tlsopensslclient.cpp
-gloox/tlsschannel.cpp
 gloox/uniquemucroom.cpp
 gloox/util.cpp
 gloox/vcard.cpp
