@@ -21,6 +21,8 @@
 
 xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick)
 {
+	if ( xmppnick.empty())
+		xmppnick = "avbot";
 	if (!xmppuser.empty() && !xmpppasswd.empty())
 		impl.reset(new XMPP::xmpp_impl(asio, xmppuser, xmpppasswd, xmppserver, xmppnick));
 }
