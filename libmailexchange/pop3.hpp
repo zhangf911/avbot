@@ -2,7 +2,6 @@
 #pragma once
 
 
-#include <boost/signal.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/foreach.hpp>
@@ -17,8 +16,8 @@
 class pop3 : boost::coro::coroutine {
 public:
 	typedef void result_type;
-	typedef boost::function<void ()>  void_function;
-	typedef boost::signal< void (mailcontent thismail, void_function call_to_contiune) > on_gotmail_signal;
+	typedef boost::function< void (int) >  call_to_continue_function;
+	typedef boost::function< void (mailcontent, call_to_continue_function)>  on_mail_function;
 public:
 	pop3(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver="");
 
@@ -143,7 +142,7 @@ public:
 				// 获取邮件内容，邮件一单行的 . 结束.
 				_yield	async_read_until ( *m_socket, *m_streambuf, "\r\n.\r\n", *this );
 				// 然后将邮件内容给处理.
-				_yield process_mail ( inbuffer ,  boost::bind(*this, ec, 0));
+				_yield process_mail ( inbuffer ,  boost::bind(*this, ec, _1));
 	#ifndef DEBUG
 				// 删除邮件啦.
 				msg = boost::str ( boost::format ( "dele %s\r\n" ) %  maillist[0] );
@@ -184,9 +183,9 @@ public:
 		}
 	}
 
-	void connect_gotmail(const on_gotmail_signal::slot_type& slot)
+	void on_mail_got(on_mail_function handler)
 	{
-		m_sig_gotmail->connect(slot);
+		m_sig_gotmail.reset(new on_mail_function(handler));
 	}
 private:
 	template<class Handler>
@@ -198,6 +197,6 @@ private:
 	// 必须是可拷贝的，所以只能用共享指针.
 	boost::shared_ptr<boost::asio::ip::tcp::socket>	m_socket;
 	boost::shared_ptr<boost::asio::streambuf>	m_streambuf;
-	boost::shared_ptr<on_gotmail_signal>		m_sig_gotmail;
+	boost::shared_ptr<on_mail_function>		m_sig_gotmail;
 	std::vector<std::string>	maillist;
 };

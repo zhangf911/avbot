@@ -40,9 +40,14 @@ static std::pair<std::string,std::string>
  	return std::make_pair("","");
 }
 
-static void broadcast_signal(boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, mailcontent thismail, boost::function<void()> handler)
+static void broadcast_signal(boost::shared_ptr<pop3::on_mail_function> sig_gotmail, mailcontent thismail, pop3::call_to_continue_function handler)
 {
-	(*sig_gotmail)(thismail, handler);
+	if (sig_gotmail){
+		(*sig_gotmail)(thismail, handler);
+	}
+	else{
+		handler(1);
+	}
 }
 
 static std::string decode_content_charset(std::string body, std::string content_type)
@@ -85,14 +90,13 @@ void pop3::process_mail(std::istream &mail, Handler handler)
 	}
 
 	std::cout << "邮件内容end" << std::endl;
- 	io_service.post(boost::bind(broadcast_signal,m_sig_gotmail,thismail, boost::function<void()>(handler)));
+ 	io_service.post(boost::bind(broadcast_signal,m_sig_gotmail,thismail, call_to_continue_function(handler)));
 }
 
 pop3::pop3(boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver)
 	:io_service(_io_service),
 	m_mailaddr(user), m_passwd(passwd),
-	m_mailserver(_mailserver),
-	m_sig_gotmail(new on_gotmail_signal())
+	m_mailserver(_mailserver)
 {
     if(m_mailserver.empty()) // 自动从　mailaddress 获得.
     {
