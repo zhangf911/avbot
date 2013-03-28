@@ -143,24 +143,28 @@ public:
 				_yield	async_read_until ( *m_socket, *m_streambuf, "\r\n.\r\n", *this );
 				// 然后将邮件内容给处理.
 				_yield process_mail ( inbuffer ,  boost::bind(*this, ec, _1));
-	#ifndef DEBUG
-				// 删除邮件啦.
-				msg = boost::str ( boost::format ( "dele %s\r\n" ) %  maillist[0] );
-				_yield m_socket->async_write_some ( buffer ( msg ), *this );
+				// 如果返回的是 1,  也就是 length != 0 ,  就删除邮件.
+				if (length){
+#	ifndef DEBUG
+					// 删除邮件啦.
+					msg = boost::str ( boost::format ( "dele %s\r\n" ) %  maillist[0] );
+					_yield m_socket->async_write_some ( buffer ( msg ), *this );
 
-				// 获得　+OK
-				m_streambuf.reset ( new streambuf );
-				_yield	async_read_until ( *m_socket, *m_streambuf, "\n", *this );
-				inbuffer >> status;
+					// 获得　+OK
+					m_streambuf.reset ( new streambuf );
+					_yield	async_read_until ( *m_socket, *m_streambuf, "\n", *this );
+					inbuffer >> status;
 
-				// 解析是不是　OK.
-				if ( status != "+OK" ) {
-					// 失败，但是并不是啥大问题.
-					std::cout << "deleting mail failed" << std::endl;
-					// but 如果是连接出问题那还是要重启的.
-					if(ec) goto restart;
+					// 解析是不是　OK.
+					if ( status != "+OK" ) {
+						// 失败，但是并不是啥大问题.
+						std::cout << "deleting mail failed" << std::endl;
+						// but 如果是连接出问题那还是要重启的.
+						if(ec) goto restart;
+					}
+#	 endif					
 				}
-	# endif
+
 				maillist.erase ( maillist.begin() );
 
 			}
