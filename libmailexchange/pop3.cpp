@@ -13,9 +13,12 @@
 
 static std::string find_mimetype(std::string contenttype)
 {
-	std::vector<std::string> splited;
-	boost::split(splited, contenttype, boost::is_any_of("; "));
-	return splited[0].empty()? splited[1]:splited[0];
+	if (!contenttype.empty()){
+		std::vector<std::string> splited;
+		boost::split(splited, contenttype, boost::is_any_of("; "));
+		return splited[0].empty()? contenttype:splited[0];
+	}
+	return "text/plain";
 }
 
 // 有　text/plain　的就选　text/plain, 没的才选　text/html
