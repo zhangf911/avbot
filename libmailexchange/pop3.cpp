@@ -21,12 +21,48 @@ static std::string find_mimetype(std::string contenttype)
 	return "text/plain";
 }
 
+static std::string decode_content_charset(std::string body, std::string content_type)
+{
+	boost::cmatch what;
+	boost::regex ex("(.*)?;[\t \r\a]?charset=(.*)?");
+	if (boost::regex_search(content_type.c_str(), what,  ex))
+	{
+		// text/plain; charset="gb18030" 这种，然后解码成 UTF-8
+		std::string charset = what[2];
+		return detail::ansi_utf8(body, charset);
+	}
+	return body;
+}
+
+// 从 IMF 中递归进行选择出一个最好的 mail content
+static void select_content(std::string& content_type, std::string& content, InternetMailFormat& imf);
+
+// 有　text/plain　的就选　text/plain, 没的才选　text/html
+static std::pair<std::string,std::string>
+	select_best_mailcontent(MIMEcontent mime);
+
+// 有　text/plain　的就选　text/plain, 没的才选　text/html
+static std::pair<std::string,std::string>
+	select_best_mailcontent(InternetMailFormat & imf)
+{
+	if (imf.have_multipart){
+		return select_best_mailcontent(boost::get<MIMEcontent>(imf.body));
+	}else{
+		std::string content_type = find_mimetype(imf.header["content-type"]);
+		std::string content = decode_content_charset(boost::get<std::string>(imf.body), imf.header["content-type"]);
+		return std::make_pair(content_type, content);
+	}
+}
+
 // 有　text/plain　的就选　text/plain, 没的才选　text/html
 static std::pair<std::string,std::string>
 	select_best_mailcontent(MIMEcontent mime)
 {
  	BOOST_FOREACH(InternetMailFormat &v, mime)
  	{
+		if (v.have_multipart){
+			return select_best_mailcontent(v);
+		}
  		// 从 v.first aka contenttype 找到编码.
  		std::string mimetype = find_mimetype(v.header["content-type"]);
  		if( mimetype == "text/plain"){
@@ -35,7 +71,10 @@ static std::pair<std::string,std::string>
  	}
  	BOOST_FOREACH(InternetMailFormat &v, mime)
  	{
- 		// 从 v.first aka contenttype 找到编码.
+		if (v.have_multipart){
+			return select_best_mailcontent(v);
+		}
+		// 从 v.first aka contenttype 找到编码.
  		std::string mimetype = find_mimetype(v.header["content-type"]);
  		if( mimetype == "text/html")
  			return std::make_pair(v.header["content-type"], boost::get<std::string>(v.body));
@@ -53,17 +92,13 @@ static void broadcast_signal(boost::shared_ptr<pop3::on_mail_function> sig_gotma
 	}
 }
 
-static std::string decode_content_charset(std::string body, std::string content_type)
+// 从 IMF 中递归进行选择出一个最好的 mail content
+static void select_content(std::string& content_type, std::string& content, InternetMailFormat& imf)
 {
-	boost::cmatch what;
-	boost::regex ex("(.*)?;[\t \r\a]?charset=(.*)?");
-	if (boost::regex_search(content_type.c_str(), what,  ex))
-	{
-		// text/plain; charset="gb18030" 这种，然后解码成 UTF-8
-		std::string charset = what[2];
-		return detail::ansi_utf8(body, charset);
-	}
-	return body;
+	std::pair<std::string,std::string> mc = select_best_mailcontent(imf);
+	content_type = find_mimetype(mc.first);
+	content = decode_content_charset(mc.second, mc.first);
+
 }
 
 template<class Handler>
@@ -71,28 +106,15 @@ void pop3::process_mail(std::istream &mail, Handler handler)
 {
 	InternetMailFormat imf;
 	imf_read_stream(imf, mail);
-		std::cout << "邮件内容begin" << std::endl;
-	
-	std::cout << "发件人:";
-	std::cout << imf.header["from"];
-	std::cout << std::endl;
-	
+
 	mailcontent thismail;
 	thismail.from = imf.header["from"];
 	thismail.to = imf.header["to"];
 	thismail.subject = imf.header["subject"];
 
-	if (!imf.have_multipart){
-		thismail.content_type = find_mimetype(imf.header["content-type"]);
-		thismail.content = decode_content_charset(boost::get<std::string>(imf.body), imf.header["content-type"]);
-	}else{
-		// base64 解码已经处理，都搞定了，接下来是从 multipart 里选一个.
-		std::pair<std::string,std::string> mc = select_best_mailcontent(boost::get<MIMEcontent>(imf.body));
-		thismail.content_type = find_mimetype(mc.first);
-		thismail.content = decode_content_charset(mc.second, mc.first);
-	}
+	select_content(thismail.content_type, thismail.content, imf);
+	std::cout <<  thismail.content <<  std::endl;
 
-	std::cout << "邮件内容end" << std::endl;
  	io_service.post(boost::bind(broadcast_signal,m_sig_gotmail,thismail, call_to_continue_function(handler)));
 }
 

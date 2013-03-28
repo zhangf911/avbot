@@ -41,7 +41,7 @@ namespace detail{
 
 inline std::string ansi_utf8(std::string const &source, const std::string &characters = "GB18030")
 {
-	return boost::locale::conv::between(source, "UTF-8", characters);
+	return boost::locale::conv::between(source, "UTF-8", characters).c_str();
 }
 
 

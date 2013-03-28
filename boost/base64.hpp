@@ -54,6 +54,7 @@ inline std::string base64_decode(std::string str)
 
 	// convert base64 characters to binary values
 	std::string  result(base64decodeIterator(str.begin()), base64decodeIterator(str.end()));
+
 	result.erase(result.length() -1 - num_to_shrik,  num_to_shrik);
 	return result;
 }
