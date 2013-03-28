@@ -4,6 +4,7 @@
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -18,8 +19,12 @@ struct is_base64_char {
 }
 
 
+// typedef	archive::iterators::transform_width< 
+// 			archive::iterators::binary_from_base64<filter_iterator<detail::is_base64_char, std::string::iterator> >, 8, 6, char>
+// 				base64decodeIterator;
+
 typedef	archive::iterators::transform_width< 
-			archive::iterators::binary_from_base64<filter_iterator<detail::is_base64_char, std::string::iterator> >, 8, 6, char>
+			archive::iterators::binary_from_base64<boost::archive::iterators::remove_whitespace< std::string::iterator > >, 8, 6, char>
 				base64decodeIterator;
 
 typedef	archive::iterators::base64_from_binary<
@@ -27,12 +32,30 @@ typedef	archive::iterators::base64_from_binary<
 				base64encodeIterator;
 
 // BASE64 解码.
-template<typename Char>
-std::basic_string<Char> base64_decode(std::basic_string<Char> str)
+inline std::string base64_decode(std::string str)
 {
+	static int shrik_map[] = {0, 2, 1};
+
+	// 移除尾部的  == 后面的 \r\n\r\n
+	while ( boost::is_any_of("\r\n.")(* str.rbegin()))
+		str.erase(str.length()-1);
+	// 统计结尾的 = 数目
+	std::string::reverse_iterator rit = str.rbegin();
+	std::size_t	num = 0;
+	while ( * rit == '=' )
+	{
+		rit ++;
+		num ++;
+	}
+
+	BOOST_ASSERT(num < 3);
+
+	std::size_t num_to_shrik = shrik_map[num];
+
 	// convert base64 characters to binary values
-	std::basic_string<Char> result(base64decodeIterator(str.begin()) , base64decodeIterator(str.end()));
-	return result.c_str();
+	std::string  result(base64decodeIterator(str.begin()), base64decodeIterator(str.end()));
+	result.erase(result.length() -1 - num_to_shrik,  num_to_shrik);
+	return result;
 }
 
 // BASE64 编码.
