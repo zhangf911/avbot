@@ -46,7 +46,7 @@ static void broadcast_signal(boost::shared_ptr<pop3::on_mail_function> sig_gotma
 		(*sig_gotmail)(thismail, handler);
 	}
 	else{
-		handler(1);
+		handler(0);
 	}
 }
 
@@ -105,6 +105,10 @@ pop3::pop3(boost::asio::io_service& _io_service, std::string user, std::string p
         else
             m_mailserver =  std::string("pop.") + m_mailaddr.substr(m_mailaddr.find_last_of("@")+1);
     }
+}
+
+void pop3::async_fetch_mail(pop3::on_mail_function handler) {
+    m_sig_gotmail.reset(new on_mail_function(handler));
     io_service.post(boost::asio::detail::bind_handler(*this, boost::system::error_code(), 0));
 }
 

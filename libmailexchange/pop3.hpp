@@ -38,7 +38,7 @@ public:
 			do {
 	#ifndef DEBUG
 				// 延时 60s
-				_yield ::boost::delayedcallsec( io_service, 60, boost::bind(*this, ec, 0) );
+				_yield ::boost::delayedcallsec( io_service, 10, boost::bind(*this, ec, 0) );
 	#endif
 
 				// dns 解析并连接.
@@ -182,15 +182,13 @@ public:
 				}
 			}
 			std::cout << "邮件处理完毕" << std::endl;
-			_yield ::boost::delayedcallsec ( io_service, 30, boost::bind ( *this, ec, 0 ) );
+			_yield ::boost::delayedcallsec ( io_service, 10, boost::bind ( *this, ec, 0 ) );
 			goto restart;
 		}
 	}
 
-	void on_mail_got(on_mail_function handler)
-	{
-		m_sig_gotmail.reset(new on_mail_function(handler));
-	}
+	void async_fetch_mail(on_mail_function handler);
+
 private:
 	template<class Handler>
 	void process_mail(std::istream &mail, Handler handler);
