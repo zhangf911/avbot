@@ -17,7 +17,8 @@
 class pop3 : boost::coro::coroutine {
 public:
 	typedef void result_type;
-	typedef boost::signal< void (mailcontent thismail) > on_gotmail_signal;
+	typedef boost::function<void ()>  void_function;
+	typedef boost::signal< void (mailcontent thismail, void_function call_to_contiune) > on_gotmail_signal;
 public:
 	pop3(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver="");
 

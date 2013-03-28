@@ -42,8 +42,7 @@ static std::pair<std::string,std::string>
 
 static void broadcast_signal(boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, mailcontent thismail, boost::function<void()> handler)
 {
-	(*sig_gotmail)(thismail);
-	handler();
+	(*sig_gotmail)(thismail, handler);
 }
 
 static std::string decode_content_charset(std::string body, std::string content_type)
@@ -59,9 +58,12 @@ static std::string decode_content_charset(std::string body, std::string content_
 	return body;
 }
 
-static void decode_mail(boost::asio::io_service & io_service, InternetMailFormat imf, boost::shared_ptr<pop3::on_gotmail_signal> sig_gotmail, boost::function<void()> handler)
+template<class Handler>
+void pop3::process_mail(std::istream &mail, Handler handler)
 {
-	std::cout << "邮件内容begin" << std::endl;
+	InternetMailFormat imf;
+	imf_read_stream(imf, mail);
+		std::cout << "邮件内容begin" << std::endl;
 	
 	std::cout << "发件人:";
 	std::cout << imf.header["from"];
@@ -83,24 +85,14 @@ static void decode_mail(boost::asio::io_service & io_service, InternetMailFormat
 	}
 
 	std::cout << "邮件内容end" << std::endl;
- 	io_service.post(boost::bind(broadcast_signal,sig_gotmail,thismail, handler));
+ 	io_service.post(boost::bind(broadcast_signal,m_sig_gotmail,thismail, boost::function<void()>(handler)));
 }
 
-template<class Handler>
-void pop3::process_mail(std::istream &mail, Handler handler)
-{
-	InternetMailFormat imf;
-	imf_read_stream(imf, mail);
-	// 解读 InternetMailFormat
-	// 处理　base64 编码的邮件内容.
-	io_service.post(boost::bind(&decode_mail, boost::ref(io_service), imf, m_sig_gotmail, boost::function<void()>(handler)));
-	return ;
-}
-
-pop3::pop3(boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver) :io_service(_io_service),
-    m_mailaddr(user), m_passwd(passwd),
-    m_mailserver(_mailserver),
-    m_sig_gotmail(new on_gotmail_signal())
+pop3::pop3(boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver)
+	:io_service(_io_service),
+	m_mailaddr(user), m_passwd(passwd),
+	m_mailserver(_mailserver),
+	m_sig_gotmail(new on_gotmail_signal())
 {
     if(m_mailserver.empty()) // 自动从　mailaddress 获得.
     {
