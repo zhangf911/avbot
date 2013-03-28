@@ -28,7 +28,7 @@ typedef	archive::iterators::transform_width<
 				base64decodeIterator;
 
 typedef	archive::iterators::base64_from_binary<
-			archive::iterators::transform_width<std::string::iterator , 6, 8> >
+			archive::iterators::transform_width<std::string::iterator , 6, 8, char> >
 				base64encodeIterator;
 
 // BASE64 解码.
@@ -60,19 +60,22 @@ inline std::string base64_decode(std::string str)
 }
 
 // BASE64 编码.
-template<typename Char>
-std::basic_string<Char> base64_encode(std::basic_string<Char> src)
+inline std::string base64_encode(std::string src)
 {
 	char tail[3] = {0,0,0};
 
-	std::basic_string<Char> result;
+	std::vector<char> result(src.length()/3*4+6);
 	uint one_third_len = src.length()/3;
 
 	uint len_rounded_down = one_third_len*3;
 	uint j = len_rounded_down + one_third_len;
 
+	std::string	base64str;
+
 	// 3 的整数倍可以编码.
-	std::copy(base64encodeIterator(src.begin()), base64encodeIterator(src.begin() + len_rounded_down), result);
+	std::copy(base64encodeIterator(src.begin()), base64encodeIterator(src.begin() + len_rounded_down), result.begin());
+
+	base64str = result.data();
 
 	// 结尾 0 填充以及使用 = 补上
 	if (len_rounded_down != src.length())
@@ -83,12 +86,16 @@ std::basic_string<Char> base64_encode(std::basic_string<Char> src)
 			tail[i] = src[len_rounded_down+i];
 		}
 
-		std::copy(base64encodeIterator(tail), base64encodeIterator(tail + 3), result.begin() + j);
+		std::vector<char> tailbase(5);
 
-		// 写入尾部的 ==
-        result.append(j + 3 - (src.length() + one_third_len), '=');
+		std::copy(base64encodeIterator(tail), base64encodeIterator(tail + 3), tailbase.begin());
+		for (int k=0;k<(3-i);k++){
+			tailbase[3-k] = '=';
+		}
+		
+		base64str += tailbase.data();
 	}
-	return result;
+	return base64str;
 }
 
 }
