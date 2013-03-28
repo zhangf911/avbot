@@ -388,14 +388,15 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 
 static void on_mail(mailcontent mail, pop3::call_to_continue_function call_to_contiune, webqq & qqclient)
 {
-	BOOST_FOREACH(messagegroup & g ,  messagegroups)
-	{
-		g.broadcast(boost::str(
-			boost::format("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s")
-			% mail.from % mail.to % mail.subject % mail.content
-		));
+	if (qqclient.is_online()){
+		BOOST_FOREACH(messagegroup & g ,  messagegroups)
+		{
+			g.broadcast(boost::str(
+				boost::format("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s")
+				% mail.from % mail.to % mail.subject % mail.content
+			));
+		}
 	}
-
 	qqclient.get_ioservice().post(boost::bind(call_to_contiune, qqclient.is_online()));
 }
 
