@@ -192,7 +192,7 @@ inline void imf_decode_multipart(InternetMailFormat &imf)
 	std::string content_type = imf.header["content-type"];
 
 	boost::cmatch what;
-	boost::regex ex("multipart/.*?;.*?boundary=\"(.*)?\"");
+	boost::regex ex("multipart/.*;.*?boundary=\"(.*)?\"");
 	if (boost::regex_search(content_type.c_str(), what, ex ))
 	{
 		imf.have_multipart = true;

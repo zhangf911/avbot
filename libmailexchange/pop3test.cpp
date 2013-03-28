@@ -3,7 +3,10 @@ namespace fs = boost::filesystem;
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
+#include <fstream>
+
 #include "pop3.hpp"
+#include "boost/base64.hpp"
 
 static fs::path configfilepath()
 {
@@ -24,6 +27,11 @@ static fs::path configfilepath()
 		return fs::path ( "/etc/qqbotrc" );
 
 	throw "not configfileexit";
+}
+
+static void on_mail(mailcontent mail, pop3::call_to_continue_function call_to_contiune)
+{
+	call_to_contiune(0);
 }
 
 int main(int argc, char * argv[])
@@ -71,10 +79,10 @@ int main(int argc, char * argv[])
 		}
 	}
 
-	
 	boost::asio::io_service asio;
 	boost::asio::io_service::work work(asio);
 
 	pop3 p(asio, mailaddr, mailpasswd, mailserver);
+	p.async_fetch_mail(on_mail);
     asio.run();
 }
