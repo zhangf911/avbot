@@ -85,8 +85,14 @@ gloox/vcardupdate.cpp
 gloox/xhtmlim.cpp
 )
 
+
 add_library(gloox STATIC ${GLOOX_SRC})
 target_link_libraries(gloox  ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
+
+if( OPENSSL_VERSION VERSION_LESS 0.9.9 )
+	target_link_libraries(gloox  -lcrypto)
+endif()
+
 if(UNIX)
 	target_link_libraries(gloox -pthread)
 endif()
