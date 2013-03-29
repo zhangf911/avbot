@@ -33,9 +33,96 @@
 #include "xmpp_impl.h"
 
 using namespace XMPP;
+using namespace gloox;
+
+void xmpp_asio_connector::cb_handle_connecting(const boost::system::error_code& ec)
+{
+	if (ec){
+		// 链接失败
+		m_state = gloox::StateDisconnected;
+		this->m_handler->handleDisconnect(this, gloox::ConnStreamClosed);
+	}
+	m_state = StateConnected;
+	this->m_handler->handleConnect(this);
+}
+
+gloox::ConnectionError xmpp_asio_connector::connect()
+{
+	m_state = gloox::StateConnecting;
+	avproxy::async_proxy_connect(avproxy::autoproxychain(m_socket,m_query), 
+ 			boost::bind(&xmpp_asio_connector::cb_handle_connecting, this, _1));
+ 	return gloox::ConnNoError;
+}
+
+void xmpp_asio_connector::disconnect()
+{
+	boost::system::error_code ec;
+	m_socket.close(ec);
+}
+
+gloox::ConnectionError xmpp_asio_connector::receive()
+{
+	// should not be called
+	BOOST_ASSERT(1);
+	return ConnIoError;
+}
+
+void xmpp_asio_connector::cb_handle_asio_read(const boost::system::error_code& error, std::size_t bytes_transferred)
+{
+	if (error){
+		if (error == boost::asio::error::eof)
+			this->m_handler->handleDisconnect(this, ConnNoError);
+		else if (error == boost::asio::error::connection_reset || error == boost::asio::error::broken_pipe)
+			this->m_handler->handleDisconnect(this, gloox::ConnStreamClosed);
+		else
+			this->m_handler->handleDisconnect(this, gloox::ConnIoError);
+	}else{
+		std::string data(m_readbuf.begin(), bytes_transferred);
+
+		this->m_handler->handleReceivedData(this, data);
+
+		// 发起异步读取
+		m_socket.async_read_some(boost::asio::buffer(m_readbuf),
+			boost::bind(&xmpp_asio_connector::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
+		);		
+	}
+}
+
+
+gloox::ConnectionError xmpp_asio_connector::recv(int timeout)
+{
+	BOOST_ASSERT(timeout == 0);
+
+	// 发起异步读取
+	m_socket.async_read_some(boost::asio::buffer(m_readbuf),
+		boost::bind(&xmpp_asio_connector::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
+	);
+	return ConnNoError;
+}
+
+void xmpp_asio_connector::cb_handle_asio_write(const boost::system::error_code& error, std::size_t bytes_transferred)
+{
+}
+
+bool xmpp_asio_connector::send(const std::string& data)
+{
+	if (m_socket.is_open()){
+		m_socket.async_write_some(boost::asio::buffer(data),
+			boost::bind(&xmpp_asio_connector::cb_handle_asio_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
+		);
+		return true;
+	}
+	return false;
+}
+
+xmpp_asio_connector::xmpp_asio_connector(boost::asio::io_service& _io, gloox::ConnectionDataHandler* cdh, boost::asio::ip::tcp::resolver::query _query)
+  : gloox::ConnectionBase(cdh), io_service(_io), m_socket(io_service), m_query(_query)
+{
+
+}
 
 xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick)
-:gloox::ConnectionBase(&m_client), io_service(asio), m_jid(xmppuser+"/"+xmppnick), m_client(m_jid, xmpppasswd), m_xmppnick(xmppnick)
+: io_service(asio), m_jid(xmppuser+"/"+xmppnick), m_client(m_jid, xmpppasswd), m_xmppnick(xmppnick)
 {
 	m_client.registerConnectionListener(this);
 	m_client.registerMessageHandler(this);
@@ -53,59 +140,15 @@ xmpp_impl::xmpp_impl(boost::asio::io_service& asio, std::string xmppuser, std::s
 
 void xmpp_impl::start()
 {
-	if (state() == gloox::StateDisconnected){
-		m_asio_socket.reset(new boost::asio::ip::tcp::socket(io_service));
-		std::string xmppclientport ;
-		if (m_client.port() == -1)
-			xmppclientport = "xmpp-client";
-		else
-			xmppclientport = boost::lexical_cast<std::string>(m_client.port());
+	std::string xmppclientport ;
+	if (m_client.port() == -1)
+		xmppclientport = "xmpp-client";
+	else
+		xmppclientport = boost::lexical_cast<std::string>(m_client.port());
 
-		avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
-		avproxy::async_proxy_connect(avproxy::autoproxychain(*m_asio_socket, query), 
-			boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
-		m_state = gloox::StateConnecting;
-	}
-}
-
-void xmpp_impl::cb_handle_connecting(const boost::system::error_code & ec)
-{
-	if (ec)
-	{
-		std::cerr <<  "xmpp服务器链接错误:" <<  ec.message() <<  std::endl;
-		// 重试.
-		m_asio_socket.reset(new boost::asio::ip::tcp::socket(io_service));
-
-		std::string xmppclientport ;
-		if (m_client.port() == -1)
-			xmppclientport = "xmpp-client";
-		else
-			xmppclientport = boost::lexical_cast<std::string>(m_client.port());
-
-		avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
-	
-		avproxy::async_proxy_connect(avproxy::autoproxychain(*m_asio_socket, query), 
-			boost::bind(&xmpp_impl::cb_handle_connecting, this, _1));
-		return ;
-	}
-
-	m_client.setConnectionImpl(this);
-
-	if(m_client.connect(false))
-		io_service.post(boost::bind(&xmpp_impl::cb_handle_connected, this));
-	else{
-		std::cerr << "unable to connect to xmpp server" << std::endl;
-	}
-}
-
-void xmpp_impl::cb_handle_connected()
-{
-	m_state = gloox::StateConnected;
-	m_client.handleConnect(this);
-
-	m_asio_socket->async_read_some(m_readbuf.prepare(8192),
-		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
-	);
+	avproxy::proxy::tcp::query query(m_client.server(), xmppclientport);
+	m_client.setConnectionImpl(new xmpp_asio_connector(io_service, &m_client, query));
+	m_client.connect(0);
 }
 
 void xmpp_impl::join(std::string roomjid)
@@ -113,71 +156,6 @@ void xmpp_impl::join(std::string roomjid)
 	gloox::JID roomnick(roomjid+"/" + m_xmppnick);//"avplayer@im.linuxapp.org";
 	boost::shared_ptr<gloox::MUCRoom> room( new  gloox::MUCRoom(&m_client, roomnick, this));
 	m_rooms.push_back(room);
-}
-
-void xmpp_impl::cb_handle_asio_read(const boost::system::error_code& error, std::size_t bytes_transferred)
-{
-	if (error){
-		m_client.handleDisconnect(this, gloox::ConnStreamClosed);
-	}else{
-		m_readbuf.commit(bytes_transferred);
-		std::string data(boost::asio::buffer_cast<const char*>(m_readbuf.data()), m_readbuf.size());
-		m_client.handleReceivedData(this, data);
-		m_readbuf.consume(m_readbuf.size());
-		m_asio_socket->async_read_some(m_readbuf.prepare(8102), 
-		boost::bind(&xmpp_impl::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
-		);
-	}
-}
-
-void xmpp_impl::cb_handle_asio_write(const boost::system::error_code& error, std::size_t bytes_transferred)
-{
-	if (error)
-		m_client.handleDisconnect(this,  gloox::ConnStreamError);
-}
-
-bool xmpp_impl::send(const std::string& data)
-{
-	if (m_asio_socket->is_open()){
-		// write to socket
-		m_asio_socket->async_write_some(boost::asio::buffer(data),
-			boost::bind(&xmpp_impl::cb_handle_asio_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
-		);
-		return true;
-	}
-	m_client.handleDisconnect(this,  gloox::ConnStreamClosed);
-	return false;	
-}
-
-gloox::ConnectionError xmpp_impl::connect()
-{
-	return m_asio_socket->is_open() ?  gloox::ConnNoError: gloox::ConnNotConnected;
-}
-
-gloox::ConnectionError xmpp_impl::receive()
-{
-	BOOST_ASSERT(1);
-}
-
-gloox::ConnectionBase* xmpp_impl::newInstance() const
-{
-	const gloox::ConnectionBase* ret = this;
-	return (gloox::ConnectionBase*)(ret);
-}
-
-gloox::ConnectionError xmpp_impl::recv(int timeout)
-{
-
-}
-
-void xmpp_impl::getStatistics(long int& totalIn, long int& totalOut)
-{
-
-}
-
-void xmpp_impl::disconnect()
-{
-	m_state = gloox::StateDisconnected;
 }
 
 void xmpp_impl::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
@@ -198,7 +176,6 @@ void xmpp_impl::send_room_message(std::string xmpproom, std::string message)
 
 void xmpp_impl::handleMessage(const gloox::Message& stanza, gloox::MessageSession* session)
 {
-	std::cout <<  __func__ <<  std::endl;
 	gloox::Message msg( gloox::Message::Chat , stanza.from(), "hello world" );
     m_client.send( msg );
 }
@@ -226,7 +203,10 @@ void xmpp_impl::onConnect()
 
 void xmpp_impl::onDisconnect(gloox::ConnectionError e)
 {
-	boost::delayedcallsec(io_service, 10, boost::bind(&xmpp_impl::start, this));
+// 	if (e == gloox::ConnStreamClosed && m_state ==gloox::StateDisconnected)
+// 		boost::delayedcallsec(io_service, 10, boost::bind(&xmpp_impl::start, this));
+	std::cout << "xmpp disconnected: " <<  e <<  std::endl;
+	return ;
 }
 
 static std::string randomname(std::string m_xmppnick)
@@ -236,7 +216,6 @@ static std::string randomname(std::string m_xmppnick)
 
 void xmpp_impl::handleMUCError(gloox::MUCRoom* room, gloox::StanzaError error)
 {
-	std::cout <<  __func__ <<  std::endl;
 	if (error == gloox::StanzaErrorConflict)
 	{
 		// 出现名字冲突，使用一个随机名字.
@@ -247,37 +226,27 @@ void xmpp_impl::handleMUCError(gloox::MUCRoom* room, gloox::StanzaError error)
 
 void xmpp_impl::handleMUCInfo(gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm)
 {
-	std::cout <<  __func__ <<  std::endl;
 }
 
 void xmpp_impl::handleMUCInviteDecline(gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason)
 {
-	std::cout <<  __func__ <<  std::endl;
-
 }
 
 void xmpp_impl::handleMUCItems(gloox::MUCRoom* room, const gloox::Disco::ItemList& items)
 {
-	std::cout <<  __func__ <<  std::endl;
-
 }
 
 
 void xmpp_impl::handleMUCParticipantPresence(gloox::MUCRoom* room, const gloox::MUCRoomParticipant participant, const gloox::Presence& presence)
 {
-	std::cout <<  __func__ <<  std::endl;
-
 }
 
 bool xmpp_impl::handleMUCRoomCreation(gloox::MUCRoom* room)
 {
-	std::cout <<  __func__ <<  std::endl;
-	return false;
+	return true;
 }
 
 void xmpp_impl::handleMUCSubject(gloox::MUCRoom* room, const std::string& nick, const std::string& subject)
 {
-	std::cout <<  __func__ <<  std::endl;
-
 }
 

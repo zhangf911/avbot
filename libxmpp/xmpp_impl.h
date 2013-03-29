@@ -32,7 +32,34 @@
 
 namespace XMPP {
 
-class xmpp_impl : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler, gloox::ConnectionBase
+class xmpp_asio_connector : public gloox::ConnectionBase
+{
+public:
+	xmpp_asio_connector(boost::asio::io_service & , gloox::ConnectionDataHandler* cdh, boost::asio::ip::tcp::resolver::query _query);
+private: // for gloox::ConnectionTCPClient
+    virtual bool send(const std::string& data);
+    virtual gloox::ConnectionError connect();
+    virtual void disconnect();
+    virtual void getStatistics(long int& totalIn, long int& totalOut){}
+    virtual gloox::ConnectionError receive();
+    virtual gloox::ConnectionError recv(int timeout = -1);
+    virtual ConnectionBase* newInstance() const
+    {
+		return new xmpp_asio_connector(io_service, m_handler, m_query);
+	}
+private: // for asio callbacks
+	void cb_handle_connecting(const boost::system::error_code & ec);
+	void cb_handle_asio_read(const boost::system::error_code & error, std::size_t bytes_transferred);
+	void cb_handle_asio_write(const boost::system::error_code & error, std::size_t bytes_transferred);
+
+private:
+	boost::asio::io_service	&io_service;
+	boost::asio::ip::tcp::socket m_socket;
+	boost::asio::ip::tcp::resolver::query m_query;
+	boost::array<char, 8192>	m_readbuf;
+};
+
+class xmpp_impl : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler
 {
 public:
 	xmpp_impl(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick);
@@ -58,21 +85,6 @@ private:  // for ConnectionListener
 
     virtual void handleMUCItems(gloox::MUCRoom* room, const gloox::Disco::ItemList& items);
     virtual bool handleMUCRoomCreation(gloox::MUCRoom* room);
-
-private: // for gloox::ConnectionTCPClient
-    virtual bool send(const std::string& data);
-    virtual gloox::ConnectionError connect();
-    virtual void disconnect();
-    virtual void getStatistics(long int& totalIn, long int& totalOut);
-    virtual gloox::ConnectionError receive();
-    virtual gloox::ConnectionError recv(int timeout = -1);
-    virtual ConnectionBase* newInstance() const;
-
-private: // for asio callback
-	void cb_handle_connecting(const boost::system::error_code & ec);
-	void cb_handle_connected();
-	void cb_handle_asio_read(const boost::system::error_code & error, std::size_t bytes_transferred);
-	void cb_handle_asio_write(const boost::system::error_code & error, std::size_t bytes_transferred);
 
 private:
 	boost::asio::io_service & io_service;
