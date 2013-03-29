@@ -409,7 +409,7 @@ static void on_verify_code(const boost::asio::const_buffer & imgbuf,webqq & qqcl
 	img.write(data,imgsize);
 	qqneedvc = true;
 	// send to xmpp and irc
-	ircclient.chat(std::string("#") + ircvercodechannel,"输入qq验证码");
+	ircclient.chat(boost::str(boost::format("#%s") % ircvercodechannel),"输入qq验证码");
 	std::cerr << "请输入验证码" ;
 }
 
