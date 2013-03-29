@@ -25,7 +25,6 @@ public:
 	{
 		using namespace boost::asio;
 
-		ip::tcp::endpoint endpoint;
 		std::string		status;
 		std::string		maillength;
 		std::istream	inbuffer ( m_streambuf.get() );
