@@ -1,6 +1,7 @@
 3.4
 	* Internet Mail Format parser re-write.
 	* delete mail only if successfully sended to the channel.
+	* fix VC2010 compilation
 
 3.3
 	* pull in upstream avproxy that add http_proxy support.
