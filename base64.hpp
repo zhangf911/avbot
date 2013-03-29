@@ -42,13 +42,9 @@ inline std::string base64_decode(std::string str)
 	};
 
 	// 统计结尾的 = 数目
-	std::string::reverse_iterator rit = str.rbegin();
 	std::size_t	num = 0;
-	while ( * rit == '=' )
-	{
-		rit ++;
-		num ++;
-	}
+	if (str.find_last_of("=")!=std::string::npos)
+		num = str.find_last_of("=") - str.find_first_of("=") + 1;
 
 	BOOST_ASSERT(num < 3);
 
