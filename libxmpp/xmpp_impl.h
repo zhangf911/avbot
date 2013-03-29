@@ -19,6 +19,10 @@
 #ifndef __XMPP_IMPL_H
 #define __XMPP_IMPL_H
 
+#include <string>
+#include <vector>
+#include <boost/shared_ptr.hpp>
+#include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <gloox/logsink.h>
 #include <gloox/client.h>
@@ -27,7 +31,6 @@
 #include <gloox/mucroomhandler.h>
 #include <gloox/connectionbase.h>
 
-#include <boost/scoped_ptr.hpp>
 #include <boost/signal.hpp>
 
 namespace XMPP {
@@ -92,7 +95,6 @@ private:
 	gloox::Client m_client;
 	std::string		m_xmppnick;
 	std::vector<boost::shared_ptr<gloox::MUCRoom> >	m_rooms;
-	boost::scoped_ptr<boost::asio::ip::tcp::socket> m_asio_socket;
 	boost::asio::streambuf							m_readbuf;
 	
 	boost::signal <void (std::string xmpproom, std::string who, std::string message)> m_sig_room_message;
