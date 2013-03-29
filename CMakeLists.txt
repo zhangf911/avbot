@@ -5,10 +5,20 @@ option(ENABLE_STATIC "link to boost staticaly" ON)
 option(ENABLE_TEST "build xmpp/pop3 test" OFF)
 option(ENABLE_CXX11 "build avbot with cxx11" OFF)
 option(ENABLE_LTO "build avbot with LTO" OFF)
+option(ENABLE_LIBSTDCXX_STATIC "link to static libstdc++" OFF)
+option(ENABLE_LIBGCC_STATIC "link to static libgcc" OFF)
 
 if(ENABLE_STATIC)
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_STATIC_RUNTIME    ON)
+endif()
+
+if(ENABLE_LIBSTDCXX_STATIC)
+set(CMAKE_LD_FLAGS APPEND -static-libstdc++)
+endif()
+
+if(ENABLE_LIBGCC_STATIC)
+set(CMAKE_LD_FLAGS APPEND -static-libgcc)
 endif()
 
 if(ENABLE_CXX11)
