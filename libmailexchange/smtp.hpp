@@ -236,6 +236,9 @@ public:
 			// 发送 IMF 格式化后的数据.
 			_yield send_mail_data(boost::bind(*this, _1, _2, handler, coro));
 
+			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
+			// 检查 OK 返回值
+			_yield check_status_for_ok(boost::bind(*this, _1, 0, handler, coro));
 			// 执行一起正常的回调.
 			io_service.post<>(boost::asio::detail::bind_handler(handler, ec));
 		}
