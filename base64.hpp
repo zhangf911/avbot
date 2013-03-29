@@ -60,8 +60,6 @@ inline std::string base64_decode(std::string str)
 // BASE64 编码.
 inline std::string base64_encode(std::string src)
 {
-	char tail[3] = {0,0,0};
-
 	std::vector<char> result(src.length()/3*4+6);
 	unsigned one_third_len = src.length()/3;
 
@@ -78,15 +76,18 @@ inline std::string base64_encode(std::string src)
 	// 结尾 0 填充以及使用 = 补上
 	if (len_rounded_down != src.length())
 	{
+		std::string tail;
+		tail.resize(4, 0);
 		unsigned i=0;
 		for(; i < src.length() - len_rounded_down; ++i)
 		{
 			tail[i] = src[len_rounded_down+i];
 		}
 
-		std::vector<char> tailbase(5);
+		std::string tailbase;
+		tailbase.resize(5);
 
-		std::copy(base64encodeIterator(tail), base64encodeIterator(tail + 3), tailbase.begin());
+		std::copy(base64encodeIterator(tail.begin()), base64encodeIterator(tail.begin() + 3), tailbase.begin());
 		for (int k=0;k<(3-i);k++){
 			tailbase[3-k] = '=';
 		}
