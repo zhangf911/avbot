@@ -139,14 +139,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="D:/home/qqbot/libirc/libirc.vcxproj">
-      <Project>F1EEBF87-28F6-46BE-B91B-B3DEB03DA12E</Project>
-    </ProjectReference>
-    <ProjectReference Include="D:/home/qqbot/libwebqq/libwebqq.vcxproj">
-      <Project>0CE5AB2D-4A1B-43C7-9046-0FF48AB5B516</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

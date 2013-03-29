@@ -30,7 +30,9 @@ namespace po = boost::program_options;
 #include <stdio.h>
 #include <time.h>
 #include <wchar.h>
-
+#if defined(_MSC_VER)
+#include <direct.h>
+#endif
 #include "libirc/irc.h"
 #include "libwebqq/webqq.h"
 #include "libwebqq/url.hpp"
