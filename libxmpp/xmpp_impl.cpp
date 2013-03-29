@@ -39,11 +39,12 @@ void xmpp_asio_connector::cb_handle_connecting(const boost::system::error_code& 
 {
 	if (ec){
 		// 链接失败
-		m_state = gloox::StateDisconnected;
 		this->m_handler->handleDisconnect(this, gloox::ConnStreamClosed);
+		return ;
 	}
 	m_state = StateConnected;
 	this->m_handler->handleConnect(this);
+	this->recv(0);
 }
 
 gloox::ConnectionError xmpp_asio_connector::connect()
@@ -56,6 +57,7 @@ gloox::ConnectionError xmpp_asio_connector::connect()
 
 void xmpp_asio_connector::disconnect()
 {
+	m_state = gloox::StateDisconnected;
 	boost::system::error_code ec;
 	m_socket.close(ec);
 }
@@ -70,12 +72,14 @@ gloox::ConnectionError xmpp_asio_connector::receive()
 void xmpp_asio_connector::cb_handle_asio_read(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
 	if (error){
-		if (error == boost::asio::error::eof)
-			this->m_handler->handleDisconnect(this, ConnNoError);
-		else if (error == boost::asio::error::connection_reset || error == boost::asio::error::broken_pipe)
-			this->m_handler->handleDisconnect(this, gloox::ConnStreamClosed);
-		else
-			this->m_handler->handleDisconnect(this, gloox::ConnIoError);
+		if ( m_state == gloox::StateConnected) {
+			if (error == boost::asio::error::eof)
+				this->m_handler->handleDisconnect(this, ConnNoError);
+			else if (error == boost::asio::error::connection_reset || error == boost::asio::error::broken_pipe)
+				this->m_handler->handleDisconnect(this, gloox::ConnStreamClosed);
+			else
+				this->m_handler->handleDisconnect(this, gloox::ConnIoError);
+		}
 	}else{
 		std::string data(m_readbuf.begin(), bytes_transferred);
 
@@ -102,11 +106,21 @@ gloox::ConnectionError xmpp_asio_connector::recv(int timeout)
 
 void xmpp_asio_connector::cb_handle_asio_write(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
+	if (error){
+		if ( m_state == gloox::StateConnected) {
+			if (error == boost::asio::error::eof)
+				this->m_handler->handleDisconnect(this, ConnNoError);
+			else if (error == boost::asio::error::connection_reset || error == boost::asio::error::broken_pipe)
+				this->m_handler->handleDisconnect(this, gloox::ConnStreamClosed);
+			else
+				this->m_handler->handleDisconnect(this, gloox::ConnIoError);
+		}
+	}
 }
 
 bool xmpp_asio_connector::send(const std::string& data)
 {
-	if (m_socket.is_open()){
+	if (m_socket.is_open() && m_state == StateConnected){
 		m_socket.async_write_some(boost::asio::buffer(data),
 			boost::bind(&xmpp_asio_connector::cb_handle_asio_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
 		);
@@ -203,9 +217,8 @@ void xmpp_impl::onConnect()
 
 void xmpp_impl::onDisconnect(gloox::ConnectionError e)
 {
-// 	if (e == gloox::ConnStreamClosed && m_state ==gloox::StateDisconnected)
-// 		boost::delayedcallsec(io_service, 10, boost::bind(&xmpp_impl::start, this));
-	std::cout << "xmpp disconnected: " <<  e <<  std::endl;
+	std::cerr << "xmpp disconnected: " <<  e << "reconnectiong..." <<  std::endl;
+	boost::delayedcallsec(io_service, 10 + rand() % 10, boost::bind(&xmpp_impl::start, this));
 	return ;
 }
 
