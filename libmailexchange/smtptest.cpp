@@ -87,7 +87,7 @@ int main(int argc, char * argv[])
 	InternetMailFormat imf;
 
 	imf.header["from"] = "test@avplayer.org";
-	imf.header["to"] = "test@avplayer.org";
+	imf.header["to"] = "test@avplayer.org; 博士 <cai@avplayer.org>; 晕菜 <microcaicai@gmail.com>";
 	imf.header["subject"] = "test mail";
 	imf.header["content-type"] = "text/plain";
 
