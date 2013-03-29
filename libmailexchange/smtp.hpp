@@ -106,7 +106,7 @@ private:
 		boost::asio::async_read_until(*m_socket, *m_readbuf, boost::regex("[0-9]*? .*?\n"), handler);
 	}
 
-	void  check_smtp_response(boost::system::error_code & ec, uint response_code, boost::function<void (std::string)> callback = boost::function<void (std::string)>())
+	void  check_smtp_response(boost::system::error_code & ec, unsigned  response_code, boost::function<void (std::string)> callback = boost::function<void (std::string)>())
 	{
 		using namespace boost::system::errc;
 		using namespace boost::system;

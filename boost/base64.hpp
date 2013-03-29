@@ -63,10 +63,10 @@ inline std::string base64_encode(std::string src)
 	char tail[3] = {0,0,0};
 
 	std::vector<char> result(src.length()/3*4+6);
-	uint one_third_len = src.length()/3;
+	unsigned one_third_len = src.length()/3;
 
-	uint len_rounded_down = one_third_len*3;
-	uint j = len_rounded_down + one_third_len;
+	unsigned len_rounded_down = one_third_len*3;
+	unsigned j = len_rounded_down + one_third_len;
 
 	std::string	base64str;
 
@@ -78,7 +78,7 @@ inline std::string base64_encode(std::string src)
 	// 结尾 0 填充以及使用 = 补上
 	if (len_rounded_down != src.length())
 	{
-		uint i=0;
+		unsigned i=0;
 		for(; i < src.length() - len_rounded_down; ++i)
 		{
 			tail[i] = src[len_rounded_down+i];
