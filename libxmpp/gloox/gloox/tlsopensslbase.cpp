@@ -248,7 +248,7 @@ namespace gloox
       m_certInfo.status = CertInvalid;
     else
       m_certInfo.status = CertOk;
-
+# if  OPENSSL_VERSION_NUMBER > 0x10000000L
     X509* peer = SSL_get_peer_certificate( m_ssl );
     if( peer )
     {
@@ -274,6 +274,7 @@ namespace gloox
     {
       m_certInfo.status = CertInvalid;
     }
+#endif
 
     const char* tmp;
     tmp = SSL_get_cipher_name( m_ssl );
