@@ -117,7 +117,8 @@ class smtp {
 	boost::asio::io_service & io_service;
 	std::string m_mailaddr,m_passwd,m_mailserver;
 	std::string m_AUTH;
-	
+	InternetMailFormat m_imf;
+
 	// 必须是可拷贝的，所以只能用共享指针.
 	boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket;
 	boost::shared_ptr<boost::asio::streambuf> m_readbuf;
@@ -137,12 +138,13 @@ public:
 	// 非ASCII编码的时候, 就会对内容执行base64编码.
 	// 所以也请不要自行设置 content-transfer-encoding
 	template<class Handler>
-	void async_sendmail(InternetMailFormat imf, Handler handler)
+	void async_sendmail(const InternetMailFormat &imf, Handler handler)
 	{
 		retry_count = 0;
 		// 依据 imf.header["to"] 拆分
 		std::vector<std::string>	mails;
-		boost::split(mails, imf.header["to"], boost::is_any_of(";,"));
+
+		detail::mail_address_split(mails, imf.header.at(std::string("to")));
 
 		BOOST_FOREACH(std::string rcpt, mails)
 		{
@@ -156,7 +158,7 @@ public:
 				rcpts.push_back(rcpt_command);
 			}
 		}
-		
+		m_imf = imf;
  		io_service.post(boost::bind(*this, boost::system::error_code(), 0, handler, boost::coro::coroutine()));
 	}
 
@@ -231,6 +233,8 @@ public:
 			// 检查 OK 返回值
 			_yield check_status_for(354, boost::bind(*this, _1, 0, handler, coro));
 			
+			_yield send_mail_data(boost::bind(*this, _1, _2, handler, coro));
+
 			// 发送 IMF 格式化后的数据.
 			std::cout <<  "start imf data transfer!" <<  std::endl;
 		}
@@ -295,6 +299,17 @@ private:
  		boost::system::error_code ec;
 		check_smtp_response(ec, 235);
 		io_service.post(boost::asio::detail::bind_handler(handler, ec));
+	}
+	
+	template<class Handler>
+	void send_mail_data(Handler handler)
+	{
+		boost::asio::streambuf data;
+		std::ostream os(&data);
+ 		boost::system::error_code ec;
+		imf_write_stream(m_imf, os);
+		os <<  "\r\n.\r\n";
+		boost::asio::async_write(*m_socket, data.data(), handler);
 	}
 };
 

@@ -6,6 +6,16 @@ namespace po = boost::program_options;
 #include <boost/format.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/regex.hpp>
+
+#include <iostream>
+#include <boost/foreach.hpp>
+#include <boost/variant.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
+#include <boost/locale.hpp>
+#include <boost/archive/iterators/insert_linebreaks.hpp>
+#include <boost/archive/iterators/ostream_iterator.hpp>
+
 #include "internet_mail_format.hpp"
 #include <boost/base64.hpp>
 
@@ -86,13 +96,18 @@ int main(int argc, char * argv[])
 	smtp _smtp(io, mailaddr, mailpasswd);
 	InternetMailFormat imf;
 
-	imf.header["from"] = "test@avplayer.org";
-	imf.header["to"] = "test@avplayer.org; 博士 <cai@avplayer.org>; 晕菜 <microcaicai@gmail.com>";
+	imf.header["from"] = mailaddr;
+	imf.header["to"] = "\"晕菜\" <beansoft@qq.com>";
 	imf.header["subject"] = "test mail";
-	imf.header["content-type"] = "text/plain";
-
-	imf.have_multipart = false;
-	imf.body = "test body";
+	imf.header["content-type"] = "text/plain; charset=utf8";
+	
+	imf.body = "test body dasdfasd ";
+	std::stringstream maildata;
+	boost::asio::streambuf buf;
+	std::ostream os(&buf);
+	imf_write_stream(imf, os);
+	
+	std::string _mdata = boost::asio::buffer_cast<const char*>(buf.data());
 
 	_smtp.async_sendmail(imf, sended);
 	io.run();
