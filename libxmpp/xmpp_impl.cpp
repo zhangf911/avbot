@@ -231,7 +231,7 @@ void xmpp_impl::onDisconnect(gloox::ConnectionError e)
 
 static std::string randomname(std::string m_xmppnick)
 {
-	return boost::str(boost::format("%s%X") % m_xmppnick % random());
+	return boost::str(boost::format("%s%X") % m_xmppnick % rand());
 }
 
 void xmpp_impl::handleMUCError(gloox::MUCRoom* room, gloox::StanzaError error)
