@@ -5,6 +5,7 @@
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/archive/iterators/remove_whitespace.hpp>
+#include <boost/archive/iterators/insert_linebreaks.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -95,6 +96,47 @@ inline std::string base64_encode(std::string src)
 		base64str += tailbase.data();
 	}
 	return base64str;
+}
+
+// BASE64 编码.
+template<int N,  class OStreamIterator>
+void base64_encode(std::string src, OStreamIterator ostream_iterator)
+{
+	unsigned one_third_len = src.length()/3;
+
+	unsigned len_rounded_down = one_third_len*3;
+	unsigned j = len_rounded_down + one_third_len;
+
+	std::string	base64str;
+
+	typedef boost::archive::iterators::insert_linebreaks<base64encodeIterator, N, char> base64encode_linebreaks_Iterator;
+	// 3 的整数倍可以编码.
+	std::copy(base64encode_linebreaks_Iterator(src.begin()), base64encode_linebreaks_Iterator(src.begin() + len_rounded_down),
+		ostream_iterator
+	);
+
+	// 结尾 0 填充以及使用 = 补上
+	if (len_rounded_down != src.length())
+	{
+		std::string tail;
+		tail.resize(4, 0);
+		unsigned i=0;
+		for(; i < src.length() - len_rounded_down; ++i)
+		{
+			tail[i] = src[len_rounded_down+i];
+		}
+
+		std::string tailbase;
+		tailbase.resize(5);
+
+		std::copy(base64encode_linebreaks_Iterator(tail.begin()), base64encode_linebreaks_Iterator(tail.begin() + 3), tailbase.begin());
+		for (int k=0;k<(3-i);k++){
+			tailbase[3-k] = '=';
+		}
+		
+		std::string base64str(tailbase.data());
+		std::copy(base64str.begin(), base64str.end(), ostream_iterator);
+	}
 }
 
 }
