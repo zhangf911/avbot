@@ -46,7 +46,6 @@ public:
 
  		std::string		status;
 		std::string		maillength;
-		std::istream	inbuffer ( m_readbuf.get() );
 		std::string		msg;
 
  		// 在这里就使用 goto failed, 就不用在内部每次执行判定了, 轻松愉快.
@@ -83,14 +82,26 @@ public:
 
 			// 发送 EHLO 执行登录.
 			_yield m_socket->async_write_some( buffer ( std::string ( "EHLO " ) + m_mailserver  + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
+			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
+
 			// 读取 250 响应.
 			_yield check_server_cap(boost::bind(*this, _1, 0, handler, coro));
 
 			// 发送 AUTH PLAIN XXX 登录认证.
+			_yield m_socket->async_write_some( buffer ( std::string ( "AUTH PLAIN " ) + m_AUTH  + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
+			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
+
+			// 读取 235 响应.
+			_yield check_login_status(boost::bind(*this, _1, 0, handler, coro));
 
 			// 进入邮件发送过程.
-			
+			// 发送 mail from <>
+			_yield m_socket->async_write_some( buffer ( std::string ( "MAIL FROM " ) + m_mailaddr + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
+			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
+			// 检查 OK 返回值
+			_yield check_status_for_ok(boost::bind(*this, _1, 0, handler, coro));
 
+			// 发送 rcpt to <>
 
 		}
 	}
@@ -111,17 +122,19 @@ private:
 		using namespace boost::system::errc;
 		using namespace boost::system;
 		// 如果出现了 response_code 以外的信息, 那可不正确哦!
-		std::string 	line;
 		std::istream	stream(m_readbuf.get());
 		while (!stream.eof())
 		{
+			std::string 	line;
 			std::getline(stream, line);
 			boost::trim_right(line);
 			boost::cmatch what;
 
-			std::string ex1 = boost::str(boost::format("%d (.*)?"));
-			std::string ex2 = boost::str(boost::format("%d-(.*)?"));
-
+			std::cout <<  line <<  std::endl;
+			std::string ex1 = boost::str(boost::format("%d (.*)?") % response_code);
+			std::string ex2 = boost::str(boost::format("%d-(.*)?") % response_code);
+			if (line.empty())
+				continue;
 			if (boost::regex_match(line.c_str(), what, boost::regex(ex1)))
 			{
 				if (callback)
@@ -138,6 +151,18 @@ private:
 		}
 		ec = make_error_code(protocol_error);
 	}
+
+	// ---------------------
+	
+	// 要保证服务器发回的是 250, ok
+	template<class Handler>
+	void check_status_for_ok(Handler handler)
+	{
+		boost::system::error_code ec;
+		check_smtp_response(ec, 250);
+		io_service.post(boost::asio::detail::bind_handler(handler, ec));
+	}
+
 
 	template<class Handler>
 	void check_wellcome_msg(Handler handler)
@@ -157,6 +182,14 @@ private:
  		boost::system::error_code ec;
 		check_smtp_response(ec, 250);
 		io_service.post(boost::asio::detail::bind_handler(handler, ec));
-	}	
+	}
+
+	template<class Handler>
+	void check_login_status(Handler handler)
+	{
+ 		boost::system::error_code ec;
+		check_smtp_response(ec, 235);
+		io_service.post(boost::asio::detail::bind_handler(handler, ec));
+	}
 };
 

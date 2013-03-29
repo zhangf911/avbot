@@ -1,3 +1,7 @@
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 
 #include <boost/format.hpp>
 #include <boost/asio/streambuf.hpp>
@@ -12,10 +16,74 @@ static void sended(const boost::system::error_code & ec)
 	std::cout <<  ec.message() <<  std::endl;
 }
 
-int main()
+static fs::path configfilepath()
 {
+	if ( getenv ( "USERPROFILE" ) ) {
+		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc" ) )
+			return fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc";
+	}
+
+	if ( getenv ( "HOME" ) ) {
+		if ( fs::exists ( fs::path ( getenv ( "HOME" ) ) / ".qqbotrc" ) )
+			return fs::path ( getenv ( "HOME" ) ) / ".qqbotrc";
+	}
+
+	if ( fs::exists ( "./qqbotrc/.qqbotrc" ) )
+		return fs::path ( "./qqbotrc/.qqbotrc" );
+
+	if ( fs::exists ( "/etc/qqbotrc" ) )
+		return fs::path ( "/etc/qqbotrc" );
+
+	throw "not configfileexit";
+}
+
+int main(int argc, char * argv[])
+{
+    std::string qqnumber, qqpwd;
+    std::string ircnick, ircroom, ircpwd;
+    std::string xmppuser, xmppserver, xmpppwd, xmpproom;
+    std::string cfgfile;
+	std::string logdir;
+	std::string chanelmap;
+	std::string mailaddr,mailpasswd,mailserver;
+
+    setlocale(LC_ALL, "");
+
+	po::options_description desc("qqbot options");
+	desc.add_options()
+	    ( "version,v",										"output version" )
+		( "help,h",											"produce help message" )
+		( "daemon,d",										"go to background" )
+		( "mail",		po::value<std::string>(&mailaddr),	"send mail by this address")
+		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
+		( "mailserver",	po::value<std::string>(&mailserver),"server to link")
+		;
+
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
+
+	if (vm.count("help"))
+	{
+		std::cerr <<  desc <<  std::endl;
+		return 1;
+	}
+	if (vm.size() ==0 )
+	{
+		try
+		{
+			fs::path p = configfilepath();
+			po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
+			po::notify(vm);
+		}
+		catch(char* e)
+		{
+			std::cerr << e << std::endl;
+		}
+	}
+
 	boost::asio::io_service io;
-	smtp _smtp(io, "test@avplayer.org", "testpasswd123");
+	smtp _smtp(io, mailaddr, mailpasswd);
 	InternetMailFormat imf;
 
 	imf.header["from"] = "test@avplayer.org";
@@ -28,5 +96,4 @@ int main()
 
 	_smtp.async_sendmail(imf, sended);
 	io.run();
-	return 0;
 }
