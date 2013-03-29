@@ -33,7 +33,6 @@ struct InternetMailFormat{
 	bool have_multipart;
 
 	// 头部结束了就是 body了，如果是 MIME 消息，请从 body 构造 MIMEcontent
-// 	std::string body;
 	boost::variant<std::string, MIMEcontent> body;
 };
 
