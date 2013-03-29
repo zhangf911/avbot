@@ -8,6 +8,16 @@ option(ENABLE_LTO "build avbot with LTO" OFF)
 option(ENABLE_LIBSTDCXX_STATIC "link to static libstdc++" OFF)
 option(ENABLE_LIBGCC_STATIC "link to static libgcc" OFF)
 
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g0")
+
+set(CMAKE_C_FLAGS_TEST "-Og -g")
+set(CMAKE_CXX_FLAGS_TEST "-Og -g0")
+
+if(CMAKE_BUILD_TYPE EQUAL "TEST")
+set(ENABLE_STATIC ON)
+endif()
+
 if(ENABLE_STATIC)
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_STATIC_RUNTIME    ON)
