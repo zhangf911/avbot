@@ -233,10 +233,11 @@ public:
 			// 检查 OK 返回值
 			_yield check_status_for(354, boost::bind(*this, _1, 0, handler, coro));
 			
+			// 发送 IMF 格式化后的数据.
 			_yield send_mail_data(boost::bind(*this, _1, _2, handler, coro));
 
-			// 发送 IMF 格式化后的数据.
-			std::cout <<  "start imf data transfer!" <<  std::endl;
+			// 执行一起正常的回调.
+			io_service.post<>(boost::asio::detail::bind_handler(handler, ec));
 		}
 	}
 	typedef void result_type;
