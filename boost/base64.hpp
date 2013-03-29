@@ -37,8 +37,10 @@ inline std::string base64_decode(std::string str)
 	static int shrik_map[] = {0, 2, 1};
 
 	// 移除尾部的  == 后面的 \r\n\r\n
-	while ( boost::is_any_of("\r\n.")(* str.rbegin()))
-		str.erase(str.length()-1);
+	if (str.find_last_of("=")!=std::string::npos){
+		str.resize(str.find_last_of("=")+1);
+	};
+
 	// 统计结尾的 = 数目
 	std::string::reverse_iterator rit = str.rbegin();
 	std::size_t	num = 0;
