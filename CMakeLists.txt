@@ -14,11 +14,11 @@ set(Boost_USE_STATIC_RUNTIME    ON)
 endif()
 
 if(ENABLE_LIBSTDCXX_STATIC)
-set(CMAKE_LD_FLAGS APPEND -static-libstdc++)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ ")
 endif()
 
 if(ENABLE_LIBGCC_STATIC)
-set(CMAKE_LD_FLAGS APPEND -static-libgcc)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc ")
 endif()
 
 if(ENABLE_CXX11)
