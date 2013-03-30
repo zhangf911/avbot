@@ -113,7 +113,7 @@ static void on_irc_message(IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
 
 	// a hack, later should be fixed to fetch channel op list.
 	if (pMsg.whom == "microcai")
-		sender_is_op;
+		sender_flag = sender_is_op;
 	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender, &qqclient);
 }
 
