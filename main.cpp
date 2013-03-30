@@ -466,7 +466,7 @@ int main(int argc, char *argv[])
 	IrcClient	ircclient(asio, ircnick, ircpwd);
 	mx::mx		mx(asio, mailaddr, mailpasswd, pop3server, smtpserver);
 
-	build_group(chanelmap,qqclient,xmppclient,ircclient);
+	build_group(chanelmap,qqclient,xmppclient,ircclient,mx);
 
 	xmppclient.on_room_message(boost::bind(&om_xmpp_message, boost::ref(xmppclient), _1, _2, _3));
 	ircclient.login(boost::bind(&on_irc_message, _1, boost::ref(ircclient), boost::ref(qqclient)));

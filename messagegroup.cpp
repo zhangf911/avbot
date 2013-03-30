@@ -22,7 +22,7 @@ messagegroup * find_group(std::string id)
 }
 
 //从命令行或者配置文件读取组信息.
-void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmppclient, IrcClient &ircclient)
+void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmppclient, IrcClient &ircclient, mx::mx& mxclient)
 {
 	std::vector<std::string> gs;
 	boost::split(gs, chanelmapstring, boost::is_any_of(";"));
@@ -30,7 +30,7 @@ void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmppclient
 	{
 		std::vector<std::string> group;
 	 	boost::split(group, pergroup, boost::is_any_of(","));
-		messagegroup g(&qqclient,&xmppclient,&ircclient);
+		messagegroup g(&qqclient,&xmppclient,&ircclient,&mxclient);
 		g.add_channel(group);
 		messagegroups.push_back(g);
 	}
