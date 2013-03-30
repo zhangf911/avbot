@@ -502,8 +502,6 @@ int main(int argc, char *argv[])
 		chdir(logdir.c_str());
 	}
 
-	boost::asio::io_service asio;
-
 	if( qqnumber.empty()|| qqpwd.empty() )
 	{
 		std::cerr << "请设置qq号码和密码" << std::endl;
@@ -521,6 +519,8 @@ int main(int argc, char *argv[])
 		std::cerr << "请设置irc频道" << std::endl;
 		exit(1);
 	}
+
+	boost::asio::io_service asio;
 
 	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver, xmppnick);
 	webqq		qqclient(asio, qqnumber, qqpwd);
