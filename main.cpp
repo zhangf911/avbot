@@ -272,7 +272,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	on_bot_command(qqclient.get_ioservice(), cmd, std::string("qq:") + group.qqnum, who.nick, sender_flag, msg_sender);
 }
 
-static void on_irc_message(const IrcMsg pMsg,  webqq & qqclient)
+static void on_irc_message(const IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
 {
 	std::cout <<  pMsg.msg<< std::endl;
 
@@ -292,9 +292,15 @@ static void on_irc_message(const IrcMsg pMsg,  webqq & qqclient)
 		std::string forwarder = boost::str(boost::format("%s 说：%s") % pMsg.whom % pMsg.msg);
 		groups->forwardmessage(from,forwarder);
 	}
-	if(boost::trim_copy(pMsg.msg) == ".qqbot exit"){
-		exit(0);
+    boost::function<void(std::string)> msg_sender;
+
+    if (groups){
+		msg_sender = boost::bind(&messagegroup::broadcast, groups,  _1);
+	}else{
+		msg_sender = boost::bind(&IrcClient::chat, &ircclient, pMsg.from, _1);
 	}
+	
+	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_is_normal, msg_sender);
 }
 
 static void om_xmpp_message(std::string xmpproom, std::string who, std::string message)
@@ -559,7 +565,7 @@ int main(int argc, char *argv[])
 	build_group(chanelmap,qqclient,xmppclient,ircclient);
 
 	xmppclient.on_room_message(boost::bind(&om_xmpp_message, _1, _2, _3));
-	ircclient.login(boost::bind(&on_irc_message, _1, boost::ref(qqclient)));
+	ircclient.login(boost::bind(&on_irc_message, _1, boost::ref(ircclient), boost::ref(qqclient)));
 
 	qqclient.on_verify_code(boost::bind(on_verify_code,_1, boost::ref(qqclient), boost::ref(ircclient), boost::ref(xmppclient)));
 	qqclient.login();
