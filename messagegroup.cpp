@@ -6,7 +6,7 @@
 
 extern qqlog logfile;			// 用于记录日志文件.
 
-std::vector<messagegroup>	messagegroups;
+static std::vector<messagegroup>	messagegroups;
 
 // ---------------------------
 
@@ -60,3 +60,15 @@ void messagegroup::forwardmessage(std::string from, std::string message) {
         }
     }
 }
+
+void forwardmessage(std::string from, std::string message)
+{
+	BOOST_FOREACH(messagegroup & g ,  messagegroups)
+	{
+		if (g.in_group(from))
+		{
+			g.forwardmessage(from, message);
+		}
+	}
+}
+

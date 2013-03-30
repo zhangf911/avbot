@@ -41,6 +41,8 @@ namespace po = boost::program_options;
 #include "counter.hpp"
 #include "logger.hpp"
 
+#include "messagegroup.hpp"
+#include "botctl.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -52,9 +54,9 @@ static counter cnt;				// 用于统计发言信息.
 static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
 static std::string progname;
 static std::string ircvercodechannel;
+po::variables_map avbot_settings;
 
-#include "messagegroup.hpp"
-#include "botctl.hpp"
+
 
 // 简单的消息命令控制.
 static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
@@ -138,7 +140,43 @@ static void om_xmpp_message(xmpp & xmppclient, std::string xmpproom, std::string
 	on_bot_command(xmppclient.get_ioservice(), message, from, who, sender_is_normal, msg_sender);
 }
 
-static bool logqqnumber = false;
+
+
+std::string	preamble_formater(qqBuddy *buddy, std::string falbacknick)
+{
+	static qqBuddy _buddy;
+	std::string preamble;
+	// 格式化神器, 哦耶.
+	// 获取格式化描述字符串
+	std::string preamblefmt = avbot_settings["preambleqq"].as<std::string>();
+	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动
+	// 默认为 qq(%a) 说:
+	if (preamblefmt.empty())
+		 preamblefmt = "qq(%c)说：";
+	preamble = preamblefmt;
+	std::string autonick = "";
+	if (!buddy){
+		autonick = falbacknick;
+		buddy = & _buddy;
+	}else{
+		autonick = buddy->card;
+		if (autonick.empty()){
+			autonick = buddy->nick;
+		}
+		if (autonick.empty()){
+			autonick = buddy->qqnum;
+		}
+		if (autonick.empty()){
+			autonick = buddy->uin;
+		}
+	}
+
+	boost::replace_all(preamble, "%a", autonick);
+	boost::replace_all(preamble, "%n", buddy->nick);
+	boost::replace_all(preamble, "%u", buddy->uin);
+	boost::replace_all(preamble, "%q", buddy->qqnum);
+	boost::replace_all(preamble, "%c", buddy->card);
+}
 
 static void on_group_msg(std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient)
 {
@@ -148,28 +186,11 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	if (group)
 		groupname = group->name;
 	buddy = group ? group->get_Buddy_by_uin(who) : NULL;
-	std::string nick = who;
-	if (buddy)
-	{
-		if (buddy->card.empty())
-			nick = buddy->nick;
-		else
-			nick = buddy->card;
-	}
 
-	std::string message_nick;
+	std::string message_nick = preamble_formater(buddy, who);
 
 	std::string htmlmsg;
 	std::string textmsg;
-
-	message_nick += nick;
-	if (logqqnumber)
-	{
-		message_nick += buddy? std::string(boost::str(boost::format("[%s]") % buddy->qqnum)):"";
-	}
-	message_nick += " 说：";
-	
-	textmsg = boost::str(boost::format("qq(%s): ") % nick);
 
 	BOOST_FOREACH(qqMsg qqmsg, msg)
 	{
@@ -210,7 +231,8 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	}
 
 	// 统计发言.
-	cnt.increace(nick);
+	if (buddy && buddy->qqnum.size())
+		cnt.increace(buddy->qqnum);
 	cnt.save();
 
 	// 记录.
@@ -226,26 +248,19 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 
 	std::string from = std::string("qq:") + group->qqnum;
 
-	messagegroup* groups =  find_group(from);
-	
-	if(groups){
-		groups->forwardmessage(from,textmsg);
-	}
+	forwardmessage(from,message_nick + textmsg);
 }
 
 static void on_mail(mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune, webqq & qqclient)
 {
 	if (qqclient.is_online()){
-		BOOST_FOREACH(messagegroup & g ,  messagegroups)
-		{
-			if (g.in_group("mail"))
-			{
-				g.broadcast(boost::str(
+	 
+		forwardmessage("mail",
+				boost::str(
 					boost::format("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s")
-					% mail.from % mail.to % mail.subject % mail.content
-				));
-			}
-		}
+						% mail.from % mail.to % mail.subject % mail.content
+				)
+		);
 	}
 	qqclient.get_ioservice().post(boost::bind(call_to_contiune, qqclient.is_online()));
 }
@@ -274,8 +289,6 @@ int daemon(int nochdir, int noclose)
 #include "input.ipp"
 #include "fsconfig.ipp"
 
-po::variables_map avbot_settings;
-
 int main(int argc, char *argv[])
 {
     std::string qqnumber, qqpwd;
@@ -295,7 +308,6 @@ int main(int argc, char *argv[])
 	    ( "version,v",										"output version" )
 		( "help,h",											"produce help message" )
 		( "daemon,d",										"go to background" )
-		( "logqqnumber",po::value<bool>(&logqqnumber),		"let qqlog contain qqnumber")
 		( "qqnum,u",	po::value<std::string>(&qqnumber),	"QQ number" )
 		( "qqpwd,p",	po::value<std::string>(&qqpwd),		"QQ password" )
 		( "logdir",		po::value<std::string>(&logdir),	"dir for logfile" )

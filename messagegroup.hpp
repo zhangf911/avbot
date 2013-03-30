@@ -6,10 +6,6 @@
 #include "libxmpp/xmpp.h"
 #include "libmailexchange/mx.hpp"
 
-class messagegroup;
-
-extern std::vector<messagegroup>	messagegroups;
-
 struct messagegroup {
 	webqq*		qq_;
 	xmpp*		xmpp_;
@@ -47,3 +43,4 @@ messagegroup * find_group(std::string id);
 // 从命令行或者配置文件读取组信息.
 void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmppclient, IrcClient &ircclient);
 
+void forwardmessage(std::string from, std::string message);
