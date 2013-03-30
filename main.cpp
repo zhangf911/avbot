@@ -271,16 +271,15 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	std::printf("%s%s\n", message_nick.c_str(),  htmlmsg.c_str());
 	if (!group)
 		return;
-	// qq消息控制.
-	if (buddy)
-		qqbot_control(qqclient, *group, *buddy, htmlmsg);
-
 	logfile.add_log(group->qqnum, message_nick + htmlmsg);
 	// send to irc
 
 	std::string from = std::string("qq:") + group->qqnum;
 
 	forwardmessage(from,message_nick + textmsg);
+	// qq消息控制.
+	if (buddy)
+		qqbot_control(qqclient, *group, *buddy, htmlmsg);
 }
 
 static void on_mail(mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune, webqq & qqclient)
