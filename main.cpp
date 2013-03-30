@@ -380,7 +380,7 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	}
 }
 
-static void on_mail(mailcontent mail, pop3::call_to_continue_function call_to_contiune, webqq & qqclient)
+static void on_mail(mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune, webqq & qqclient)
 {
 	if (qqclient.is_online()){
 		BOOST_FOREACH(messagegroup & g ,  messagegroups)
@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
     std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
-	std::string mailaddr,mailpasswd,mailserver;
+	std::string mailaddr,mailpasswd,pop3server, stmpserver;
 
     progname = fs::basename(argv[0]);
 
@@ -437,6 +437,7 @@ int main(int argc, char *argv[])
 	    ( "version,v",										"output version" )
 		( "help,h",											"produce help message" )
 		( "daemon,d",										"go to background" )
+		( "logqqnumber",po::value<bool>(&logqqnumber),		"let qqlog contain qqnumber")
 		( "qqnum,u",	po::value<std::string>(&qqnumber),	"QQ number" )
 		( "qqpwd,p",	po::value<std::string>(&qqpwd),		"QQ password" )
 		( "logdir",		po::value<std::string>(&logdir),	"dir for logfile" )
@@ -451,8 +452,8 @@ int main(int argc, char *argv[])
 		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
 		( "mail",		po::value<std::string>(&mailaddr),	"fetch mail from this address")
 		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
-		( "mailserver",	po::value<std::string>(&mailserver),"pop server of mail,  default to pop.[domain]")
-		( "logqqnumber",po::value<bool>(&logqqnumber),		"let qqlog contain qqnumber")
+		( "pop3server",	po::value<std::string>(&pop3server),"pop server of mail,  default to pop.[domain]")
+		( "stmpserver",	po::value<std::string>(&stmpserver),"smtp server of mail,  default to smtp.[domain]")
 		;
 
 	po::variables_map vm;
@@ -535,7 +536,7 @@ int main(int argc, char *argv[])
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient)));
 
 	if(!mailaddr.empty())
-	{pop3(asio, mailaddr, mailpasswd, mailserver).async_fetch_mail(boost::bind(on_mail,_1, _2, boost::ref(qqclient)));}
+	{mx::pop3(asio, mailaddr, mailpasswd, pop3server).async_fetch_mail(boost::bind(on_mail,_1, _2, boost::ref(qqclient)));}
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));

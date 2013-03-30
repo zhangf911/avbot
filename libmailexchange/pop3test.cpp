@@ -10,7 +10,7 @@ namespace po = boost::program_options;
 
 #include "fsconfig.ipp"
 
-static void on_mail(mailcontent mail, pop3::call_to_continue_function call_to_contiune)
+static void on_mail(mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune)
 {
 	call_to_contiune(0);
 }
@@ -63,7 +63,7 @@ int main(int argc, char * argv[])
 	boost::asio::io_service asio;
 	boost::asio::io_service::work work(asio);
 
-	pop3 p(asio, mailaddr, mailpasswd, mailserver);
+	mx::pop3 p(asio, mailaddr, mailpasswd, mailserver);
 	p.async_fetch_mail(on_mail);
     asio.run();
 }

@@ -11,6 +11,8 @@
 
 #include "pop3.hpp"
 
+namespace mx{
+
 static std::string find_mimetype(std::string contenttype)
 {
 	if (!contenttype.empty()){
@@ -137,3 +139,4 @@ void pop3::async_fetch_mail(pop3::on_mail_function handler) {
     io_service.post(boost::asio::detail::bind_handler(*this, boost::system::error_code(), 0));
 }
 
+}

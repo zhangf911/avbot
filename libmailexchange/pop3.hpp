@@ -13,6 +13,8 @@
 
 #include "internet_mail_format.hpp"
 
+namespace mx{
+
 class pop3 : boost::coro::coroutine {
 public:
 	typedef void result_type;
@@ -201,3 +203,5 @@ private:
 	boost::shared_ptr<on_mail_function>		m_sig_gotmail;
 	std::vector<std::string>	maillist;
 };
+
+}
