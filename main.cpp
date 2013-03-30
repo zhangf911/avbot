@@ -59,14 +59,13 @@ static std::string ircvercodechannel;
 class messagegroup;
 static std::vector<messagegroup>	messagegroups;
 
-class messagegroup {
+struct messagegroup {
 	webqq*		qq_;
 	xmpp*		xmpp_;
 	IrcClient*	irc_;
 	// 组号.
 	std::vector<std::string> channels;
 
-public:
 	messagegroup(webqq * _qq, xmpp * _xmpp, IrcClient * _irc)
 	:qq_(_qq),xmpp_(_xmpp),irc_(_irc){}
 
@@ -139,99 +138,101 @@ static void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmp
 	}
 }
 
-// 简单的消息命令控制.
-static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
+enum sender_flags{
+	sender_is_op, // 管理员, 群管理员或者频道OP .
+	sender_is_normal, // 普通用户.
+};
+
+//-------------
+
+// 命令控制, 所有的协议都能享受的命令控制在这里实现.
+// msg_sender 是一个函数, on_command 用它发送消息.
+static void on_bot_command(boost::asio::io_service& io_service, std::string message, std::string from_channel, std::string sender, sender_flags sender_flag, boost::function<void(std::string)> msg_sender)
 {
 	boost::regex ex;
 	boost::cmatch what;
-    boost::trim(cmd);
-    
-    messagegroup* chanelgroup = find_group(std::string("qq:") + group.qqnum);
-    boost::function<void(std::string)> msg_sender;
 
-    if (chanelgroup){
-		msg_sender = boost::bind(&messagegroup::broadcast, chanelgroup,  _1);
-	}else{
-		msg_sender = boost::bind(static_cast<void (webqq::*)(std::string, std::string, boost::function<void (const boost::system::error_code& ec)>)>(& webqq::send_group_message), &qqclient, group.gid, _1, boost::lambda::constant(0));
-	}
+    messagegroup* chanelgroup = find_group(from_channel);
+	qqGroup* group =  chanelgroup->qq_->get_Group_by_qq(from_channel.substr(3));
 
-	if( cmd == ".qqbot help")
+	if( message == ".qqbot help")
 	{
-        qqclient.get_ioservice().post(
+        io_service.post(
             boost::bind(msg_sender, "可用的命令\n"
 						"\t.qqbot help\n"
 						"\t.qqbot version\n"
 						"\t.qqbot ping\n"
 						"\t.qqbot relogin\n\t.qqbot reload\n"
-                        "\t.qqbot start imgage\t\n.qqbot stop image\n"
+                        "\t.qqbot start image\t\n.qqbot stop image\n"
                         "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
                         "\t.qqbot newbee SB")
         );
 	}
 
-	if( cmd == ".qqbot ping")
+	if( message == ".qqbot ping")
 	{
-		msg_sender("我还活着");
+		io_service.post(boost::bind(msg_sender,"我还活着"));
 	}
 	
-	if( cmd == ".qqbot version")
+	if( message == ".qqbot version")
 	{
-		msg_sender(boost::str(boost::format("我的版本是 %s") % QQBOT_VERSION) );
+		io_service.post(boost::bind(msg_sender,boost::str(boost::format("我的版本是 %s (%s %s)") % QQBOT_VERSION %__DATE__% __TIME__)));
 	}
 
-	if ((who.mflag & 21) == 21 || who.uin == group.owner )
+	if ( sender_flag == sender_is_op )
 	{
-		if (cmd == ".qqbot relogin")
+		if (message == ".qqbot relogin")
 		{
-			qqclient.get_ioservice().post(
-				boost::bind(&webqq::login,qqclient)
+			io_service.post(
+				boost::bind(&webqq::login,chanelgroup->qq_)
 			);
 		}
 
-		if ( cmd == ".qqbot exit")
+		if ( message == ".qqbot exit")
 		{
 			exit(0);
 		}
 		// 转发图片处理.
-		if (cmd == ".qqbot start image")
+		if (message == ".qqbot start image")
 		{
 			resend_img = true;
 		}
 
-		if (cmd == ".qqbot stop image")
+		if (message == ".qqbot stop image")
 		{
 			resend_img = false;
 		}
 
 		// 重新加载群成员列表.
-		if (cmd == ".qqbot reload")
+		if (message == ".qqbot reload")
 		{
-			qqclient.get_ioservice().post(boost::bind(&webqq::update_group_member, qqclient, boost::ref(group)));
+
+			io_service.post(boost::bind(&webqq::update_group_member, chanelgroup->qq_ , boost::ref(*group)));
 			msg_sender("群成员列表重加载");
 		}
 
 		// 开始讲座记录.	
 		ex.set_expression(".qqbot begin class ?\"(.*)?\"");
 		
-		if(boost::regex_match(cmd.c_str(), what, ex))
+		if(boost::regex_match(message.c_str(), what, ex))
 		{
 			std::string title = what[1];
 			if (title.empty()) return ;
-			if (!logfile.begin_lecture(group.qqnum, title))
+			if (!logfile.begin_lecture(group->qqnum, title))
 			{
 				printf("lecture failed!\n");
 			}
 		}
 
 		// 停止讲座记录.
-		if (cmd == ".qqbot end class")
+		if (message == ".qqbot end class")
 		{
 			logfile.end_lecture();
 		}
 		
 		// 向新人问候.
 		ex.set_expression(".qqbot newbee ?(.*)?");
-		if(boost::regex_match(cmd.c_str(), what, ex))
+		if(boost::regex_match(message.c_str(), what, ex))
 		{
 			std::string nick = what[1];
 			
@@ -244,7 +245,31 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 			question.add_to_list(list);
 			question.on_handle_message( msg_sender );
 		}
+	}	
+}
+
+// 简单的消息命令控制.
+static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
+{
+    boost::trim(cmd);
+
+    messagegroup* chanelgroup = find_group(std::string("qq:") + group.qqnum);
+    boost::function<void(std::string)> msg_sender;
+
+    if (chanelgroup){
+		msg_sender = boost::bind(&messagegroup::broadcast, chanelgroup,  _1);
+	}else{
+		msg_sender = boost::bind(static_cast<void (webqq::*)(std::string, std::string, boost::function<void (const boost::system::error_code& ec)>)>(& webqq::send_group_message), &qqclient, group.gid, _1, boost::lambda::constant(0));
 	}
+
+	sender_flags sender_flag;
+
+	if ((who.mflag & 21) == 21 || who.uin == group.owner )
+		sender_flag = sender_is_op;
+	else
+		sender_flag = sender_is_normal;
+
+	on_bot_command(qqclient.get_ioservice(), cmd, std::string("qq:") + group.qqnum, who.nick, sender_flag, msg_sender);
 }
 
 static void on_irc_message(const IrcMsg pMsg,  webqq & qqclient)
@@ -452,7 +477,7 @@ int main(int argc, char *argv[])
 		( "xmpppwd",	po::value<std::string>(&xmpppwd),	"password for XMPP" )
 		( "xmpprooms",	po::value<std::string>(&xmpproom),	"xmpp rooms" )
 		( "xmppnick",	po::value<std::string>(&xmppnick),	"nick in xmpp rooms" )	
-		( "map",		po::value<std::string>(&chanelmap),	"map qqgroup to irc channel. eg: --map:qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
+		( "map",		po::value<std::string>(&chanelmap),	"map channels. eg: --map=qq:12345,irc:avplayer;qq:56789,irc:ubuntu-cn" )
 		( "mail",		po::value<std::string>(&mailaddr),	"fetch mail from this address")
 		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
 		( "pop3server",	po::value<std::string>(&pop3server),"pop server of mail,  default to pop.[domain]")
