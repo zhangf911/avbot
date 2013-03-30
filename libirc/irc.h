@@ -55,7 +55,7 @@ public:
 		cb_=cb;
 	}
     void join(const std::string& ch,const std::string &pwd="");
-    void chat(const std::string& whom,const std::string& msg);
+    void chat(const std::string whom,const std::string msg);
     void send_command(const std::string& cmd){
 		send_request(cmd);
 	}

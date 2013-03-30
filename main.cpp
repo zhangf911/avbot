@@ -299,7 +299,7 @@ static void on_irc_message(const IrcMsg pMsg, IrcClient & ircclient, webqq & qqc
 	}else{
 		msg_sender = boost::bind(&IrcClient::chat, &ircclient, pMsg.from, _1);
 	}
-	
+
 	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_is_normal, msg_sender);
 }
 

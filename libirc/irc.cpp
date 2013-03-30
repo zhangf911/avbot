@@ -42,7 +42,7 @@ void IrcClient::connected()
     
 }
 
-void IrcClient::chat(const std::string& whom,const std::string& msg)
+void IrcClient::chat(const std::string whom,const std::string msg)
 {
 	std::vector<std::string> msgs;
 	boost::split(msgs, msg, boost::is_any_of("\r\n"));
