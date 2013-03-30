@@ -78,7 +78,7 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	else
 		sender_flag = sender_is_normal;
 
-	on_bot_command(qqclient.get_ioservice(), cmd, std::string("qq:") + group.qqnum, who.nick, sender_flag, msg_sender);
+	on_bot_command(qqclient.get_ioservice(), cmd, std::string("qq:") + group.qqnum, who.nick, sender_flag, msg_sender, &qqclient);
 }
 
 static void on_irc_message(IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
@@ -114,7 +114,7 @@ static void on_irc_message(IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
 	// a hack, later should be fixed to fetch channel op list.
 	if (pMsg.whom == "microcai")
 		sender_is_op;
-	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender);
+	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender, &qqclient);
 }
 
 static void om_xmpp_message(xmpp & xmppclient, std::string xmpproom, std::string who, std::string message)
@@ -148,7 +148,7 @@ std::string	preamble_formater(qqBuddy *buddy, std::string falbacknick)
 	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动
 	// 默认为 qq(%a) 说:
 	if (preamblefmt.empty())
-		 preamblefmt = "qq(%c)说：";
+		 preamblefmt = "qq(%a)说：";
 	preamble = preamblefmt;
 	std::string autonick = "";
 	if (!buddy){
@@ -172,6 +172,7 @@ std::string	preamble_formater(qqBuddy *buddy, std::string falbacknick)
 	boost::replace_all(preamble, "%u", buddy->uin);
 	boost::replace_all(preamble, "%q", buddy->qqnum);
 	boost::replace_all(preamble, "%c", buddy->card);
+	return preamble;
 }
 
 static void on_group_msg(std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient)

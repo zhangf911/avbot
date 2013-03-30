@@ -56,13 +56,18 @@ extern qqlog logfile;			// 用于记录日志文件.
 
 // 命令控制, 所有的协议都能享受的命令控制在这里实现.
 // msg_sender 是一个函数, on_command 用它发送消息.
-void on_bot_command(boost::asio::io_service& io_service, std::string message, std::string from_channel, std::string sender, sender_flags sender_flag, boost::function<void(std::string)> msg_sender)
+void on_bot_command(boost::asio::io_service& io_service, std::string message, std::string from_channel, std::string sender, sender_flags sender_flag, boost::function<void(std::string)> msg_sender, webqq *qqclient)
 {
 	boost::regex ex;
 	boost::cmatch what;
+	qqGroup* group = NULL;
 
     messagegroup* chanelgroup = find_group(from_channel);
-	qqGroup* group =  chanelgroup->qq_->get_Group_by_qq(from_channel.substr(3));
+    if (chanelgroup){
+		qqclient = chanelgroup->qq_;
+	}
+	if (qqclient)
+		group =  qqclient->get_Group_by_qq(from_channel.substr(3));
 
 	if( message == ".qqbot help")
 	{
@@ -105,10 +110,10 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 
 	if ( sender_flag == sender_is_op )
 	{
-		if (message == ".qqbot relogin")
+		if (qqclient && message == ".qqbot relogin")
 		{
 			io_service.post(
-				boost::bind(&webqq::login,chanelgroup->qq_)
+				boost::bind(&webqq::login,qqclient)
 			);
 		}
 
@@ -118,17 +123,21 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 		}
 
 		// 重新加载群成员列表.
-		if (message == ".qqbot reload")
+		if (qqclient && message == ".qqbot reload")
 		{
-
-			io_service.post(boost::bind(&webqq::update_group_member, chanelgroup->qq_ , boost::ref(*group)));
-			msg_sender("群成员列表重加载");
+			if (group)
+			{
+				io_service.post(boost::bind(&webqq::update_group_member, qqclient , boost::ref(*group)));
+				msg_sender("群成员列表重加载");
+			}else{
+				msg_sender("加载哪个群? 你没设置啊!");
+			}
 		}
 
 		// 开始讲座记录.	
 		ex.set_expression(".qqbot begin class ?\"(.*)?\"");
 		
-		if(boost::regex_match(message.c_str(), what, ex))
+		if(qqclient && group && boost::regex_match(message.c_str(), what, ex))
 		{
 			std::string title = what[1];
 			if (title.empty()) return ;
@@ -139,14 +148,14 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 		}
 
 		// 停止讲座记录.
-		if (message == ".qqbot end class")
+		if (qqclient && message == ".qqbot end class")
 		{
 			logfile.end_lecture();
 		}
 		
 		// 向新人问候.
 		ex.set_expression(".qqbot newbee ?(.*)?");
-		if(boost::regex_match(message.c_str(), what, ex))
+		if(qqclient && boost::regex_match(message.c_str(), what, ex))
 		{
 			std::string nick = what[1];
 			
