@@ -61,3 +61,9 @@ void messagegroup::forwardmessage(std::string from, std::string message) {
     }
 }
 
+
+void messagegroup::forwardmessage(std::string from, std::string who, std::string message)
+{
+	
+}
+

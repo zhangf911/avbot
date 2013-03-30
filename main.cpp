@@ -54,17 +54,7 @@ static std::string progname;
 static std::string ircvercodechannel;
 
 #include "messagegroup.hpp"
-
-enum sender_flags{
-	sender_is_op, // 管理员, 群管理员或者频道OP .
-	sender_is_normal, // 普通用户.
-};
-
-//-------------
-
-// 命令控制, 所有的协议都能享受的命令控制在这里实现.
-// msg_sender 是一个函数, on_command 用它发送消息.
-void on_bot_command(boost::asio::io_service& io_service, std::string message, std::string from_channel, std::string sender, sender_flags sender_flag, boost::function<void(std::string)> msg_sender);
+#include "botctl.hpp"
 
 // 简单的消息命令控制.
 static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
@@ -167,8 +157,10 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 			nick = buddy->card;
 	}
 
-	std::string message_nick, message;
-	std::string ircmsg;
+	std::string message_nick;
+
+	std::string htmlmsg;
+	std::string textmsg;
 
 	message_nick += nick;
 	if (logqqnumber)
@@ -177,7 +169,7 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	}
 	message_nick += " 说：";
 	
-	ircmsg = boost::str(boost::format("qq(%s): ") % nick);
+	textmsg = boost::str(boost::format("qq(%s): ") % nick);
 
 	BOOST_FOREACH(qqMsg qqmsg, msg)
 	{
@@ -187,7 +179,7 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 			case qqMsg::LWQQ_MSG_TEXT:
 			{
 				buf = qqmsg.text;
-				ircmsg += buf;
+				textmsg += buf;
 				if (!buf.empty()) {
 					boost::replace_all(buf, "&", "&amp;");
 					boost::replace_all(buf, "<", "&lt;");
@@ -205,16 +197,16 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 					boost::format(" http://w.qq.com/cgi-bin/get_group_pic?pic=%s ")
 						% url_encode(qqmsg.cface)
 				);
-				ircmsg += imgurl;
+				textmsg += imgurl;
 			}break;
 			case qqMsg::LWQQ_MSG_FACE:
 			{
 				buf = boost::str(boost::format(
 					"<img src=\"http://0.web.qstatic.com/webqqpic/style/face/%d.gif\" >") % qqmsg.face);
-				ircmsg += buf;
+				textmsg += buf;
 			}break;
 		}
-		message += buf;
+		htmlmsg += buf;
 	}
 
 	// 统计发言.
@@ -222,14 +214,14 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	cnt.save();
 
 	// 记录.
-	std::printf("%s%s\n", message_nick.c_str(),  message.c_str());
+	std::printf("%s%s\n", message_nick.c_str(),  htmlmsg.c_str());
 	if (!group)
 		return;
 	// qq消息控制.
 	if (buddy)
-		qqbot_control(qqclient, *group, *buddy, message);
+		qqbot_control(qqclient, *group, *buddy, htmlmsg);
 
-	logfile.add_log(group->qqnum, message_nick + message);
+	logfile.add_log(group->qqnum, message_nick + htmlmsg);
 	// send to irc
 
 	std::string from = std::string("qq:") + group->qqnum;
@@ -237,7 +229,7 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 	messagegroup* groups =  find_group(from);
 	
 	if(groups){
-		groups->forwardmessage(from,ircmsg);
+		groups->forwardmessage(from,textmsg);
 	}
 }
 
