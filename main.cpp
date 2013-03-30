@@ -37,7 +37,7 @@ namespace po = boost::program_options;
 #include "libwebqq/webqq.h"
 #include "libwebqq/url.hpp"
 #include "libxmpp/xmpp.h"
-#include "libmailexchange/pop3.hpp"
+#include "libmailexchange/mx.hpp"
 
 #include "counter.hpp"
 #include "logger.hpp"
