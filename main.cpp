@@ -54,9 +54,8 @@ static counter cnt;				// 用于统计发言信息.
 static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
 static std::string progname;
 static std::string ircvercodechannel;
-po::variables_map avbot_settings;
 
-
+static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
 // 简单的消息命令控制.
 static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
@@ -145,7 +144,7 @@ std::string	preamble_formater(qqBuddy *buddy, std::string falbacknick)
 	std::string preamble;
 	// 格式化神器, 哦耶.
 	// 获取格式化描述字符串
-	std::string preamblefmt = avbot_settings["preambleqq"].as<std::string>();
+	std::string preamblefmt = preamble_qq_fmt;
 	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动
 	// 默认为 qq(%a) 说:
 	if (preamblefmt.empty())
@@ -299,19 +298,13 @@ int main(int argc, char *argv[])
     progname = fs::basename(argv[0]);
 
     setlocale(LC_ALL, "");
-
+	po::variables_map vm;
 	po::options_description desc("qqbot options");
 	desc.add_options()
-	    ( "version,v",										"output version" )
-		( "help,h",											"produce help message" )
-		( "daemon,d",										"go to background" )
-		( "preambleqq",										"为QQ设置的发言前缀, 默认是 qq(%a)说: " )
-		( "preambleirc",									"为IRC设置的发言前缀, 默认是 %a 说: " )
-		( "preamblexmpp",									"为XMPP设置的发言前缀, 默认是 (%a)说: \n\n"
-															"前缀里的含义\n"
-															"\t%a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片.\n"
-															"可以包含多个, 例如想记录QQ号码的可以使用 qq(%a, %q)说:\n"
-															"注意在shell下可能需要使用\\(来转义(\n配置文件无此问题\n\n"	)
+	    ( "version,v",	"output version" )
+		( "help,h",		"produce help message" )
+		( "daemon,d",	"go to background" )
+
 		( "qqnum,u",	po::value<std::string>(&qqnumber),	"QQ number" )
 		( "qqpwd,p",	po::value<std::string>(&qqpwd),		"QQ password" )
 		( "logdir",		po::value<std::string>(&logdir),	"dir for logfile" )
@@ -328,24 +321,35 @@ int main(int argc, char *argv[])
 		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
 		( "pop3server",	po::value<std::string>(&pop3server),"pop server of mail,  default to pop.[domain]")
 		( "smtpserver",	po::value<std::string>(&smtpserver),"smtp server of mail,  default to smtp.[domain]")
+
+		( "preambleqq",		po::value<std::string>(&preamble_qq_fmt),
+				"为QQ设置的发言前缀, 默认是 qq(%a)说: " )
+		( "preambleirc",	po::value<std::string>(&preamble_irc_fmt),
+				"为IRC设置的发言前缀, 默认是 %a 说: " )
+		( "preamblexmpp",	po::value<std::string>(&preamble_xmpp_fmt),
+				"为XMPP设置的发言前缀, 默认是 (%a)说: \n\n"
+				"前缀里的含义\n"
+				"\t%a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片.\n"
+				"可以包含多个, 例如想记录QQ号码的可以使用 qq(%a, %q)说:\n"
+				"注意在shell下可能需要使用\\(来转义(\n配置文件无此问题\n\n"	)
 		;
 
-	po::store(po::parse_command_line(argc, argv, desc), avbot_settings);
-	po::notify(avbot_settings);
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
 
-	if (avbot_settings.count("help"))
+	if (vm.count("help"))
 	{
 		std::cerr <<  desc <<  std::endl;
 		return 1;
 	}
 
-	if (avbot_settings.size() ==0 || (avbot_settings.size() ==1 && avbot_settings.count("daemon")))
+	if (vm.size() ==0 || (vm.size() ==1 && vm.count("daemon")))
 	{
 		try
 		{
 			fs::path p = configfilepath();
-			po::store(po::parse_config_file<char>(p.string().c_str(), desc), avbot_settings);
-			po::notify(avbot_settings);
+			po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
+			po::notify(vm);
 		}
 		catch(char* e)
 		{
@@ -354,10 +358,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (avbot_settings.count("daemon"))
+	if (vm.count("daemon"))
 		daemon(0, 1);
 		
-	if (avbot_settings.count("version"))
+	if (vm.count("version"))
 	{
 		printf("qqbot version %s (%s %s) \n", QQBOT_VERSION, __DATE__, __TIME__);
 		exit(EXIT_SUCCESS);
@@ -429,7 +433,7 @@ int main(int argc, char *argv[])
 	}
 
     boost::asio::io_service::work work(asio);
-	if (!avbot_settings.count("daemon")){
+	if (!vm.count("daemon")){
 #ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
 		boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin(new boost::asio::posix::stream_descriptor(asio, 0));
 		boost::shared_ptr<boost::asio::streambuf> inputbuffer(new boost::asio::streambuf);
