@@ -102,17 +102,15 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 	if( message == ".qqbot ping")
 	{
 		io_service.post(boost::bind(msg_sender,"我还活着"));
+		return;
 	}
 	
 	if( message == ".qqbot version")
 	{
 		io_service.post(boost::bind(msg_sender,boost::str(boost::format("我的版本是 %s (%s %s)") % QQBOT_VERSION %__DATE__% __TIME__)));
+		return;
 	}
 
-	if ( message == ".qqbot mailend")
-	{
-		// 开始发送 !
-	}
 	ex.set_expression(".qqbot mail to ?\"(.*)?\"");
 
 	if(boost::regex_match(message.c_str(), what, ex))
@@ -125,6 +123,7 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 			chanelgroup->pimf->header["subject"] = "send by avbot";
 			chanelgroup->pimf->body = std::string("");
 		}
+		return;
 	}
 
 	ex.set_expression(".qqbot mail subject ?\"(.*)?\"");
@@ -135,6 +134,7 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 			// 进入邮件记录模式.
 			chanelgroup->pimf->header["subject"] = what[1];
 		}
+		return;
 	}
 
 	ex.set_expression(".qqbot mail end");
@@ -151,6 +151,7 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 			);
 			chanelgroup->pimf.reset();
 		}
+		return;
 	}
 	if ( sender_flag == sender_is_op )
 	{
@@ -159,6 +160,7 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 			io_service.post(
 				boost::bind(&webqq::login,qqclient)
 			);
+			return;
 		}
 
 		if ( message == ".qqbot exit")
@@ -180,6 +182,7 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 			}else{
 				msg_sender("加载哪个群? 你没设置啊!");
 			}
+			return;
 		}
 
 		// 开始讲座记录.	
@@ -193,12 +196,14 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 			{
 				printf("lecture failed!\n");
 			}
+			return;
 		}
 
 		// 停止讲座记录.
 		if (qqclient && message == ".qqbot end class")
 		{
 			logfile.end_lecture();
+			return;
 		}
 		
 		// 向新人问候.
