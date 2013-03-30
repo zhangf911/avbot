@@ -3,6 +3,7 @@
 	* delete mail only if successfully sended to the channel.
 	* fix VC2010 compilation
 	* windows support for stdin
+	* smtp support (libs/developers only, not avliable to avbot)
 
 3.3
 	* pull in upstream avproxy that add http_proxy support.
