@@ -62,7 +62,7 @@ add_subdirectory(libxmpp)
 add_subdirectory(libmailexchange)
 
 add_definitions(-DQQBOT_VERSION=\"3.5\")
-add_executable(avbot main.cpp botcmd.cpp messagegroup.cpp)
+add_executable(avbot main.cpp botctl.cpp messagegroup.cpp)
 
 target_link_libraries(avbot webqq irc xmpp mailexchange)
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
