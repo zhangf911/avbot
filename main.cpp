@@ -162,10 +162,15 @@ static void on_bot_command(boost::asio::io_service& io_service, std::string mess
 						"\t.qqbot help\n"
 						"\t.qqbot version\n"
 						"\t.qqbot ping\n"
-						"\t.qqbot relogin\n\t.qqbot reload\n"
-                        "\t.qqbot start image\t\n\t.qqbot stop image\n"
+						"\t.qqbot mailto [emailaddress]\n"
+						"\t 将命令中间的聊天内容发送到邮件 emailaddress\n"
+						"\t.qqbot mailend\n"
+						"== 以下命令需要管理员才能使用==\n"
+						"\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
+                        "\t.qqbot start image \t.qqbot stop image 开启关闭群图片的URL转发\n"
                         "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
-                        "\t.qqbot newbee SB")
+                        "\t.qqbot newbee SB\n"
+                        "以上! (别吐嘈, 我是武藏舰长)")
         );
 	}
 
@@ -177,6 +182,17 @@ static void on_bot_command(boost::asio::io_service& io_service, std::string mess
 	if( message == ".qqbot version")
 	{
 		io_service.post(boost::bind(msg_sender,boost::str(boost::format("我的版本是 %s (%s %s)") % QQBOT_VERSION %__DATE__% __TIME__)));
+	}
+
+	if ( message == ".qqbot mailend")
+	{
+		// 开始发送 !
+	}
+	ex.set_expression(".qqbot mailto ?\"(.*)?\"");
+
+	if(boost::regex_match(message.c_str(), what, ex))
+	{
+		// 进入邮件记录模式.
 	}
 
 	if ( sender_flag == sender_is_op )
