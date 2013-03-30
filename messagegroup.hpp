@@ -11,6 +11,8 @@ struct messagegroup {
 	xmpp*		xmpp_;
 	IrcClient*	irc_;
 	mx::mx*		mx_;
+	boost::shared_ptr<InternetMailFormat>	pimf;
+
 	// 组号.
 	std::vector<std::string> channels;
 

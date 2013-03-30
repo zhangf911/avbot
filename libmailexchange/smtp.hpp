@@ -134,8 +134,7 @@ class smtp {
 public:
 	smtp(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver="");
 
-	template<class Handler>
-	void async_sendmail(const InternetMailFormat &imf, Handler handler)
+	void async_sendmail(const InternetMailFormat &imf, boost::function<void (const boost::system::error_code &)> handler)
 	{
 		retry_count = 0;
 		// 依据 imf.header["to"] 拆分

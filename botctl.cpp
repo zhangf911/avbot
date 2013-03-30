@@ -5,9 +5,11 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <memory>
 
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
@@ -16,9 +18,9 @@ namespace fs = boost::filesystem;
 #include <boost/format.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/foreach.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/locale.hpp>
 #include <boost/lambda/lambda.hpp>
+
 #include <locale.h>
 #include <fstream>
 #include <string.h>
@@ -51,6 +53,11 @@ namespace fs = boost::filesystem;
 static auto_question question;	// 自动问问题.
 
 extern qqlog logfile;			// 用于记录日志文件.
+
+static void mail_send_hander(const boost::system::error_code & ec, boost::function<void(std::string)> msg_sender)
+{
+	
+}
 
 //-------------
 
@@ -101,13 +108,45 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 	{
 		// 开始发送 !
 	}
-	ex.set_expression(".qqbot mailto ?\"(.*)?\"");
+	ex.set_expression(".qqbot mail to ?\"(.*)?\"");
 
 	if(boost::regex_match(message.c_str(), what, ex))
 	{
-		// 进入邮件记录模式.
+		if(chanelgroup){
+			// 进入邮件记录模式.
+			chanelgroup->pimf.reset(new InternetMailFormat);
+			chanelgroup->pimf->header["from"] = chanelgroup->mx_->mailaddres();
+			chanelgroup->pimf->header["to"] = what[1];
+			chanelgroup->pimf->header["subject"] = "send by avbot";
+			chanelgroup->pimf->body = std::string("");
+		}
 	}
 
+	ex.set_expression(".qqbot mail subject ?\"(.*)?\"");
+
+	if(boost::regex_match(message.c_str(), what, ex))
+	{
+		if(chanelgroup && chanelgroup->pimf){
+			// 进入邮件记录模式.
+			chanelgroup->pimf->header["subject"] = what[1];
+		}
+	}
+
+	ex.set_expression(".qqbot mail end");
+
+	if(boost::regex_match(message.c_str(), what, ex))
+	{
+		if(chanelgroup && chanelgroup->pimf){
+
+			// 发送邮件内容.
+			chanelgroup->mx_->async_send_mail(
+				*chanelgroup->pimf, 
+				// 报告发送成功还是失败, 怎么报告?
+				boost::bind(mail_send_hander, _1, msg_sender)
+			);
+			chanelgroup->pimf.reset();
+		}
+	}
 	if ( sender_flag == sender_is_op )
 	{
 		if (qqclient && message == ".qqbot relogin")

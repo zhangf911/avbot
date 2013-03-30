@@ -37,6 +37,9 @@ void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmppclient
 }
 
 void messagegroup::forwardmessage(std::string from, std::string message) {
+	if (pimf){
+		boost::get<std::string>(pimf->body) += message;
+	}
     BOOST_FOREACH(std::string chatgroupmember, channels)
     {
         if (chatgroupmember == from)
