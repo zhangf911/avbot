@@ -91,7 +91,7 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 						"\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
                         "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
                         "\t.qqbot newbee SB\n"
-                        "以上! (别吐嘈, 我是武藏舰长)")
+                        "以上! (武藏舰长)")
         );
 	}
 
