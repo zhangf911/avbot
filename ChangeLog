@@ -2,6 +2,7 @@
 	* Internet Mail Format parser re-write.
 	* delete mail only if successfully sended to the channel.
 	* fix VC2010 compilation
+	* windows support for stdin
 
 3.3
 	* pull in upstream avproxy that add http_proxy support.
