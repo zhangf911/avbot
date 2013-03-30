@@ -416,6 +416,8 @@ int main(int argc, char *argv[])
 
 	if (vm.count("daemon")){
 		daemon(0, 0);
+		av_sigmask(SIG_BLOCK,SIGHUP);
+
 		signal(SIGSEGV, handle_segfault);
 	}
 
