@@ -56,7 +56,11 @@ extern qqlog logfile;			// 用于记录日志文件.
 
 static void mail_send_hander(const boost::system::error_code & ec, boost::function<void(std::string)> msg_sender)
 {
-	
+	if (ec){
+		msg_sender("邮件没发送成功, 以上");
+	}else{
+		msg_sender("邮件发送成功, 以上");
+	}
 }
 
 //-------------
