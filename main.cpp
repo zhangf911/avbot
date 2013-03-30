@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
     std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
-	std::string mailaddr,mailpasswd,pop3server, stmpserver;
+	std::string mailaddr,mailpasswd,pop3server, smtpserver;
 
     progname = fs::basename(argv[0]);
 
@@ -453,7 +453,7 @@ int main(int argc, char *argv[])
 		( "mail",		po::value<std::string>(&mailaddr),	"fetch mail from this address")
 		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
 		( "pop3server",	po::value<std::string>(&pop3server),"pop server of mail,  default to pop.[domain]")
-		( "stmpserver",	po::value<std::string>(&stmpserver),"smtp server of mail,  default to smtp.[domain]")
+		( "smtpserver",	po::value<std::string>(&smtpserver),"smtp server of mail,  default to smtp.[domain]")
 		;
 
 	po::variables_map vm;
@@ -475,7 +475,8 @@ int main(int argc, char *argv[])
 		}
 		catch(char* e)
 		{
-			std::cerr << e << std::endl;
+			std::cout <<  "no command line arg and config file not found neither." <<  std::endl;
+			std::cout <<  "try to add command line arg or put config file in /etc/qqbotrc or ~/.qqbotrc" <<  std::endl;
 		}
 	}
 
@@ -525,6 +526,7 @@ int main(int argc, char *argv[])
 	xmpp		xmppclient(asio, xmppuser, xmpppwd, xmppserver, xmppnick);
 	webqq		qqclient(asio, qqnumber, qqpwd);
 	IrcClient	ircclient(asio, ircnick, ircpwd);
+	mx::mx		mx(asio, mailaddr, mailpasswd, pop3server, smtpserver);
 
 	build_group(chanelmap,qqclient,xmppclient,ircclient);
 
