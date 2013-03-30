@@ -216,7 +216,7 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 		groupname = group->name;
 	buddy = group ? group->get_Buddy_by_uin(who) : NULL;
 
-	std::string message_nick = preamble_formater(buddy, who);
+	std::string message_nick = preamble_formater(buddy, who, group);
 
 	std::string htmlmsg;
 	std::string textmsg;
