@@ -99,12 +99,11 @@ static void on_irc_message(IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
 		return;
 	}
 
+	std::string forwarder = boost::str(boost::format("%s 说：%s") % pMsg.whom % pMsg.msg);
+	forwardmessage(from, forwarder);
+
+	boost::function<void(std::string)> msg_sender;
 	messagegroup* groups =  find_group(from);
-	if(groups){
-		std::string forwarder = boost::str(boost::format("%s 说：%s") % pMsg.whom % pMsg.msg);
-		groups->forwardmessage(from,forwarder);
-	}
-    boost::function<void(std::string)> msg_sender;
 
     if (groups){
 		msg_sender = boost::bind(&messagegroup::broadcast, groups,  _1);
@@ -123,13 +122,11 @@ static void om_xmpp_message(xmpp & xmppclient, std::string xmpproom, std::string
 {
 	std::string from = std::string("xmpp:") + xmpproom;
 	//log to logfile?
-	messagegroup* groups =  find_group(from);
-	if(groups){
-		std::string forwarder = boost::str(boost::format("(%s)说：%s") % who % message);
-		groups->forwardmessage(from,forwarder);
-	}
-
+	std::string forwarder = boost::str(boost::format("(%s)说：%s") % who % message);
+	forwardmessage(from,forwarder);
+	
 	boost::function<void(std::string)> msg_sender;
+	messagegroup* groups =  find_group(from);
 
     if (groups){
 		msg_sender = boost::bind(&messagegroup::broadcast, groups,  _1);
