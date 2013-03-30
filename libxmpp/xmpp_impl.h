@@ -69,6 +69,10 @@ public:
 	void join(std::string roomjid);
 	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);
 	void send_room_message(std::string xmpproom, std::string message);
+	boost::asio::io_service& get_ioservice(){
+		return io_service;
+	}
+
 private:
 	void start();
 

@@ -48,3 +48,9 @@ void xmpp::send_room_message(std::string xmpproom, std::string message)
 	if (impl)
 		impl->send_room_message(xmpproom, message);
 }
+
+boost::asio::io_service& xmpp::get_ioservice()
+{
+	return this->impl->get_ioservice();
+}
+
