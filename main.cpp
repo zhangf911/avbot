@@ -81,64 +81,8 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	on_bot_command(qqclient.get_ioservice(), cmd, std::string("qq:") + group.qqnum, who.nick, sender_flag, msg_sender, &qqclient);
 }
 
-static void on_irc_message(IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
-{
-	std::cout <<  pMsg.msg<< std::endl;
 
-	boost::trim(pMsg.msg);
-
-	std::string from = std::string("irc:") + pMsg.from.substr(1);
-
-	//验证码check
-	if(qqneedvc){
-		std::string vc = boost::trim_copy(pMsg.msg);
-		if(vc[0] == '.' && vc[1]=='v' && vc[2]=='c' && vc[3] == ' ')
-			qqclient.login_withvc(vc.substr(4));
-		qqneedvc = false;
-		return;
-	}
-
-	std::string forwarder = boost::str(boost::format("%s 说：%s") % pMsg.whom % pMsg.msg);
-	forwardmessage(from, forwarder);
-
-	boost::function<void(std::string)> msg_sender;
-	messagegroup* groups =  find_group(from);
-
-    if (groups){
-		msg_sender = boost::bind(&messagegroup::broadcast, groups,  _1);
-	}else{
-		msg_sender = boost::bind(&IrcClient::chat, &ircclient, pMsg.from, _1);
-	}
-	sender_flags sender_flag = sender_is_normal;
-
-	// a hack, later should be fixed to fetch channel op list.
-	if (pMsg.whom == "microcai")
-		sender_flag = sender_is_op;
-	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender, &qqclient);
-}
-
-static void om_xmpp_message(xmpp & xmppclient, std::string xmpproom, std::string who, std::string message)
-{
-	std::string from = std::string("xmpp:") + xmpproom;
-	//log to logfile?
-	std::string forwarder = boost::str(boost::format("(%s)说：%s") % who % message);
-	forwardmessage(from,forwarder);
-	
-	boost::function<void(std::string)> msg_sender;
-	messagegroup* groups =  find_group(from);
-
-    if (groups){
-		msg_sender = boost::bind(&messagegroup::broadcast, groups,  _1);
-	}else{
-		msg_sender = boost::bind(&xmpp::send_room_message, &xmppclient, xmpproom, _1);
-	}
-
-	on_bot_command(xmppclient.get_ioservice(), message, from, who, sender_is_normal, msg_sender);
-}
-
-
-
-std::string	preamble_formater(qqBuddy *buddy, std::string falbacknick)
+static std::string	preamble_formater(qqBuddy *buddy, std::string falbacknick)
 {
 	static qqBuddy _buddy;
 	std::string preamble;
@@ -173,6 +117,87 @@ std::string	preamble_formater(qqBuddy *buddy, std::string falbacknick)
 	boost::replace_all(preamble, "%q", buddy->qqnum);
 	boost::replace_all(preamble, "%c", buddy->card);
 	return preamble;
+}
+
+static std::string	preamble_formater(IrcMsg pmsg)
+{
+	// 格式化神器, 哦耶.
+	// 获取格式化描述字符串
+	std::string preamble = preamble_irc_fmt;
+	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间
+	// 默认为 qq(%a) 说:
+	boost::replace_all(preamble, "%a", pmsg.whom);
+	boost::replace_all(preamble, "%r", pmsg.from);
+	boost::replace_all(preamble, "%n", pmsg.whom);
+	return preamble;
+}
+
+static std::string	preamble_formater(std::string who, std::string room)
+{
+	// 格式化神器, 哦耶.
+	// 获取格式化描述字符串
+	std::string preamble = preamble_xmpp_fmt;
+	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间
+	// 默认为 qq(%a) 说:
+	boost::replace_all(preamble, "%a", who);
+	boost::replace_all(preamble, "%r", room);
+	boost::replace_all(preamble, "%n", who);
+	return preamble;
+}
+
+static void on_irc_message(IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
+{
+	std::cout <<  pMsg.msg<< std::endl;
+
+	boost::trim(pMsg.msg);
+
+	std::string from = std::string("irc:") + pMsg.from.substr(1);
+
+	//验证码check
+	if(qqneedvc){
+		std::string vc = boost::trim_copy(pMsg.msg);
+		if(vc[0] == '.' && vc[1]=='v' && vc[2]=='c' && vc[3] == ' ')
+			qqclient.login_withvc(vc.substr(4));
+		qqneedvc = false;
+		return;
+	}
+
+	std::string forwarder = boost::str(boost::format("%s %s") % preamble_formater(pMsg) % pMsg.msg);
+	forwardmessage(from, forwarder);
+
+	boost::function<void(std::string)> msg_sender;
+	messagegroup* groups =  find_group(from);
+
+    if (groups){
+		msg_sender = boost::bind(&messagegroup::broadcast, groups,  _1);
+	}else{
+		msg_sender = boost::bind(&IrcClient::chat, &ircclient, pMsg.from, _1);
+	}
+	sender_flags sender_flag = sender_is_normal;
+
+	// a hack, later should be fixed to fetch channel op list.
+	if (pMsg.whom == "microcai")
+		sender_flag = sender_is_op;
+	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender, &qqclient);
+}
+
+static void om_xmpp_message(xmpp & xmppclient, std::string xmpproom, std::string who, std::string message)
+{
+	std::string from = std::string("xmpp:") + xmpproom;
+	
+	std::string forwarder = boost::str(boost::format("%s %s") % preamble_formater(who, xmpproom) % message);
+	forwardmessage(from,forwarder);
+	
+	boost::function<void(std::string)> msg_sender;
+	messagegroup* groups =  find_group(from);
+
+    if (groups){
+		msg_sender = boost::bind(&messagegroup::broadcast, groups,  _1);
+	}else{
+		msg_sender = boost::bind(&xmpp::send_room_message, &xmppclient, xmpproom, _1);
+	}
+
+	on_bot_command(xmppclient.get_ioservice(), message, from, who, sender_is_normal, msg_sender);
 }
 
 static void on_group_msg(std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient)
