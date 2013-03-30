@@ -301,8 +301,12 @@ static void on_irc_message(IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
 	}else{
 		msg_sender = boost::bind(&IrcClient::chat, &ircclient, pMsg.from, _1);
 	}
+	sender_flags sender_flag = sender_is_normal;
 
-	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_is_normal, msg_sender);
+	// a hack, later should be fixed to fetch channel op list.
+	if (pMsg.whom == "microcai")
+		sender_is_op;
+	on_bot_command(qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender);
 }
 
 static void om_xmpp_message(xmpp & xmppclient, std::string xmpproom, std::string who, std::string message)
