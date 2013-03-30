@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
 
 
 	if (vm.count("daemon")){
-		daemon(0, 1);
+		daemon(0, 0);
 		signal(SIGSEGV, handle_segfault);
 	}
 
