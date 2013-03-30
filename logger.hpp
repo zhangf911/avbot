@@ -1,6 +1,15 @@
 
 #pragma once
+
+#include <iostream>
+#include <fstream>
 #include <string>
+#include <map>
+#include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#include <boost/date_time.hpp>
 
 class qqlog : public boost::noncopyable
 {

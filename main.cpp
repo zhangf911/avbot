@@ -9,7 +9,6 @@
 
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 #include <boost/program_options.hpp>
@@ -42,101 +41,19 @@ namespace po = boost::program_options;
 #include "counter.hpp"
 #include "logger.hpp"
 
-#include "auto_question.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
 #endif
 
-static qqlog logfile;			// 用于记录日志文件.
+qqlog logfile;			// 用于记录日志文件.
+
 static counter cnt;				// 用于统计发言信息.
-static bool resend_img = false;	// 用于标识是否转发图片url.
 static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
-static auto_question question;	// 自动问问题.
 static std::string progname;
 static std::string ircvercodechannel;
 
-class messagegroup;
-static std::vector<messagegroup>	messagegroups;
-
-struct messagegroup {
-	webqq*		qq_;
-	xmpp*		xmpp_;
-	IrcClient*	irc_;
-	// 组号.
-	std::vector<std::string> channels;
-
-	messagegroup(webqq * _qq, xmpp * _xmpp, IrcClient * _irc)
-	:qq_(_qq),xmpp_(_xmpp),irc_(_irc){}
-
-	void add_channel(std::string);
-	void add_channel(std::vector<std::string> groups){
-		//std::copy(channels,groups);
-		channels = groups;
-	}
-
-	bool in_group(std::string ch){
-		return std::find(channels.begin(),channels.end(),ch)!=channels.end();
-	}
-
-	void broadcast(std::string message){
-		forwardmessage("",message);
-	}
-
-	void forwardmessage(std::string from, std::string message){
-		BOOST_FOREACH(std::string chatgroupmember, channels)
-	 	{
-			if (chatgroupmember == from)
-				continue;
-
-			if (chatgroupmember.substr(0,3) == "irc")
-			{
-				irc_->chat(std::string("#") + chatgroupmember.substr(4), message);
-			}
-			else if (chatgroupmember.substr(0,4) == "xmpp")
-			{
-				//XMPP
-				xmpp_->send_room_message(chatgroupmember.substr(5), message);
-			}else if (chatgroupmember.substr(0,2)=="qq" )
-			{
-				
-				std::string qqnum = chatgroupmember.substr(3);
-				logfile.add_log(qqnum, message);
-				if(qq_->get_Group_by_qq(qqnum))
-					qq_->send_group_message(*qq_->get_Group_by_qq(qqnum), message, boost::lambda::constant(0));
-			}
-		}
-	}
-};
-
-
-/*
- * 查找同组的其他聊天室和qq群.
- */
-static messagegroup * find_group(std::string id)
-{
-	BOOST_FOREACH(messagegroup & g ,  messagegroups)
-	{
-		if (g.in_group(id))
-			return &g;
-	}
-	return NULL;
-}
-
-//从命令行或者配置文件读取组信息.
-static void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmppclient, IrcClient &ircclient)
-{
-	std::vector<std::string> gs;
-	boost::split(gs, chanelmapstring, boost::is_any_of(";"));
-	BOOST_FOREACH(std::string  pergroup, gs)
-	{
-		std::vector<std::string> group;
-	 	boost::split(group, pergroup, boost::is_any_of(","));
-		messagegroup g(&qqclient,&xmppclient,&ircclient);
-		g.add_channel(group);
-		messagegroups.push_back(g);
-	}
-}
+#include "messagegroup.hpp"
 
 enum sender_flags{
 	sender_is_op, // 管理员, 群管理员或者频道OP .
@@ -147,122 +64,7 @@ enum sender_flags{
 
 // 命令控制, 所有的协议都能享受的命令控制在这里实现.
 // msg_sender 是一个函数, on_command 用它发送消息.
-static void on_bot_command(boost::asio::io_service& io_service, std::string message, std::string from_channel, std::string sender, sender_flags sender_flag, boost::function<void(std::string)> msg_sender)
-{
-	boost::regex ex;
-	boost::cmatch what;
-
-    messagegroup* chanelgroup = find_group(from_channel);
-	qqGroup* group =  chanelgroup->qq_->get_Group_by_qq(from_channel.substr(3));
-
-	if( message == ".qqbot help")
-	{
-        io_service.post(
-            boost::bind(msg_sender, "可用的命令\n"
-						"\t.qqbot help\n"
-						"\t.qqbot version\n"
-						"\t.qqbot ping\n"
-						"\t.qqbot mailto [emailaddress]\n"
-						"\t 将命令中间的聊天内容发送到邮件 emailaddress\n"
-						"\t.qqbot mailend\n"
-						"== 以下命令需要管理员才能使用==\n"
-						"\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
-                        "\t.qqbot start image \t.qqbot stop image 开启关闭群图片的URL转发\n"
-                        "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
-                        "\t.qqbot newbee SB\n"
-                        "以上! (别吐嘈, 我是武藏舰长)")
-        );
-	}
-
-	if( message == ".qqbot ping")
-	{
-		io_service.post(boost::bind(msg_sender,"我还活着"));
-	}
-	
-	if( message == ".qqbot version")
-	{
-		io_service.post(boost::bind(msg_sender,boost::str(boost::format("我的版本是 %s (%s %s)") % QQBOT_VERSION %__DATE__% __TIME__)));
-	}
-
-	if ( message == ".qqbot mailend")
-	{
-		// 开始发送 !
-	}
-	ex.set_expression(".qqbot mailto ?\"(.*)?\"");
-
-	if(boost::regex_match(message.c_str(), what, ex))
-	{
-		// 进入邮件记录模式.
-	}
-
-	if ( sender_flag == sender_is_op )
-	{
-		if (message == ".qqbot relogin")
-		{
-			io_service.post(
-				boost::bind(&webqq::login,chanelgroup->qq_)
-			);
-		}
-
-		if ( message == ".qqbot exit")
-		{
-			exit(0);
-		}
-		// 转发图片处理.
-		if (message == ".qqbot start image")
-		{
-			resend_img = true;
-		}
-
-		if (message == ".qqbot stop image")
-		{
-			resend_img = false;
-		}
-
-		// 重新加载群成员列表.
-		if (message == ".qqbot reload")
-		{
-
-			io_service.post(boost::bind(&webqq::update_group_member, chanelgroup->qq_ , boost::ref(*group)));
-			msg_sender("群成员列表重加载");
-		}
-
-		// 开始讲座记录.	
-		ex.set_expression(".qqbot begin class ?\"(.*)?\"");
-		
-		if(boost::regex_match(message.c_str(), what, ex))
-		{
-			std::string title = what[1];
-			if (title.empty()) return ;
-			if (!logfile.begin_lecture(group->qqnum, title))
-			{
-				printf("lecture failed!\n");
-			}
-		}
-
-		// 停止讲座记录.
-		if (message == ".qqbot end class")
-		{
-			logfile.end_lecture();
-		}
-		
-		// 向新人问候.
-		ex.set_expression(".qqbot newbee ?(.*)?");
-		if(boost::regex_match(message.c_str(), what, ex))
-		{
-			std::string nick = what[1];
-			
-			if (nick.empty())
-				return;
-				
-			auto_question::value_qq_list list;			
-			list.push_back(nick);
-			
-			question.add_to_list(list);
-			question.on_handle_message( msg_sender );
-		}
-	}	
-}
+void on_bot_command(boost::asio::io_service& io_service, std::string message, std::string from_channel, std::string sender, sender_flags sender_flag, boost::function<void(std::string)> msg_sender);
 
 // 简单的消息命令控制.
 static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd)
@@ -403,10 +205,6 @@ static void on_group_msg(std::string group_code, std::string who, const std::vec
 					boost::format(" http://w.qq.com/cgi-bin/get_group_pic?pic=%s ")
 						% url_encode(qqmsg.cface)
 				);
-				if (resend_img){
-					//TODO send it
-					qqclient.send_group_message(group_code, imgurl, boost::lambda::constant(0) == 0);
-				}
 				ircmsg += imgurl;
 			}break;
 			case qqMsg::LWQQ_MSG_FACE:
