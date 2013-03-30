@@ -1,3 +1,6 @@
+3.5
+	* fix VC2010 compilation, VC sucks, does it?
+
 3.4
 	* Internet Mail Format parser re-write.
 	* delete mail only if successfully sended to the channel.

@@ -61,7 +61,7 @@ add_subdirectory(libirc)
 add_subdirectory(libxmpp)
 add_subdirectory(libmailexchange)
 
-add_definitions(-DQQBOT_VERSION=\"3.4\")
+add_definitions(-DQQBOT_VERSION=\"3.5\")
 add_executable(avbot main.cpp)
 
 target_link_libraries(avbot webqq irc xmpp mailexchange)
