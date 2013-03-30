@@ -272,9 +272,11 @@ static void qqbot_control(webqq & qqclient, qqGroup & group, qqBuddy &who, std::
 	on_bot_command(qqclient.get_ioservice(), cmd, std::string("qq:") + group.qqnum, who.nick, sender_flag, msg_sender);
 }
 
-static void on_irc_message(const IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
+static void on_irc_message(IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient)
 {
 	std::cout <<  pMsg.msg<< std::endl;
+
+	boost::trim(pMsg.msg);
 
 	std::string from = std::string("irc:") + pMsg.from.substr(1);
 

@@ -43,7 +43,7 @@ struct IrcMsg
     std::string msg;
 };
 
-typedef boost::function<void(const IrcMsg& msg)> privmsg_cb;
+typedef boost::function<void(IrcMsg msg)> privmsg_cb;
 
 class IrcClient
 {
