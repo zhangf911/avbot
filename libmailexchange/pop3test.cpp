@@ -8,26 +8,7 @@ namespace po = boost::program_options;
 #include "pop3.hpp"
 #include "boost/base64.hpp"
 
-static fs::path configfilepath()
-{
-	if ( getenv ( "USERPROFILE" ) ) {
-		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc" ) )
-			return fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc";
-	}
-
-	if ( getenv ( "HOME" ) ) {
-		if ( fs::exists ( fs::path ( getenv ( "HOME" ) ) / ".qqbotrc" ) )
-			return fs::path ( getenv ( "HOME" ) ) / ".qqbotrc";
-	}
-
-	if ( fs::exists ( "./qqbotrc/.qqbotrc" ) )
-		return fs::path ( "./qqbotrc/.qqbotrc" );
-
-	if ( fs::exists ( "/etc/qqbotrc" ) )
-		return fs::path ( "/etc/qqbotrc" );
-
-	throw "not configfileexit";
-}
+#include "fsconfig.ipp"
 
 static void on_mail(mailcontent mail, pop3::call_to_continue_function call_to_contiune)
 {

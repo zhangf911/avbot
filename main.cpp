@@ -48,8 +48,6 @@ namespace po = boost::program_options;
 #define QQBOT_VERSION "unknow"
 #endif
 
-static fs::path configfilepath();
-
 static qqlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.
 static bool resend_img = false;	// 用于标识是否转发图片url.
@@ -418,6 +416,7 @@ int daemon(int nochdir, int noclose)
 #endif // WIN32
 
 #include "input.ipp"
+#include "fsconfig.ipp"
 
 int main(int argc, char *argv[])
 {
@@ -566,28 +565,3 @@ int main(int argc, char *argv[])
     asio.run();
     return 0;
 }
-
-static fs::path configfilepath()
-{
-	if ( fs::exists ( fs::path ( progname ) / "qqbotrc" ) )
-		return fs::path ( progname ) / "qqbotrc";
-
-	if ( getenv ( "USERPROFILE" ) ) {
-		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc" ) )
-			return fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc";
-	}
-
-	if ( getenv ( "HOME" ) ) {
-		if ( fs::exists ( fs::path ( getenv ( "HOME" ) ) / ".qqbotrc" ) )
-			return fs::path ( getenv ( "HOME" ) ) / ".qqbotrc";
-	}
-
-	if ( fs::exists ( "./qqbotrc/.qqbotrc" ) )
-		return fs::path ( "./qqbotrc/.qqbotrc" );
-
-	if ( fs::exists ( "/etc/qqbotrc" ) )
-		return fs::path ( "/etc/qqbotrc" );
-
-	throw "not configfileexit";
-}
-
