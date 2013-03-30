@@ -357,8 +357,8 @@ int main(int argc, char *argv[])
 		( "preamblexmpp",	po::value<std::string>(&preamble_xmpp_fmt),
 				"为XMPP设置的发言前缀, 默认是 (%a)说: \n\n"
 				"前缀里的含义\n"
-				"\t%a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片\n"
-				"\t%r为房间好(群号, XMPP房名, IRC频道名)\n"
+				"\t %a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片\n"
+				"\t %r为房间名(群号, XMPP房名, IRC频道名)\n"
 				"可以包含多个, 例如想记录QQ号码的可以使用 qq(%a, %q)说:\n"
 				"注意在shell下可能需要使用\\(来转义(\n配置文件无此问题\n\n"	)
 		;
