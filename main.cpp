@@ -50,7 +50,7 @@ namespace po = boost::program_options;
 #define QQBOT_VERSION "unknow"
 #endif
 
-std::string execpath;
+char * execpath;
 qqlog logfile;			// 用于记录日志文件.
 
 static counter cnt;				// 用于统计发言信息.

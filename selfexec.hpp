@@ -1,6 +1,6 @@
 
 #include "boost/process.hpp"
-extern std::string execpath;
+extern char* execpath;
 
 inline void re_exec_self()
 {
@@ -11,6 +11,6 @@ inline void re_exec_self()
 	args.push_back("avbot");
 	args.push_back("-d");
 	std::cout <<  "segfault ,  reexecing " <<  execpath <<  std::endl;
-	boost::process::launch(execpath, args, ctx);
+	boost::process::launch(std::string(execpath), args, ctx);
 	exit(0);
 }
