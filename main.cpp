@@ -385,10 +385,13 @@ static void on_mail(mailcontent mail, mx::pop3::call_to_continue_function call_t
 	if (qqclient.is_online()){
 		BOOST_FOREACH(messagegroup & g ,  messagegroups)
 		{
-			g.broadcast(boost::str(
-				boost::format("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s")
-				% mail.from % mail.to % mail.subject % mail.content
-			));
+			if (g.in_group("mail"))
+			{
+				g.broadcast(boost::str(
+					boost::format("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s")
+					% mail.from % mail.to % mail.subject % mail.content
+				));
+			}
 		}
 	}
 	qqclient.get_ioservice().post(boost::bind(call_to_contiune, qqclient.is_online()));
