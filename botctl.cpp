@@ -42,7 +42,7 @@ namespace fs = boost::filesystem;
 #include "auto_question.hpp"
 #include "messagegroup.hpp"
 #include "botctl.hpp"
-
+#include "selfexec.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -120,6 +120,10 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 		if ( message == ".qqbot exit")
 		{
 			exit(0);
+		}
+
+		if (message == ".qqbot reexec"){
+			re_exec_self();
 		}
 
 		// 重新加载群成员列表.

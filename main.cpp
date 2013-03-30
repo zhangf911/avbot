@@ -6,7 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <vector>
-
+#include <sys/signal.h>
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
@@ -32,6 +32,8 @@ namespace po = boost::program_options;
 #if defined(_MSC_VER)
 #include <direct.h>
 #endif
+
+#include "selfexec.hpp"
 #include "libirc/irc.h"
 #include "libwebqq/webqq.h"
 #include "libwebqq/url.hpp"
@@ -48,6 +50,7 @@ namespace po = boost::program_options;
 #define QQBOT_VERSION "unknow"
 #endif
 
+std::string execpath;
 qqlog logfile;			// 用于记录日志文件.
 
 static counter cnt;				// 用于统计发言信息.
@@ -318,6 +321,13 @@ int daemon(int nochdir, int noclose)
 #include "input.ipp"
 #include "fsconfig.ipp"
 
+
+// 断错误后重启自己.
+static void handle_segfault(int signal_number)
+{
+	re_exec_self();
+}
+
 int main(int argc, char *argv[])
 {
     std::string qqnumber, qqpwd;
@@ -329,6 +339,7 @@ int main(int argc, char *argv[])
 	std::string mailaddr,mailpasswd,pop3server, smtpserver;
 
     progname = fs::basename(argv[0]);
+	execpath = strdup(fs::absolute(fs::path(argv[0])).normalize().c_str());
 
     setlocale(LC_ALL, "");
 	po::variables_map vm;
@@ -385,16 +396,19 @@ int main(int argc, char *argv[])
 			po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
 			po::notify(vm);
 		}
-		catch(char* e)
+		catch(char const* e)
 		{
 			std::cout <<  "no command line arg and config file not found neither." <<  std::endl;
 			std::cout <<  "try to add command line arg or put config file in /etc/qqbotrc or ~/.qqbotrc" <<  std::endl;
 		}
 	}
 
-	if (vm.count("daemon"))
+
+	if (vm.count("daemon")){
 		daemon(0, 1);
-		
+		signal(SIGSEGV, handle_segfault);
+	}
+
 	if (vm.count("version"))
 	{
 		printf("qqbot version %s (%s %s) \n", QQBOT_VERSION, __DATE__, __TIME__);
@@ -466,7 +480,7 @@ int main(int argc, char *argv[])
 		xmppclient.join(room);
 	}
 
-    boost::asio::io_service::work work(asio);
+	boost::asio::io_service::work work(asio);
 	if (!vm.count("daemon")){
 #ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
 		boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin(new boost::asio::posix::stream_descriptor(asio, 0));
