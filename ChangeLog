@@ -1,6 +1,7 @@
 3.5
 	* fix VC2010 compilation, VC sucks, does it?
 	* allow IRC/XMPP to use .qqbot command. that's a long lacking feature
+	* allow customize the message preamble
 
 3.4
 	* Internet Mail Format parser re-write.
