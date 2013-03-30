@@ -282,6 +282,8 @@ int daemon(int nochdir, int noclose)
 #include "input.ipp"
 #include "fsconfig.ipp"
 
+po::variables_map avbot_settings;
+
 int main(int argc, char *argv[])
 {
     std::string qqnumber, qqpwd;
@@ -320,22 +322,22 @@ int main(int argc, char *argv[])
 		( "smtpserver",	po::value<std::string>(&smtpserver),"smtp server of mail,  default to smtp.[domain]")
 		;
 
-	po::variables_map vm;
-	po::store(po::parse_command_line(argc, argv, desc), vm);
-	po::notify(vm);
+	po::store(po::parse_command_line(argc, argv, desc), avbot_settings);
+	po::notify(avbot_settings);
 
-	if (vm.count("help"))
+	if (avbot_settings.count("help"))
 	{
 		std::cerr <<  desc <<  std::endl;
 		return 1;
 	}
-	if (vm.size() ==0 || (vm.size() ==1 && vm.count("daemon")))
+
+	if (avbot_settings.size() ==0 || (avbot_settings.size() ==1 && avbot_settings.count("daemon")))
 	{
 		try
 		{
 			fs::path p = configfilepath();
-			po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
-			po::notify(vm);
+			po::store(po::parse_config_file<char>(p.string().c_str(), desc), avbot_settings);
+			po::notify(avbot_settings);
 		}
 		catch(char* e)
 		{
@@ -344,10 +346,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (vm.count("daemon"))
+	if (avbot_settings.count("daemon"))
 		daemon(0, 1);
 		
-	if (vm.count("version"))
+	if (avbot_settings.count("version"))
 	{
 		printf("qqbot version %s (%s %s) \n", QQBOT_VERSION, __DATE__, __TIME__);
 		exit(EXIT_SUCCESS);
@@ -419,7 +421,7 @@ int main(int argc, char *argv[])
 	}
 
     boost::asio::io_service::work work(asio);
-	if (!vm.count("daemon")){
+	if (!avbot_settings.count("daemon")){
 #ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
 		boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin(new boost::asio::posix::stream_descriptor(asio, 0));
 		boost::shared_ptr<boost::asio::streambuf> inputbuffer(new boost::asio::streambuf);
