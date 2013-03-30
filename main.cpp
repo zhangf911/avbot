@@ -495,7 +495,7 @@ int main(int argc, char *argv[])
 			fs::create_directory(logdir);
 	}
 	// 设置到中国的时区，否则 qq 消息时间不对啊.
-	putenv("TZ=Asia/Shanghai");
+	putenv((char*)"TZ=Asia/Shanghai");
 
 	// 设置日志自动记录目录.
 	if (! logdir.empty()){
