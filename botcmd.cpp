@@ -48,7 +48,6 @@ namespace fs = boost::filesystem;
 #endif
 
 static auto_question question;	// 自动问问题.
-static bool resend_img = false;	// 用于标识是否转发图片url.
 
 extern qqlog logfile;			// 用于记录日志文件.
 
@@ -81,7 +80,6 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 						"\t.qqbot mailend\n"
 						"== 以下命令需要管理员才能使用==\n"
 						"\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
-                        "\t.qqbot start image \t.qqbot stop image 开启关闭群图片的URL转发\n"
                         "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
                         "\t.qqbot newbee SB\n"
                         "以上! (别吐嘈, 我是武藏舰长)")
@@ -121,16 +119,6 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 		if ( message == ".qqbot exit")
 		{
 			exit(0);
-		}
-		// 转发图片处理.
-		if (message == ".qqbot start image")
-		{
-			resend_img = true;
-		}
-
-		if (message == ".qqbot stop image")
-		{
-			resend_img = false;
 		}
 
 		// 重新加载群成员列表.
