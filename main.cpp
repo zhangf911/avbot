@@ -322,9 +322,19 @@ int daemon(int nochdir, int noclose)
 #include "fsconfig.ipp"
 
 
+int av_sigmask(int how,int signal_number)
+{
+	sigset_t sigset={0};
+	sigaddset(&sigset,signal_number);
+	return sigprocmask(how,&sigset,NULL);
+}
+
+
 // 断错误后重启自己.
 static void handle_segfault(int signal_number)
 {
+	av_sigmask(SIG_UNBLOCK,SIGINT);
+
 	re_exec_self();
 }
 
