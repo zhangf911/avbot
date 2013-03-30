@@ -163,7 +163,7 @@ static void on_bot_command(boost::asio::io_service& io_service, std::string mess
 						"\t.qqbot version\n"
 						"\t.qqbot ping\n"
 						"\t.qqbot relogin\n\t.qqbot reload\n"
-                        "\t.qqbot start image\t\n.qqbot stop image\n"
+                        "\t.qqbot start image\t\n\t.qqbot stop image\n"
                         "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
                         "\t.qqbot newbee SB")
         );
