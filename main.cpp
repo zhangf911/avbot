@@ -537,8 +537,7 @@ int main(int argc, char *argv[])
 	qqclient.login();
 	qqclient.on_group_msg(boost::bind(on_group_msg, _1, _2, _3, boost::ref(qqclient)));
 
-	if(!mailaddr.empty())
-	{mx::pop3(asio, mailaddr, mailpasswd, pop3server).async_fetch_mail(boost::bind(on_mail,_1, _2, boost::ref(qqclient)));}
+	mx.async_fetch_mail(boost::bind(on_mail,_1, _2, boost::ref(qqclient)));
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
