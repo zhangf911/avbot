@@ -4,7 +4,8 @@
 #include <boost/base64.hpp>
 
 #include "smtp.hpp"
-
+namespace mx{
+namespace detail{
 smtp::smtp(boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver)
 	:io_service(_io_service),
 	m_mailaddr(user), m_passwd(passwd),
@@ -25,4 +26,13 @@ smtp::smtp(boost::asio::io_service& _io_service, std::string user, std::string p
         else
             m_mailserver =  std::string("smtp.") + m_mailaddr.substr(m_mailaddr.find_last_of("@")+1);
     }	
+}
+
+}
+
+smtp::smtp(boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver)
+  : impl_smtp(_io_service, user, passwd, _mailserver)
+{
+}
+
 }

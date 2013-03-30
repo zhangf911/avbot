@@ -93,7 +93,7 @@ int main(int argc, char * argv[])
 	}
 
 	boost::asio::io_service io;
-	smtp _smtp(io, mailaddr, mailpasswd);
+	mx::smtp smtp(io, mailaddr, mailpasswd);
 	InternetMailFormat imf;
 
 	imf.header["from"] = mailaddr;
@@ -109,6 +109,6 @@ int main(int argc, char * argv[])
 	
 	std::string _mdata = boost::asio::buffer_cast<const char*>(buf.data());
 
-	_smtp.async_sendmail(imf, sended);
+	smtp.async_sendmail(imf, sended);
 	io.run();
 }

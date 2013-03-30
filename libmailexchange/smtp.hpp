@@ -12,6 +12,9 @@
 
 #include "internet_mail_format.hpp"
 
+namespace mx{
+namespace detail{
+
 class check_smtp_response{
 public:
 	template<class streambuf>
@@ -131,12 +134,6 @@ class smtp {
 public:
 	smtp(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver="");
 
-	// ---------------------------------------------
-
-	// 使用 async_sendmail 异步发送一份邮件.邮件的内容由 InternetMailFormat 指定.
-	// 请不要对 InternetMailFormat 执行 base64 编码, async_sendmail 发现里面包含了
-	// 非ASCII编码的时候, 就会对内容执行base64编码.
-	// 所以也请不要自行设置 content-transfer-encoding
 	template<class Handler>
 	void async_sendmail(const InternetMailFormat &imf, Handler handler)
 	{
@@ -144,7 +141,7 @@ public:
 		// 依据 imf.header["to"] 拆分
 		std::vector<std::string>	mails;
 
-		detail::mail_address_split(mails, imf.header.at(std::string("to")));
+		::detail::mail_address_split(mails, imf.header.at(std::string("to")));
 
 		BOOST_FOREACH(std::string rcpt, mails)
 		{
@@ -257,7 +254,7 @@ private:
 
 	void  check_smtp_response(boost::system::error_code & ec, unsigned  response_code, boost::function<void (std::string)> callback = boost::function<void (std::string)>())
 	{
-		::check_smtp_response(m_readbuf.get(), ec, response_code, callback);
+		detail::check_smtp_response(m_readbuf.get(), ec, response_code, callback);
 	}
 	// ---------------------
 	
@@ -316,4 +313,24 @@ private:
 		boost::asio::async_write(*m_socket, data.data(), handler);
 	}
 };
+
+}
+
+class smtp{
+	detail::smtp	impl_smtp;
+public:
+	smtp(::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver="");
+	// ---------------------------------------------
+
+	// 使用 async_sendmail 异步发送一份邮件.邮件的内容由 InternetMailFormat 指定.
+	// 请不要对 InternetMailFormat 执行 base64 编码, async_sendmail 发现里面包含了
+	// 非ASCII编码的时候, 就会对内容执行base64编码.
+	// 所以也请不要自行设置 content-transfer-encoding
+	template<class Handler>
+	void async_sendmail(const InternetMailFormat &imf, Handler handler){
+		impl_smtp.async_sendmail(imf, handler);
+	}
+};
+
+}
 
