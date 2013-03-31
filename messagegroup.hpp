@@ -47,3 +47,4 @@ messagegroup * find_group(std::string id);
 void build_group(std::string chanelmapstring, webqq & qqclient, xmpp& xmppclient, IrcClient &ircclient, mx::mx&);
 
 void forwardmessage(std::string from, std::string message);
+void broadcastmessage(std::string message);

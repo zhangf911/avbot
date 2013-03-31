@@ -27,7 +27,7 @@ static void input_got_one_line(std::string line_input, webqq & qqclient)
 		qqneedvc = false;
 		return;
 	}else{
-		forwardmessage("",
+		broadcastmessage(
 			boost::str(
 				boost::format("来自 avbot 命令行的消息: %s") % line_input
 			)
