@@ -28,6 +28,21 @@ smtp::smtp(boost::asio::io_service& _io_service, std::string user, std::string p
     }	
 }
 
+void smtp::server_cap_handler(std::string cap)
+{
+    boost::cmatch what;
+    // 如果有 STARTTLS ,  就执行 STARTTLS 开启 TLS 加密
+    if (cap == "STARTTLS")
+    {
+        using namespace boost::asio::ssl;
+        using namespace boost::asio::ip;
+        m_sslctx.reset(new context(context::tlsv1_client));
+        m_sslsocket.reset(
+            new stream<tcp::socket&>(*m_socket, *m_sslctx)
+        );
+    }
+}
+
 }
 
 smtp::smtp(boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver)

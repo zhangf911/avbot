@@ -216,12 +216,12 @@ public:
 			_yield read_smtp_response_lines(*m_socket, boost::bind(*this, _1, _2, handler, coro));
 
 			// 读取 250 响应.
-			_yield check_server_cap(boost::bind(*this, _1, 0, handler, coro));
+			check_server_cap();
 
 			// 如果有 STARTTLS 支持, 就开启 TLS
 			if (m_sslsocket){
 	   			// 发送 STARTTLS
-				_yield boost::asio::async_write(*m_socket, buffer(std::string("STARTTLS")), boost::bind(*this, _1, _2, handler, coro));
+				_yield boost::asio::async_write(*m_socket, buffer(std::string("STARTTLS\r\n")), boost::bind(*this, _1, _2, handler, coro));
  				_yield read_smtp_response_lines(*m_socket, boost::bind(*this, _1, _2, handler, coro));
 				// 220 2.0.0 SMTP server ready
  				_yield check_status_for<220>(boost::bind(*this, _1, 0, handler, coro));
@@ -285,7 +285,7 @@ private:
 			boost::asio::async_write(*m_socket, buffers, handler);
 		}
 	}
-	
+
 	// ----------------------
 
 	// 读取 SMTP 应答. 以 数字[空格]消息 
@@ -341,28 +341,14 @@ private:
 	}
 
 	// ---------------------------------
-	void server_cap_handler(std::string cap)
-	{
-		boost::cmatch what;
-		// 如果有 STARTTLS ,  就执行 STARTTLS 开启 TLS 加密
-		if (boost::regex_search(cap.c_str(), what, boost::regex("250[- ]*STARTTLS")))
-		{
-			using namespace boost::asio::ssl;
-			using namespace boost::asio::ip;
-			m_sslctx.reset(new context(context::tlsv1_client));
- 			m_sslsocket.reset(
- 				new stream<tcp::socket&>(*m_socket, *m_sslctx)
-			);
-		}
-	}
+	void server_cap_handler(std::string cap);
+
 	// 检查服务器的能力!
 	// 以 250 起始终.
-	template<class Handler>
-	void check_server_cap(Handler handler)
+	void check_server_cap()
 	{
  		boost::system::error_code ec;
 		check_smtp_response(ec, 250, boost::bind(&smtp::server_cap_handler, this, _1));
-		io_service.post(boost::asio::detail::bind_handler(handler, ec));
 	}
 
 	template<class Handler>
