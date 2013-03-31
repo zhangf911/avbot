@@ -58,12 +58,12 @@ public:
 // ----------------
 
 // 发送 rcpt to 命令, 返回发送成功的个数. 如果没有一个成功, 返回错误.
-template<class socket_type>
+template<class AsioStream>
 class send_rcpt_tos_op : boost::coro::coroutine {
 public:
 
 	template<class Handler>
-	send_rcpt_tos_op(socket_type & socket, boost::shared_ptr<boost::asio::streambuf> _readbuf, 
+	send_rcpt_tos_op(AsioStream & socket, boost::shared_ptr<boost::asio::streambuf> _readbuf, 
 	const std::vector<std::string> & _rcpts, 
 	Handler handler)
 	  : m_socket(socket), m_readbuf(_readbuf), m_rcpts(_rcpts), m_handler(handler)
@@ -110,7 +110,7 @@ private:
 
 private:
 	boost::function<void (const boost::system::error_code & ec, std::size_t count) >	m_handler;
-	socket_type& m_socket;
+	AsioStream& m_socket;
 	boost::shared_ptr<boost::asio::streambuf> m_readbuf;
 	std::vector<std::string> m_rcpts;
 	int i;
@@ -135,7 +135,8 @@ class smtp {
 	// 必须是可拷贝的，所以只能用共享指针.
 	boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket;
 	boost::shared_ptr<boost::asio::streambuf> m_readbuf;
-	boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > m_sslsocket;
+	boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&> > m_sslsocket;
+	boost::shared_ptr<boost::asio::ssl::context> m_sslctx;
 
 	std::vector<std::string> rcpts;// 接收的人
 
@@ -206,19 +207,30 @@ public:
 			m_readbuf.reset(new boost::asio::streambuf);
 
 			// 读取欢迎信息. 以 220 XXX 终止.如果多行, 最后一个是 带空格的, 前面的都不带. 故而使用 "[0-9]*? .*?\n" 正则表达式
-			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
+			_yield read_smtp_response_lines(*m_socket, boost::bind(*this, _1, _2, handler, coro));
 			// discard 220 message
 			_yield check_wellcome_msg(boost::bind(*this, _1, 0, handler, coro));
 
 			// 发送 EHLO 执行登录.
 			_yield m_socket->async_write_some( buffer( std::string ( "EHLO " ) + m_mailserver  + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
-			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
+			_yield read_smtp_response_lines(*m_socket, boost::bind(*this, _1, _2, handler, coro));
 
 			// 读取 250 响应.
 			_yield check_server_cap(boost::bind(*this, _1, 0, handler, coro));
 
+			// 如果有 STARTTLS 支持, 就开启 TLS
+			if (m_sslsocket){
+	   			// 发送 STARTTLS
+				_yield boost::asio::async_write(*m_socket, buffer(std::string("STARTTLS")), boost::bind(*this, _1, _2, handler, coro));
+ 				_yield read_smtp_response_lines(*m_socket, boost::bind(*this, _1, _2, handler, coro));
+				// 220 2.0.0 SMTP server ready
+ 				_yield check_status_for<220>(boost::bind(*this, _1, 0, handler, coro));
+
+ 				// SSL handshake
+ 				_yield m_sslsocket->async_handshake(ssl::stream_base::client, boost::bind(*this, _1, 0, handler, coro));
+			}
 			// 发送 AUTH PLAIN XXX 登录认证.
-			_yield m_socket->async_write_some( buffer( std::string ( "AUTH PLAIN " ) + m_AUTH  + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
+			_yield async_write( buffer( std::string ( "AUTH PLAIN " ) + m_AUTH  + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
 			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
 
 			// 读取 235 响应.
@@ -226,19 +238,30 @@ public:
 
 			// 进入邮件发送过程.
 			// 发送 mail from <>
-			_yield m_socket->async_write_some( buffer( std::string ( "MAIL FROM " ) + m_mailaddr + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
+			_yield async_write( buffer( std::string ( "MAIL FROM " ) + m_mailaddr + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
+
 			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
+
 			// 检查 OK 返回值
 			_yield check_status_for_ok(boost::bind(*this, _1, 0, handler, coro));
 
-			// 发送 rcpt to <>
-			_yield send_rcpt_tos(*m_socket, m_readbuf, rcpts, boost::bind(*this, _1, _2, handler, coro));
+			// 发送 rcpt to XXX
+			if (m_sslsocket){
+				_yield send_rcpt_tos(*m_sslsocket, m_readbuf, rcpts, boost::bind(*this, _1, _2, handler, coro));
+			}else{
+				_yield send_rcpt_tos(*m_socket, m_readbuf, rcpts, boost::bind(*this, _1, _2, handler, coro));
+			}
 
 			// 发送 DATA
-			_yield m_socket->async_write_some(buffer(std::string("DATA\r\n")), boost::bind(*this, _1, _2, handler, coro) );
+			if (m_sslsocket){
+				_yield m_sslsocket->async_write_some(buffer(std::string("DATA\r\n")), boost::bind(*this, _1, _2, handler, coro) );
+			}else{
+				_yield m_socket->async_write_some(buffer(std::string("DATA\r\n")), boost::bind(*this, _1, _2, handler, coro) );
+			}
+
 			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
 			// 检查 OK 返回值
-			_yield check_status_for(354, boost::bind(*this, _1, 0, handler, coro));
+			_yield check_status_for<354>(boost::bind(*this, _1, 0, handler, coro));
 			
 			// 发送 IMF 格式化后的数据.
 			_yield send_mail_data(boost::bind(*this, _1, _2, handler, coro));
@@ -247,11 +270,32 @@ public:
 			// 检查 OK 返回值
 			_yield check_status_for_ok(boost::bind(*this, _1, 0, handler, coro));
 			// 执行一起正常的回调.
-			io_service.post<>(boost::asio::detail::bind_handler(handler, ec));
+			io_service.post(boost::asio::detail::bind_handler(handler, ec));
 		}
 	}
 	typedef void result_type;
 private:
+
+	template <typename ConstBufferSequence,typename WriteHandler>
+	void async_write(const ConstBufferSequence& buffers, BOOST_ASIO_MOVE_ARG(WriteHandler) handler)
+	{
+		if(m_sslsocket){
+			boost::asio::async_write(*m_sslsocket, buffers, handler);
+		}else{
+			boost::asio::async_write(*m_socket, buffers, handler);
+		}
+	}
+	
+	// ----------------------
+
+	// 读取 SMTP 应答. 以 数字[空格]消息 
+	// 为终止条件
+ 	template<class ReadHandler, class AsyncReadStream>
+ 	void read_smtp_response_lines(AsyncReadStream& socket, ReadHandler handler)
+ 	{
+ 		boost::asio::async_read_until(socket, *m_readbuf, boost::regex("[0-9]*? .*?\n"), handler);
+ 	}
+
 	// ----------------------
 
 	// 读取 SMTP 应答. 以 数字[空格]消息 
@@ -259,7 +303,11 @@ private:
 	template<class Handler>
 	void read_smtp_response_lines(Handler handler)
 	{
-		boost::asio::async_read_until(*m_socket, *m_readbuf, boost::regex("[0-9]*? .*?\n"), handler);
+		if (m_sslsocket){
+			read_smtp_response_lines(*m_sslsocket, handler);
+		}else{
+			read_smtp_response_lines(*m_socket, handler);
+		}
 	}
 
 	void  check_smtp_response(boost::system::error_code & ec, unsigned  response_code, boost::function<void (std::string)> callback = boost::function<void (std::string)>())
@@ -272,12 +320,12 @@ private:
 	template<class Handler>
 	void check_status_for_ok(Handler handler)
 	{
-		check_status_for(250, handler);
+		check_status_for<250>(handler);
 	}
 
 	// 要保证服务器发回的是 status_code, ok
-	template<class Handler>
-	void check_status_for(unsigned status_code, Handler handler)
+	template<unsigned status_code, class Handler>
+	void check_status_for(Handler handler)
 	{
 		boost::system::error_code ec;
 		check_smtp_response(ec, status_code);
@@ -293,14 +341,27 @@ private:
 	}
 
 	// ---------------------------------
-	
+	void server_cap_handler(std::string cap)
+	{
+		boost::cmatch what;
+		// 如果有 STARTTLS ,  就执行 STARTTLS 开启 TLS 加密
+		if (boost::regex_search(cap.c_str(), what, boost::regex("250[- ]*STARTTLS")))
+		{
+			using namespace boost::asio::ssl;
+			using namespace boost::asio::ip;
+			m_sslctx.reset(new context(context::tlsv1_client));
+ 			m_sslsocket.reset(
+ 				new stream<tcp::socket&>(*m_socket, *m_sslctx)
+			);
+		}
+	}
 	// 检查服务器的能力!
 	// 以 250 起始终.
 	template<class Handler>
 	void check_server_cap(Handler handler)
 	{
  		boost::system::error_code ec;
-		check_smtp_response(ec, 250);
+		check_smtp_response(ec, 250, boost::bind(&smtp::server_cap_handler, this, _1));
 		io_service.post(boost::asio::detail::bind_handler(handler, ec));
 	}
 
@@ -320,7 +381,10 @@ private:
  		boost::system::error_code ec;
 		imf_write_stream(m_imf, os);
 		os <<  "\r\n.\r\n";
-		boost::asio::async_write(*m_socket, data.data(), handler);
+		if (m_sslsocket)
+			boost::asio::async_write(*m_sslsocket, data.data(), handler);
+		else
+			boost::asio::async_write(*m_socket, data.data(), handler);
 	}
 };
 
