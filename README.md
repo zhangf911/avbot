@@ -48,6 +48,8 @@ gloox 已经通过 bundle 的形式包含了，不需要外部依赖了。
 
 # 使用
 
+配置文件请参考 [qqbotrc.example](https://github.com/avplayer/avbot/blob/master/qqbotrc.example)
+
 读取配置文件 /etc/qqbotrc
 
 配置文件的选项就是去掉 -- 的命令行选项。比如命令行接受 --qqnum 
