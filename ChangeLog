@@ -3,6 +3,7 @@
 	* allow IRC/XMPP to use .qqbot command. that's a long lacking feature
 	* allow customize the message preamble
 	* allow sending email via ".qqbot mail to  XXX" command
+	* SMTP supports STARTSTL, make it more secure
 
 3.4
 	* Internet Mail Format parser re-write.
