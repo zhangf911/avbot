@@ -135,6 +135,7 @@ class smtp {
 	// 必须是可拷贝的，所以只能用共享指针.
 	boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket;
 	boost::shared_ptr<boost::asio::streambuf> m_readbuf;
+	boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > m_sslsocket;
 
 	std::vector<std::string> rcpts;// 接收的人
 
