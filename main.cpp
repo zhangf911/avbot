@@ -93,9 +93,7 @@ static std::string	preamble_formater(qqBuddy *buddy, std::string falbacknick, qq
 	// 获取格式化描述字符串
 	std::string preamblefmt = preamble_qq_fmt;
 	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动
-	// 默认为 qq(%a) 说:
-	if (preamblefmt.empty())
-		 preamblefmt = "qq(%a)：";
+
 	preamble = preamblefmt;
 	std::string autonick = "";
 	if (!buddy){
@@ -129,8 +127,7 @@ static std::string	preamble_formater(IrcMsg pmsg)
 	// 格式化神器, 哦耶.
 	// 获取格式化描述字符串
 	std::string preamble = preamble_irc_fmt;
-	if (preamble.empty())
-		preamble = "%a 说: ";
+
 	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间
 	// 默认为 qq(%a) 说:
 	boost::replace_all(preamble, "%a", pmsg.whom);
@@ -145,9 +142,6 @@ static std::string	preamble_formater(std::string who, std::string room)
 	// 获取格式化描述字符串
 	std::string preamble = preamble_xmpp_fmt;
 	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间
-	// 默认为 qq(%a) 说:
-	if (preamble.empty())
-		preamble = "(%a )：";
 
 	boost::replace_all(preamble, "%a", who);
 	boost::replace_all(preamble, "%r", room);
@@ -375,11 +369,11 @@ int main(int argc, char *argv[])
 		( "pop3server",	po::value<std::string>(&pop3server),"pop server of mail,  default to pop.[domain]")
 		( "smtpserver",	po::value<std::string>(&smtpserver),"smtp server of mail,  default to smtp.[domain]")
 
-		( "preambleqq",		po::value<std::string>(&preamble_qq_fmt),
+		( "preambleqq",		po::value<std::string>(&preamble_qq_fmt)->default_value("qq(%a)："),
 				"为QQ设置的发言前缀, 默认是 qq(%a): " )
-		( "preambleirc",	po::value<std::string>(&preamble_irc_fmt),
+		( "preambleirc",	po::value<std::string>(&preamble_irc_fmt)->default_value("%a 说："),
 				"为IRC设置的发言前缀, 默认是 %a 说: " )
-		( "preamblexmpp",	po::value<std::string>(&preamble_xmpp_fmt),
+		( "preamblexmpp",	po::value<std::string>(&preamble_xmpp_fmt)->default_value("(%a)："),
 				"为XMPP设置的发言前缀, 默认是 (%a): \n\n"
 				"前缀里的含义\n"
 				"\t %a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片\n"
@@ -397,7 +391,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (vm.size() ==0 || (vm.size() ==1 && vm.count("daemon")))
+	if (qqnumber.empty())
 	{
 		try
 		{
