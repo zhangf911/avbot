@@ -132,6 +132,8 @@ class smtp {
 	std::string m_AUTH;
 	InternetMailFormat m_imf;
 
+	boost::asio::ip::tcp::resolver::query m_mailserver_query;
+
 	// 必须是可拷贝的，所以只能用共享指针.
 	boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket;
 	boost::shared_ptr<boost::asio::streambuf> m_readbuf;
@@ -201,7 +203,7 @@ public:
 
 			// 首先链接到服务器. dns 解析并连接.
 			_yield avproxy::async_proxy_connect(
-					avproxy::autoproxychain(*m_socket, ip::tcp::resolver::query(m_mailserver, "25")),
+					avproxy::autoproxychain(*m_socket, m_mailserver_query),
 					boost::bind(*this, _1, 0, handler, coro));
 
 			m_readbuf.reset(new boost::asio::streambuf);

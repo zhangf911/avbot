@@ -9,7 +9,7 @@ namespace detail{
 smtp::smtp(boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver)
 	:io_service(_io_service),
 	m_mailaddr(user), m_passwd(passwd),
-	m_mailserver(_mailserver)
+	m_mailserver(_mailserver), m_mailserver_query("smtp.qq.com", "25")
 {
 	// 计算 m_AUTH
 	std::vector<char> authtoken(user.length() + passwd.length() + 2);
@@ -25,7 +25,15 @@ smtp::smtp(boost::asio::io_service& _io_service, std::string user, std::string p
             m_mailserver = "smtp.qq.com"; // 如果　邮箱是 qq 号码（没@），就默认使用 smtp.qq.com .
         else
             m_mailserver =  std::string("smtp.") + m_mailaddr.substr(m_mailaddr.find_last_of("@")+1);
-    }	
+    }
+    boost::cmatch what;
+
+    if (boost::regex_search(m_mailserver.c_str(), what, boost::regex("(.*):([0-9]+)")))
+	{
+ 		m_mailserver_query = boost::asio::ip::tcp::resolver::query(what[1].str(), what[2].str());
+	}else{
+ 		m_mailserver_query = boost::asio::ip::tcp::resolver::query(m_mailserver, "25");
+	}
 }
 
 void smtp::server_cap_handler(std::string cap)

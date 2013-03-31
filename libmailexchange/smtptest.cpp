@@ -47,7 +47,7 @@ int main(int argc, char * argv[])
 		( "daemon,d",										"go to background" )
 		( "mail",		po::value<std::string>(&mailaddr),	"send mail by this address")
 		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
-		( "mailserver",	po::value<std::string>(&mailserver),"server to link")
+		( "mailserver",	po::value<std::string>(&mailserver),"server to use")
 		;
 
 	po::variables_map vm;
@@ -74,7 +74,7 @@ int main(int argc, char * argv[])
 	}
 
 	boost::asio::io_service io;
-	mx::smtp smtp(io, mailaddr, mailpasswd);
+	mx::smtp smtp(io, mailaddr, mailpasswd, mailserver);
 	InternetMailFormat imf;
 
 	imf.header["from"] = mailaddr;
