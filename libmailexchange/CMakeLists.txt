@@ -1,8 +1,11 @@
 project(libpop3)
 find_package(Boost 1.48 COMPONENTS regex signals system locale)
+find_package(OpenSSL REQUIRED)
+
+include_directories(${OpenSSL_INCLUDE_DIRS})
 
 add_library(mailexchange pop3.cpp smtp.cpp)
-target_link_libraries(mailexchange ${Boost_LIBRARIES})
+target_link_libraries(mailexchange ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 if(ENABLE_STATIC)
 

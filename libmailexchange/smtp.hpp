@@ -1,7 +1,8 @@
 #pragma once
 
 #include <string>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/bind.hpp>
 #include <boost/format.hpp>
 #include <boost/foreach.hpp>
@@ -57,12 +58,12 @@ public:
 // ----------------
 
 // 发送 rcpt to 命令, 返回发送成功的个数. 如果没有一个成功, 返回错误.
-class send_rcpt_tos : boost::coro::coroutine {
+template<class socket_type>
+class send_rcpt_tos_op : boost::coro::coroutine {
 public:
-	typedef boost::asio::ip::tcp::socket	socket_type;
 
 	template<class Handler>
-	send_rcpt_tos(socket_type & socket, boost::shared_ptr<boost::asio::streambuf> _readbuf, 
+	send_rcpt_tos_op(socket_type & socket, boost::shared_ptr<boost::asio::streambuf> _readbuf, 
 	const std::vector<std::string> & _rcpts, 
 	Handler handler)
 	  : m_socket(socket), m_readbuf(_readbuf), m_rcpts(_rcpts), m_handler(handler)
@@ -115,6 +116,15 @@ private:
 	int i;
 	int sended_rcpt;
 };
+
+template <class socket_type, class Handler>
+void send_rcpt_tos(socket_type & socket,
+	boost::shared_ptr<boost::asio::streambuf> _readbuf,
+	const std::vector<std::string> & _rcpts, 
+	Handler handler)
+{
+	send_rcpt_tos_op<socket_type>(socket, _readbuf, _rcpts, handler);
+}
 
 class smtp {
 	boost::asio::io_service & io_service;
