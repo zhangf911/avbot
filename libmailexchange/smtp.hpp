@@ -164,7 +164,7 @@ public:
 			if (boost::regex_search(rcpt.c_str(), what, ex))
 			{
 				std::string mailaddress = what[0];
-				std::string rcpt_command = boost::str(boost::format("rcpt to %s\r\n") % mailaddress);
+				std::string rcpt_command = boost::str(boost::format("rcpt to: <%s>\r\n") % mailaddress);
 				rcpts.push_back(rcpt_command);
 			}
 		}
@@ -240,7 +240,10 @@ public:
 
 			// 进入邮件发送过程.
 			// 发送 mail from <>
-			_yield async_write( buffer( std::string ( "MAIL FROM " ) + m_mailaddr + "\r\n" ), boost::bind(*this, _1, _2, handler, coro) );
+			_yield async_write(
+					buffer(boost::str(boost::format("MAIL FROM: <%s>\r\n") % m_mailaddr)),
+					boost::bind(*this, _1, _2, handler, coro)
+			);
 
 			_yield read_smtp_response_lines(boost::bind(*this, _1, _2, handler, coro));
 
