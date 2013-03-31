@@ -75,3 +75,12 @@ void forwardmessage(std::string from, std::string message)
 	}
 }
 
+void broadcastmessage(std::string message)
+{
+	BOOST_FOREACH(messagegroup & g ,  messagegroups)
+	{
+		g.broadcast(message);
+	}
+}
+
+
