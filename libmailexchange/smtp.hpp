@@ -218,7 +218,8 @@ public:
 			_yield read_smtp_response_lines(*m_socket, boost::bind(*this, _1, _2, handler, coro));
 
 			// 读取 250 响应.
-			check_server_cap();
+			check_server_cap(ec);
+			_yield io_service.post(boost::bind(*this, ec, 0, handler, coro));
 
 			// 如果有 STARTTLS 支持, 就开启 TLS
 			if (m_sslsocket){
@@ -350,9 +351,8 @@ private:
 
 	// 检查服务器的能力!
 	// 以 250 起始终.
-	void check_server_cap()
+	void check_server_cap(boost::system::error_code &ec)
 	{
- 		boost::system::error_code ec;
 		check_smtp_response(ec, 250, boost::bind(&smtp::server_cap_handler, this, _1));
 	}
 
