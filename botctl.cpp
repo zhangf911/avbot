@@ -63,6 +63,11 @@ static void mail_send_hander(const boost::system::error_code & ec, boost::functi
 	}
 }
 
+static void iopost_msg(boost::asio::io_service& io_service, boost::function<void(std::string)> msg_sender, std::string msg)
+{
+	io_service.post(boost::bind(msg_sender, msg));
+}
+
 //-------------
 
 // 命令控制, 所有的协议都能享受的命令控制在这里实现.
@@ -72,6 +77,8 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 	boost::regex ex;
 	boost::cmatch what;
 	qqGroup* group = NULL;
+
+	boost::function<void(std::string)> sendmsg = boost::bind(iopost_msg, boost::ref(io_service), msg_sender, _1);
 
     messagegroup* chanelgroup = find_group(from_channel);
     if (chanelgroup){
@@ -101,13 +108,13 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 
 	if( message == ".qqbot ping")
 	{
-		io_service.post(boost::bind(msg_sender,"我还活着"));
+		sendmsg("我还活着");
 		return;
 	}
 	
 	if( message == ".qqbot version")
 	{
-		io_service.post(boost::bind(msg_sender,boost::str(boost::format("我的版本是 %s (%s %s)") % QQBOT_VERSION %__DATE__% __TIME__)));
+		sendmsg(boost::str(boost::format("我的版本是 %s (%s %s)") % QQBOT_VERSION %__DATE__% __TIME__));
 		return;
 	}
 
@@ -178,9 +185,9 @@ void on_bot_command(boost::asio::io_service& io_service, std::string message, st
 			if (group)
 			{
 				io_service.post(boost::bind(&webqq::update_group_member, qqclient , boost::ref(*group)));
-				msg_sender("群成员列表重加载");
+				sendmsg("群成员列表重加载");
 			}else{
-				msg_sender("加载哪个群? 你没设置啊!");
+				sendmsg("加载哪个群? 你没设置啊!");
 			}
 			return;
 		}
