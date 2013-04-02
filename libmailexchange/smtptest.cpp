@@ -21,75 +21,71 @@ namespace po = boost::program_options;
 
 #include "smtp.hpp"
 
-static void sended(const boost::system::error_code & ec)
+static void sended( const boost::system::error_code & ec )
 {
 	std::cout <<  ec.message() <<  std::endl;
 }
 
 #include "fsconfig.ipp"
 
-int main(int argc, char * argv[])
+int main( int argc, char * argv[] )
 {
-    std::string qqnumber, qqpwd;
-    std::string ircnick, ircroom, ircpwd;
-    std::string xmppuser, xmppserver, xmpppwd, xmpproom;
-    std::string cfgfile;
+	std::string qqnumber, qqpwd;
+	std::string ircnick, ircroom, ircpwd;
+	std::string xmppuser, xmppserver, xmpppwd, xmpproom;
+	std::string cfgfile;
 	std::string logdir;
 	std::string chanelmap;
-	std::string mailaddr,mailpasswd,mailserver;
+	std::string mailaddr, mailpasswd, mailserver;
 
-    setlocale(LC_ALL, "");
+	setlocale( LC_ALL, "" );
 
-	po::options_description desc("qqbot options");
+	po::options_description desc( "qqbot options" );
 	desc.add_options()
-	    ( "version,v",										"output version" )
-		( "help,h",											"produce help message" )
-		( "daemon,d",										"go to background" )
-		( "mail",		po::value<std::string>(&mailaddr),	"send mail by this address")
-		( "mailpasswd",	po::value<std::string>(&mailpasswd),"password of mail")
-		( "mailserver",	po::value<std::string>(&mailserver),"server to use")
-		;
+	( "version,v",										"output version" )
+	( "help,h",											"produce help message" )
+	( "daemon,d",										"go to background" )
+	( "mail",		po::value<std::string>( &mailaddr ),	"send mail by this address" )
+	( "mailpasswd",	po::value<std::string>( &mailpasswd ), "password of mail" )
+	( "mailserver",	po::value<std::string>( &mailserver ), "server to use" )
+	;
 
 	po::variables_map vm;
-	po::store(po::parse_command_line(argc, argv, desc), vm);
-	po::notify(vm);
+	po::store( po::parse_command_line( argc, argv, desc ), vm );
+	po::notify( vm );
 
-	if (vm.count("help"))
-	{
+	if( vm.count( "help" ) ) {
 		std::cerr <<  desc <<  std::endl;
 		return 1;
 	}
-	if (vm.size() ==0 )
-	{
-		try
-		{
+
+	if( vm.size() == 0 ) {
+		try {
 			fs::path p = configfilepath();
-			po::store(po::parse_config_file<char>(p.string().c_str(), desc), vm);
-			po::notify(vm);
-		}
-		catch(char* e)
-		{
+			po::store( po::parse_config_file<char>( p.string().c_str(), desc ), vm );
+			po::notify( vm );
+		} catch( char* e ) {
 			std::cerr << e << std::endl;
 		}
 	}
 
 	boost::asio::io_service io;
-	mx::smtp smtp(io, mailaddr, mailpasswd, mailserver);
+	mx::smtp smtp( io, mailaddr, mailpasswd, mailserver );
 	InternetMailFormat imf;
 
 	imf.header["from"] = mailaddr;
 	imf.header["to"] = "\"晕菜\" <beansoft@qq.com>";
 	imf.header["subject"] = "test mail";
 	imf.header["content-type"] = "text/plain; charset=utf8";
-	
+
 	imf.body = "test body dasdfasd ";
 	std::stringstream maildata;
 	boost::asio::streambuf buf;
-	std::ostream os(&buf);
-	imf_write_stream(imf, os);
-	
-	std::string _mdata = boost::asio::buffer_cast<const char*>(buf.data());
+	std::ostream os( &buf );
+	imf_write_stream( imf, os );
 
-	smtp.async_sendmail(imf, sended);
+	std::string _mdata = boost::asio::buffer_cast<const char*>( buf.data() );
+
+	smtp.async_sendmail( imf, sended );
 	io.run();
 }
