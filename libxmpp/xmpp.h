@@ -25,17 +25,16 @@
 #include <boost/function.hpp>
 
 namespace XMPP {
-	class xmpp_impl;
+class xmpp_impl;
 }
 
-class xmpp
-{
+class xmpp {
 public:
-	xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver = "", std::string xmppnick = "avbot");
-	void join(std::string roomjid);
+	xmpp( boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver = "", std::string xmppnick = "avbot" );
+	void join( std::string roomjid );
 	~xmpp();
-	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);
-	void send_room_message(std::string xmpproom, std::string message);
+	void on_room_message( boost::function<void ( std::string xmpproom, std::string who, std::string message )> cb );
+	void send_room_message( std::string xmpproom, std::string message );
 	boost::asio::io_service& get_ioservice();
 private:
 	boost::scoped_ptr<XMPP::xmpp_impl>		impl;

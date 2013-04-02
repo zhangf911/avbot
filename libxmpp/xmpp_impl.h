@@ -35,25 +35,23 @@
 
 namespace XMPP {
 
-class xmpp_asio_connector : public gloox::ConnectionBase
-{
+class xmpp_asio_connector : public gloox::ConnectionBase {
 public:
-	xmpp_asio_connector(boost::asio::io_service & , gloox::ConnectionDataHandler* cdh, boost::asio::ip::tcp::resolver::query _query);
+	xmpp_asio_connector( boost::asio::io_service & , gloox::ConnectionDataHandler* cdh, boost::asio::ip::tcp::resolver::query _query );
 private: // for gloox::ConnectionTCPClient
-    virtual bool send(const std::string& data);
-    virtual gloox::ConnectionError connect();
-    virtual void disconnect();
-    virtual void getStatistics(long int& totalIn, long int& totalOut){}
-    virtual gloox::ConnectionError receive();
-    virtual gloox::ConnectionError recv(int timeout = -1);
-    virtual ConnectionBase* newInstance() const
-    {
-		return new xmpp_asio_connector(io_service, m_handler, m_query);
+	virtual bool send( const std::string& data );
+	virtual gloox::ConnectionError connect();
+	virtual void disconnect();
+	virtual void getStatistics( long int& totalIn, long int& totalOut ) {}
+	virtual gloox::ConnectionError receive();
+	virtual gloox::ConnectionError recv( int timeout = -1 );
+	virtual ConnectionBase* newInstance() const {
+		return new xmpp_asio_connector( io_service, m_handler, m_query );
 	}
 private: // for asio callbacks
-	void cb_handle_connecting(const boost::system::error_code & ec);
-	void cb_handle_asio_read(const boost::system::error_code & error, std::size_t bytes_transferred);
-	void cb_handle_asio_write(const boost::system::error_code & error, std::size_t bytes_transferred);
+	void cb_handle_connecting( const boost::system::error_code & ec );
+	void cb_handle_asio_read( const boost::system::error_code & error, std::size_t bytes_transferred );
+	void cb_handle_asio_write( const boost::system::error_code & error, std::size_t bytes_transferred );
 
 private:
 	boost::asio::io_service	&io_service;
@@ -62,14 +60,13 @@ private:
 	boost::array<char, 8192>	m_readbuf;
 };
 
-class xmpp_impl : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler
-{
+class xmpp_impl : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler {
 public:
-	xmpp_impl(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick);
-	void join(std::string roomjid);
-	void on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb);
-	void send_room_message(std::string xmpproom, std::string message);
-	boost::asio::io_service& get_ioservice(){
+	xmpp_impl( boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick );
+	void join( std::string roomjid );
+	void on_room_message( boost::function<void ( std::string xmpproom, std::string who, std::string message )> cb );
+	void send_room_message( std::string xmpproom, std::string message );
+	boost::asio::io_service& get_ioservice() {
 		return io_service;
 	}
 
@@ -77,21 +74,21 @@ private:
 	void start();
 
 private:  // for ConnectionListener
-    virtual void handleMessage(const gloox::Message& msg, gloox::MessageSession* session = 0);
+	virtual void handleMessage( const gloox::Message& msg, gloox::MessageSession* session = 0 );
 
-    virtual void onConnect();
-    virtual void onDisconnect(gloox::ConnectionError e);
-    virtual bool onTLSConnect(const gloox::CertInfo& info);
+	virtual void onConnect();
+	virtual void onDisconnect( gloox::ConnectionError e );
+	virtual bool onTLSConnect( const gloox::CertInfo& info );
 
-    virtual void handleMUCMessage(gloox::MUCRoom* room, const gloox::Message& msg, bool priv);
-    virtual void handleMUCParticipantPresence(gloox::MUCRoom* room, const gloox::MUCRoomParticipant participant, const gloox::Presence& presence);
-    virtual void handleMUCSubject(gloox::MUCRoom* room, const std::string& nick, const std::string& subject);
-    virtual void handleMUCError(gloox::MUCRoom* room, gloox::StanzaError error);
-    virtual void handleMUCInfo(gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm);
-    virtual void handleMUCInviteDecline(gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason);
+	virtual void handleMUCMessage( gloox::MUCRoom* room, const gloox::Message& msg, bool priv );
+	virtual void handleMUCParticipantPresence( gloox::MUCRoom* room, const gloox::MUCRoomParticipant participant, const gloox::Presence& presence );
+	virtual void handleMUCSubject( gloox::MUCRoom* room, const std::string& nick, const std::string& subject );
+	virtual void handleMUCError( gloox::MUCRoom* room, gloox::StanzaError error );
+	virtual void handleMUCInfo( gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm );
+	virtual void handleMUCInviteDecline( gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason );
 
-    virtual void handleMUCItems(gloox::MUCRoom* room, const gloox::Disco::ItemList& items);
-    virtual bool handleMUCRoomCreation(gloox::MUCRoom* room);
+	virtual void handleMUCItems( gloox::MUCRoom* room, const gloox::Disco::ItemList& items );
+	virtual bool handleMUCRoomCreation( gloox::MUCRoom* room );
 
 private:
 	boost::asio::io_service & io_service;
@@ -100,8 +97,8 @@ private:
 	std::string		m_xmppnick;
 	std::vector<boost::shared_ptr<gloox::MUCRoom> >	m_rooms;
 	boost::asio::streambuf							m_readbuf;
-	
-	boost::signal <void (std::string xmpproom, std::string who, std::string message)> m_sig_room_message;
+
+	boost::signal <void ( std::string xmpproom, std::string who, std::string message )> m_sig_room_message;
 };
 
 }

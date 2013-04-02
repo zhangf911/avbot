@@ -19,34 +19,35 @@
 #include "xmpp.h"
 #include "xmpp_impl.h"
 
-xmpp::xmpp(boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick)
+xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick )
 {
-	if ( xmppnick.empty())
+	if( xmppnick.empty() )
 		xmppnick = "avbot";
-	if (!xmppuser.empty() && !xmpppasswd.empty())
-		impl.reset(new XMPP::xmpp_impl(asio, xmppuser, xmpppasswd, xmppserver, xmppnick));
+
+	if( !xmppuser.empty() && !xmpppasswd.empty() )
+		impl.reset( new XMPP::xmpp_impl( asio, xmppuser, xmpppasswd, xmppserver, xmppnick ) );
 }
 
-void xmpp::join(std::string roomjid)
+void xmpp::join( std::string roomjid )
 {
-	if (impl)
-		impl->join(roomjid);
+	if( impl )
+		impl->join( roomjid );
 }
 
 xmpp::~xmpp()
 {
 }
 
-void xmpp::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
+void xmpp::on_room_message( boost::function<void ( std::string xmpproom, std::string who, std::string message )> cb )
 {
-	if (impl)
-		impl->on_room_message(cb);
+	if( impl )
+		impl->on_room_message( cb );
 }
 
-void xmpp::send_room_message(std::string xmpproom, std::string message)
+void xmpp::send_room_message( std::string xmpproom, std::string message )
 {
-	if (impl)
-		impl->send_room_message(xmpproom, message);
+	if( impl )
+		impl->send_room_message( xmpproom, message );
 }
 
 boost::asio::io_service& xmpp::get_ioservice()
