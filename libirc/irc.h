@@ -35,63 +35,61 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 
 #include "boost/coro/coro.hpp"
 
-struct IrcMsg
-{
-    std::string whom;
-    std::string from;
-    std::string locate;
-    std::string msg;
+struct IrcMsg {
+	std::string whom;
+	std::string from;
+	std::string locate;
+	std::string msg;
 };
 
-typedef boost::function<void(IrcMsg msg)> privmsg_cb;
+typedef boost::function<void( IrcMsg msg )> privmsg_cb;
 
-class IrcClient
-{
+class IrcClient {
 public:
-    IrcClient(boost::asio::io_service &io_service,const std::string& user,const std::string& user_pwd="",const std::string& server="irc.freenode.net", const std::string& port="6667",const unsigned int max_retry_count=1000);
+	IrcClient( boost::asio::io_service &io_service, const std::string& user, const std::string& user_pwd = "", const std::string& server = "irc.freenode.net", const std::string& port = "6667", const unsigned int max_retry_count = 1000 );
 
 public:
-    void login(const privmsg_cb &cb){
-		cb_=cb;
+	void login( const privmsg_cb &cb ) {
+		cb_ = cb;
 	}
-    void join(const std::string& ch,const std::string &pwd="");
-    void chat(const std::string whom,const std::string msg);
-    void send_command(const std::string& cmd){
-		send_request(cmd);
+	void join( const std::string& ch, const std::string &pwd = "" );
+	void chat( const std::string whom, const std::string msg );
+	void send_command( const std::string& cmd ) {
+		send_request( cmd );
 	}
-	void oper(const std::string& user,const std::string& pwd){
-		send_request("OPER "+user+" "+pwd);
+	void oper( const std::string& user, const std::string& pwd ) {
+		send_request( "OPER " + user + " " + pwd );
 	}
 
 private:
-    void handle_read_request(const boost::system::error_code& err, std::size_t readed);
-	void handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro);
-    void handle_connect_request(const boost::system::error_code& err);
-    void send_request(const std::string& msg){
-		std::string data=msg+"\r\n";
-		send_data(data.c_str(),data.length());
+	void handle_read_request( const boost::system::error_code& err, std::size_t readed );
+	void handle_write_request( const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro );
+	void handle_connect_request( const boost::system::error_code& err );
+	void send_request( const std::string& msg ) {
+		std::string data = msg + "\r\n";
+		send_data( data.c_str(), data.length() );
 	}
-    void send_data(const char* data,const size_t len);
-    void process_request(boost::asio::streambuf& buf);
-    void connect();
-    void relogin();
-    void relogin_delayed();
-    void connected();
+	void send_data( const char* data, const size_t len );
+	void process_request( boost::asio::streambuf& buf );
+	void connect();
+	void relogin();
+	void relogin_delayed();
+	void connected();
 
 private:
 	boost::asio::io_service &io_service;
-    boost::asio::ip::tcp::socket    socket_;
-    boost::asio::streambuf          request_;
-    boost::asio::streambuf          response_;
-    privmsg_cb                      cb_;
-    std::string                     user_;
-    std::string                     pwd_;
-    std::string                     server_;
-    std::string                     port_;
-    bool                            login_;
-    std::vector<std::string>        msg_queue_;
-    std::vector<std::string>        join_queue_;
-    unsigned int                    retry_count_;
-    const unsigned int              c_retry_cuont;
-    bool insending;
+	boost::asio::ip::tcp::socket    socket_;
+	boost::asio::streambuf          request_;
+	boost::asio::streambuf          response_;
+	privmsg_cb                      cb_;
+	std::string                     user_;
+	std::string                     pwd_;
+	std::string                     server_;
+	std::string                     port_;
+	bool                            login_;
+	std::vector<std::string>        msg_queue_;
+	std::vector<std::string>        join_queue_;
+	unsigned int                    retry_count_;
+	const unsigned int              c_retry_cuont;
+	bool insending;
 };
