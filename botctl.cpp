@@ -72,7 +72,13 @@ static void iopost_msg( boost::asio::io_service& io_service, boost::function<voi
 
 // 命令控制, 所有的协议都能享受的命令控制在这里实现.
 // msg_sender 是一个函数, on_command 用它发送消息.
-void on_bot_command( boost::asio::io_service& io_service, std::string message, std::string from_channel, std::string sender, sender_flags sender_flag, boost::function<void( std::string )> msg_sender, webqq *qqclient )
+void on_bot_command( boost::asio::io_service& io_service, 
+					std::string message,
+					std::string from_channel,
+					std::string sender,
+					sender_flags sender_flag,
+					boost::function<void( std::string )> msg_sender,
+					webqq *qqclient )
 {
 	boost::regex ex;
 	boost::cmatch what;

@@ -71,7 +71,13 @@ static void qqbot_control( webqq & qqclient, qqGroup & group, qqBuddy &who, std:
 	if( chanelgroup ) {
 		msg_sender = boost::bind( &messagegroup::broadcast, chanelgroup,  _1 );
 	} else {
-		msg_sender = boost::bind( static_cast<void ( webqq::* )( std::string, std::string, boost::function<void ( const boost::system::error_code & ec )> )>( & webqq::send_group_message ), &qqclient, group.gid, _1, boost::lambda::constant( 0 ) );
+
+		typedef void ( webqq::*webqq_send_group_message )
+			( std::string, std::string, boost::function<void ( const boost::system::error_code & ec )> );
+
+		msg_sender = boost::bind( static_cast<webqq_send_group_message>( & webqq::send_group_message ),
+									&qqclient, group.gid, _1, boost::lambda::constant( 0 )
+								);
 	}
 
 	sender_flags sender_flag;
