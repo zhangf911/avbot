@@ -19,46 +19,41 @@
 #include <boost/tuple/tuple.hpp>
 
 
-class counter : public boost::noncopyable 
-{
+class counter : public boost::noncopyable {
 public:
-	counter(std::string filename = "counter.db")
-		: filename_(filename)
-	{
+	counter( std::string filename = "counter.db" )
+		: filename_( filename ) {
 		load();
 	}
 
-	void save()
-	{
-		std::fstream out(filename_.c_str(), std::fstream::out);
-		for(std::map<std::string, boost::tuples::tuple<std::size_t, boost::posix_time::ptime> >::iterator iter = map_.begin(); iter != map_.end(); iter++) {
-			out << iter->first << "\t" << boost::get<0>(iter->second) << "\t" << boost::get<1>(iter->second) << "\n";
+	void save() {
+		std::fstream out( filename_.c_str(), std::fstream::out );
+
+		for( std::map<std::string, boost::tuples::tuple<std::size_t, boost::posix_time::ptime> >::iterator iter = map_.begin(); iter != map_.end(); iter++ ) {
+			out << iter->first << "\t" << boost::get<0>( iter->second ) << "\t" << boost::get<1>( iter->second ) << "\n";
 		}
 	}
 
-	void increace(std::string qq)
-	{
+	void increace( std::string qq ) {
 		boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-		boost::get<0>(map_[qq]) ++ ;
-		boost::get<1>(map_[qq]) = now;
+		boost::get<0>( map_[qq] ) ++ ;
+		boost::get<1>( map_[qq] ) = now;
 	}
 
 private:
 	std::string filename_;
 	std::map<std::string, boost::tuples::tuple<std::size_t, boost::posix_time::ptime> > map_;
 
-	void load()
-	{
-		std::fstream in(filename_.c_str(), std::ios_base::in);
+	void load() {
+		std::fstream in( filename_.c_str(), std::ios_base::in );
 		std::string key;
 		std::size_t count;
 		boost::posix_time::ptime time;
-		if( in.good() )
-		{
-			while(in >> key >> count >> time)
-			{
-				boost::get<0>(map_[key]) = count;
-				boost::get<1>(map_[key]) = time;
+
+		if( in.good() ) {
+			while( in >> key >> count >> time ) {
+				boost::get<0>( map_[key] ) = count;
+				boost::get<1>( map_[key] ) = time;
 			}
 		}
 	}
