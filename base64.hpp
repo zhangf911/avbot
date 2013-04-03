@@ -11,14 +11,6 @@
 
 namespace boost {
 
-namespace detail{
-
-struct is_base64_char {
-  bool operator()(char x) { return boost::is_any_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/=")(x);}
-};
-
-}
-
 
 // typedef	archive::iterators::transform_width< 
 // 			archive::iterators::binary_from_base64<filter_iterator<detail::is_base64_char, std::string::iterator> >, 8, 6, char>
