@@ -6,7 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <vector>
-#include <sys/signal.h>
+#include <signal.h>
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
@@ -33,7 +33,6 @@ namespace po = boost::program_options;
 #include <direct.h>
 #endif
 
-#include "selfexec.hpp"
 #include "libirc/irc.h"
 #include "libwebqq/webqq.h"
 #include "libwebqq/url.hpp"
@@ -45,6 +44,8 @@ namespace po = boost::program_options;
 
 #include "messagegroup.hpp"
 #include "botctl.hpp"
+
+#include "selfexec.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -96,9 +97,9 @@ static std::string	preamble_formater( qqBuddy *buddy, std::string falbacknick, q
 	static qqBuddy _buddy;
 	std::string preamble;
 	// 格式化神器, 哦耶.
-	// 获取格式化描述字符串
+	// 获取格式化描述字符串.
 	std::string preamblefmt = preamble_qq_fmt;
-	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动
+	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动.
 
 	preamble = preamblefmt;
 	std::string autonick = "";
@@ -137,11 +138,11 @@ static std::string	preamble_formater( qqBuddy *buddy, std::string falbacknick, q
 static std::string	preamble_formater( IrcMsg pmsg )
 {
 	// 格式化神器, 哦耶.
-	// 获取格式化描述字符串
+	// 获取格式化描述字符串.
 	std::string preamble = preamble_irc_fmt;
 
-	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间
-	// 默认为 qq(%a) 说:
+	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间.
+	// 默认为 qq(%a) 说:.
 	boost::replace_all( preamble, "%a", pmsg.whom );
 	boost::replace_all( preamble, "%r", pmsg.from );
 	boost::replace_all( preamble, "%n", pmsg.whom );
@@ -151,9 +152,9 @@ static std::string	preamble_formater( IrcMsg pmsg )
 static std::string	preamble_formater( std::string who, std::string room )
 {
 	// 格式化神器, 哦耶.
-	// 获取格式化描述字符串
+	// 获取格式化描述字符串.
 	std::string preamble = preamble_xmpp_fmt;
-	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间
+	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间.
 
 	boost::replace_all( preamble, "%a", who );
 	boost::replace_all( preamble, "%r", room );
@@ -169,7 +170,7 @@ static void on_irc_message( IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient
 
 	std::string from = std::string( "irc:" ) + pMsg.from.substr( 1 );
 
-	//验证码check
+	//验证码check.
 	if( qqneedvc ) {
 		std::string vc = boost::trim_copy( pMsg.msg );
 
@@ -320,8 +321,8 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qq
 	img.write( data, imgsize );
 	qqneedvc = true;
 	// send to xmpp and irc
-	ircclient.chat( boost::str( boost::format( "#%s" ) % ircvercodechannel ), "输入qq验证码" );
-	std::cerr << "请输入验证码" ;
+	ircclient.chat( boost::str( boost::format( "#%s" ) % ircvercodechannel ), "输入qq验证码 " );
+	std::cerr << "请输入验证码:" ;
 }
 
 #ifdef WIN32
@@ -335,20 +336,21 @@ int daemon( int nochdir, int noclose )
 #include "input.ipp"
 #include "fsconfig.ipp"
 
-
-int av_sigmask( int how, int signal_number )
+#ifndef _WIN32
+void av_sigmask( int how, int signal_number )
 {
 	sigset_t sigset = {0};
 	sigaddset( &sigset, signal_number );
 	return sigprocmask( how, &sigset, NULL );
 }
-
+#endif
 
 // 断错误后重启自己.
 static void handle_segfault( int signal_number )
 {
+#ifndef _WIN32
 	av_sigmask( SIG_UNBLOCK, SIGINT );
-
+#endif
 	re_exec_self();
 }
 
@@ -363,7 +365,7 @@ int main( int argc, char *argv[] )
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
 	progname = fs::basename( argv[0] );
-	execpath = strdup( fs::absolute( fs::path( argv[0] ) ).normalize().c_str() );
+	execpath = strdup( (char*) fs::absolute( fs::path( argv[0] ) ).normalize().c_str() );
 
 	setlocale( LC_ALL, "" );
 	po::variables_map vm;
@@ -390,17 +392,17 @@ int main( int argc, char *argv[] )
 	( "pop3server",	po::value<std::string>( &pop3server ), 	"pop server of mail,  default to pop.[domain]" )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
 
-	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( "qq(%a)：" ),
-	  "为QQ设置的发言前缀, 默认是 qq(%a): " )
-	( "preambleirc",	po::value<std::string>( &preamble_irc_fmt )->default_value( "%a 说：" ),
-	  "为IRC设置的发言前缀, 默认是 %a 说: " )
-	( "preamblexmpp",	po::value<std::string>( &preamble_xmpp_fmt )->default_value( "(%a)：" ),
-	  "为XMPP设置的发言前缀, 默认是 (%a): \n\n"
-	  "前缀里的含义\n"
-	  "\t %a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片\n"
-	  "\t %r为房间名(群号, XMPP房名, IRC频道名)\n"
-	  "可以包含多个, 例如想记录QQ号码的可以使用 qq(%a, %q)说:\n"
-	  "注意在shell下可能需要使用\\(来转义(\n配置文件无此问题\n\n"	)
+	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( "qq(%a)： " ),
+	  "为QQ设置的发言前缀, 默认是 qq(%a):  " )
+	( "preambleirc",	po::value<std::string>( &preamble_irc_fmt )->default_value( "%a 说： " ),
+	  "为IRC设置的发言前缀, 默认是 %a 说:  " )
+	( "preamblexmpp",	po::value<std::string>( &preamble_xmpp_fmt )->default_value( "(%a)： " ),
+	  "为XMPP设置的发言前缀, 默认是 (%a): \n\n "
+	  "前缀里的含义 \n"
+	  "\t %a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片 \n"
+	  "\t %r为房间名(群号, XMPP房名, IRC频道名) \n"
+	  "可以包含多个, 例如想记录QQ号码的可以使用 qq(%a, %q)说: \n"
+	  "注意在shell下可能需要使用\\(来转义(\n配置文件无此问题 \n\n"	)
 	;
 
 	po::store( po::parse_command_line( argc, argv, desc ), vm );
@@ -425,8 +427,9 @@ int main( int argc, char *argv[] )
 
 	if( vm.count( "daemon" ) ) {
 		daemon( 0, 0 );
+#ifndef _WIN32
 		av_sigmask( SIG_BLOCK, SIGHUP );
-
+#endif
 		signal( SIGSEGV, handle_segfault );
 	}
 
@@ -450,17 +453,17 @@ int main( int argc, char *argv[] )
 	}
 
 	if( qqnumber.empty() || qqpwd.empty() ) {
-		std::cerr << "请设置qq号码和密码" << std::endl;
+		std::cerr << "请设置qq号码和密码 " << std::endl;
 		exit( 1 );
 	}
 
 	if( ircnick.empty() ) {
-		std::cerr << "请设置irc昵称" << std::endl;
+		std::cerr << "请设置irc昵称 " << std::endl;
 		exit( 1 );
 	}
 
 	if( ircroom.empty() ) {
-		std::cerr << "请设置irc频道" << std::endl;
+		std::cerr << "请设置irc频道 " << std::endl;
 		exit( 1 );
 	}
 
