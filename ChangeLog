@@ -1,3 +1,7 @@
+3.6
+	* allow caching the qqgroup result so that if we have trouble fetching the group list, we won't suffer
+	* allow to fetch the group chat image to local storage
+
 3.5
 	* fix VC2010 compilation, VC sucks, does it?
 	* allow IRC/XMPP to use .qqbot command. that's a long lacking feature
