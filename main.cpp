@@ -341,7 +341,7 @@ void av_sigmask( int how, int signal_number )
 {
 	sigset_t sigset = {0};
 	sigaddset( &sigset, signal_number );
-	return sigprocmask( how, &sigset, NULL );
+	sigprocmask( how, &sigset, NULL );
 }
 #endif
 
