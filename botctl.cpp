@@ -82,7 +82,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 {
 	boost::regex ex;
 	boost::cmatch what;
-	qqGroup* group = NULL;
+	qqGroup_ptr  group;
 
 	boost::function<void( std::string )> sendmsg = boost::bind( iopost_msg, boost::ref( io_service ), msg_sender, _1 );
 
@@ -185,7 +185,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 		// 重新加载群成员列表.
 		if( qqclient && message == ".qqbot reload" ) {
 			if( group ) {
-				io_service.post( boost::bind( &webqq::update_group_member, qqclient , boost::ref( *group ) ) );
+				io_service.post( boost::bind( &webqq::update_group_member, qqclient , group) );
 				sendmsg( "群成员列表重加载" );
 			} else {
 				sendmsg( "加载哪个群? 你没设置啊!" );

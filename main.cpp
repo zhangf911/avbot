@@ -234,7 +234,7 @@ static void save_image(const boost::system::error_code & ec, boost::asio::stream
 static void on_group_msg( std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient )
 {
 	qqBuddy *buddy = NULL;
-	qqGroup *group = qqclient.get_Group_by_gid( group_code );
+	qqGroup_ptr group = qqclient.get_Group_by_gid( group_code );
 	std::string groupname = group_code;
 
 	if( group )
@@ -242,7 +242,7 @@ static void on_group_msg( std::string group_code, std::string who, const std::ve
 
 	buddy = group ? group->get_Buddy_by_uin( who ) : NULL;
 
-	std::string message_nick = preamble_formater( buddy, who, group );
+	std::string message_nick = preamble_formater( buddy, who, group.get() );
 
 	std::string htmlmsg;
 	std::string textmsg;
