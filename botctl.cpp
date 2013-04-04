@@ -101,15 +101,15 @@ void on_bot_command( boost::asio::io_service& io_service,
 						 "\t.qqbot help\n"
 						 "\t.qqbot version\n"
 						 "\t.qqbot ping\n"
-						 "\t.qqbot mail to [emailaddress]\n"
-						 "\t 将命令中间的聊天内容发送到邮件 emailaddress\n"
+						 "\t.qqbot mail to \"emailaddress\"\n"
+						 "\t 将命令中间的聊天内容发送到邮件 emailaddress,  注意引号\n"
 						 "\t 使用 .qqbot mail subject 设置主题\n"
 						 "\t.qqbot mail end\n"
 						 "== 以下命令需要管理员才能使用==\n"
 						 "\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
 						 "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
 						 "\t.qqbot newbee SB\n"
-						 "以上! (武藏舰长)" )
+						 "以上!" )
 		);
 	}
 
@@ -123,7 +123,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 		return;
 	}
 
-	ex.set_expression( ".qqbot mail to ?\"(.*)?\"" );
+	ex.set_expression( ".qqbot mail to \"?(.*)\"?" );
 
 	if( boost::regex_match( message.c_str(), what, ex ) ) {
 		if( chanelgroup ) {
@@ -138,7 +138,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 		return;
 	}
 
-	ex.set_expression( ".qqbot mail subject ?\"(.*)?\"" );
+	ex.set_expression( ".qqbot mail subject \"?(.*)\"?" );
 
 	if( boost::regex_match( message.c_str(), what, ex ) ) {
 		if( chanelgroup && chanelgroup->pimf ) {
