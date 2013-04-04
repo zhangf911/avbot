@@ -258,10 +258,13 @@ static void on_group_msg( std::string group_code, std::string who, const std::ve
 									  "<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" > " )
 								  % qqmsg.cface );
 				std::string imgurl = boost::str(
-										 boost::format( " http://w.qq.com/cgi-bin/get_group_pic?pic=%s " )
-										 % url_encode( qqmsg.cface )
-									 );
+										boost::format( " http://w.qq.com/cgi-bin/get_group_pic?pic=%s " )
+										% url_encode( qqmsg.cface )
+									);
 				textmsg += imgurl;
+				// save to disk
+				std::ofstream cface((std::string("imges/") + qqmsg.cface).c_str(), std::ofstream::out);
+ 				cface.write(qqmsg.cface_data.data(), qqmsg.cface_data.length());
 			} break;
 			case qqMsg::LWQQ_MSG_FACE: {
 				buf = boost::str( boost::format(
