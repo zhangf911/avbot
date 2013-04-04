@@ -221,6 +221,16 @@ static void om_xmpp_message( xmpp & xmppclient, std::string xmpproom, std::strin
 	on_bot_command( xmppclient.get_ioservice(), message, from, who, sender_is_normal, msg_sender );
 }
 
+static std::string 	base_image_url = "http://w.qq.com/cgi-bin/get_group_pic?pic=";
+
+static void save_image(const boost::system::error_code & ec, boost::asio::streambuf & buf, std::string cface)
+{
+	if (!ec || ec == boost::asio::error::eof){
+		std::ofstream cfaceimg((std::string("images/") + cface).c_str(), std::ofstream::out);
+		cfaceimg.write(boost::asio::buffer_cast<const char*>(buf.data()), boost::asio::buffer_size(buf.data()));
+	}
+}
+
 static void on_group_msg( std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient )
 {
 	qqBuddy *buddy = NULL;
@@ -255,16 +265,23 @@ static void on_group_msg( std::string group_code, std::string who, const std::ve
 			break;
 			case qqMsg::LWQQ_MSG_CFACE: {
 				buf = boost::str( boost::format(
-									  "<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" > " )
+									  "<img src=\"%s%s\" > " ) % base_image_url
 								  % qqmsg.cface );
 				std::string imgurl = boost::str(
-										boost::format( " http://w.qq.com/cgi-bin/get_group_pic?pic=%s " )
+										boost::format( " %s%s " ) % base_image_url
 										% url_encode( qqmsg.cface )
 									);
 				textmsg += imgurl;
-				// save to disk
-				std::ofstream cface((std::string("imges/") + qqmsg.cface).c_str(), std::ofstream::out);
- 				cface.write(qqmsg.cface_data.data(), qqmsg.cface_data.length());
+				if (base_image_url != "http://w.qq.com/cgi-bin/get_group_pic?pic="){
+					// save to disk
+					// 先检查这样的图片本地有没有，有你fetch的P啊.
+					if (!fs::exists(std::string("images/") + qqmsg.cface))
+					{
+						if (!fs::exists("images"))
+							fs::create_directories("images");
+						qqclient.async_fetch_cface(qqmsg.cface, boost::bind(save_image, _1, _2, qqmsg.cface));
+					}
+				}
 			} break;
 			case qqMsg::LWQQ_MSG_FACE: {
 				buf = boost::str( boost::format(
@@ -367,6 +384,9 @@ int main( int argc, char *argv[] )
 	std::string chanelmap;
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
+	bool localimage;
+	std::string baseimageurl;
+
 	progname = fs::basename( argv[0] );
 	execpath = strdup( (char*) fs::absolute( fs::path( argv[0] ) ).normalize().c_str() );
 
@@ -394,6 +414,9 @@ int main( int argc, char *argv[] )
 	( "mailpasswd",	po::value<std::string>( &mailpasswd ), 	"password of mail" )
 	( "pop3server",	po::value<std::string>( &pop3server ), 	"pop server of mail,  default to pop.[domain]" )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
+
+	( "localimage", po::value<bool>( &localimage)->default_value(false),	"fetch qq image to local disk and store it there")
+	( "imageurlbase", po::value<std::string>(&baseimageurl), "if fetch image to local disk,  use this url as image prefix")
 
 	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( "qq(%a)： " ),
 	  "为QQ设置的发言前缀, 默认是 qq(%a):  " )
@@ -445,6 +468,9 @@ int main( int argc, char *argv[] )
 		if( !fs::exists( logdir ) )
 			fs::create_directory( logdir );
 	}
+
+	if (localimage)
+		base_image_url = baseimageurl;
 
 	// 设置到中国的时区，否则 qq 消息时间不对啊.
 	putenv( ( char* )"TZ=Asia/Shanghai" );
