@@ -268,7 +268,7 @@ static void on_group_msg( std::string group_code, std::string who, const std::ve
 									  "<img src=\"%s%s\" > " ) % base_image_url
 								  % qqmsg.cface );
 				std::string imgurl = boost::str(
-										boost::format( " %s%s " ) % base_image_url
+										boost::format( " http://w.qq.com/cgi-bin/get_group_pic?pic=%s " ) % base_image_url
 										% url_encode( qqmsg.cface )
 									);
 				textmsg += imgurl;
