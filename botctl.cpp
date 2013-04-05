@@ -211,7 +211,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 			if( title.empty() ) return ;
 
 			if( !logfile.begin_lecture( group->qqnum, title ) ) {
-				printf( "lecture failed!\n" );
+				std::printf( "lecture failed!\n" );
 			}
 
 			return;
