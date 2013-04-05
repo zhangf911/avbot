@@ -1,4 +1,5 @@
 3.6
+	* with the control of .qqbot, avbot can join qq groups by itself.
 	* allow caching the qqgroup result so that if we have trouble fetching the group list, we won't suffer
 	* allow to fetch the group chat image to local storage
 
