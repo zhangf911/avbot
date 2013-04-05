@@ -14,9 +14,10 @@ public:
 	typedef void result_type;
 	template<class handler>
 	base_delayedcall(boost::asio::io_service &_io_service, int timeunitcount, handler _cb)
-		:io_service(_io_service),timer( new boost::asio::deadline_timer(io_service, timeunit(timeunitcount)))
+		:io_service(_io_service),timer( new boost::asio::deadline_timer(io_service))
 	{
 	    BOOST_ASIO_WAIT_HANDLER_CHECK(handler, _cb) type_check;
+	    timer->expires_from_now(timeunit(timeunitcount));
  		timer->async_wait(boost::bind(*this, boost::function<void()>(_cb), _1));
 	}
 	template<class handler>
