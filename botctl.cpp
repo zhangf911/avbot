@@ -99,10 +99,11 @@ static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string 
 								join_group_handler
 						);
 	}else if (group && !needvc){
-		msg_sender("哎呦妈呀，群加入了呢～记得修改 qqbotrc 将群添加到频道组哦～");
+		msg_sender("哎呦妈呀，群加入了呢～等待对方管理员通过\n记得修改 qqbotrc 将群添加到频道组哦～");
+	}else{
+		msg_sender("哎呦妈呀，群加不了");
 	}
 }
-
 
 static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool needvc, const std::string & vc_img_data, webqq * qqclient, boost::function<void( std::string )> msg_sender)
 {
