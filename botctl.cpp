@@ -68,6 +68,29 @@ static void iopost_msg( boost::asio::io_service& io_service, boost::function<voi
 	io_service.post( boost::bind( msg_sender, msg ) );
 }
 
+static boost::function<void (std::string)> do_vc_code;
+
+static void handle_search_group(qqGroup_ptr group, bool needvc, const std::string & vc_img_data, webqq * qqclient, boost::function<void( std::string )> msg_sender)
+{
+	static qqGroup_ptr _group;
+
+	if (needvc){
+		// 写入验证码.
+		std::ofstream vcode("vercode.jpeg", std::ofstream::out);
+		vcode.write(vc_img_data.data(), vc_img_data.size());
+		vcode.close();
+		// 向大家吵闹输入验证码.
+		msg_sender("哎呀，查找群的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg");
+
+		webqq::search_group_handler search_group_handler = boost::bind(handle_search_group, _1, _2, _3, qqclient, msg_sender);
+
+		do_vc_code = boost::bind(&webqq::search_group, qqclient,group->qqnum, _1, search_group_handler);
+	}else if (group){
+		// 很好，加入群吧！
+		msg_sender("哈呀，验证码正确了个去的，申请加入ing");
+	}
+}
+
 //-------------
 
 // 命令控制, 所有的协议都能享受的命令控制在这里实现.
@@ -183,6 +206,22 @@ void on_bot_command( boost::asio::io_service& io_service,
 
 		if( message == ".qqbot reexec" ) {
 			re_exec_self();
+		}
+
+		ex.set_expression( ".qqbot join group ([0-9]+)" );
+		if (qqclient && boost::regex_match( message.c_str(), what, ex ) )
+		{
+			qqclient->search_group(what[1], "", boost::bind(handle_search_group, _1, _2, _3, qqclient, msg_sender));
+		}
+
+		ex.set_expression( ".qqbot vc (.*)" );
+		if (qqclient && boost::regex_match( message.c_str(), what, ex ) )
+		{
+			if ( do_vc_code)
+				do_vc_code(what[1]);
+			else{
+				sendmsg("哈？输入验证码干嘛？");
+			}
 		}
 
 		// 重新加载群成员列表.
