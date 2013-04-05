@@ -71,7 +71,38 @@ static void iopost_msg( boost::asio::io_service& io_service, boost::function<voi
 	io_service.post( boost::bind( msg_sender, msg ) );
 }
 
+static void write_vcode(const std::string & vc_img_data)
+{
+	std::ofstream vcode("vercode.jpeg", std::ofstream::out);
+	vcode.write(vc_img_data.data(), vc_img_data.size());
+	vcode.close();
+}
+
 static boost::function<void (std::string)> do_vc_code;
+
+static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string & vc_img_data, webqq * qqclient, boost::function<void( std::string )> msg_sender)
+{
+	if (needvc && group){
+		// 写入验证码.
+		write_vcode(vc_img_data);
+		std::string msg = boost::str(
+				boost::format("哎呀，加入群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg") % group->qqnum
+			);
+		std::cout <<  msg <<  std::endl;
+		msg_sender(msg);
+
+		webqq::join_group_handler  join_group_handler = boost::bind(handle_join_group, _1, _2, _3, qqclient, msg_sender);
+		do_vc_code = boost::bind(
+							&webqq::join_group, qqclient,
+								group,
+								_1,
+								join_group_handler
+						);
+	}else if (group && !needvc){
+		msg_sender("哎呦妈呀，群加入了呢～记得修改 qqbotrc 将群添加到频道组哦～");
+	}
+}
+
 
 static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool needvc, const std::string & vc_img_data, webqq * qqclient, boost::function<void( std::string )> msg_sender)
 {
@@ -79,9 +110,7 @@ static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool 
 
 	if (needvc){
 		// 写入验证码.
-		std::ofstream vcode("vercode.jpeg", std::ofstream::out);
-		vcode.write(vc_img_data.data(), vc_img_data.size());
-		vcode.close();
+		write_vcode(vc_img_data);
 		// 向大家吵闹输入验证码.
 		std::string msg = boost::str(
 				boost::format("哎呀，查找群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg") % groupqqnum
@@ -100,6 +129,7 @@ static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool 
 	}else if (group){
 		// 很好，加入群吧！
 		msg_sender("哈呀，验证码正确了个去的，申请加入ing");
+		qqclient->join_group(group, "", boost::bind(handle_join_group, _1, _2, _3, qqclient, msg_sender));
 	}else{
 		msg_sender("没找到没找到");
 	}
