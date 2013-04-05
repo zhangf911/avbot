@@ -86,11 +86,14 @@ void on_bot_command( boost::asio::io_service& io_service,
 
 	boost::function<void( std::string )> sendmsg = boost::bind( iopost_msg, boost::ref( io_service ), msg_sender, _1 );
 
+	std::vector< std::string > qqGroups;
 	messagegroup* chanelgroup = find_group( from_channel );
 
 	if( chanelgroup ) {
 		qqclient = chanelgroup->qq_;
+		qqGroups =  chanelgroup->get_qqgroups();
 	}
+	
 
 	if( qqclient )
 		group =  qqclient->get_Group_by_qq( from_channel.substr( 3 ) );
@@ -184,11 +187,16 @@ void on_bot_command( boost::asio::io_service& io_service,
 
 		// 重新加载群成员列表.
 		if( qqclient && message == ".qqbot reload" ) {
-			if( group ) {
-				io_service.post( boost::bind( &webqq::update_group_member, qqclient , group) );
-				sendmsg( "群成员列表重加载" );
-			} else {
+			if( qqGroups.empty() ) {
 				sendmsg( "加载哪个群? 你没设置啊!" );
+			} else {
+				BOOST_FOREACH(std::string g, qqGroups)
+				{
+					group = qqclient->get_Group_by_qq(g);
+					if (group)
+						io_service.post( boost::bind( &webqq::update_group_member, qqclient , group) );
+				}
+				sendmsg( "群成员列表重加载" );
 			}
 
 			return;

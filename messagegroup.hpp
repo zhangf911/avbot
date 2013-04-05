@@ -25,6 +25,18 @@ struct messagegroup {
 		channels = groups;
 	}
 
+	// get maped qq groups
+	std::vector<std::string> get_qqgroups()
+	{
+		std::vector<std::string> ret;
+		BOOST_FOREACH( std::string c ,  channels)
+		{
+			if (c.substr(0, 3)=="qq:")
+				ret.push_back(c);
+		}
+		return ret;
+	}
+
 	bool in_group( std::string ch ) {
 		return std::find( channels.begin(), channels.end(), ch ) != channels.end();
 	}
