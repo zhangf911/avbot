@@ -20,6 +20,9 @@ namespace fs = boost::filesystem;
 #include <boost/foreach.hpp>
 #include <boost/locale.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
+#include <boost/bind/protect.hpp>
 
 #include <locale.h>
 #include <fstream>
@@ -70,7 +73,7 @@ static void iopost_msg( boost::asio::io_service& io_service, boost::function<voi
 
 static boost::function<void (std::string)> do_vc_code;
 
-static void handle_search_group(qqGroup_ptr group, bool needvc, const std::string & vc_img_data, webqq * qqclient, boost::function<void( std::string )> msg_sender)
+static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool needvc, const std::string & vc_img_data, webqq * qqclient, boost::function<void( std::string )> msg_sender)
 {
 	static qqGroup_ptr _group;
 
@@ -80,14 +83,25 @@ static void handle_search_group(qqGroup_ptr group, bool needvc, const std::strin
 		vcode.write(vc_img_data.data(), vc_img_data.size());
 		vcode.close();
 		// 向大家吵闹输入验证码.
-		msg_sender("哎呀，查找群的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg");
+		std::string msg = boost::str(
+				boost::format("哎呀，查找群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg") % groupqqnum
+			);
+		std::cout <<  msg <<  std::endl;
+		msg_sender(msg);
 
-		webqq::search_group_handler search_group_handler = boost::bind(handle_search_group, _1, _2, _3, qqclient, msg_sender);
+		webqq::search_group_handler  search_group_handler = boost::bind(handle_search_group, groupqqnum, _1, _2, _3, qqclient, msg_sender);
+		do_vc_code = boost::bind(
+							&webqq::search_group, qqclient,
+								groupqqnum,
+								_1,
+								search_group_handler
+						);
 
-		do_vc_code = boost::bind(&webqq::search_group, qqclient,group->qqnum, _1, search_group_handler);
 	}else if (group){
 		// 很好，加入群吧！
 		msg_sender("哈呀，验证码正确了个去的，申请加入ing");
+	}else{
+		msg_sender("没找到没找到");
 	}
 }
 
@@ -211,7 +225,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 		ex.set_expression( ".qqbot join group ([0-9]+)" );
 		if (qqclient && boost::regex_match( message.c_str(), what, ex ) )
 		{
-			qqclient->search_group(what[1], "", boost::bind(handle_search_group, _1, _2, _3, qqclient, msg_sender));
+			qqclient->search_group(what[1], "", boost::bind(handle_search_group, std::string(what[1]), _1, _2, _3, qqclient, msg_sender));
 		}
 
 		ex.set_expression( ".qqbot vc (.*)" );
