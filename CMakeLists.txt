@@ -58,14 +58,16 @@ include_directories(avproxy/include)
 include_directories(process/)
 
 add_subdirectory(libwebqq)
+if(ENABLE_TEST)
 add_subdirectory(libirc)
+endif()
 add_subdirectory(libxmpp)
 add_subdirectory(libmailexchange)
 
 add_definitions(-DQQBOT_VERSION=\"3.6\")
 add_executable(avbot main.cpp botctl.cpp messagegroup.cpp)
 
-target_link_libraries(avbot webqq irc xmpp mailexchange)
+target_link_libraries(avbot webqq xmpp mailexchange)
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 install(TARGETS avbot RUNTIME DESTINATION bin)
 
