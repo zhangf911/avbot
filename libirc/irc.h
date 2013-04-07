@@ -338,7 +338,7 @@ private:
 	}
 
 private:
-	boost::asio::io_service &io_service;
+	boost::asio::io_service &       io_service;
 	boost::asio::ip::tcp::socket    socket_;
 	boost::asio::streambuf          request_;
 	boost::asio::streambuf          response_;
