@@ -176,24 +176,24 @@ void on_bot_command( boost::asio::io_service& io_service,
 
 	if( message == ".qqbot help" ) {
 		io_service.post(
-			boost::bind( msg_sender, " usable command\n"
-						"\t.qqbot help\n"
-						"\t.qqbot version\n"
+			boost::bind( msg_sender, utf8str("可用的命令\n"
+						 "\t.qqbot help\n"
+						 "\t.qqbot version\n"
 						 "\t.qqbot ping\n"
 						 "\t.qqbot mail to \"emailaddress\"\n"
-						 "\t 将命令中间的聊天内容发送到邮件 emailaddress,  注意引号 \n"
-						 "\t 使用 .qqbot mail subject 设置主题 \n"
-						 "\t.qqbot mail end \n"
-						 "== 以下命令需要管理员才能使用== \n"
-						 "\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表 \n"
+						 "\t 将命令中间的聊天内容发送到邮件 emailaddress,  注意引号\n"
+						 "\t 使用 .qqbot mail subject 设置主题\n"
+						 "\t.qqbot mail end\n"
+						 "== 以下命令需要管理员才能使用==\n"
+						 "\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
 						 "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
 						 "\t.qqbot newbee SB\n"
-						 "以上!  " ))
+						 "以上!" ))
 		);
 	}
 
 	if( message == ".qqbot ping" ) {
-		sendmsg( utf8str("我还活着 "));
+		sendmsg( utf8str("我还活着"));
 		return;
 	}
 
@@ -288,7 +288,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 					if (group)
 						io_service.post( boost::bind( &webqq::update_group_member, qqclient , group) );
 				}
-				sendmsg( utf8str("群成员列表重加载~") );
+				sendmsg( utf8str("群成员列表重加载") );
 			}
 
 			return;
