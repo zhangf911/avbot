@@ -166,12 +166,13 @@ public:
 
 		BOOST_FOREACH( std::string rcpt, mails ) {
 			boost::cmatch	what;
-			boost::regex	ex( "[A-Za-z0-9\\._\\-]*@[A-Za-z0-9\\._\\-]*" );
+			boost::regex	ex( "([A-Za-z0-9\\._\\-]*)@[A-Za-z0-9\\._\\-]*" );
 
 			// 有的是 u@d 的形式,  有的是 "name" <u@d> 的形式呢
 			if( boost::regex_search( rcpt.c_str(), what, ex ) ) {
 				std::string mailaddress = what[0];
-				std::string rcpt_command = boost::str( boost::format( "rcpt to: <%s>\r\n" ) % mailaddress );
+				std::string mailname = what[1];
+				std::string rcpt_command = boost::str( boost::format( "rcpt to: \"%s\" <%s>\r\n" ) % mailname %mailaddress );
 				rcpts.push_back( rcpt_command );
 			}
 		}
