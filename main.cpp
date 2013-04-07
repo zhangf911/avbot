@@ -33,6 +33,8 @@ namespace po = boost::program_options;
 #include <direct.h>
 #endif
 
+#include "boost/vc_comp.hpp"
+
 #include "libirc/irc.h"
 #include "libwebqq/webqq.h"
 #include "libwebqq/url.hpp"
@@ -323,7 +325,7 @@ static void on_mail( mailcontent mail, mx::pop3::call_to_continue_function call_
 
 		forwardmessage( "mail",
 						boost::str(
-							boost::format( "[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s" )
+							boost::format( utf8str("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s") )
 							% mail.from % mail.to % mail.subject % mail.content
 						)
 					  );
@@ -341,8 +343,8 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qq
 	img.write( data, imgsize );
 	qqneedvc = true;
 	// send to xmpp and irc
-	ircclient.chat( boost::str( boost::format( "#%s" ) % ircvercodechannel ), "输入qq验证码 " );
-	std::cerr << "请输入验证码:" ;
+	ircclient.chat( boost::str( boost::format( "#%s" ) % ircvercodechannel ), utf8str("输入qq验证码") );
+	std::cerr << localstr("请打开gglog目录查看 vercode.jpeg 然后输入验证码:") ;
 }
 
 #ifdef WIN32
@@ -385,7 +387,6 @@ int main( int argc, char *argv[] )
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
 	bool localimage;
-	std::string baseimageurl;
 
 	progname = fs::basename( argv[0] );
 	execpath = strdup( (char*) fs::absolute( fs::path( argv[0] ) ).normalize().c_str() );
@@ -416,19 +417,18 @@ int main( int argc, char *argv[] )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
 
 	( "localimage", po::value<bool>( &localimage)->default_value(false),	"fetch qq image to local disk and store it there")
-	( "imageurlbase", po::value<std::string>(&baseimageurl), "if fetch image to local disk,  use this url as image prefix")
 
-	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( "qq(%a)： " ),
+	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( localstr("qq(%a)：") ),
 	  "为QQ设置的发言前缀, 默认是 qq(%a):  " )
-	( "preambleirc",	po::value<std::string>( &preamble_irc_fmt )->default_value( "%a 说： " ),
+	( "preambleirc",	po::value<std::string>( &preamble_irc_fmt )->default_value( localstr("%a 说：") ),
 	  "为IRC设置的发言前缀, 默认是 %a 说:  " )
-	( "preamblexmpp",	po::value<std::string>( &preamble_xmpp_fmt )->default_value( "(%a)： " ),
-	  "为XMPP设置的发言前缀, 默认是 (%a): \n\n "
+	( "preamblexmpp",	po::value<std::string>( &preamble_xmpp_fmt )->default_value( localstr("(%a)：") ),
+	  localstr("为XMPP设置的发言前缀, 默认是 (%a): \n\n "
 	  "前缀里的含义 \n"
 	  "\t %a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片 \n"
 	  "\t %r为房间名(群号, XMPP房名, IRC频道名) \n"
 	  "可以包含多个, 例如想记录QQ号码的可以使用 qq(%a, %q)说: \n"
-	  "注意在shell下可能需要使用\\(来转义(\n配置文件无此问题 \n\n"	)
+	  "注意在shell下可能需要使用\\(来转义(\n配置文件无此问题 \n\n") )
 	;
 
 	po::store( po::parse_command_line( argc, argv, desc ), vm );
@@ -470,7 +470,7 @@ int main( int argc, char *argv[] )
 	}
 
 	if (localimage)
-		base_image_url = baseimageurl;
+		base_image_url = "../images/";
 
 	// 设置到中国的时区，否则 qq 消息时间不对啊.
 	putenv( ( char* )"TZ=Asia/Shanghai" );
@@ -482,17 +482,17 @@ int main( int argc, char *argv[] )
 	}
 
 	if( qqnumber.empty() || qqpwd.empty() ) {
-		std::cerr << "请设置qq号码和密码 " << std::endl;
+		std::cerr << localstr("请设置qq号码和密码") << std::endl;
 		exit( 1 );
 	}
 
 	if( ircnick.empty() ) {
-		std::cerr << "请设置irc昵称 " << std::endl;
+		std::cerr << localstr("请设置irc昵称") << std::endl;
 		exit( 1 );
 	}
 
 	if( ircroom.empty() ) {
-		std::cerr << "请设置irc频道 " << std::endl;
+		std::cerr << localstr("请设置irc频道") << std::endl;
 		exit( 1 );
 	}
 

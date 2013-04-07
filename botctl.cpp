@@ -23,7 +23,7 @@ namespace fs = boost::filesystem;
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/bind/protect.hpp>
-
+#include <boost/locale/encoding.hpp>
 #include <locale.h>
 #include <fstream>
 #include <string.h>
@@ -53,6 +53,14 @@ namespace fs = boost::filesystem;
 #define QQBOT_VERSION "unknow"
 #endif
 
+#include "boost/vc_comp.hpp"
+
+inline std::string utf8_ansi( std::string const &source, const std::string &characters = "GB18030" )
+{
+	return boost::locale::conv::between( source, characters, "UTF-8" ).c_str();
+}
+
+
 static auto_question question;	// 自动问问题.
 
 extern qqlog logfile;			// 用于记录日志文件.
@@ -60,9 +68,9 @@ extern qqlog logfile;			// 用于记录日志文件.
 static void mail_send_hander( const boost::system::error_code & ec, boost::function<void( std::string )> msg_sender )
 {
 	if( ec ) {
-		msg_sender( "邮件没发送成功, 以上" );
+		msg_sender( utf8str("邮件没发送成功, 以上") );
 	} else {
-		msg_sender( "邮件发送成功, 以上" );
+		msg_sender( utf8str("邮件发送成功, 以上") );
 	}
 }
 
@@ -86,9 +94,9 @@ static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string 
 		// 写入验证码.
 		write_vcode(vc_img_data);
 		std::string msg = boost::str(
-				boost::format("哎呀，加入群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg") % group->qqnum
+				boost::format(utf8str("哎呀，加入群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg")) % group->qqnum
 			);
-		std::cout <<  msg <<  std::endl;
+		std::cout <<  utf8_ansi(msg) <<  std::endl;
 		msg_sender(msg);
 
 		webqq::join_group_handler  join_group_handler = boost::bind(handle_join_group, _1, _2, _3, qqclient, msg_sender);
@@ -99,9 +107,9 @@ static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string 
 								join_group_handler
 						);
 	}else if (group && !needvc){
-		msg_sender("哎呦妈呀，群加入了呢～等待对方管理员通过\n记得修改 qqbotrc 将群添加到频道组哦～");
+		msg_sender(utf8str("哎呦妈呀，群加入了呢～等待对方管理员通过\n记得修改 qqbotrc 将群添加到频道组哦～"));
 	}else{
-		msg_sender("哎呦妈呀，群加不了");
+		msg_sender(utf8str("哎呦妈呀，群加不了"));
 	}
 }
 
@@ -114,9 +122,9 @@ static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool 
 		write_vcode(vc_img_data);
 		// 向大家吵闹输入验证码.
 		std::string msg = boost::str(
-				boost::format("哎呀，查找群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg") % groupqqnum
+				boost::format(utf8str("哎呀，查找群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg")) % groupqqnum
 			);
-		std::cout <<  msg <<  std::endl;
+		std::cout << utf8_ansi(msg) <<  std::endl;
 		msg_sender(msg);
 
 		webqq::search_group_handler  search_group_handler = boost::bind(handle_search_group, groupqqnum, _1, _2, _3, qqclient, msg_sender);
@@ -129,10 +137,10 @@ static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool 
 
 	}else if (group){
 		// 很好，加入群吧！
-		msg_sender("哈呀，验证码正确了个去的，申请加入ing");
+		msg_sender(utf8str("哈呀，验证码正确了个去的，申请加入ing"));
 		qqclient->join_group(group, "", boost::bind(handle_join_group, _1, _2, _3, qqclient, msg_sender));
 	}else{
-		msg_sender("没找到没找到");
+		msg_sender(utf8str("没找到没找到"));
 	}
 }
 
@@ -168,7 +176,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 
 	if( message == ".qqbot help" ) {
 		io_service.post(
-			boost::bind( msg_sender, "可用的命令\n"
+			boost::bind( msg_sender, utf8str("可用的命令\n"
 						 "\t.qqbot help\n"
 						 "\t.qqbot version\n"
 						 "\t.qqbot ping\n"
@@ -180,17 +188,17 @@ void on_bot_command( boost::asio::io_service& io_service,
 						 "\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
 						 "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
 						 "\t.qqbot newbee SB\n"
-						 "以上!" )
+						 "以上!" ))
 		);
 	}
 
 	if( message == ".qqbot ping" ) {
-		sendmsg( "我还活着" );
+		sendmsg( utf8str("我还活着"));
 		return;
 	}
 
 	if( message == ".qqbot version" ) {
-		sendmsg( boost::str( boost::format( "我的版本是 %s (%s %s)" ) % QQBOT_VERSION % __DATE__ % __TIME__ ) );
+		sendmsg( boost::str( boost::format( utf8str("我的版本是 %s (%s %s)") ) % QQBOT_VERSION % __DATE__ % __TIME__ ) );
 		return;
 	}
 
@@ -265,14 +273,14 @@ void on_bot_command( boost::asio::io_service& io_service,
 			if ( do_vc_code)
 				do_vc_code(what[1]);
 			else{
-				sendmsg("哈？输入验证码干嘛？");
+				sendmsg(utf8str("哈？输入验证码干嘛?"));
 			}
 		}
 
 		// 重新加载群成员列表.
 		if( qqclient && message == ".qqbot reload" ) {
 			if( qqGroups.empty() ) {
-				sendmsg( "加载哪个群? 你没设置啊!" );
+				sendmsg( utf8str("加载哪个群? 你没设置啊!" ) );
 			} else {
 				BOOST_FOREACH(std::string g, qqGroups)
 				{
@@ -280,7 +288,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 					if (group)
 						io_service.post( boost::bind( &webqq::update_group_member, qqclient , group) );
 				}
-				sendmsg( "群成员列表重加载" );
+				sendmsg( utf8str("群成员列表重加载") );
 			}
 
 			return;
