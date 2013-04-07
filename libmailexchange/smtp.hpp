@@ -77,11 +77,14 @@ public:
 	void operator()( boost::system::error_code ec, std::size_t bytetransfered ) {
 		using namespace boost::asio;
 
+		std::string rcpt_command;
 		reenter( this ) {
 			using namespace boost::system::errc;
 
 			for( sended_rcpt = i = 0; i < m_rcpts.size(); i++ ) {
 				// 开始发送循环.
+				rcpt_command = boost::str( boost::format( "rcpt to: %s\r\n" ) % m_rcpts[i] );
+
 				_yield m_socket.async_write_some( buffer( m_rcpts[i] ), *this );
 
 				if( ec )
@@ -95,9 +98,24 @@ public:
 
 				// 检查是不是 250 OK
 				check_smtp_response( m_readbuf.get(), ec, 250 );
-
 				if( !ec ) { // 是 250 就加 1
 					sended_rcpt ++;
+				}else{
+					rcpt_command = boost::str( boost::format( "rcpt to: <%s>\r\n" ) % m_rcpts[i] );
+					_yield m_socket.async_write_some( buffer( m_rcpts[i] ), *this );
+				
+					// 读取响应.
+					_yield read_smtp_response_lines( *this );
+
+					if( ec )
+						break;
+
+					// 检查是不是 250 OK
+					check_smtp_response( m_readbuf.get(), ec, 250 );
+
+					if( !ec ) { // 是 250 就加 1
+						sended_rcpt ++;
+					}
 				}
 
 				ec.clear();
@@ -166,14 +184,12 @@ public:
 
 		BOOST_FOREACH( std::string rcpt, mails ) {
 			boost::cmatch	what;
-			boost::regex	ex( "([A-Za-z0-9\\._\\-]*)@[A-Za-z0-9\\._\\-]*" );
+			boost::regex	ex( "[A-Za-z0-9\\._\\-]*@[A-Za-z0-9\\._\\-]*" );
 
 			// 有的是 u@d 的形式,  有的是 "name" <u@d> 的形式呢
 			if( boost::regex_search( rcpt.c_str(), what, ex ) ) {
 				std::string mailaddress = what[0];
-				std::string mailname = what[1];
-				std::string rcpt_command = boost::str( boost::format( "rcpt to: \"%s\" <%s>\r\n" ) % mailname %mailaddress );
-				rcpts.push_back( rcpt_command );
+				rcpts.push_back( mailaddress );
 			}
 		}
 		m_imf = imf;
