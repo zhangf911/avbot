@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <vector>
 #include <signal.h>
+#include <fstream>
+
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
@@ -22,7 +24,6 @@ namespace po = boost::program_options;
 #include <boost/locale.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <locale.h>
-#include <fstream>
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -337,8 +338,7 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qq
 	const char * data = boost::asio::buffer_cast<const char*>( imgbuf );
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
 	fs::path imgpath = fs::path( logfile.log_path() ) / "vercode.jpeg";
-	std::ofstream	img;
-	img.open( imgpath.string(), std::ofstream::binary | std::ofstream::out );
+	std::ofstream	img( imgpath.string().c_str(), std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
 	img.write( data, imgsize );
 	qqneedvc = true;
 	// send to xmpp and irc
