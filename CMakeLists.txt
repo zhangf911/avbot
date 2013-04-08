@@ -8,6 +8,9 @@ option(ENABLE_LTO "build avbot with LTO" OFF)
 option(ENABLE_LIBSTDCXX_STATIC "link to static libstdc++" OFF)
 option(ENABLE_LIBGCC_STATIC "link to static libgcc" OFF)
 
+if(MINGW)
+add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+endif()
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g0")
 
