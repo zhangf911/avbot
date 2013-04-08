@@ -337,7 +337,7 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qq
 	const char * data = boost::asio::buffer_cast<const char*>( imgbuf );
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
 	fs::path imgpath = fs::path( logfile.log_path() ) / "vercode.jpeg";
-	std::ofstream	img( imgpath.c_str(), std::ios::binary | std::ios::out );
+	std::ofstream	img( imgpath.c_str(), std::ofstream::binary | std::ofstream::out );
 	img.write( data, imgsize );
 	qqneedvc = true;
 	// send to xmpp and irc
