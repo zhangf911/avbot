@@ -1,19 +1,5 @@
 project(gloox)
 
-find_package(OpenSSL REQUIRED)
-
-if(NOT WIN32)
-
-	find_package(ZLIB )
-	if(ZLIB_FOUND)
-		add_definitions(-DHAVE_ZLIB)
-	endif()
-
-endif()
-
-
-include_directories(${OpenSSL_INCLUDE_DIRS})
-
 SET( GLOOX_SRC
 gloox/amp.cpp
 gloox/annotations.cpp
@@ -90,8 +76,4 @@ gloox/vcardupdate.cpp
 gloox/xhtmlim.cpp
 )
 
-add_library(gloox STATIC ${GLOOX_SRC})
-target_link_libraries(gloox  ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
-if(UNIX)
-	target_link_libraries(gloox -pthread)
-endif()
+add_library(gloox OBJECT ${GLOOX_SRC})
