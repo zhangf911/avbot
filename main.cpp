@@ -385,7 +385,6 @@ int main( int argc, char *argv[] )
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
 	bool localimage;
-	std::string baseimageurl;
 
 	progname = fs::basename( argv[0] );
 	execpath = strdup( (char*) fs::absolute( fs::path( argv[0] ) ).normalize().c_str() );
@@ -416,7 +415,6 @@ int main( int argc, char *argv[] )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
 
 	( "localimage", po::value<bool>( &localimage)->default_value(false),	"fetch qq image to local disk and store it there")
-	( "imageurlbase", po::value<std::string>(&baseimageurl), "if fetch image to local disk,  use this url as image prefix")
 
 	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( "qq(%a)： " ),
 	  "为QQ设置的发言前缀, 默认是 qq(%a):  " )
@@ -470,7 +468,7 @@ int main( int argc, char *argv[] )
 	}
 
 	if (localimage)
-		base_image_url = baseimageurl;
+		base_image_url = "../images/";
 
 	// 设置到中国的时区，否则 qq 消息时间不对啊.
 	putenv( ( char* )"TZ=Asia/Shanghai" );
