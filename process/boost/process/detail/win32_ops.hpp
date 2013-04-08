@@ -81,11 +81,7 @@ inline boost::shared_array<char> collection_to_win32_cmdline(const Arguments &ar
     boost::shared_array<char> cmdline(new char[size]); 
     cmdline.get()[0] = '\0'; 
     for (arguments_t::size_type i = 0; i < args.size(); ++i) 
-#if defined(__CYGWIN__) || defined(_SCL_SECURE_NO_DEPRECATE) 
-        ::strncat(cmdline.get(), args2[i].c_str(), args2[i].size()); 
-#else 
-        ::strcat_s(cmdline.get(), size, args2[i].c_str()); 
-#endif 
+        strcat(cmdline.get(), args2[i].c_str());
 
     return cmdline; 
 } 
