@@ -15,7 +15,7 @@
  * Provides some convenience functions to start processes under 
  * Windows-compatible operating systems. 
  */ 
-
+#define _SCL_SECURE_NO_DEPRECATE 1
 #ifndef BOOST_PROCESS_DETAIL_WIN32_OPS_HPP 
 #define BOOST_PROCESS_DETAIL_WIN32_OPS_HPP 
 
@@ -117,12 +117,8 @@ inline boost::shared_array<char> environment_to_win32_strings(const environment 
         } 
 
         envp.reset(new char[s.size() + 1]); 
-#if defined(__CYGWIN__) || defined(_SCL_SECURE_NO_DEPRECATE) 
         ::memcpy(envp.get(), s.c_str(), s.size() + 1); 
-#else 
-        ::memcpy_s(envp.get(), s.size() + 1, s.c_str(), s.size() + 1); 
-#endif 
-    } 
+    }
 
     return envp; 
 } 
