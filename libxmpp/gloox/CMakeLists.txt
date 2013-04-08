@@ -1,11 +1,16 @@
 project(gloox)
 
 find_package(OpenSSL REQUIRED)
-find_package(ZLIB )
 
-if(ZLIB_FOUND)
-	add_definitions(-DHAVE_ZLIB)
+if(NOT WIN32)
+
+	find_package(ZLIB )
+	if(ZLIB_FOUND)
+		add_definitions(-DHAVE_ZLIB)
+	endif()
+
 endif()
+
 
 include_directories(${OpenSSL_INCLUDE_DIRS})
 
