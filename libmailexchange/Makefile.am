@@ -1,9 +1,9 @@
 
 AM_CPPFLAGS = -I${top_srcdir}/avproxy/include -I${top_srcdir}
 
-lib_LTLIBRARIES = libmx.la
+noinst_LTLIBRARIES = libmx.la
 
-libmx_la_SOURCES = pop3.cpp smtp.cpp 
+libmx_la_SOURCES = pop3.cpp smtp.cpp smtp.hpp pop3.hpp internet_mail_format.hpp  mx.hpp
 
 libmx_la_LDFLAGS = -static
 

@@ -6,29 +6,14 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
-/* Define to 1 if you have the `dn_skipname' function. */
-#undef HAVE_DN_SKIPNAME
-
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
 /* Define to 1 if you have the `getaddrinfo' function. */
 #undef HAVE_GETADDRINFO
 
-/* Define to 1 if you want TLS support (GnuTLS). Undefine HAVE_OPENSSL. */
-#undef HAVE_GNUTLS
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
-
-/* Define to 1 if you have the `bind' library (-lbind). */
-#undef HAVE_LIBBIND
-
-/* Define to 1 if you want IDN support. */
-#undef HAVE_LIBIDN
-
-/* Define to 1 if you have the `resolv' library (-lresolv). */
-#undef HAVE_LIBRESOLV
 
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
@@ -38,12 +23,6 @@
 
 /* Define to 1 if you want TLS support (OpenSSL). Undefine HAVE_GNUTLS. */
 #undef HAVE_OPENSSL
-
-/* Define to 1 if you have the `res_query' function. */
-#undef HAVE_RES_QUERY
-
-/* Define to 1 if you have the `res_querydomain' function. */
-#undef HAVE_RES_QUERYDOMAIN
 
 /* Define to 1 if you have the `setsockopt' function. */
 #undef HAVE_SETSOCKOPT

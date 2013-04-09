@@ -8,6 +8,10 @@ AM_CPPFLAGS = -Wall -pedantic -pipe -W -Wfloat-equal -Wcast-align -Wsign-compare
 
 noinst_LTLIBRARIES = libgloox.la
 
+libgloox_la_LDFLAGS = -static
+libgloox_la_LIBADD = ${LIBS}
+libgloox_la_CFLAGS = $(CPPFLAGS)
+
 libgloox_la_SOURCES = jid.cpp parser.cpp clientbase.cpp tag.cpp stanza.cpp logsink.cpp \
                         prep.cpp base64.cpp client.cpp component.cpp \
                         disco.cpp adhoc.cpp privatexml.cpp registration.cpp \
@@ -27,13 +31,8 @@ libgloox_la_SOURCES = jid.cpp parser.cpp clientbase.cpp tag.cpp stanza.cpp logsi
                         messageevent.cpp receipt.cpp nickname.cpp eventdispatcher.cpp \
                         pubsubevent.cpp xhtmlim.cpp featureneg.cpp \
                         shim.cpp softwareversion.cpp attention.cpp \
-                        tlsopensslclient.cpp tlsopensslbase.cpp compressiondefault.cpp 
-
-libgloox_la_LDFLAGS = -static
-libgloox_la_LIBADD = ${LIBS}
-libgloox_la_CFLAGS = $(CPPFLAGS)
-
-noinst_HEADERS = adhoccommandprovider.h      privacymanager.h        tag.h \
+                        tlsopensslclient.cpp tlsopensslbase.cpp compressiondefault.cpp  \
+			adhoccommandprovider.h      privacymanager.h        tag.h \
                             adhoc.h attention.h iqhandler.h             privatexml.h \
                             annotations.h             client.h                privatexmlhandler.h \
                             annotationshandler.h      component.h             registration.h \
@@ -77,9 +76,8 @@ noinst_HEADERS = adhoccommandprovider.h      privacymanager.h        tag.h \
                             nickname.h                pubsubevent.h           xhtmlim.h \
                             eventdispatcher.h         \
                             pubsubitem.h shim.h util.h \
-                            compressiondefault.h
-
-noinst_HEADERS += config.h prep.h nonsaslauth.h mucmessagesession.h stanzaextensionfactory.h \
+                            compressiondefault.h \
+                            config.h prep.h nonsaslauth.h mucmessagesession.h stanzaextensionfactory.h \
                    tlsopensslbase.h tlsschannel.h \
                    compressionzlib.h rosteritemdata.h tlsopensslclient.h 
 

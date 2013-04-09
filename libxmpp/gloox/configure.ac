@@ -20,9 +20,8 @@ dnl Checks for programs.
 AC_PROG_INSTALL
 AC_PROG_CC
 AC_PROG_CXX
-AC_PROG_RANLIB
-AM_PROG_LIBTOOL
-AC_PROG_LIBTOOL
+
+LT_INIT
 
 dnl
 dnl extra paths
@@ -44,30 +43,6 @@ for libpath in $split_libs ; do
     LDFLAGS="-L$libpath $LDFLAGS"
 done
 
-dnl Checks for libraries.
-
-dnl Libidn
-AC_ARG_WITH(libidn, AC_HELP_STRING([--with-libidn=[DIR]],
-      [Support IDN (needs GNU Libidn)]),
-      libidn=$withval, libidn=yes)
-if test "$libidn" != "no"; then
-  if test "$libidn" != "yes"; then
-    LDFLAGS="${LDFLAGS} -L$libidn/lib"
-    CPPFLAGS="${CPPFLAGS} -I$libidn/include"
-  fi
-  AC_CHECK_HEADER(idna.h,
-  AC_CHECK_LIB(idn, stringprep_check_version,
-           [libidn=yes LIBS="${LIBS} -lidn"], libidn=no),
-           libidn=no)
-fi
-if test "$libidn" != "no" ; then
-  AC_DEFINE(HAVE_LIBIDN, 1, [Define to 1 if you want IDN support.])
-else
-  AC_MSG_WARN([Libidn not found])
-fi
-AC_MSG_CHECKING([if Libidn should be used])
-AC_MSG_RESULT($libidn)
-
 
 dnl extra win32 libs
 case "$host_os" in
@@ -76,7 +51,6 @@ case "$host_os" in
   *)
       CXXFLAGS="$CXXFLAGS -ansi";;
 esac
-
 
 ssl=no
 
@@ -97,31 +71,6 @@ if test "$schannel" = "yes"; then
   esac
   AC_MSG_CHECKING([if SChannel should be used])
   AC_MSG_RESULT($schannel)
-fi
-
-dnl GnuTLS
-if test "$ssl" = "no"; then
-  AC_ARG_WITH(gnutls, AC_HELP_STRING([--with-gnutls=[DIR]],
-        [Support Stream Encryption (needs GnuTLS)]),
-        gnutls=$withval, gnutls=yes)
-  if test "$gnutls" != "no"; then
-    if test "$gnutls" != "yes"; then
-      LDFLAGS="${LDFLAGS} `pkg-config gnutls --libs-only-L`"
-      CPPFLAGS="${CPPFLAGS} `pkg-config gnutls --cflags`"
-    fi
-    AC_CHECK_HEADER(gnutls/gnutls.h,
-    AC_CHECK_LIB(gnutls, gnutls_check_version,
-            [gnutls=yes LIBS="${LIBS} `pkg-config gnutls --libs`"], gnutls=no),
-            gnutls=no)
-  fi
-  if test "$gnutls" != "no" ; then
-    AC_DEFINE(HAVE_GNUTLS, 1, [Define to 1 if you want TLS support (GnuTLS). Undefine HAVE_OPENSSL.])
-    ssl=yes
-  else
-    AC_MSG_WARN([GnuTLS not found])
-  fi
-  AC_MSG_CHECKING([if GnuTLS should be used])
-  AC_MSG_RESULT($gnutls)
 fi
 
 dnl OpenSSL
@@ -172,117 +121,6 @@ fi
 AC_MSG_CHECKING([if Zlib should be used])
 AC_MSG_RESULT($zlib)
 
-dnl pthread
-ACX_PTHREAD()
-
-dnl check for res_querydomain in libc, libbind and libresolv
-AC_CHECK_FUNCS(res_querydomain)
-if test "x-$ac_cv_func_res_querydomain" = "x-yes" ; then
-  have_res_querydomain=yes
-else
-  AC_CHECK_LIB(resolv, res_querydomain)
-  if test "x-$ac_cv_lib_resolv_res_querydomain" = "x-yes" ; then
-    have_res_querydomain=yes
-    AC_DEFINE(HAVE_RES_QUERYDOMAIN)
-  else
-    AC_CHECK_LIB(bind, res_querydomain)
-    if test "x-$ac_cv_lib_bind_res_querydomain" = "x-yes" ; then
-      have_res_querydomain=yes
-      AC_DEFINE(HAVE_RES_QUERYDOMAIN)
-    else
-      AC_MSG_CHECKING([for res_querydomain in -lresolv (alternate version)])
-      save_libs="$LIBS"
-      LIBS="-lresolv $LIBS"
-      AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <resolv.h>]], [[res_querydomain(0,0,0,0,0,0)]])],
-                     [AC_MSG_RESULT(yes)
-                      AC_DEFINE(HAVE_RES_QUERYDOMAIN)
-                      have_res_querydomain=yes],
-                     [AC_MSG_RESULT(no)
-                     LIBS="$save_libs"])
-    fi
-  fi
-fi
-
-dnl check for dn_skipname in libc, libbind and libresolv
-AC_CHECK_FUNCS(dn_skipname)
-if test "x-$ac_cv_func_dn_skipname" = "x-yes" ; then
-  have_dn_skipname=yes
-else
-  AC_CHECK_LIB(resolv, dn_skipname)
-  if test "x-$ac_cv_lib_resolv_dn_skipname" = "x-yes" ; then
-    have_dn_skipname=yes
-    AC_DEFINE(HAVE_DN_SKIPNAME)
-  else
-    AC_CHECK_LIB(bind, dn_skipname)
-    if test "x-$ac_cv_lib_bind_dn_skipname" = "x-yes" ; then
-      have_dn_skipname=yes
-      AC_DEFINE(HAVE_DN_SKIPNAME)
-    else
-      AC_MSG_CHECKING([for dn_skipname in -lresolv (alternate version)])
-      save_libs="$LIBS"
-      LIBS="-lresolv $LIBS"
-      AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <netinet/in.h>
- #include <resolv.h>]], [[dn_skipname(0,0)]])],
-                     [AC_MSG_RESULT(yes)
-                      AC_DEFINE(HAVE_DN_SKIPNAME)
-                      have_dn_skipname=yes],
-                     [AC_MSG_RESULT(no)
-                     LIBS="$save_libs"])
-    fi
-  fi
-fi
-
-dnl check for res_query in libc, libbind and libresolv
-AC_CHECK_FUNCS(res_query)
-if test "x-$ac_cv_func_res_query" = "x-yes" ; then
-  have_res_query=yes
-else
-  AC_CHECK_LIB(resolv, res_query)
-  if test "x-$ac_cv_lib_resolv_res_query" = "x-yes" ; then
-    have_res_query=yes
-    AC_DEFINE(HAVE_RES_QUERY)
-  else
-    AC_CHECK_LIB(bind, res_query)
-    if test "x-$ac_cv_lib_bind_res_query" = "x-yes" ; then
-      have_res_query=yes
-      AC_DEFINE(HAVE_RES_QUERY)
-    else
-      AC_MSG_CHECKING([for res_query in -lresolv (alternate version)])
-      save_libs="$LIBS"
-      LIBS="-lresolv $LIBS"
-      AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <resolv.h>]], [[res_query(0,0)]])],
-                     [AC_MSG_RESULT(yes)
-                      AC_DEFINE(HAVE_RES_QUERY)
-                      have_res_query=yes],
-                     [AC_MSG_RESULT(no)
-                     LIBS="$save_libs"])
-    fi
-  fi
-fi
-
-
-#  AC_SEARCH_LIBS(res_query,resolv bind,,
-#                 AC_SEARCH_LIBS(__res_query,resolv bind,,have_resolver=no))
-#  AC_SEARCH_LIBS(dn_expand,resolv bind,,
-#                 AC_SEARCH_LIBS(__dn_expand,resolv bind,,have_resolver=no))
-#  AC_SEARCH_LIBS(dn_skipname,resolv bind,,
-#                 AC_SEARCH_LIBS(__dn_skipname,resolv bind,,have_resolver=no))
-#  AC_SEARCH_LIBS(res_querydomain,resolv bind,,
-#                 AC_SEARCH_LIBS(__res_querydomain,resolv bind,,have_resolver=no))
-
-
-dnl Debug
-debug="no"
-AC_ARG_ENABLE( debug,
-               [  --enable-debug          turn on debugging [default=no]],
-               [debug="yes"] )
-if test "x$debug" = "xyes"; then
-      CPPFLAGS="$CPPFLAGS -g3 -fno-inline -DDEBUG"
-fi
-AC_MSG_CHECKING([whether to enable debug])
-AC_MSG_RESULT($debug)
-
-dnl getaddrinfo
 getaddrinfo="no"
 AC_ARG_ENABLE( getaddrinfo,
                [  --enable-getaddrinfo    use getaddrinfo for dns lookups [default=no]],
