@@ -47,7 +47,6 @@ namespace fs = boost::filesystem;
 #include "auto_question.hpp"
 #include "messagegroup.hpp"
 #include "botctl.hpp"
-#include "selfexec.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -248,11 +247,14 @@ void on_bot_command( boost::asio::io_service& io_service,
 		if( message == ".qqbot exit" ) {
 			exit( 0 );
 		}
-
+#ifndef _WIN32
 		if( message == ".qqbot reexec" ) {
-			re_exec_self();
+			if (fork()==0){
+				char * argv[]={"avbot", NULL};
+				execvp("avbot", argv);
+			}
 		}
-
+#endif
 		ex.set_expression( ".qqbot join group ([0-9]+)" );
 		if (qqclient && boost::regex_match( message.c_str(), what, ex ) )
 		{

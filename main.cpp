@@ -24,7 +24,7 @@ namespace po = boost::program_options;
 #include <boost/locale.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <locale.h>
-#include <string.h>
+#include <cstring>
 #include <stdlib.h>
 #include <signal.h>
 #include <stdio.h>
@@ -45,8 +45,6 @@ namespace po = boost::program_options;
 
 #include "messagegroup.hpp"
 #include "botctl.hpp"
-
-#include "selfexec.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -357,24 +355,6 @@ int daemon( int nochdir, int noclose )
 #include "input.ipp"
 #include "fsconfig.ipp"
 
-#ifndef _WIN32
-void av_sigmask( int how, int signal_number )
-{
-	sigset_t sigset = {0};
-	sigaddset( &sigset, signal_number );
-	sigprocmask( how, &sigset, NULL );
-}
-#endif
-
-// 断错误后重启自己.
-static void handle_segfault( int signal_number )
-{
-#ifndef _WIN32
-	av_sigmask( SIG_UNBLOCK, SIGINT );
-#endif
-	re_exec_self();
-}
-
 int main( int argc, char *argv[] )
 {
 	std::string qqnumber, qqpwd;
@@ -388,7 +368,6 @@ int main( int argc, char *argv[] )
 	bool localimage;
 
 	progname = fs::basename( argv[0] );
-	execpath = strdup( (char*) fs::absolute( fs::path( argv[0] ) ).normalize().c_str() );
 
 	setlocale( LC_ALL, "" );
 	po::variables_map vm;
@@ -452,10 +431,6 @@ int main( int argc, char *argv[] )
 
 	if( vm.count( "daemon" ) ) {
 		daemon( 0, 0 );
-#ifndef _WIN32
-		av_sigmask( SIG_BLOCK, SIGHUP );
-#endif
-		signal( SIGSEGV, handle_segfault );
 	}
 
 	if( vm.count( "version" ) ) {
