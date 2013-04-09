@@ -55,6 +55,10 @@ endif()
 
 find_package(Threads)
 
+if(MINGW)
+add_definitions(-DBOOST_THREAD_USE_LIB)
+endif()
+
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(avproxy/include)
