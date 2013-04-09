@@ -1,4 +1,6 @@
 
+EXTRA_DIST = CMakeLists.txt smtptest.cpp pop3test.cpp
+
 AM_CPPFLAGS = -I${top_srcdir}/avproxy/include -I${top_srcdir}
 
 noinst_LTLIBRARIES = libmx.la

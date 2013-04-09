@@ -1,4 +1,6 @@
 
+EXTRA_DIST = CMakeLists.txt test.cpp
+
 SUBDIRS = gloox
 
 AM_CPPFLAGS = -I ${srcdir}/gloox -I ${top_srcdir} -I ${top_srcdir}/avproxy/include
