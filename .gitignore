@@ -8,6 +8,8 @@ build/
 !.gitignore
 *~
 *.kde*
+
+## autotools
 !Makefile.am
 Makefile
 Makefile.in
@@ -20,6 +22,10 @@ depcomp
 ltmain.sh
 install-sh
 missing
+stamp-h1
+libtool
+config.log
+config.h.unix
 
 
 Release
