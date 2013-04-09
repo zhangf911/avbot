@@ -3,11 +3,11 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT([gloox], [1.0], [js@camaya.net])
-AC_CONFIG_SRCDIR(src/gloox.cpp)
-AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+AC_CONFIG_SRCDIR(gloox/gloox.cpp)
+AM_INIT_AUTOMAKE([foreign])
 
 dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
-AM_CONFIG_HEADER(config.h.unix)
+AC_CONFIG_HEADER(config.h.unix)
 
 AC_SUBST(VERSION)
 
@@ -174,9 +174,6 @@ AC_MSG_RESULT($zlib)
 
 dnl pthread
 ACX_PTHREAD()
-LIBS="$PTHREAD_LIBS $LIBS"
-CPPFLAGS="$CPPFLAGS $PTHREAD_CFLAGS"
-LDFLAGS="$LDFLAGS $PTHREAD_CFLAGS"
 
 dnl check for res_querydomain in libc, libbind and libresolv
 AC_CHECK_FUNCS(res_querydomain)
@@ -305,118 +302,10 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
 
-dnl build tests?
-want_tests=yes
-AC_ARG_WITH(tests, AC_HELP_STRING([--with-tests],
-      [Build unit tests (default=yes]),
-      want_tests=$withval, want_tests=yes)
-AC_MSG_CHECKING([if unit tests should be built])
-AC_MSG_RESULT($want_tests)
-
-if test "$want_tests" = yes;
-then
-  MAYBE_TESTS=tests
-else
-  MAYBE_TESTS=
-fi
-AC_SUBST([MAYBE_TESTS])
-
-dnl build examples?
-want_examples=yes
-AC_ARG_WITH(examples, AC_HELP_STRING([--with-examples],
-      [Build example programs (default=yes)]),
-      want_examples=$withval, want_examples=yes)
-AC_MSG_CHECKING([if example programs should be built])
-AC_MSG_RESULT($want_examples)
-
-if test "$want_examples" = yes;
-then
-  MAYBE_EXAMPLES=examples
-else
-  MAYBE_EXAMPLES=
-fi
-AC_SUBST([MAYBE_EXAMPLES])
-
 
 dnl Generating makefiles.
 AC_CONFIG_FILES([
 Makefile
-gloox.pc
-gloox-config
-src/Makefile
-src/examples/Makefile
-src/tests/Makefile
-src/tests/adhoc/Makefile
-src/tests/adhoccommand/Makefile
-src/tests/adhoccommandnote/Makefile
-src/tests/amprule/Makefile
-src/tests/amp/Makefile
-src/tests/base64/Makefile
-src/tests/capabilities/Makefile
-src/tests/chatstatefilter/Makefile
-src/tests/client/Makefile
-src/tests/clientbase/Makefile
-src/tests/connectionbosh/Makefile
-src/tests/dataform/Makefile
-src/tests/dataformfield/Makefile
-src/tests/dataformitem/Makefile
-src/tests/dataformreported/Makefile
-src/tests/delayeddelivery/Makefile
-src/tests/discoinfo/Makefile
-src/tests/discoitems/Makefile
-src/tests/disco/Makefile
-src/tests/error/Makefile
-src/tests/featureneg/Makefile
-src/tests/flexofflineoffline/Makefile
-src/tests/flexoffline/Makefile
-src/tests/gpgencrypted/Makefile
-src/tests/gpgsigned/Makefile
-src/tests/inbandbytestreamibb/Makefile
-src/tests/inbandbytestream/Makefile
-src/tests/iq/Makefile
-src/tests/jid/Makefile
-src/tests/lastactivityquery/Makefile
-src/tests/lastactivity/Makefile
-src/tests/md5/Makefile
-src/tests/message/Makefile
-src/tests/messageeventfilter/Makefile
-src/tests/mucroommuc/Makefile
-src/tests/mucroommucadmin/Makefile
-src/tests/mucroommucowner/Makefile
-src/tests/mucroommucuser/Makefile
-src/tests/nickname/Makefile
-src/tests/nonsaslauthquery/Makefile
-src/tests/nonsaslauth/Makefile
-src/tests/oob/Makefile
-src/tests/parser/Makefile
-src/tests/prep/Makefile
-src/tests/presence/Makefile
-src/tests/privacymanagerquery/Makefile
-src/tests/privacymanager/Makefile
-src/tests/privatexml/Makefile
-src/tests/pubsubmanagerpubsub/Makefile
-src/tests/pubsubmanager/Makefile
-src/tests/pubsubevent/Makefile
-src/tests/receipt/Makefile
-src/tests/registrationquery/Makefile
-src/tests/registration/Makefile
-src/tests/rostermanagerquery/Makefile
-src/tests/rostermanager/Makefile
-src/tests/searchquery/Makefile
-src/tests/search/Makefile
-src/tests/sha/Makefile
-src/tests/shim/Makefile
-src/tests/simanager/Makefile
-src/tests/simanagersi/Makefile
-src/tests/stanzaextensionfactory/Makefile
-src/tests/subscription/Makefile
-src/tests/tag/Makefile
-src/tests/tlsgnutls/Makefile
-src/tests/uniquemucroomunique/Makefile
-src/tests/util/Makefile
-src/tests/vcard/Makefile
-src/tests/vcardupdate/Makefile
-src/tests/xpath/Makefile
-src/tests/zlib/Makefile
+gloox/Makefile
 ])
 AC_OUTPUT

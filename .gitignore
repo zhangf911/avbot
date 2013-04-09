@@ -8,11 +8,22 @@ build/
 !.gitignore
 *~
 *.kde*
-
+!Makefile.am
+Makefile
+Makefile.in
+configure
+m4/
+*.m4
+autom4te.cache
+config.*
+depcomp
+ltmain.sh
+install-sh
+missing
 
 
 Release
 Debug
-/ipch
+ipch
 
-/*.sdf
+*.sdf
