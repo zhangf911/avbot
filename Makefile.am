@@ -1,5 +1,5 @@
 
-EXTRA_DIST = m4 avproxy boost libirc CMakeLists.txt
+EXTRA_DIST = m4 avproxy boost libirc CMakeLists.txt fsconfig.ipp  input.ipp
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AUTOMAKE_OPTIONS = color-tests parallel-tests
