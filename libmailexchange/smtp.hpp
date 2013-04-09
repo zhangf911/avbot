@@ -85,7 +85,7 @@ public:
 				// 开始发送循环.
 				rcpt_command = boost::str( boost::format( "rcpt to: %s\r\n" ) % m_rcpts[i] );
 
-				_yield m_socket.async_write_some( buffer( m_rcpts[i] ), *this );
+				_yield m_socket.async_write_some( buffer(rcpt_command), *this );
 
 				if( ec )
 					break;
@@ -102,7 +102,7 @@ public:
 					sended_rcpt ++;
 				}else{
 					rcpt_command = boost::str( boost::format( "rcpt to: <%s>\r\n" ) % m_rcpts[i] );
-					_yield m_socket.async_write_some( buffer( m_rcpts[i] ), *this );
+					_yield m_socket.async_write_some( buffer(rcpt_command), *this );
 					if( ec )
 						break;
 					// 读取响应.
