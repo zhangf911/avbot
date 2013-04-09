@@ -103,7 +103,8 @@ public:
 				}else{
 					rcpt_command = boost::str( boost::format( "rcpt to: <%s>\r\n" ) % m_rcpts[i] );
 					_yield m_socket.async_write_some( buffer( m_rcpts[i] ), *this );
-				
+					if( ec )
+						break;
 					// 读取响应.
 					_yield read_smtp_response_lines( *this );
 
@@ -115,6 +116,8 @@ public:
 
 					if( !ec ) { // 是 250 就加 1
 						sended_rcpt ++;
+					}else{
+						continue;
 					}
 				}
 
@@ -123,6 +126,8 @@ public:
 
 			if( sended_rcpt == 0 ) {
 				ec = make_error_code( permission_denied );
+			}else{
+				ec.clear();
 			}
 
 			m_socket.get_io_service().post( boost::asio::detail::bind_handler( m_handler, ec, sended_rcpt ) );
