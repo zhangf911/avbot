@@ -24,7 +24,7 @@ else()
 add_library(xmpp STATIC xmpp_impl.cpp xmpp.cpp)
 endif()
 
-target_link_libraries(xmpp ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(xmpp ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 if(INTERNALGLOOX)
 target_link_libraries(xmpp )
