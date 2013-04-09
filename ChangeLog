@@ -1,4 +1,5 @@
 3.6
+	* add autotools build system in case cmake is not avaliable
 	* fix a critical bug that will DOS the TX webqq server.
 	* to make life easier , drop the support for VC , you can still compile avbot by mingw
 	* avhttp now default to use HTTP 1.1 and avbot is using HTTP1.1 too
