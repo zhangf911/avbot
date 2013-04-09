@@ -1,5 +1,4 @@
 project(libpop3)
-
 find_package(Boost 1.48 COMPONENTS regex signals system locale)
 find_package(OpenSSL REQUIRED)
 

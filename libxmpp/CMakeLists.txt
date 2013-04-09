@@ -1,4 +1,4 @@
-find_package(Boost 1.48 COMPONENTS date_time regex signals system)
+find_package(Boost 1.48 REQUIRED COMPONENTS date_time regex signals system)
 find_package(OpenSSL REQUIRED)
 
 if(NOT WIN32)
