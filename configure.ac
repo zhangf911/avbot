@@ -33,7 +33,31 @@ AC_LANG(C++)
 
 # Checks for libraries.
 
-PKG_CHECK_MODULES(OPENSSL,openssl)
+  dnl OpenSSL
+  AC_ARG_WITH(openssl, AC_HELP_STRING([--with-openssl=[DIR]],
+        [Support Stream Encryption (needs OpenSSL)]),
+        openssl=$withval, openssl=yes)
+  if test "$openssl" != "no"; then
+    if test "$openssl" != "yes"; then
+      LDFLAGS="${LDFLAGS} -L$openssl/lib"
+      CPPFLAGS="${CPPFLAGS} -I$openssl/include"
+    fi
+    LIBS_TMP=${LIBS}
+    LIBS="${LIBS} -lssl -lcrypto"
+    AC_CHECK_HEADER(openssl/ssl.h,
+    AC_CHECK_LIB(ssl, SSL_library_init,
+            [openssl=yes], openssl=no),
+            [openssl=no LIBS=${LIBS_TMP}])
+  fi
+  if test "$openssl" != "no" ; then
+    AC_DEFINE(HAVE_OPENSSL, 1, [Define to 1 if you want TLS support (OpenSSL). Undefine HAVE_GNUTLS.])
+  else
+    AC_MSG_WARN([OpenSSL not found])
+  fi
+  AC_MSG_CHECKING([if OpenSSL should be used])
+  AC_MSG_RESULT($openssl)
+
+
 
 BOOST_REQUIRE(1.48)
 BOOST_LOCALE([s])
