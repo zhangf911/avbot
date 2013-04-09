@@ -1,8 +1,6 @@
 project(libpop3)
 
-if(NOT Boost_FOUND)
 find_package(Boost 1.48 COMPONENTS regex signals system locale)
-endif()
 find_package(OpenSSL REQUIRED)
 
 include_directories(${OpenSSL_INCLUDE_DIRS})
