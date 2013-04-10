@@ -79,7 +79,12 @@ add_definitions(-DQQBOT_VERSION=\"3.6\")
 add_executable(avbot main.cpp botctl.cpp messagegroup.cpp)
 
 target_link_libraries(avbot webqq xmpp mailexchange)
+if(WIN32)
+target_link_libraries(avbot -Wl,--disable-auto-import)
+endif()
+
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+
 install(TARGETS avbot RUNTIME DESTINATION bin)
 
 if( NOT Boost_USE_STATIC_RUNTIME )
