@@ -1,5 +1,6 @@
 4.0
 	* better support for windows platform - via mingw
+	* 修复在 windows 控制台下输出乱码的问题
 
 3.6
 	* add autotools build system in case cmake is not avaliable
