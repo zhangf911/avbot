@@ -31,7 +31,7 @@ inline std::string console_out_str(std::wstring in )
 inline std::string console_out_str(std::string in)
 {
 #ifdef WIN32
-	console_out_str(utf8_wide(in));
+	return console_out_str(utf8_wide(in));
 #else
 	return in;
 #endif
