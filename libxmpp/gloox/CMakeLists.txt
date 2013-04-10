@@ -96,3 +96,7 @@ target_link_libraries(gloox  ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
 if(UNIX)
 	target_link_libraries(gloox -pthread)
 endif()
+if(WIN32)
+	# SCHANNEL
+	target_link_libraries(gloox -lsecur32)
+endif()
