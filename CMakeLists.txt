@@ -10,6 +10,7 @@ option(ENABLE_LIBGCC_STATIC "link to static libgcc" OFF)
 
 if(WIN32)
 add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--enable-auto-import,-lstdc++ -Wl,--disable-auto-import")
 endif()
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g0")
@@ -82,4 +83,8 @@ install(TARGETS avbot RUNTIME DESTINATION bin)
 
 if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
+endif()
+
+if(WIN32)
+	link_libraries(-liconv -lssl -lcrypt32)
 endif()
