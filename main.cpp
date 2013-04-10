@@ -46,6 +46,8 @@ namespace po = boost::program_options;
 #include "messagegroup.hpp"
 #include "botctl.hpp"
 
+#include "boost/consolestr.hpp"
+
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
 #endif
@@ -396,17 +398,18 @@ int main( int argc, char *argv[] )
 
 	( "localimage", po::value<bool>( &localimage)->default_value(false),	"fetch qq image to local disk and store it there")
 
-	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( "qq(%a)： " ),
-	  "为QQ设置的发言前缀, 默认是 qq(%a):  " )
-	( "preambleirc",	po::value<std::string>( &preamble_irc_fmt )->default_value( "%a 说： " ),
-	  "为IRC设置的发言前缀, 默认是 %a 说:  " )
-	( "preamblexmpp",	po::value<std::string>( &preamble_xmpp_fmt )->default_value( "(%a)： " ),
+	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a)：") ),
+		console_out_str("为QQ设置的发言前缀, 默认是 qq(%a):").c_str() )
+	( "preambleirc",	po::value<std::string>( &preamble_irc_fmt )->default_value( console_out_str("%a 说：") ),
+	  console_out_str("为IRC设置的发言前缀, 默认是 %a 说: ").c_str() )
+	( "preamblexmpp",	po::value<std::string>( &preamble_xmpp_fmt )->default_value( console_out_str("(%a)：") ),
+		console_out_str(
 	  "为XMPP设置的发言前缀, 默认是 (%a): \n\n "
 	  "前缀里的含义 \n"
 	  "\t %a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片 \n"
 	  "\t %r为房间名(群号, XMPP房名, IRC频道名) \n"
 	  "可以包含多个, 例如想记录QQ号码的可以使用 qq(%a, %q)说: \n"
-	  "注意在shell下可能需要使用\\(来转义(\n配置文件无此问题 \n\n"	)
+	  "注意在shell下可能需要使用\\(来转义(\n配置文件无此问题 \n\n").c_str()	)
 	;
 
 	po::store( po::parse_command_line( argc, argv, desc ), vm );
@@ -416,6 +419,12 @@ int main( int argc, char *argv[] )
 		std::cerr <<  desc <<  std::endl;
 		return 1;
 	}
+#ifdef WIN32
+	// 从 windows 控制台输入的能有啥好编码，转到utf8吧.
+	preamble_qq_fmt = ansi_utf8(preamble_qq_fmt);
+	preamble_irc_fmt = ansi_utf8(preamble_irc_fmt);
+	preamble_xmpp_fmt = ansi_utf8(preamble_xmpp_fmt);
+#endif
 
 	if( qqnumber.empty() ) {
 		try {
@@ -456,17 +465,12 @@ int main( int argc, char *argv[] )
 	}
 
 	if( qqnumber.empty() || qqpwd.empty() ) {
-		std::cerr << "请设置qq号码和密码 " << std::endl;
+		std::cerr << console_out_str("请设置qq号码和密码") << std::endl;
 		exit( 1 );
 	}
 
 	if( ircnick.empty() ) {
-		std::cerr << "请设置irc昵称 " << std::endl;
-		exit( 1 );
-	}
-
-	if( ircroom.empty() ) {
-		std::cerr << "请设置irc频道 " << std::endl;
+		std::cerr << console_out_str("请设置irc昵称") << std::endl;
 		exit( 1 );
 	}
 
