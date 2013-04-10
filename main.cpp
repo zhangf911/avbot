@@ -342,8 +342,8 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qq
 	img.write( data, imgsize );
 	qqneedvc = true;
 	// send to xmpp and irc
-	ircclient.chat( boost::str( boost::format( "#%s" ) % ircvercodechannel ), "输入qq验证码 " );
-	std::cerr << "请输入验证码:" ;
+	ircclient.chat( boost::str( boost::format( "#%s" ) % ircvercodechannel ), "输入qq验证码：" );
+	std::cerr << console_out_str("请查看qqlog目录下的vercode.jpeg 然后输入验证码:") ;
 }
 
 #ifdef WIN32

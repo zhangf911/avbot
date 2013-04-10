@@ -39,6 +39,7 @@
 #include "auto_question.hpp"
 #include "messagegroup.hpp"
 #include "botctl.hpp"
+#include "boost/consolestr.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -79,7 +80,7 @@ static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string 
 		std::string msg = boost::str(
 				boost::format("哎呀，加入群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg") % group->qqnum
 			);
-		std::cout <<  msg <<  std::endl;
+		std::cout << console_out_str(msg) <<  std::endl;
 		msg_sender(msg);
 
 		webqq::join_group_handler  join_group_handler = boost::bind(handle_join_group, _1, _2, _3, qqclient, msg_sender);
@@ -107,7 +108,7 @@ static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool 
 		std::string msg = boost::str(
 				boost::format("哎呀，查找群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg") % groupqqnum
 			);
-		std::cout <<  msg <<  std::endl;
+		std::cout <<  console_out_str(msg) <<  std::endl;
 		msg_sender(msg);
 
 		webqq::search_group_handler  search_group_handler = boost::bind(handle_search_group, groupqqnum, _1, _2, _3, qqclient, msg_sender);
