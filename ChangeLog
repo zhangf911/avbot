@@ -1,3 +1,6 @@
+4.0
+	* better support for windows platform - via mingw
+
 3.6
 	* add autotools build system in case cmake is not avaliable
 	* fix a critical bug that will DOS the TX webqq server.
