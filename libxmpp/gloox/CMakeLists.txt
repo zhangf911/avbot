@@ -82,6 +82,7 @@ gloox/tag.cpp
 gloox/tlsdefault.cpp
 gloox/tlsopensslbase.cpp
 gloox/tlsopensslclient.cpp
+gloox/tlsschannel.cpp
 gloox/uniquemucroom.cpp
 gloox/util.cpp
 gloox/vcard.cpp
