@@ -1,18 +1,17 @@
 project(gloox)
 
-find_package(OpenSSL REQUIRED)
-
 if(NOT WIN32)
+	find_package(OpenSSL REQUIRED)
 
 	find_package(ZLIB )
 	if(ZLIB_FOUND)
 		add_definitions(-DHAVE_ZLIB)
 	endif()
 
+	include_directories(${OpenSSL_INCLUDE_DIRS})
+
 endif()
 
-
-include_directories(${OpenSSL_INCLUDE_DIRS})
 
 SET( GLOOX_SRC
 gloox/amp.cpp
@@ -92,7 +91,11 @@ gloox/xhtmlim.cpp
 )
 
 add_library(gloox STATIC ${GLOOX_SRC})
+
+if(NOT WIN32)
 target_link_libraries(gloox  ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
+endif()
+
 if(UNIX)
 	target_link_libraries(gloox -pthread)
 endif()
