@@ -55,8 +55,10 @@ endif()
 
 find_package(Threads)
 
-if(MINGW)
+if(MINGW AND Boost_USE_STATIC_LIBS)
 add_definitions(-DBOOST_THREAD_USE_LIB)
+add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
+add_definitions(-DBOOST_ALL_STATIC_LINK)
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
