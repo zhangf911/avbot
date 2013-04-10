@@ -27,6 +27,10 @@ if(ENABLE_STATIC)
 	endif()
 endif()
 
+if(WIN32)
+	target_link_libraries(mailexchange -liconv -lssl -lcrypt32 -lws2_32 )
+endif()
+
 if( ENABLE_TEST )
 add_definitions(-DDEBUG)
 add_executable(pop3test pop3test.cpp)
