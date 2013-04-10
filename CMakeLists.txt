@@ -78,6 +78,10 @@ add_subdirectory(libmailexchange)
 add_definitions(-DQQBOT_VERSION=\"3.6\")
 add_executable(avbot main.cpp botctl.cpp messagegroup.cpp)
 
+if(WIN32)
+target_link_libraries(avbot -liconv -lssl -lcrypt32 -lws2_32  )
+endif()
+
 target_link_libraries(avbot webqq xmpp mailexchange)
 if(WIN32)
 target_link_libraries(avbot -Wl,--disable-auto-import)
@@ -92,6 +96,5 @@ if( NOT Boost_USE_STATIC_RUNTIME )
 endif()
 
 if(WIN32)
-target_link_libraries(avbot -liconv -lssl -lcrypt32 -lws2_32 )
 target_link_libraries(avbot -Wl,--enable-auto-import -lstdc++ -Wl,--disable-auto-import)
 endif()
