@@ -6,23 +6,17 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
+#include <iostream>
 
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <boost/date_time.hpp>
-#include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
-#include <boost/make_shared.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/foreach.hpp>
 #include <boost/locale.hpp>
-#include <boost/lambda/lambda.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/bind/protect.hpp>
 
 #include <locale.h>
 #include <fstream>
@@ -35,11 +29,9 @@ namespace fs = boost::filesystem;
 #if defined(_MSC_VER)
 #include <direct.h>
 #endif
-#include "libirc/irc.h"
+
 #include "libwebqq/webqq.h"
-#include "libwebqq/url.hpp"
-#include "libxmpp/xmpp.h"
-#include "libmailexchange/mx.hpp"
+#include "libmailexchange/smtp.hpp"
 
 #include "counter.hpp"
 #include "logger.hpp"
