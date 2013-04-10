@@ -20,20 +20,6 @@
 #endif
 
 #ifndef GLOOX_API
-
-#if defined( _WIN32 ) && !defined( __SYMBIAN32__ )
-#  if defined( GLOOX_EXPORTS ) || defined( DLL_EXPORT )
-#    define GLOOX_API __declspec( dllexport )
-#  else
-#    if defined( GLOOX_IMPORTS ) || defined( DLL_IMPORT )
-#      define GLOOX_API __declspec( dllimport )
-#    endif
-#  endif
-#endif
-
-# endif
-
-#ifndef GLOOX_API
 #  define GLOOX_API
 #endif
 

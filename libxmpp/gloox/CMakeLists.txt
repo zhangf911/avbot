@@ -92,8 +92,6 @@ gloox/xhtmlim.cpp
 
 add_library(gloox STATIC ${GLOOX_SRC})
 
-add_definitions(-DGLOOX_API)
-
 if(NOT WIN32)
 target_link_libraries(gloox  ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
 endif()
