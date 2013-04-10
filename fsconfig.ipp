@@ -4,6 +4,8 @@ static fs::path configfilepath()
 	if ( getenv ( "USERPROFILE" ) ) {
 		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc" ) )
 			return fs::path ( getenv ( "USERPROFILE" ) ) / ".qqbotrc";
+		if ( fs::exists ( fs::path ( getenv ( "USERPROFILE" ) ) / "qqbotrc" ) )
+			return fs::path ( getenv ( "USERPROFILE" ) ) / "qqbotrc";
 	}
 
 	if ( getenv ( "HOME" ) ) {
