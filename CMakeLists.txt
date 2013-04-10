@@ -80,7 +80,7 @@ endif()
 add_subdirectory(libxmpp)
 add_subdirectory(libmailexchange)
 
-add_definitions(-DQQBOT_VERSION=\"3.6\")
+add_definitions(-DQQBOT_VERSION=\"3.999\")
 add_executable(avbot main.cpp botctl.cpp messagegroup.cpp)
 
 if(WIN32)
