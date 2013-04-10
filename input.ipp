@@ -13,7 +13,7 @@ static void input_thread(boost::asio::io_service & io_service, webqq & qqclient)
 	while ( !boost::this_thread::interruption_requested() && !std::cin.eof()){
 		std::string line;
 		std::getline(std::cin, line);
-		io_service.post(boost::asio::detail::bind_handler(input_got_one_line, line, boost::ref(qqclient)));
+		io_service.post(boost::asio::detail::bind_handler(input_got_one_line, ansi_utf8(line), boost::ref(qqclient)));
 	}
 }
 #endif
