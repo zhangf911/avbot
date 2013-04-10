@@ -19,6 +19,8 @@
 #  pragma warning( disable:4786 )
 #endif
 
+#ifndef GLOOX_API
+
 #if defined( _WIN32 ) && !defined( __SYMBIAN32__ )
 #  if defined( GLOOX_EXPORTS ) || defined( DLL_EXPORT )
 #    define GLOOX_API __declspec( dllexport )
@@ -28,6 +30,8 @@
 #    endif
 #  endif
 #endif
+
+# endif
 
 #ifndef GLOOX_API
 #  define GLOOX_API
