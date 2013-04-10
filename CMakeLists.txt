@@ -94,3 +94,7 @@ endif()
 if(WIN32)
 	link_libraries(-liconv -lssl -lcrypt32)
 endif()
+
+if(WIN32)
+target_link_libraries(avbot -Wl,--enable-auto-import -lstdc++)
+endif()
