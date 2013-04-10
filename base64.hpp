@@ -11,13 +11,8 @@
 
 namespace boost {
 
-
-// typedef	archive::iterators::transform_width< 
-// 			archive::iterators::binary_from_base64<filter_iterator<detail::is_base64_char, std::string::iterator> >, 8, 6, char>
-// 				base64decodeIterator;
-
 typedef	archive::iterators::transform_width< 
-			archive::iterators::binary_from_base64<boost::archive::iterators::remove_whitespace< std::string::iterator > >, 8, 6, char>
+			archive::iterators::binary_from_base64<boost::archive::iterators::remove_whitespace< char* > >, 8, 6, char>
 				base64decodeIterator;
 
 typedef	archive::iterators::base64_from_binary<
@@ -42,7 +37,7 @@ inline std::string base64_decode(std::string str)
 	std::size_t num_to_shrik = shrik_map[num];
 
 	// convert base64 characters to binary values
-	std::string  result(base64decodeIterator(str.begin()), base64decodeIterator(str.end()));
+	std::string  result(base64decodeIterator(str.c_str()), base64decodeIterator(str.c_str() + str.length()));
 
 	result.erase(result.length() -1 - num_to_shrik,  num_to_shrik);
 	return result;
