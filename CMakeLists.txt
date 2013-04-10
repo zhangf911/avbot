@@ -8,7 +8,7 @@ option(ENABLE_LTO "build avbot with LTO" OFF)
 option(ENABLE_LIBSTDCXX_STATIC "link to static libstdc++" OFF)
 option(ENABLE_LIBGCC_STATIC "link to static libgcc" OFF)
 
-if(MINGW)
+if(WIN32)
 add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
 endif()
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0")
@@ -55,7 +55,7 @@ endif()
 
 find_package(Threads)
 
-if(MINGW AND Boost_USE_STATIC_LIBS)
+if(WIN32 AND Boost_USE_STATIC_LIBS)
 add_definitions(-DBOOST_THREAD_USE_LIB)
 add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
 add_definitions(-DBOOST_ALL_STATIC_LINK)
