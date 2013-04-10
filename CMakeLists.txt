@@ -92,9 +92,9 @@ if( NOT Boost_USE_STATIC_RUNTIME )
 endif()
 
 if(WIN32)
-	link_libraries(-liconv -lssl -lcrypt32)
+	link_libraries(-liconv -lssl -lcrypt32 -lws2_32)
 endif()
 
 if(WIN32)
-target_link_libraries(avbot -Wl,--enable-auto-import -lstdc++)
+target_link_libraries(avbot -Wl,--enable-auto-import -lstdc++ -Wl,--disable-auto-import)
 endif()
