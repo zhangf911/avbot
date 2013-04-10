@@ -9,9 +9,15 @@ option(ENABLE_LIBSTDCXX_STATIC "link to static libstdc++" OFF)
 option(ENABLE_LIBGCC_STATIC "link to static libgcc" OFF)
 
 if(WIN32)
+set(ENABLE_LIBGCC_STATIC ON)
+set(ENABLE_LIBSTDCXX_STATIC ON)
+set(ENABLE_STATIC ON)
+endif()
+
+if(WIN32)
 add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
 set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-auto-import ")
- endif()
+endif()
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g0")
