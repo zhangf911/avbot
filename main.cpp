@@ -516,3 +516,5 @@ int main( int argc, char *argv[] )
 	asio.run();
 	return 0;
 }
+
+extern "C" void OPENSSL_add_all_algorithms_noconf(){}

@@ -28,7 +28,7 @@ if(ENABLE_STATIC)
 endif()
 
 if(WIN32)
-	target_link_libraries(mailexchange -liconv -lssl -lcrypt32 -lws2_32 )
+	target_link_libraries(mailexchange -liconv -lssl -lcrypto -lcrypt32 -lws2_32 )
 endif()
 
 if( ENABLE_TEST )
