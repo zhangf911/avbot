@@ -165,7 +165,7 @@ static std::string	preamble_formater( std::string who, std::string room )
 
 static void on_irc_message( IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient )
 {
-	std::cout <<  pMsg.msg << std::endl;
+	std::cout << console_out_str(pMsg.msg) << std::endl;
 
 	boost::trim( pMsg.msg );
 
@@ -301,7 +301,7 @@ static void on_group_msg( std::string group_code, std::string who, const std::ve
 	cnt.save();
 
 	// 记录.
-	std::printf( "%s%s\n", message_nick.c_str(),  htmlmsg.c_str() );
+	std::cout << console_out_str(message_nick) <<  console_out_str(htmlmsg) <<  std::endl;
 
 	if( !group )
 		return;
