@@ -32,27 +32,6 @@ namespace po = boost::program_options;
 #include <wchar.h>
 #if defined(_WIN32)
 #include <direct.h>
-
-#include <windows.h>
-#include "resource.h"
-
-#ifndef WINVER
-#define WINVER 0x0501
-#endif
-
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
-#endif	
-
-#ifndef _WIN32_WINDOWS
-#define _WIN32_WINDOWS 0x0410
-#endif
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0600
-#endif
-
-#define WIN32_LEAN_AND_MEAN
 #endif
 
 #include "libirc/irc.h"
@@ -71,38 +50,6 @@ namespace po = boost::program_options;
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
-#endif
-
-#if defined(_WIN32)
-// 选项设置框框的消息回调函数
-BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam) 
-{ 
-	BOOL fError; 
-
-	switch (message) 
-	{ 
-	case WM_INITDIALOG: 		
-		return TRUE; 
-	case WM_COMMAND: 
-		switch (LOWORD(wParam)) 
-		{ 
-		case IDOK:
-			{
-
-			}
-			
-			return TRUE; 
-		case IDCANCEL: 
-			DestroyWindow(hwndDlg); 
-			// 退出消息循环
-			PostMessage(NULL, WM_QUIT, NULL, NULL);
-			return TRUE; 
-		} 
-	} 
-
-	return FALSE; 
-} 
-
 #endif
 
 char * execpath;
@@ -516,32 +463,6 @@ int main( int argc, char *argv[] )
 		logfile.log_path( logdir );
 		chdir( logdir.c_str() );
 	}
-	
-#ifdef WIN32
-		// windows下面弹出选项设置框框
-		if( qqnumber.empty() || qqpwd.empty() || ircnick.empty() ) {
-			HMODULE hIns = GetModuleHandle(NULL);
-			HWND hDlg = NULL;
-
-			hDlg = CreateDialog(hIns, MAKEINTRESOURCE(IDD_DIALOG1), NULL, (DLGPROC)DlgProc);
-
-			ShowWindow(hDlg, SW_SHOW);
-
-			// 启动windows消息循环
-			MSG msg;
-			while (true)
-			{
-				if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-				{
-					if (msg.message == WM_QUIT) break;
-					
-					TranslateMessage(&msg);	
-					DispatchMessage(&msg);	
-				}		
-			}
-		}
-		
-#endif
 
 	if( qqnumber.empty() || qqpwd.empty() ) {
 		std::cerr << console_out_str("请设置qq号码和密码") << std::endl;
