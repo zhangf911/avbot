@@ -74,6 +74,10 @@ namespace po = boost::program_options;
 #endif
 
 #if defined(_WIN32)
+
+// 重启qqbot
+#define WM_RESTART_AV_BOT WM_USER + 5
+
 // 选项设置框框的消息回调函数
 BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 { 
@@ -87,10 +91,8 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam)) 
 		{ 
 		case IDOK:
-			{
-
-			}
-			
+			// 通知主函数写入数据并重启
+			PostMessage(NULL, WM_RESTART_AV_BOT, NULL, NULL);
 			return TRUE; 
 		case IDCANCEL: 
 			DestroyWindow(hwndDlg); 
