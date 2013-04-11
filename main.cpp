@@ -283,7 +283,7 @@ static std::string 	base_image_url = "http://w.qq.com/cgi-bin/get_group_pic?pic=
 static void save_image(const boost::system::error_code & ec, boost::asio::streambuf & buf, std::string cface)
 {
 	if (!ec || ec == boost::asio::error::eof){
-		std::ofstream cfaceimg((std::string("images/") + cface).c_str(), std::ofstream::out);
+		std::ofstream cfaceimg((std::string("images/") + cface).c_str(), std::ofstream::binary|std::ofstream::out);
 		cfaceimg.write(boost::asio::buffer_cast<const char*>(buf.data()), boost::asio::buffer_size(buf.data()));
 	}
 }
