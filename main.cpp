@@ -34,6 +34,7 @@ namespace po = boost::program_options;
 #include <direct.h>
 
 #include <windows.h>
+#include <tchar.h>
 #include "resource.h"
 
 #ifndef WINVER
@@ -537,6 +538,24 @@ int main( int argc, char *argv[] )
 				{
 					if (msg.message == WM_QUIT) break;
 					
+					if (msg.message == WM_RESTART_AV_BOT) {
+						// save data to config file
+
+						TCHAR file_path[MAX_PATH];
+						GetModuleFileName(NULL, file_path, MAX_PATH);
+						// now, create process
+						STARTUPINFO si = { sizeof(si) };
+						PROCESS_INFORMATION pi = { sizeof(pi) };
+
+						CreateProcess(file_path, NULL, NULL, NULL,
+							FALSE, 0, NULL, NULL,
+							&si, &pi);
+						CloseHandle(pi.hProcess);
+						CloseHandle(pi.hThread);
+						// now,parent process exit.
+						exit(1);
+					}
+
 					TranslateMessage(&msg);	
 					DispatchMessage(&msg);	
 				}		
