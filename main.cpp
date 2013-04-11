@@ -545,7 +545,7 @@ int main( int argc, char *argv[] )
 						GetModuleFileName(NULL, file_path, MAX_PATH);
 						// now, create process
 						STARTUPINFO si = { sizeof(si) };
-						PROCESS_INFORMATION pi = { sizeof(pi) };
+						PROCESS_INFORMATION pi = { 0 };
 
 						CreateProcess(file_path, NULL, NULL, NULL,
 							FALSE, 0, NULL, NULL,
