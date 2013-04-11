@@ -523,7 +523,7 @@ int main( int argc, char *argv[] )
 			HMODULE hIns = GetModuleHandle(NULL);
 			HWND hDlg = NULL;
 
-			hDlg = CreateDialog(hIns, MAKEINTRESOURCE(IDD_DIALOG1), NULL, (DLGPROC)DlgProc);
+			hDlg = CreateDialog(hIns, MAKEINTRESOURCE(IDD_AVSETTINGS_DIALOG), NULL, (DLGPROC)DlgProc);
 
 			ShowWindow(hDlg, SW_SHOW);
 
