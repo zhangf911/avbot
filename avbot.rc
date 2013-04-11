@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ä¸­æ–‡(ç®€ä½“ï¼Œä¸­å›½) resources
+// ÖÐÎÄ(¼òÌå£¬ÖÐ¹ú) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -51,14 +51,14 @@ END
 
 IDD_DIALOG1 DIALOGEX 0, 0, 309, 177
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "QQBotå‚æ•°è®¾ç½®"
+CAPTION "QQBot²ÎÊýÉèÖÃ"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "æˆ‘è®¾ç½®å¥½äº†",IDOK,70,156,78,14
-    PUSHBUTTON      "ç®—äº†,æˆ‘ä¸æƒ³ç”¨äº†",IDCANCEL,163,156,85,14
-    GROUPBOX        "XMPPé¢‘é“è®¾ç½®",IDC_STATIC,7,103,295,40
-    GROUPBOX        "IRCé¢‘é“è®¾ç½®",IDC_STATIC,7,55,295,40
-    GROUPBOX        "QQè®¾ç½®",IDC_STATIC,7,7,295,40
+    DEFPUSHBUTTON   "ÎÒÉèÖÃºÃÁË",IDOK,70,156,78,14
+    PUSHBUTTON      "ËãÁË,ÎÒ²»ÏëÓÃÁË",IDCANCEL,163,156,85,14
+    GROUPBOX        "XMPPÆµµÀÉèÖÃ",IDC_STATIC,7,103,295,40
+    GROUPBOX        "IRCÆµµÀÉèÖÃ",IDC_STATIC,7,55,295,40
+    GROUPBOX        "QQÉèÖÃ",IDC_STATIC,7,7,295,40
 END
 
 
@@ -80,7 +80,7 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
-#endif    // ä¸­æ–‡(ç®€ä½“ï¼Œä¸­å›½) resources
+#endif    // ÖÐÎÄ(¼òÌå£¬ÖÐ¹ú) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
