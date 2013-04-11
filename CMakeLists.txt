@@ -81,7 +81,7 @@ add_subdirectory(libxmpp)
 add_subdirectory(libmailexchange)
 
 add_definitions(-DQQBOT_VERSION=\"3.999\")
-add_executable(avbot main.cpp botctl.cpp messagegroup.cpp)
+add_executable(avbot main.cpp botctl.cpp messagegroup.cpp avbot.rc)
 
 if(WIN32)
 target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32  )
