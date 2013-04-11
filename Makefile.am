@@ -1,5 +1,5 @@
 
-EXTRA_DIST = m4 avproxy boost libirc CMakeLists.txt fsconfig.ipp  input.ipp
+EXTRA_DIST = m4 avproxy boost libirc CMakeLists.txt fsconfig.ipp  input.ipp avbot.rc
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AUTOMAKE_OPTIONS = color-tests parallel-tests
@@ -11,7 +11,7 @@ AM_CPPFLAGS = -I ${srcdir}/avproxy/include
 bin_PROGRAMS = avbot
 
 avbot_SOURCES = main.cpp botctl.cpp messagegroup.cpp \
-		auto_question.hpp  botctl.hpp  counter.hpp  logger.hpp  messagegroup.hpp
+		auto_question.hpp  botctl.hpp  counter.hpp  logger.hpp  messagegroup.hpp resource.h
 
 avbot_LDFLAGS=${BOOST_THREAD_LDFLAGS}
 
