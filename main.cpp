@@ -544,8 +544,12 @@ int main( int argc, char *argv[] )
 						TCHAR file_path[MAX_PATH];
 						GetModuleFileName(NULL, file_path, MAX_PATH);
 						// now, create process
-						STARTUPINFO si = { sizeof(si) };
-						PROCESS_INFORMATION pi = { 0 };
+						STARTUPINFO si;
+						PROCESS_INFORMATION pi;
+
+						ZeroMemory(&si, sizeof(si));
+						si.cb = sizeof(si);
+						ZeroMemory(&pi, sizeof(pi));
 
 						CreateProcess(file_path, NULL, NULL, NULL,
 							FALSE, 0, NULL, NULL,
