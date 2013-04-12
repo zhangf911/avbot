@@ -48,7 +48,6 @@ public:
 				if (!ec)
 					_fork acceptor_server<ProtocolProcesser, Protocol>(*this)(ec);
 			}while (is_parent());
-			std::cout <<  "child here" << std::endl;
 			{ProtocolProcesser p(m_client_socket);}
 		}
 	}
