@@ -12,6 +12,9 @@ bin_PROGRAMS = avbot
 
 avbot_SOURCES = main.cpp botctl.cpp messagegroup.cpp \
 		auto_question.hpp  botctl.hpp  counter.hpp  logger.hpp  messagegroup.hpp resource.h
+if OS_WINNT
+avbot_SOURCES += avbot.rc
+endif
 
 avbot_LDFLAGS=${BOOST_THREAD_LDFLAGS}
 

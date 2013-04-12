@@ -36,7 +36,7 @@ namespace po = boost::program_options;
 
 #include <windows.h>
 #include <tchar.h>
-#include <CommCtrl.h> 
+#include <commctrl.h>
 #include "resource.h"
 
 // 据说mingw32不支持这个

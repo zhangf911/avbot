@@ -47,7 +47,7 @@ done
 dnl extra win32 libs
 case "$host_os" in
   *mingw*|*cygwin*)
-      LIBS="${LIBS} -lwsock32 -lgdi32 -ldnsapi";;
+      LIBS="${LIBS} -lwsock32 -lgdi32 -ldnsapi -lcrypt32 -ldnsapi -lsecur32";;
   *)
       CXXFLAGS="$CXXFLAGS -ansi";;
 esac
