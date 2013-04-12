@@ -14,6 +14,17 @@ BOOST_DEFUN([Locale],
                 [boost::locale::conv::between( "nihao", "UTF-8", "GBK" );])
 ])# BOOST_LOCALE
 
+# BOOST_THREAD([PREFERRED-RT-OPT])
+# --------------------------------
+# Look for Boost.System.  For the documentation of PREFERRED-RT-OPT, see the
+# documentation of BOOST_FIND_LIB above.  This library was introduced in Boost
+# 1.35.0.
+BOOST_DEFUN([THREAD],
+[BOOST_FIND_LIB([thread], [$1],
+                [boost/thread.hpp],
+                [;])
+])# BOOST_THREAD
+
 
 AC_INIT([avbot], [3.6], [discuss@avplayer.org])
 AC_CONFIG_SRCDIR([main.cpp])
@@ -61,7 +72,7 @@ AC_LANG(C++)
 
 BOOST_REQUIRE(1.48)
 BOOST_LOCALE([s])
-BOOST_THREADS([s])
+BOOST_THREAD([s])
 BOOST_SYSTEM([s])
 BOOST_FILESYSTEM([s])
 BOOST_DATE_TIME([s])
