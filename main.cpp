@@ -12,6 +12,7 @@
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 namespace fs = boost::filesystem;
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -573,6 +574,14 @@ int main( int argc, char *argv[] )
 					}
 
 					// save data to config file
+					try {
+						fs::path config_file = configfilepath();
+						fs::ofstream file(config_file);
+					}
+					catch (std::string e) {
+						std::cerr << e << std::endl;
+						exit(1);
+					}
 
 					TCHAR file_path[MAX_PATH];
 					GetModuleFileName(NULL, file_path, MAX_PATH);
