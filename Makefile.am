@@ -21,3 +21,6 @@ avbot_LDFLAGS=${BOOST_THREAD_LDFLAGS}
 avbot_LDADD = ${top_builddir}/libxmpp/libxmpp.la ${top_builddir}/libwebqq/libwebqq.la ${top_builddir}/libmailexchange/libmx.la
 
 avbot_LDADD +=${BOOST_THREAD_LIBS} ${BOOST_SYSTEM_LIBS} ${BOOST_PROGRAM_OPTIONS_LIBS} ${BOOST_FILESYSTEM_LIBS}  ${BOOST_REGEX_LIBS} ${BOOST_SIGNALS_LIBS} ${BOOST_LOCALE_LIBS}
+
+.rc.o:
+	${RC} -o $@ $<
