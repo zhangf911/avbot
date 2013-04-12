@@ -536,9 +536,44 @@ int main( int argc, char *argv[] )
 			{
 				if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 				{
-					if (msg.message == WM_QUIT) break;
+					if (msg.message == WM_QUIT) exit(1);
 					
 					if (msg.message == WM_RESTART_AV_BOT) {
+						// 看起来avbot用的是多字节,std::string not std::wstring
+						TCHAR temp[MAX_PATH];
+						bool use_xmpp = false;
+
+						// qq setting				
+						GetDlgItemText(hDlg, IDC_EDIT_USER_NAME, temp, MAX_PATH);
+						qqnumber = temp;
+						
+						GetDlgItemText(hDlg, IDC_EDIT_PWD, temp, MAX_PATH);
+						qqpwd = temp;
+
+						// irc setting
+						GetDlgItemText(hDlg, IDC_EDIT_IRC_CHANNEL, temp, MAX_PATH);
+						ircroom = temp;
+						
+						GetDlgItemText(hDlg, IDC_EDIT_IRC_NICK, temp, MAX_PATH);
+						ircnick = temp;
+						
+						GetDlgItemText(hDlg, IDC_EDIT_IRC_PWD, temp, MAX_PATH);
+						ircpwd = temp;
+
+						// xmpp setting
+						if (IsDlgButtonChecked(hDlg, IDC_CHECK_XMPP) == BST_CHECKED) {
+							GetDlgItemText(hDlg, IDC_EDIT_XMPP_CHANNEL, temp, MAX_PATH);
+							xmpproom = temp;
+							
+							GetDlgItemText(hDlg, IDC_EDIT_XMPP_NICK, temp, MAX_PATH);
+							xmppnick = temp;
+							
+							GetDlgItemText(hDlg, IDC_EDIT_XMPP_PWD, temp, MAX_PATH);
+							xmpppwd = temp;
+							
+							use_xmpp = true;
+						}
+
 						// save data to config file
 
 						TCHAR file_path[MAX_PATH];
