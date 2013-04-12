@@ -6,6 +6,17 @@
 #define IDI_ICON1                       102
 #define IDI_AVBOT_ICON                  102
 
+#define IDC_EDIT_USER_NAME              1001
+#define IDC_EDIT_PWD                    1002
+#define IDC_EDIT_IRC_CHANNEL            1003
+#define IDC_EDIT_IRC_NICK               1004
+#define IDC_EDIT_IRC_PWD                1005
+#define IDC_EDIT_XMPP_CHANNEL           1006
+#define IDC_EDIT_XMPP_NICK              1007
+#define IDC_EDIT_PWD3                   1008
+#define IDC_EDIT_XMPP_PWD               1008
+#define IDC_CHECK_XMPP                  1009
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
