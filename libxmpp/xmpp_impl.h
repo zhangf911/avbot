@@ -31,7 +31,7 @@
 #include <gloox/mucroomhandler.h>
 #include <gloox/connectionbase.h>
 
-#include <boost/signal.hpp>
+#include <boost/signals2.hpp>
 
 namespace XMPP {
 
@@ -98,7 +98,7 @@ private:
 	std::vector<boost::shared_ptr<gloox::MUCRoom> >	m_rooms;
 	boost::asio::streambuf							m_readbuf;
 
-	boost::signal <void ( std::string xmpproom, std::string who, std::string message )> m_sig_room_message;
+	boost::signals2::signal<void ( std::string xmpproom, std::string who, std::string message )> m_sig_room_message;
 };
 
 }

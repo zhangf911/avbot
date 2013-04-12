@@ -33,5 +33,12 @@ public:
 	avbot_rpc_server(socket_type _socket)
 	  : m_socket(_socket)
 	{
+		// 将自己注册到 avbot 的 signal 去
+	}
+
+	// signal 的回调到了这里
+	void operator()()
+	{
+
 	}
 };
