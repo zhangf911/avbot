@@ -13,6 +13,7 @@ BOOST_DEFUN([Locale],
 case $host_os in
   (*mingw*)
     BOOST_LOCALE_LIBS+="-liconv"
+    AC_DEFINE_UNQUOTED(BOOST_LOCALE_NO_POSIX_BACKEND,1)
   ;;
 esac
 
@@ -143,7 +144,7 @@ case $host_os in
   ;;
 esac
 
-AM_CONDITIONAL(OS_WINNT,[test "x$OS_WINNT" = "xyes"])
+AM_CONDITIONAL(OS_WINNT,[test "x$OS_WINNT" != "xno"])
 
 
 # Checks for typedefs, structures, and compiler characteristics.

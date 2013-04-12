@@ -7,9 +7,21 @@
 
 #include "utf8.hpp"
 
+
+inline std::wstring ansi_wide( std::string const &source )
+{
+#ifdef WIN32
+	std::vector<wchar_t> szBuf(source.length()*2);
+	MultiByteToWideChar(CP_ACP, 0, source.c_str(), -1, &szBuf[0], szBuf.capacity());
+	return std::wstring(szBuf.data());
+#else
+	return utf8_wide(source);
+#endif
+}
+
 inline std::string ansi_utf8( std::string const &source, const std::string &characters = "GB18030" )
 {
-	return boost::locale::conv::between( source, "UTF-8", characters ).c_str();
+	return wide_utf8(ansi_wide(source));
 }
 
 // convert wide string for console output aka native encoding
