@@ -10,16 +10,19 @@ AC_PREREQ([2.69])
 # 1.35.0.
 BOOST_DEFUN([Locale],
 [
+
 case $host_os in
   (*mingw*)
-    BOOST_LOCALE_LIBS+="-liconv"
+    LIBS+=" -liconv "
     AC_DEFINE_UNQUOTED(BOOST_LOCALE_NO_POSIX_BACKEND,1)
   ;;
 esac
 
 BOOST_FIND_LIB([locale], [$1],
                 [boost/locale.hpp],
-                [boost::locale::conv::between( "nihao", "UTF-8", "GBK" );])
+                [])
+
+
 ])# BOOST_LOCALE
 
 # BOOST_THREAD([PREFERRED-RT-OPT])
