@@ -75,6 +75,8 @@ namespace po = boost::program_options;
 #include "botctl.hpp"
 
 #include "boost/consolestr.hpp"
+#include "boost/acceptor_server.hpp"
+#include "avbot_rpc_server.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -442,7 +444,7 @@ int main( int argc, char *argv[] )
 	std::string chanelmap;
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
-	bool localimage;
+	bool localimage, runrpc;
 
 	progname = fs::basename( argv[0] );
 
@@ -472,6 +474,7 @@ int main( int argc, char *argv[] )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
 
 	( "localimage", po::value<bool>( &localimage)->default_value(false),	"fetch qq image to local disk and store it there")
+	( "runrpc",		po::value<bool>( &runrpc)->default_value(false),	"run rpc server on port 6176")
 
 	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a)：") ),
 		console_out_str("为QQ设置的发言前缀, 默认是 qq(%a):").c_str() )
@@ -681,7 +684,10 @@ int main( int argc, char *argv[] )
 		boost::thread( boost::bind( input_thread, boost::ref( asio ), boost::ref( qqclient ) ) );
 #endif
 	}
-
+	if (runrpc){
+		// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
+		boost::acceptor_server<avbot_rpc_server>(asio, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), 6176));
+	}
 	asio.run();
 	return 0;
 }
