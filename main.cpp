@@ -527,6 +527,7 @@ int main( int argc, char *argv[] )
 	}
 	
 #ifdef WIN32
+	::InitCommonControls();
 	// windows下面弹出选项设置框框
 	if( qqnumber.empty() || qqpwd.empty() || ircnick.empty() ) {
 		HMODULE hIns = GetModuleHandle(NULL);
