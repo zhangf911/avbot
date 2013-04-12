@@ -84,7 +84,7 @@ add_definitions(-DQQBOT_VERSION=\"3.999\")
 add_executable(avbot main.cpp botctl.cpp messagegroup.cpp avbot.rc)
 
 if(WIN32)
-target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32  )
+target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 )
 endif()
 
 target_link_libraries(avbot webqq xmpp mailexchange)
