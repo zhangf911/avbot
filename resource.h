@@ -13,7 +13,6 @@
 #define IDC_EDIT_IRC_PWD                1005
 #define IDC_EDIT_XMPP_CHANNEL           1006
 #define IDC_EDIT_XMPP_NICK              1007
-#define IDC_EDIT_PWD3                   1008
 #define IDC_EDIT_XMPP_PWD               1008
 #define IDC_CHECK_XMPP                  1009
 
