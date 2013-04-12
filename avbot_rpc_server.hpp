@@ -35,6 +35,9 @@ namespace js = boost::property_tree::json_parser;
 #include "botctl.hpp"
 
 #include "boost/coro/yield.hpp"
+
+namespace detail {
+
 // avbot_rpc_server 由 acceptor_server 这个辅助类调用
 // 为其构造函数传入一个 m_socket, 是 shared_ptr 的.
 class avbot_rpc_server
@@ -52,6 +55,7 @@ public:
 	  , m_request(new boost::asio::streambuf)
 	  , m_responses(new boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> > )
 	{
+		std::cout <<  "avbot_rpc_server constructed here" <<  std::endl;
 		m_socket->get_io_service().post(
 			boost::asio::detail::bind_handler(*this, boost::coro::coroutine(), boost::system::error_code(), 0)
 		);
@@ -128,5 +132,8 @@ private:
 	boost::shared_ptr<boost::asio::streambuf>	m_request;
 	boost::shared_ptr< boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> > >	m_responses;
 };
+}
+
+using detail::avbot_rpc_server;
 
 #include "boost/coro/unyield.hpp"
