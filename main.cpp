@@ -521,85 +521,85 @@ int main( int argc, char *argv[] )
 	}
 	
 #ifdef WIN32
-		// windows下面弹出选项设置框框
-		if( qqnumber.empty() || qqpwd.empty() || ircnick.empty() ) {
-			HMODULE hIns = GetModuleHandle(NULL);
-			HWND hDlg = NULL;
+	// windows下面弹出选项设置框框
+	if( qqnumber.empty() || qqpwd.empty() || ircnick.empty() ) {
+		HMODULE hIns = GetModuleHandle(NULL);
+		HWND hDlg = NULL;
 
-			hDlg = CreateDialog(hIns, MAKEINTRESOURCE(IDD_AVSETTINGS_DIALOG), NULL, (DLGPROC)DlgProc);
+		hDlg = CreateDialog(hIns, MAKEINTRESOURCE(IDD_AVSETTINGS_DIALOG), NULL, (DLGPROC)DlgProc);
 
-			ShowWindow(hDlg, SW_SHOW);
+		ShowWindow(hDlg, SW_SHOW);
 
-			// 启动windows消息循环
-			MSG msg;
-			while (true)
+		// 启动windows消息循环
+		MSG msg;
+		while (true)
+		{
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 			{
-				if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-				{
-					if (msg.message == WM_QUIT) exit(1);
+				if (msg.message == WM_QUIT) exit(1);
+				
+				if (msg.message == WM_RESTART_AV_BOT) {
+					// 看起来avbot用的是多字节,std::string not std::wstring
+					TCHAR temp[MAX_PATH];
+					bool use_xmpp = false;
+
+					// qq setting				
+					GetDlgItemText(hDlg, IDC_EDIT_USER_NAME, temp, MAX_PATH);
+					qqnumber = temp;
 					
-					if (msg.message == WM_RESTART_AV_BOT) {
-						// 看起来avbot用的是多字节,std::string not std::wstring
-						TCHAR temp[MAX_PATH];
-						bool use_xmpp = false;
+					GetDlgItemText(hDlg, IDC_EDIT_PWD, temp, MAX_PATH);
+					qqpwd = temp;
 
-						// qq setting				
-						GetDlgItemText(hDlg, IDC_EDIT_USER_NAME, temp, MAX_PATH);
-						qqnumber = temp;
+					// irc setting
+					GetDlgItemText(hDlg, IDC_EDIT_IRC_CHANNEL, temp, MAX_PATH);
+					ircroom = temp;
+					
+					GetDlgItemText(hDlg, IDC_EDIT_IRC_NICK, temp, MAX_PATH);
+					ircnick = temp;
+					
+					GetDlgItemText(hDlg, IDC_EDIT_IRC_PWD, temp, MAX_PATH);
+					ircpwd = temp;
+
+					// xmpp setting
+					if (IsDlgButtonChecked(hDlg, IDC_CHECK_XMPP) == BST_CHECKED) {
+						GetDlgItemText(hDlg, IDC_EDIT_XMPP_CHANNEL, temp, MAX_PATH);
+						xmpproom = temp;
 						
-						GetDlgItemText(hDlg, IDC_EDIT_PWD, temp, MAX_PATH);
-						qqpwd = temp;
-
-						// irc setting
-						GetDlgItemText(hDlg, IDC_EDIT_IRC_CHANNEL, temp, MAX_PATH);
-						ircroom = temp;
+						GetDlgItemText(hDlg, IDC_EDIT_XMPP_NICK, temp, MAX_PATH);
+						xmppnick = temp;
 						
-						GetDlgItemText(hDlg, IDC_EDIT_IRC_NICK, temp, MAX_PATH);
-						ircnick = temp;
+						GetDlgItemText(hDlg, IDC_EDIT_XMPP_PWD, temp, MAX_PATH);
+						xmpppwd = temp;
 						
-						GetDlgItemText(hDlg, IDC_EDIT_IRC_PWD, temp, MAX_PATH);
-						ircpwd = temp;
-
-						// xmpp setting
-						if (IsDlgButtonChecked(hDlg, IDC_CHECK_XMPP) == BST_CHECKED) {
-							GetDlgItemText(hDlg, IDC_EDIT_XMPP_CHANNEL, temp, MAX_PATH);
-							xmpproom = temp;
-							
-							GetDlgItemText(hDlg, IDC_EDIT_XMPP_NICK, temp, MAX_PATH);
-							xmppnick = temp;
-							
-							GetDlgItemText(hDlg, IDC_EDIT_XMPP_PWD, temp, MAX_PATH);
-							xmpppwd = temp;
-							
-							use_xmpp = true;
-						}
-
-						// save data to config file
-
-						TCHAR file_path[MAX_PATH];
-						GetModuleFileName(NULL, file_path, MAX_PATH);
-						// now, create process
-						STARTUPINFO si;
-						PROCESS_INFORMATION pi;
-
-						ZeroMemory(&si, sizeof(si));
-						si.cb = sizeof(si);
-						ZeroMemory(&pi, sizeof(pi));
-
-						CreateProcess(file_path, NULL, NULL, NULL,
-							FALSE, 0, NULL, NULL,
-							&si, &pi);
-						CloseHandle(pi.hProcess);
-						CloseHandle(pi.hThread);
-						// now,parent process exit.
-						exit(1);
+						use_xmpp = true;
 					}
 
-					TranslateMessage(&msg);	
-					DispatchMessage(&msg);	
-				}		
-			}
+					// save data to config file
+
+					TCHAR file_path[MAX_PATH];
+					GetModuleFileName(NULL, file_path, MAX_PATH);
+					// now, create process
+					STARTUPINFO si;
+					PROCESS_INFORMATION pi;
+
+					ZeroMemory(&si, sizeof(si));
+					si.cb = sizeof(si);
+					ZeroMemory(&pi, sizeof(pi));
+
+					CreateProcess(file_path, NULL, NULL, NULL,
+						FALSE, 0, NULL, NULL,
+						&si, &pi);
+					CloseHandle(pi.hProcess);
+					CloseHandle(pi.hThread);
+					// now,parent process exit.
+					exit(1);
+				}
+
+				TranslateMessage(&msg);	
+				DispatchMessage(&msg);	
+			}		
 		}
+	}
 		
 #endif
 
