@@ -17,7 +17,6 @@
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-#pragma code_page(936)
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -50,13 +49,13 @@ END
 // Dialog
 //
 
-IDD_AVSETTINGS_DIALOG DIALOGEX 0, 0, 309, 200
+IDD_AVSETTINGS_DIALOG DIALOGEX 0, 0, 309, 194
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "QQBot参数设置"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "我设置好了",IDOK,70,175,78,14
-    PUSHBUTTON      "算了,我不想用了",IDCANCEL,163,175,85,14
+    DEFPUSHBUTTON   "我设置好了",IDOK,70,168,78,14
+    PUSHBUTTON      "算了,我不想用了",IDCANCEL,163,168,85,14
     GROUPBOX        "XMPP频道设置",IDC_STATIC,7,103,295,58
     GROUPBOX        "IRC频道设置",IDC_STATIC,7,55,295,40
     GROUPBOX        "QQ设置",IDC_STATIC,7,7,295,40
@@ -98,7 +97,6 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon
@@ -107,7 +105,6 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_AVBOT_ICON          ICON                    "avbot.ico"
-1						24						"avbot.manifest"
 #endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -122,4 +119,3 @@ IDI_AVBOT_ICON          ICON                    "avbot.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-
