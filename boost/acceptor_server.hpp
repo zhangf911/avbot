@@ -26,13 +26,13 @@ class acceptor_server :  boost::coro::coroutine
 public:
 	typedef typename Protocol::endpoint endpoint_type;
 
-	acceptor_server(boost::asio::io_service & io, const endpoint_type & endpoint)
+	explicit acceptor_server(boost::asio::io_service & io, const endpoint_type & endpoint)
 		:io_service(io), m_acceptor_socket(new boost::asio::basic_socket_acceptor<Protocol>(io, endpoint))
 	{
 		start_accept();
 	}
 
-	acceptor_server(boost::shared_ptr<boost::asio::basic_socket_acceptor<Protocol> > acceptor_socket)
+	explicit acceptor_server(boost::shared_ptr<boost::asio::basic_socket_acceptor<Protocol> > acceptor_socket)
 		:io_service(acceptor_socket->get_io_service()), m_acceptor_socket(acceptor_socket)
 	{
 		start_accept();

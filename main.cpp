@@ -23,6 +23,7 @@ namespace po = boost::program_options;
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/locale.hpp>
+#include <boost/signals2.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <locale.h>
 #include <cstring>
@@ -138,6 +139,8 @@ static std::string progname;
 static std::string ircvercodechannel;
 
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
+
+avbot_rpc_server::on_message_signal_type avbot_rpc_server::on_message;
 
 // 简单的消息命令控制.
 static void qqbot_control( webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd )
@@ -276,7 +279,7 @@ static void on_irc_message( IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient
 	// a hack, later should be fixed to fetch channel op list.
 	if( pMsg.whom == "microcai" )
 		sender_flag = sender_is_op;
-
+	avbot_rpc_server::on_message("irc", pMsg.from, pMsg.whom, pMsg.msg, sender_flag);
 	on_bot_command( qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender, &qqclient );
 }
 
@@ -296,6 +299,7 @@ static void om_xmpp_message( xmpp & xmppclient, std::string xmpproom, std::strin
 		msg_sender = boost::bind( &xmpp::send_room_message, &xmppclient, xmpproom, _1 );
 	}
 
+	avbot_rpc_server::on_message("xmpp", from, who, message, sender_is_normal);
 	on_bot_command( xmppclient.get_ioservice(), message, from, who, sender_is_normal, msg_sender );
 }
 
@@ -391,8 +395,16 @@ static void on_group_msg( std::string group_code, std::string who, const std::ve
 	forwardmessage( from, message_nick + textmsg );
 
 	// qq消息控制.
-	if( buddy )
+	if( buddy ){
+		sender_flags sender_flag;
+	 	if( ( buddy->mflag & 21 ) == 21 || buddy->uin == group->owner )
+			sender_flag = sender_is_op;
+		else
+			sender_flag = sender_is_normal;
+
+		avbot_rpc_server::on_message("qq", groupname, buddy->nick, htmlmsg, sender_flag);
 		qqbot_control( qqclient, *group, *buddy, htmlmsg );
+	}
 }
 
 static void on_mail( mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune, webqq & qqclient )
