@@ -53,23 +53,23 @@ public:
 	avbot_rpc_server(boost::shared_ptr<socket_type> _socket)
 	  : m_socket(_socket)
 	  , m_request(new boost::asio::streambuf)
-	  , m_responses(new boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> > )
+	  , m_responses(new boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> >(20) )
 	{
-		std::cout <<  "avbot_rpc_server constructed here" <<  std::endl;
 		m_socket->get_io_service().post(
 			boost::asio::detail::bind_handler(*this, boost::coro::coroutine(), boost::system::error_code(), 0)
 		);
 	}
 
 	// 数据操作跑这里，嘻嘻.
-	void operator()(boost::coro::coroutine coro, const boost::system::error_code & ec, std::size_t bytestransfered)
+	void operator()(boost::coro::coroutine coro, boost::system::error_code ec, std::size_t bytestransfered)
 	{
 		boost::shared_ptr<boost::asio::streambuf>	sendbuf;
 
 		if (ec){
+			m_socket->close(ec);
 			// 看来不是 HTTP 客户端，诶，滚蛋啊！
 			// 沉默，直接关闭链接. 取消信号注册.
-			if (m_connect)
+		 	if (m_connect && m_connect->connected())
 				m_connect->disconnect();
 			return;
 		}
@@ -79,6 +79,7 @@ public:
 		do{
 			// 发起 HTTP 处理操作.
 			_yield boost::asio::async_read_until(*m_socket, *m_request, "\r\n\r\n", boost::bind(*this, coro, _1, _2));
+			m_request->consume(bytestransfered);
 
 			// 解析 HTTP
 
@@ -88,9 +89,8 @@ public:
 				if (!m_connect){
 					// 将自己注册到 avbot 的 signal 去
 					// 等 有消息的时候，on_message 被调用，也就是下面的 operator() 被调用.
-					_yield m_connect.reset(new boost::signals2::scoped_connection(
-											on_message.connect(boost::bind(*this, coro, _1, _2, _3, _4, _5))
-										));
+					_yield m_connect.reset( new boost::signals2::connection(on_message.connect(boost::bind(*this, coro, _1, _2, _3, _4, _5))));
+
 				}else{
 					return;
 				}
@@ -111,12 +111,21 @@ public:
 		pt::ptree jsonmessage;
 		boost::shared_ptr<boost::asio::streambuf> buf(new boost::asio::streambuf);
 		std::ostream	stream(buf.get());
+		std::stringstream	teststream;
 		jsonmessage.put("protocol", protocol);
 		jsonmessage.put("root", room);
 		jsonmessage.put("who", who);
 		jsonmessage.put("msg", message);
+
+		js::write_json(teststream,  jsonmessage);
+
 		// 直接写入 json 格式的消息吧!
+		stream <<  "HTTP/1.1 200 OK\r\n" <<  "Content-type: application/json\r\n";
+		stream <<  "connection: keep-alive\r\n" <<  "Content-length: ";
+		stream << teststream.str().length() <<  "\r\n\r\n";
+
 		js::write_json(stream, jsonmessage);
+
 		// 检查 发送缓冲区.
 		if (m_responses->empty()){
 			// 打通仁督脉.
@@ -127,7 +136,7 @@ public:
 	}
 private:
 	boost::shared_ptr<socket_type> m_socket;
-	boost::shared_ptr<boost::signals2::scoped_connection> m_connect;
+	boost::shared_ptr<boost::signals2::connection> m_connect;
 
 	boost::shared_ptr<boost::asio::streambuf>	m_request;
 	boost::shared_ptr< boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> > >	m_responses;
