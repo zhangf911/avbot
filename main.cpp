@@ -92,7 +92,12 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message) 
 	{ 
-	case WM_INITDIALOG: 		
+	case WM_INITDIALOG: 
+		if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_XMPP) != BST_CHECKED) {
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_CHANNEL), FALSE);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_NICK), FALSE);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_PWD), FALSE);
+		}
 		return TRUE; 
 	case WM_COMMAND: 
 		switch (LOWORD(wParam)) 
@@ -106,6 +111,14 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			// 退出消息循环
 			PostMessage(NULL, WM_QUIT, NULL, NULL);
 			return TRUE; 
+		case IDC_CHECK_XMPP:
+			BOOL enable = FALSE;
+			if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_XMPP) == BST_CHECKED) enable = TRUE;
+			
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_CHANNEL), enable);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_NICK), enable);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_PWD), enable);
+			return TRUE;
 		} 
 	} 
 
