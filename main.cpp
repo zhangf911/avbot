@@ -532,10 +532,8 @@ int main( int argc, char *argv[] )
 
 		// 启动windows消息循环
 		MSG msg;
-		while (true)
-		{
-			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-			{
+		while (true) {
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 				if (msg.message == WM_QUIT) exit(1);
 				
 				if (msg.message == WM_RESTART_AV_BOT) {
