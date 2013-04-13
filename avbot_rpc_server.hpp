@@ -66,7 +66,7 @@ public:
 	// 数据操作跑这里，嘻嘻.
 	void operator()(boost::coro::coroutine coro, boost::system::error_code ec, std::size_t bytestransfered)
 	{
-		boost::shared_ptr<boost::asio::streambuf>	sendbuf;
+		boost::shared_ptr<boost::asio::streambuf> sendbuf;
 
 		if (ec){
 			m_socket->close(ec);
