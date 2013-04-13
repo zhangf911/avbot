@@ -43,7 +43,10 @@ namespace detail {
 class avbot_rpc_server
 {
 public:
-	typedef boost::signals2::signal< void( std::string protocol, std::string room, std::string who, std::string message, sender_flags ) > on_message_signal_type;
+	typedef boost::signals2::signal<
+		void( std::string protocol, std::string room, std::string who,
+				std::string message, sender_flags )
+	> on_message_signal_type;
 	static on_message_signal_type on_message;
 
 	typedef boost::asio::ip::tcp Protocol;
