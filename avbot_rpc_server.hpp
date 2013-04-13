@@ -94,8 +94,14 @@ public:
 					// 等 有消息的时候，on_message 被调用，也就是下面的 operator() 被调用.
 					_yield m_connect = boost::make_shared<boost::signals2::connection>
 						(on_message.connect(boost::bind(*this, coro, _1, _2, _3, _4, _5)));
-
+					// 就这么退出了，但是消息来的时候，om_message 被调用，然后下面的那个
+					// operator() 就被调用了，那个 operator() 接着就会重新回调本 operator()
+					// 结果就是随着 coroutine 的作用，代码进入这一行，然后退出  if 判定
+					// 然后进入发送过程.
 				}else{
+					// 如果已经注册，直接返回。时候如果消息来了，on_message 被调用，也就
+					// 是下面的 operator() 被调用. 结果就是随着 coroutine 的作用，代码
+					// 进入上面那行，然后退出  if 判定。然后进入发送过程.
 					return;
 				}
 				// signals2 回调的时候会进入到这一行.
