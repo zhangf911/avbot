@@ -142,7 +142,7 @@ AC_DEFINE_UNQUOTED(BOOST_THREAD_USE_LIB,"1",[define this to use static version o
 
 case $host_os in
   (*mingw*)
-    LIBS+=" -static-libstdc++  -static-libgcc -lws2_32 -lcrypt32 -lsecur32 -luuid -ladvapi32 -lgdi32 -lcomctl32 -lkernel32 -luser32 -lwinspool -lshell32 -lole32 -loleaut32 -lcomdlg32"
+    LIBS+=" -static-libstdc++  -static-libgcc -lws2_32 -lmswsock -lcrypt32 -lsecur32 -luuid -ladvapi32 -lgdi32 -lcomctl32 -lkernel32 -luser32 -lwinspool -lshell32 -lole32 -loleaut32 -lcomdlg32"
     OS_WINNT=yes
   ;;
 esac
