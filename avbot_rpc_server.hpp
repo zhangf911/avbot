@@ -89,7 +89,8 @@ public:
 				if (!m_connect){
 					// 将自己注册到 avbot 的 signal 去
 					// 等 有消息的时候，on_message 被调用，也就是下面的 operator() 被调用.
-					_yield m_connect.reset( new boost::signals2::connection(on_message.connect(boost::bind(*this, coro, _1, _2, _3, _4, _5))));
+					_yield m_connect = boost::make_shared<boost::signals2::connection>
+						(on_message.connect(boost::bind(*this, coro, _1, _2, _3, _4, _5)));
 
 				}else{
 					return;
