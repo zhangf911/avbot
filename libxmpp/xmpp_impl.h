@@ -33,7 +33,7 @@
 
 #include <boost/signals2.hpp>
 
-namespace XMPP {
+namespace xmppimpl {
 
 class xmpp_asio_connector : public gloox::ConnectionBase {
 public:
@@ -60,9 +60,9 @@ private:
 	boost::array<char, 8192>	m_readbuf;
 };
 
-class xmpp_impl : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler {
+class xmpp : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler {
 public:
-	xmpp_impl( boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick );
+	xmpp( boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick );
 	void join( std::string roomjid );
 	void on_room_message( boost::function<void ( std::string xmpproom, std::string who, std::string message )> cb );
 	void send_room_message( std::string xmpproom, std::string message );

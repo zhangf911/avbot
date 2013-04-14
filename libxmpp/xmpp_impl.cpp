@@ -32,8 +32,9 @@
 
 #include "xmpp_impl.h"
 
-using namespace XMPP;
 using namespace gloox;
+
+namespace xmppimpl{
 
 void xmpp_asio_connector::cb_handle_connecting( const boost::system::error_code& ec )
 {
@@ -137,7 +138,7 @@ xmpp_asio_connector::xmpp_asio_connector( boost::asio::io_service& _io, gloox::C
 
 }
 
-xmpp_impl::xmpp_impl( boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick )
+xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick )
 	: io_service( asio ), m_jid( xmppuser + "/" + xmppnick ), m_client( m_jid, xmpppasswd ), m_xmppnick( xmppnick )
 {
 	m_client.registerConnectionListener( this );
@@ -153,10 +154,10 @@ xmpp_impl::xmpp_impl( boost::asio::io_service& asio, std::string xmppuser, std::
 			m_client.setPort( boost::lexical_cast<int>( splited[1] ) );
 	}
 
-	io_service.post( boost::bind( &xmpp_impl::start, this ) );
+	io_service.post( boost::bind( &xmpp::start, this ) );
 }
 
-void xmpp_impl::start()
+void xmpp::start()
 {
 	std::string xmppclientport ;
 
@@ -170,19 +171,19 @@ void xmpp_impl::start()
 	m_client.connect( 0 );
 }
 
-void xmpp_impl::join( std::string roomjid )
+void xmpp::join( std::string roomjid )
 {
 	gloox::JID roomnick( roomjid + "/" + m_xmppnick ); //"avplayer@im.linuxapp.org";
 	boost::shared_ptr<gloox::MUCRoom> room( new  gloox::MUCRoom( &m_client, roomnick, this ) );
 	m_rooms.push_back( room );
 }
 
-void xmpp_impl::on_room_message( boost::function<void ( std::string xmpproom, std::string who, std::string message )> cb )
+void xmpp::on_room_message( boost::function<void ( std::string xmpproom, std::string who, std::string message )> cb )
 {
 	m_sig_room_message.connect( cb );
 }
 
-void xmpp_impl::send_room_message( std::string xmpproom, std::string message )
+void xmpp::send_room_message( std::string xmpproom, std::string message )
 {
 	//查找啊.
 	BOOST_FOREACH( boost::shared_ptr<gloox::MUCRoom> room, m_rooms ) {
@@ -192,24 +193,24 @@ void xmpp_impl::send_room_message( std::string xmpproom, std::string message )
 	}
 }
 
-void xmpp_impl::handleMessage( const gloox::Message& stanza, gloox::MessageSession* session )
+void xmpp::handleMessage( const gloox::Message& stanza, gloox::MessageSession* session )
 {
 	gloox::Message msg( gloox::Message::Chat , stanza.from(), "hello world" );
 	m_client.send( msg );
 }
 
-void xmpp_impl::handleMUCMessage( gloox::MUCRoom* room, const gloox::Message& msg, bool priv )
+void xmpp::handleMUCMessage( gloox::MUCRoom* room, const gloox::Message& msg, bool priv )
 {
 	if( !msg.from().resource().empty() && msg.from().resource() != room->nick() )
 		m_sig_room_message( room->name(), msg.from().resource(), msg.body() );
 }
 
-bool xmpp_impl::onTLSConnect( const gloox::CertInfo& info )
+bool xmpp::onTLSConnect( const gloox::CertInfo& info )
 {
 	return true;
 }
 
-void xmpp_impl::onConnect()
+void xmpp::onConnect()
 {
 	BOOST_FOREACH( boost::shared_ptr<gloox::MUCRoom> room,  m_rooms ) {
 		room->join();
@@ -218,10 +219,10 @@ void xmpp_impl::onConnect()
 	}
 }
 
-void xmpp_impl::onDisconnect( gloox::ConnectionError e )
+void xmpp::onDisconnect( gloox::ConnectionError e )
 {
 	std::cerr << "xmpp disconnected: " <<  e << "reconnectiong..." <<  std::endl;
-	boost::delayedcallsec( io_service, 10 + rand() % 10, boost::bind( &xmpp_impl::start, this ) );
+	boost::delayedcallsec( io_service, 10 + rand() % 10, boost::bind( &xmpp::start, this ) );
 	return ;
 }
 
@@ -230,7 +231,7 @@ static std::string randomname( std::string m_xmppnick )
 	return boost::str( boost::format( "%s%X" ) % m_xmppnick % rand() );
 }
 
-void xmpp_impl::handleMUCError( gloox::MUCRoom* room, gloox::StanzaError error )
+void xmpp::handleMUCError( gloox::MUCRoom* room, gloox::StanzaError error )
 {
 	if( error == gloox::StanzaErrorConflict ) {
 		// 出现名字冲突，使用一个随机名字.
@@ -239,29 +240,30 @@ void xmpp_impl::handleMUCError( gloox::MUCRoom* room, gloox::StanzaError error )
 	}
 }
 
-void xmpp_impl::handleMUCInfo( gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm )
+void xmpp::handleMUCInfo( gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm )
 {
 }
 
-void xmpp_impl::handleMUCInviteDecline( gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason )
+void xmpp::handleMUCInviteDecline( gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason )
 {
 }
 
-void xmpp_impl::handleMUCItems( gloox::MUCRoom* room, const gloox::Disco::ItemList& items )
+void xmpp::handleMUCItems( gloox::MUCRoom* room, const gloox::Disco::ItemList& items )
 {
 }
 
 
-void xmpp_impl::handleMUCParticipantPresence( gloox::MUCRoom* room, const gloox::MUCRoomParticipant participant, const gloox::Presence& presence )
+void xmpp::handleMUCParticipantPresence( gloox::MUCRoom* room, const gloox::MUCRoomParticipant participant, const gloox::Presence& presence )
 {
 }
 
-bool xmpp_impl::handleMUCRoomCreation( gloox::MUCRoom* room )
+bool xmpp::handleMUCRoomCreation( gloox::MUCRoom* room )
 {
 	return true;
 }
 
-void xmpp_impl::handleMUCSubject( gloox::MUCRoom* room, const std::string& nick, const std::string& subject )
+void xmpp::handleMUCSubject( gloox::MUCRoom* room, const std::string& nick, const std::string& subject )
 {
 }
 
+}
