@@ -39,6 +39,7 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 #include "boost/timedcall.hpp"
 #include "boost/coro/yield.hpp"
 
+namespace irc{
 struct IrcMsg
 {
 	std::string whom;
@@ -354,3 +355,5 @@ private:
 	const unsigned int              c_retry_cuont;
 	bool insending;
 };
+
+}

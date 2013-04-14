@@ -4,6 +4,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace irc;
 
 // int n2u(const char *in, size_t in_len, char *out, size_t out_len)
 // {

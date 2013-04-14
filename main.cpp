@@ -216,7 +216,7 @@ static std::string	preamble_formater( qqBuddy *buddy, std::string falbacknick, q
 	return preamble;
 }
 
-static std::string	preamble_formater( IrcMsg pmsg )
+static std::string	preamble_formater( irc::IrcMsg pmsg )
 {
 	// 格式化神器, 哦耶.
 	// 获取格式化描述字符串.
@@ -243,7 +243,7 @@ static std::string	preamble_formater( std::string who, std::string room )
 	return preamble;
 }
 
-static void on_irc_message( IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient )
+static void on_irc_message( irc::IrcMsg pMsg, irc::IrcClient & ircclient, webqq & qqclient )
 {
 	std::cout << console_out_str(pMsg.msg) << std::endl;
 
@@ -271,7 +271,7 @@ static void on_irc_message( IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient
 	if( groups ) {
 		msg_sender = boost::bind( &messagegroup::broadcast, groups,  _1 );
 	} else {
-		msg_sender = boost::bind( &IrcClient::chat, &ircclient, pMsg.from, _1 );
+		msg_sender = boost::bind( &irc::IrcClient::chat, &ircclient, pMsg.from, _1 );
 	}
 
 	sender_flags sender_flag = sender_is_normal;
@@ -422,7 +422,7 @@ static void on_mail( mailcontent mail, mx::pop3::call_to_continue_function call_
 	qqclient.get_ioservice().post( boost::bind( call_to_contiune, qqclient.is_online() ) );
 }
 
-static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient )
+static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qqclient, irc::IrcClient & ircclient, xmpp& xmppclient )
 {
 	const char * data = boost::asio::buffer_cast<const char*>( imgbuf );
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
@@ -658,7 +658,7 @@ int main( int argc, char *argv[] )
 
 	xmpp		xmppclient( asio, xmppuser, xmpppwd, xmppserver, xmppnick );
 	webqq		qqclient( asio, qqnumber, qqpwd );
-	IrcClient	ircclient( asio, ircnick, ircpwd );
+	irc::IrcClient	ircclient( asio, ircnick, ircpwd );
 	mx::mx		mx( asio, mailaddr, mailpasswd, pop3server, smtpserver );
 
 	build_group( chanelmap, qqclient, xmppclient, ircclient, mx );
