@@ -79,6 +79,7 @@ add_subdirectory(libirc)
 endif()
 add_subdirectory(libxmpp)
 add_subdirectory(libmailexchange)
+add_subdirectory(libavbot)
 
 add_definitions(-DQQBOT_VERSION=\"3.999\")
 add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp messagegroup.cpp avbot.rc)
