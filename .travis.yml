@@ -16,9 +16,6 @@ before_script:
 script:
   make
 
-branches:
-  only:
-    - master
 notifications:
   recipients:
     - microcaicai@gmail.com
