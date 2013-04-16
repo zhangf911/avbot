@@ -1,3 +1,5 @@
+#include <boost/regex.hpp>
+#include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 #include <boost/format.hpp>
@@ -87,6 +89,8 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 						m_qq_account->async_fetch_cface(qqmsg.cface, boost::bind(&avbot::callback_save_qq_image, this, _1, _2, qqmsg.cface));
 					}
 				}
+				// 接收方，需要把 cfage 格式化为 url , loger 格式化为 ../images/XX ,
+				// 而 forwarder 则格式化为 http://http://w.qq.com/cgi-bin/get_group_pic?pic=XXX
 				textmsg.add("cface", qqmsg.cface);
 			}
 			break;
@@ -97,5 +101,84 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 			} break;
 		}
 	}
+	message.add_child("message", textmsg);
+	on_message(message);
+}
 
+void avbot::callback_on_xmpp_group_message( std::string xmpproom, std::string who, std::string textmsg )
+{
+	using boost::property_tree::ptree;
+	ptree message;
+
+	message.add("protocol", "xmpp");
+	message.add("room", xmpproom);
+	message.add("who", who);
+	message.add_child("message", ptree().add("text", textmsg));
+
+	on_message(message);
+}
+
+void avbot::callback_on_mail( mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune )
+{
+
+}
+
+
+void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::need_verify_image cb )
+{
+	m_qq_account.reset(new webqq(m_io_service, qqnumber, password));
+	m_qq_account->on_verify_code(cb);
+	m_qq_account->login();
+	m_qq_account->on_group_msg(boost::bind(&avbot::callback_on_qq_group_message, this, _1, _2, _3));
+}
+
+void avbot::feed_login_verify_code( std::string vcode )
+{
+	m_qq_account->login_withvc(vcode);
+}
+
+void avbot::set_irc_account( std::string nick, std::string password, std::string server, bool use_ssl)
+{
+	boost::cmatch what;
+	if (use_ssl){
+		boost::throw_exception(std::invalid_argument("ssl is currently not supported"));
+	}
+
+	std::string server_host, server_port;
+	if (boost::regex_search(server.c_str(), what, boost::regex("(.*):([0-9]+)?")))
+	{
+		server_host = what[1];
+		server_port = what[2];
+	}
+	else
+	{
+		server_host = server;
+		server_port = 6667;
+	}
+	m_irc_account.reset(new irc::IrcClient(m_io_service, nick, password, server_host, server_port));
+	m_irc_account->login(boost::bind(&avbot::callback_on_irc_message, this, _1));
+}
+
+void avbot::irc_join_room( std::string room_name )
+{
+	m_irc_account->join(room_name);
+}
+
+void avbot::set_xmpp_account( std::string user, std::string password, std::string nick, std::string server )
+{
+	m_xmpp_account.reset(new xmpp(m_io_service, user, password, server, nick));
+	m_xmpp_account->on_room_message(boost::bind(&avbot::callback_on_xmpp_group_message, this, _1, _2, _3));
+}
+
+void avbot::xmpp_join_room( std::string room )
+{
+	m_xmpp_account->join(room);
+}
+
+void avbot::set_mail_account( std::string mailaddr, std::string password, std::string pop3server, std::string smtpserver )
+{
+	// 开启 pop3 收邮件.
+	m_mail_account.reset(new mx::mx(m_io_service, mailaddr, password, pop3server, smtpserver));
+
+	m_mail_account->async_fetch_mail(boost::bind(&avbot::callback_on_mail, this, _1, _2));
 }
