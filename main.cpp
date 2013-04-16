@@ -641,8 +641,6 @@ int main( int argc, char *argv[] )
 							file << "xmpproom=" << xmpproom << std::endl;
 							file << std::endl;
 						}
-						
-						file.close();
 					}
 					catch (...) {
 						std::cerr << "error while handle config file" << std::endl;
