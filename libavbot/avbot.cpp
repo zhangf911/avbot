@@ -231,9 +231,9 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 		ptree_who.add("qqnumber", buddy->qqnum);
 		ptree_who.add("card", buddy->card);
 		if( ( buddy->mflag & 21 ) == 21 || buddy->uin == group->owner )
-			ptree_who.add("op", "1");
+			message.add("op", "1");
 		else
-			ptree_who.add("op", "0");
+			message.add("op", "0");
 	}
 
 	message.add_child("who", ptree_who);
