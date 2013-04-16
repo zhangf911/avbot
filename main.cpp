@@ -104,12 +104,12 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		{ 
 		case IDOK:
 			// 通知主函数写入数据并重启
-			PostMessage(NULL, WM_RESTART_AV_BOT, NULL, NULL);
+			PostMessage(NULL, WM_RESTART_AV_BOT, 0, 0);
 			return TRUE; 
 		case IDCANCEL: 
 			DestroyWindow(hwndDlg); 
 			// 退出消息循环
-			PostMessage(NULL, WM_QUIT, NULL, NULL);
+			PostMessage(NULL, WM_QUIT, 0, 0);
 			return TRUE; 
 		case IDC_CHECK_XMPP:
 			BOOL enable = FALSE;
@@ -592,14 +592,43 @@ int main( int argc, char *argv[] )
 						use_xmpp = true;
 					}
 
-					// save data to config file
-					try {
-						fs::path config_file = configfilepath();
+					// save data to config file					
+					try {						
+						fs::path config_file;
+						if (exist_config_file()) {
+							 config_file = configfilepath();
+						}
+						else {
+							std::cerr << "config file not exist." << std::endl;
+							TCHAR file_path[MAX_PATH];
+							GetModuleFileName(NULL, file_path, MAX_PATH);
+							config_file = fs::path(file_path).parent_path();
+							config_file += "\\qqbotrc";
+						}
+						
 						fs::ofstream file(config_file);
+						
+						file << "# qq config" << std::endl;
+						file << "qqnum=" << qqnumber << std::endl;
+						file << "qqpwd=" << qqpwd << std::endl;
+						file << std::endl;
+						
+						file << "# irc config" << std::endl;
+						file << "ircnick=" << ircnick << std::endl;
+						file << "ircpwd=" << ircpwd << std::endl;
+						file << "ircrooms=" << ircroom << std::endl;
+						file << std::endl;
+						
+						if (use_xmpp) {
+							file << "# xmpp config" << std::endl;
+							file << "xmppuser=" << xmppnick << std::endl;
+							file << "xmpppwd=" << xmpppwd << std::endl;
+							file << "xmpproom=" << xmpproom << std::endl;
+							file << std::endl;
+						}
 					}
-					catch (std::string e) {
-						std::cerr << e << std::endl;
-						exit(1);
+					catch (...) {
+						std::cerr << "error while handle config file" << std::endl;
 					}
 
 					TCHAR file_path[MAX_PATH];
@@ -615,10 +644,11 @@ int main( int argc, char *argv[] )
 					CreateProcess(file_path, NULL, NULL, NULL,
 						FALSE, 0, NULL, NULL,
 						&si, &pi);
+					
 					CloseHandle(pi.hProcess);
 					CloseHandle(pi.hThread);
 					// now,parent process exit.
-					exit(1);
+					exit(1);					
 				}
 
 				TranslateMessage(&msg);	
