@@ -44,19 +44,19 @@ class avbot_rpc_server
 {
 public:
 	typedef boost::signals2::signal<
-		void( std::string protocol, std::string room, std::string who,
-				std::string message, sender_flags )
+		void( boost::property_tree::ptree )
 	> on_message_signal_type;
-	static on_message_signal_type on_message;
+	on_message_signal_type & on_message;
 
 	typedef boost::asio::ip::tcp Protocol;
 	typedef boost::asio::basic_stream_socket<Protocol> socket_type;
 	typedef void result_type;
 
-	avbot_rpc_server(boost::shared_ptr<socket_type> _socket)
-	  : m_socket(_socket)
-	  , m_request(new boost::asio::streambuf)
-	  , m_responses(new boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> >(20) )
+	avbot_rpc_server(boost::shared_ptr<socket_type> _socket,on_message_signal_type & _on_message )
+		: m_socket(_socket)
+		, m_request(new boost::asio::streambuf)
+		, m_responses(new boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> >(20) )
+		, on_message(_on_message)
 	{
 		m_socket->get_io_service().post(
 			boost::asio::detail::bind_handler(*this, boost::coro::coroutine(), boost::system::error_code(), 0)
@@ -93,7 +93,7 @@ public:
 					// 将自己注册到 avbot 的 signal 去
 					// 等 有消息的时候，on_message 被调用，也就是下面的 operator() 被调用.
 					_yield m_connect = boost::make_shared<boost::signals2::connection>
-						(on_message.connect(boost::bind(*this, coro, _1, _2, _3, _4, _5)));
+						(on_message.connect(boost::bind(*this, coro, _1)));
 					// 就这么退出了，但是消息来的时候，om_message 被调用，然后下面的那个
 					// operator() 就被调用了，那个 operator() 接着就会重新回调本 operator()
 					// 结果就是随着 coroutine 的作用，代码进入这一行，然后退出  if 判定
@@ -116,16 +116,11 @@ public:
 	}
 
 	// signal 的回调到了这里, 这里我们要区分对方是不是用了 keep-alive 呢.
-	void operator()(boost::coro::coroutine coro, std::string protocol, std::string room, std::string who, std::string message, sender_flags)
+	void operator()(boost::coro::coroutine coro, const boost::property_tree::ptree & jsonmessage)
 	{
-		pt::ptree jsonmessage;
 		boost::shared_ptr<boost::asio::streambuf> buf(new boost::asio::streambuf);
 		std::ostream	stream(buf.get());
 		std::stringstream	teststream;
-		jsonmessage.put("protocol", protocol);
-		jsonmessage.put("root", room);
-		jsonmessage.put("who", who);
-		jsonmessage.put("msg", message);
 
 		js::write_json(teststream,  jsonmessage);
 
@@ -152,7 +147,5 @@ private:
 	boost::shared_ptr< boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> > >	m_responses;
 };
 }
-
-using detail::avbot_rpc_server;
 
 #include "boost/coro/unyield.hpp"

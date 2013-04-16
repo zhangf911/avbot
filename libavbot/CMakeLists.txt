@@ -3,3 +3,5 @@ project(libavbot)
 
 
 add_library(libavbot STATIC avbot.cpp)
+
+target_link_libraries(libavbot webqq xmpp mailexchange)

@@ -30,16 +30,17 @@
 #include <direct.h>
 #endif
 
+#include "boost/consolestr.hpp"
+
+#include "libavlog/avlog.hpp"
+#include "libavbot/avbot.hpp"
+
 #include "libwebqq/webqq.h"
-#include "libmailexchange/smtp.hpp"
 
 #include "counter.hpp"
-#include "logger.hpp"
 
 #include "auto_question.hpp"
-#include "messagegroup.hpp"
 #include "botctl.hpp"
-#include "boost/consolestr.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -47,20 +48,12 @@
 
 static auto_question question;	// 自动问问题.
 
-extern qqlog logfile;			// 用于记录日志文件.
+extern avlog logfile;			// 用于记录日志文件.
 
-static void mail_send_hander( const boost::system::error_code & ec, boost::function<void( std::string )> msg_sender )
-{
-	if( ec ) {
-		msg_sender( "邮件没发送成功, 以上" );
-	} else {
-		msg_sender( "邮件发送成功, 以上" );
-	}
-}
-
-static void iopost_msg( boost::asio::io_service& io_service, boost::function<void( std::string )> msg_sender, std::string msg )
+static void iopost_msg( boost::asio::io_service& io_service, boost::function<void( std::string )> msg_sender, std::string msg , std::string groupid)
 {
 	io_service.post( boost::bind( msg_sender, msg ) );
+	logfile.add_log(groupid, msg);
 }
 
 static void write_vcode(const std::string & vc_img_data)
@@ -128,39 +121,78 @@ static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool 
 	}
 }
 
+struct mail_recoder
+{
+	std::string channel;
+	boost::shared_ptr<InternetMailFormat> pimf;
+	avbot * mybot;
+	boost::function<void( std::string )> sendmsg;
+
+	// 由 avbot 的 on_message 调用.
+	void operator()( avbot::av_message_tree jsonmessage )
+	{
+		static boost::regex ex( ".qqbot mail subject \"?(.*)\"?" );
+		boost::cmatch what;
+
+		try
+		{
+			if( jsonmessage.get<std::string>( "channel" ) != channel )
+				return;
+
+			std::string tmsg = boost::trim_copy(jsonmessage.get<std::string>( "message.text" ));
+
+			if( tmsg != ".qqbot end mail" )
+			{
+				if( boost::regex_match( tmsg.c_str(), what, ex ) )
+				{
+					pimf->header["subject"] = what[1];
+				}
+				else
+				{
+					boost::get<std::string>( pimf->body ) += avbot::format_message( jsonmessage );
+				}
+			}
+			else
+			{
+				mybot->get_mx().async_send_mail( *pimf, *this );
+			}
+		}
+		catch( ... )
+		{
+			boost::get<std::string>( pimf->body ) += avbot::format_message( jsonmessage );
+		}
+	}
+
+	void operator()(const boost::system::error_code &ec)
+	{
+		if (ec)
+			sendmsg("邮件发送失败！以上!");
+		else
+			sendmsg("邮件发送成功！以上!");
+	}
+};
+
+
 //-------------
 
 // 命令控制, 所有的协议都能享受的命令控制在这里实现.
-// msg_sender 是一个函数, on_command 用它发送消息.
-void on_bot_command( boost::asio::io_service& io_service, 
-					std::string message,
-					std::string from_channel,
-					std::string sender,
-					sender_flags sender_flag,
-					boost::function<void( std::string )> msg_sender,
-					webqq *qqclient )
+// msg_sender 是一个函数, on_command 用/*它发送消息.
+void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 {
+
 	boost::regex ex;
 	boost::cmatch what;
 	qqGroup_ptr  group;
+	boost::function<void( std::string )> msg_sender =
+		boost::bind( &avbot::broadcast_message, &mybot, jsonmessage.get<std::string>("channel"), _1);
 
-	boost::function<void( std::string )> sendmsg = boost::bind( iopost_msg, boost::ref( io_service ), msg_sender, _1 );
+	boost::function<void( std::string )> sendmsg =
+		boost::bind( iopost_msg, boost::ref( mybot.get_io_service() ), msg_sender, _1, jsonmessage.get<std::string>("channel") );
 
-	std::vector< std::string > qqGroups;
-	messagegroup* chanelgroup = find_group( from_channel );
-
-	if( chanelgroup ) {
-		qqclient = chanelgroup->qq_;
-		qqGroups =  chanelgroup->get_qqgroups();
-	}
-	
-
-	if( qqclient )
-		group =  qqclient->get_Group_by_qq( from_channel.substr( 3 ) );
+	std::string message = boost::trim_copy(jsonmessage.get<std::string>("message.text"));
 
 	if( message == ".qqbot help" ) {
-		io_service.post(
-			boost::bind( msg_sender, "可用的命令\n"
+		sendmsg( "可用的命令\n"
 						 "\t.qqbot help\n"
 						 "\t.qqbot version\n"
 						 "\t.qqbot ping\n"
@@ -172,8 +204,7 @@ void on_bot_command( boost::asio::io_service& io_service,
 						 "\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
 						 "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
 						 "\t.qqbot newbee SB\n"
-						 "以上!" )
-		);
+						 "以上!" );
 	}
 
 	if( message == ".qqbot ping" ) {
@@ -189,133 +220,109 @@ void on_bot_command( boost::asio::io_service& io_service,
 	ex.set_expression( ".qqbot mail to \"?(.*)\"?" );
 
 	if( boost::regex_match( message.c_str(), what, ex ) ) {
-		if( chanelgroup ) {
-			// 进入邮件记录模式.
-			chanelgroup->pimf.reset( new InternetMailFormat );
-			chanelgroup->pimf->header["from"] = chanelgroup->mx_->mailaddres();
-			chanelgroup->pimf->header["to"] = what[1];
-			chanelgroup->pimf->header["subject"] = "send by avbot";
-			chanelgroup->pimf->body = std::string( "" );
-		}
-
+ 			// 进入邮件记录模式.
+ 			mail_recoder mrecoder;
+ 			mrecoder.pimf.reset( new InternetMailFormat );
+			mrecoder.pimf->header["from"] = mybot.get_mx().mailaddres();
+			mrecoder.pimf->header["to"] = what[1];
+ 			mrecoder.pimf->header["subject"] = "send by avbot";
+ 			mrecoder.pimf->body = std::string( "" );
+ 			mrecoder.channel = jsonmessage.get<std::string>("channel");
+ 			mrecoder.mybot = & mybot;
+			mybot.on_message.connect(mrecoder);
 		return;
 	}
 
-	ex.set_expression( ".qqbot mail subject \"?(.*)\"?" );
+	ex.set_expression( ".vc (.*)" );
+	if (boost::regex_match( message.c_str(), what, ex ) )
+	{
+		mybot.feed_login_verify_code(what[1]);
+	}
 
-	if( boost::regex_match( message.c_str(), what, ex ) ) {
-		if( chanelgroup && chanelgroup->pimf ) {
-			// 进入邮件记录模式.
-			chanelgroup->pimf->header["subject"] = what[1];
+	ex.set_expression( ".qqbot vc (.*)" );
+	if (boost::regex_match( message.c_str(), what, ex ) )
+	{
+		if ( do_vc_code)
+			do_vc_code(what[1]);
+		else{
+			sendmsg("哈？输入验证码干嘛？");
 		}
+	}
 
+	if( jsonmessage.get<int>("op") != 1 )
+		return;
+
+	if( message == ".qqbot relogin" ) {
+		mybot.get_io_service().post(
+			boost::bind( &webqq::login, &mybot.get_qq() )
+		);
 		return;
 	}
 
-	ex.set_expression( ".qqbot mail end" );
-
-	if( boost::regex_match( message.c_str(), what, ex ) ) {
-		if( chanelgroup && chanelgroup->pimf ) {
-
-			// 发送邮件内容.
-			chanelgroup->mx_->async_send_mail(
-				*chanelgroup->pimf,
-				// 报告发送成功还是失败, 怎么报告?
-				boost::bind( mail_send_hander, _1, msg_sender )
-			);
-			chanelgroup->pimf.reset();
-		}
-
-		return;
+	if( message == ".qqbot exit" ) {
+		exit( 0 );
 	}
-
-	if( sender_flag == sender_is_op ) {
-		if( qqclient && message == ".qqbot relogin" ) {
-			io_service.post(
-				boost::bind( &webqq::login, qqclient )
-			);
-			return;
-		}
-
-		if( message == ".qqbot exit" ) {
-			exit( 0 );
-		}
 #ifndef _WIN32
-		if( message == ".qqbot reexec" ) {
-			if (fork()==0){
-				char * argv[]={"avbot", NULL};
-				execvp("avbot", argv);
-			}
-		}
-#endif
-		ex.set_expression( ".qqbot join group ([0-9]+)" );
-		if (qqclient && boost::regex_match( message.c_str(), what, ex ) )
-		{
-			qqclient->search_group(what[1], "", boost::bind(handle_search_group, std::string(what[1]), _1, _2, _3, qqclient, msg_sender));
-		}
-
-		ex.set_expression( ".qqbot vc (.*)" );
-		if (qqclient && boost::regex_match( message.c_str(), what, ex ) )
-		{
-			if ( do_vc_code)
-				do_vc_code(what[1]);
-			else{
-				sendmsg("哈？输入验证码干嘛？");
-			}
-		}
-
-		// 重新加载群成员列表.
-		if( qqclient && message == ".qqbot reload" ) {
-			if( qqGroups.empty() ) {
-				sendmsg( "加载哪个群? 你没设置啊!" );
-			} else {
-				BOOST_FOREACH(std::string g, qqGroups)
-				{
-					group = qqclient->get_Group_by_qq(g);
-					if (group)
-						io_service.post( boost::bind( &webqq::update_group_member, qqclient , group) );
-				}
-				sendmsg( "群成员列表重加载" );
-			}
-
-			return;
-		}
-
-		// 开始讲座记录.
-		ex.set_expression( ".qqbot begin class ?\"(.*)?\"" );
-
-		if( qqclient && group && boost::regex_match( message.c_str(), what, ex ) ) {
-			std::string title = what[1];
-
-			if( title.empty() ) return ;
-
-			if( !logfile.begin_lecture( group->qqnum, title ) ) {
-				std::printf( "lecture failed!\n" );
-			}
-
-			return;
-		}
-
-		// 停止讲座记录.
-		if( qqclient && message == ".qqbot end class" ) {
-			logfile.end_lecture();
-			return;
-		}
-
-		// 向新人问候.
-		ex.set_expression( ".qqbot newbee ?(.*)?" );
-
-		if( qqclient && boost::regex_match( message.c_str(), what, ex ) ) {
-			std::string nick = what[1];
-
-			if( nick.empty() )
-				return;
-
-			auto_question::value_qq_list list;
-			list.push_back( nick );
-
-			question.add_to_list( list );
-			question.on_handle_message( msg_sender );
+	if( message == ".qqbot reexec" ) {
+		if (fork()==0){
+			char * argv[]={"avbot", NULL};
+			execvp("avbot", argv);
 		}
 	}
+#endif
+	ex.set_expression( ".qqbot join group ([0-9]+)" );
+	if (boost::regex_match( message.c_str(), what, ex ) )
+	{
+		mybot.get_qq().search_group(what[1], "", boost::bind(handle_search_group, std::string(what[1]), _1, _2, _3, &mybot.get_qq(), msg_sender));
+	}
+
+	// 重新加载群成员列表.
+	if(message == ".qqbot reload" ) {
+		group = mybot.get_qq().get_Group_by_qq(jsonmessage.get<std::string>("channel"));
+		if (group)
+			mybot.get_io_service().post( boost::bind( &webqq::update_group_member, &mybot.get_qq() , group) );
+		sendmsg( "群成员列表重加载" );
+
+		return;
+	}
+
+	// 开始讲座记录.
+	ex.set_expression( ".qqbot begin class ?\"(.*)?\"" );
+
+	if( boost::regex_match( message.c_str(), what, ex ) ) {
+		std::string title = what[1];
+
+		if( title.empty() ) return ;
+
+		group = mybot.get_qq().get_Group_by_qq(jsonmessage.get<std::string>("channel"));
+
+		if(group &&  !logfile.begin_lecture( group->qqnum, title ) ) {
+			sendmsg( "lecture failed!\n" );
+		}
+
+		return;
+	}
+
+	// 停止讲座记录.
+	if( message == ".qqbot end class" ) {
+		logfile.end_lecture();
+		return;
+	}
+
+	// 向新人问候.
+	ex.set_expression( ".qqbot newbee ?(.*)?" );
+
+	if( boost::regex_match( message.c_str(), what, ex ) ) {
+		std::string nick = what[1];
+
+		if( nick.empty() )
+			return;
+
+		auto_question::value_qq_list list;
+		list.push_back( nick );
+
+		question.add_to_list( list );
+		question.on_handle_message( msg_sender );
+	}
+
 }

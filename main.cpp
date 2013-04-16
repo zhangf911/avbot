@@ -1,3 +1,16 @@
+
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0600
+#endif
+#if defined(_WIN32)
+#include <direct.h>
+
+#include <windows.h>
+#include <tchar.h>
+#include <commctrl.h>
+#include "resource.h"
+#endif
+
 /**
  * @file   main.cpp
  * @author microcai <microcaicai@gmail.com>
@@ -32,51 +45,17 @@ namespace po = boost::program_options;
 #include <stdio.h>
 #include <time.h>
 #include <wchar.h>
-#if defined(_WIN32)
-#include <direct.h>
-
-#include <windows.h>
-#include <tchar.h>
-#include <commctrl.h>
-#include "resource.h"
-
-// 据说mingw32不支持这个
-//#pragma comment(lib, "Comctl32.lib")
-//#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-
-#ifndef WINVER
-#define WINVER 0x0501
-#endif
-
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
-#endif	
-
-#ifndef _WIN32_WINDOWS
-#define _WIN32_WINDOWS 0x0410
-#endif
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0600
-#endif
-
-#define WIN32_LEAN_AND_MEAN
-#endif
-
-#include "libirc/irc.h"
-#include "libwebqq/webqq.h"
-#include "libwebqq/url.hpp"
-#include "libxmpp/xmpp.h"
-#include "libmailexchange/mx.hpp"
-
-#include "counter.hpp"
-#include "logger.hpp"
-
-#include "messagegroup.hpp"
-#include "botctl.hpp"
 
 #include "boost/consolestr.hpp"
 #include "boost/acceptor_server.hpp"
+
+#include "libavbot/avbot.hpp"
+#include "libavlog/avlog.hpp"
+
+#include "counter.hpp"
+
+#include "botctl.hpp"
+
 #include "avbot_rpc_server.hpp"
 
 #ifndef QQBOT_VERSION
@@ -131,298 +110,15 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 #endif
 
 char * execpath;
-qqlog logfile;			// 用于记录日志文件.
+avlog logfile;			// 用于记录日志文件.
 
 static counter cnt;				// 用于统计发言信息.
 static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
 static std::string progname;
-static std::string ircvercodechannel;
 
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
-avbot_rpc_server::on_message_signal_type avbot_rpc_server::on_message;
-
-// 简单的消息命令控制.
-static void qqbot_control( webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd )
-{
-	boost::trim( cmd );
-
-	messagegroup* chanelgroup = find_group( std::string( "qq:" ) + group.qqnum );
-	boost::function<void( std::string )> msg_sender;
-
-	if( chanelgroup ) {
-		msg_sender = boost::bind( &messagegroup::broadcast, chanelgroup,  _1 );
-	} else {
-
-		typedef void ( webqq::*webqq_send_group_message )
-			( std::string, std::string, boost::function<void ( const boost::system::error_code & ec )> );
-
-		msg_sender = boost::bind( static_cast<webqq_send_group_message>( & webqq::send_group_message ),
-									&qqclient, group.gid, _1, boost::lambda::constant( 0 )
-								);
-	}
-
-	sender_flags sender_flag;
-
-	if( ( who.mflag & 21 ) == 21 || who.uin == group.owner )
-		sender_flag = sender_is_op;
-	else
-		sender_flag = sender_is_normal;
-
-	on_bot_command( qqclient.get_ioservice(), cmd, std::string( "qq:" ) + group.qqnum, who.nick, sender_flag, msg_sender, &qqclient );
-}
-
-
-static std::string	preamble_formater( qqBuddy *buddy, std::string falbacknick, qqGroup * grpup = NULL )
-{
-	static qqBuddy _buddy;
-	std::string preamble;
-	// 格式化神器, 哦耶.
-	// 获取格式化描述字符串.
-	std::string preamblefmt = preamble_qq_fmt;
-	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动.
-
-	preamble = preamblefmt;
-	std::string autonick = "";
-
-	if( !buddy ) {
-		autonick = falbacknick;
-		buddy = & _buddy;
-	} else {
-		autonick = buddy->card;
-
-		if( autonick.empty() ) {
-			autonick = buddy->nick;
-		}
-
-		if( autonick.empty() ) {
-			autonick = buddy->qqnum;
-		}
-
-		if( autonick.empty() ) {
-			autonick = buddy->uin;
-		}
-	}
-
-	boost::replace_all( preamble, "%a", autonick );
-	boost::replace_all( preamble, "%n", buddy->nick );
-	boost::replace_all( preamble, "%u", buddy->uin );
-	boost::replace_all( preamble, "%q", buddy->qqnum );
-	boost::replace_all( preamble, "%c", buddy->card );
-
-	if( grpup )
-		boost::replace_all( preamble, "%r", grpup->qqnum );
-
-	return preamble;
-}
-
-static std::string	preamble_formater( irc::IrcMsg pmsg )
-{
-	// 格式化神器, 哦耶.
-	// 获取格式化描述字符串.
-	std::string preamble = preamble_irc_fmt;
-
-	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间.
-	// 默认为 qq(%a) 说:.
-	boost::replace_all( preamble, "%a", pmsg.whom );
-	boost::replace_all( preamble, "%r", pmsg.from );
-	boost::replace_all( preamble, "%n", pmsg.whom );
-	return preamble;
-}
-
-static std::string	preamble_formater( std::string who, std::string room )
-{
-	// 格式化神器, 哦耶.
-	// 获取格式化描述字符串.
-	std::string preamble = preamble_xmpp_fmt;
-	// 支持的格式化类型有 %u UID,  %q QQ号, %n 昵称,  %c 群名片 %a 自动 %r irc 房间.
-
-	boost::replace_all( preamble, "%a", who );
-	boost::replace_all( preamble, "%r", room );
-	boost::replace_all( preamble, "%n", who );
-	return preamble;
-}
-
-static void on_irc_message( irc::IrcMsg pMsg, irc::IrcClient & ircclient, webqq & qqclient )
-{
-	std::cout << console_out_str(pMsg.msg) << std::endl;
-
-	boost::trim( pMsg.msg );
-
-	std::string from = std::string( "irc:" ) + pMsg.from.substr( 1 );
-
-	//验证码check.
-	if( qqneedvc ) {
-		std::string vc = boost::trim_copy( pMsg.msg );
-
-		if( vc[0] == '.' && vc[1] == 'v' && vc[2] == 'c' && vc[3] == ' ' )
-			qqclient.login_withvc( vc.substr( 4 ) );
-
-		qqneedvc = false;
-		return;
-	}
-
-	std::string forwarder = boost::str( boost::format( "%s %s" ) % preamble_formater( pMsg ) % pMsg.msg );
-	forwardmessage( from, forwarder );
-
-	boost::function<void( std::string )> msg_sender;
-	messagegroup* groups =  find_group( from );
-
-	if( groups ) {
-		msg_sender = boost::bind( &messagegroup::broadcast, groups,  _1 );
-	} else {
-		msg_sender = boost::bind( &irc::IrcClient::chat, &ircclient, pMsg.from, _1 );
-	}
-
-	sender_flags sender_flag = sender_is_normal;
-
-	// a hack, later should be fixed to fetch channel op list.
-	if( pMsg.whom == "microcai" )
-		sender_flag = sender_is_op;
-	avbot_rpc_server::on_message("irc", pMsg.from, pMsg.whom, pMsg.msg, sender_flag);
-	on_bot_command( qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender, &qqclient );
-}
-
-static void om_xmpp_message( xmpp & xmppclient, std::string xmpproom, std::string who, std::string message )
-{
-	std::string from = std::string( "xmpp:" ) + xmpproom;
-
-	std::string forwarder = boost::str( boost::format( "%s %s" ) % preamble_formater( who, xmpproom ) % message );
-	forwardmessage( from, forwarder );
-
-	boost::function<void( std::string )> msg_sender;
-	messagegroup* groups =  find_group( from );
-
-	if( groups ) {
-		msg_sender = boost::bind( &messagegroup::broadcast, groups,  _1 );
-	} else {
-		msg_sender = boost::bind( &xmpp::send_room_message, &xmppclient, xmpproom, _1 );
-	}
-
-	avbot_rpc_server::on_message("xmpp", from, who, message, sender_is_normal);
-	on_bot_command( xmppclient.get_ioservice(), message, from, who, sender_is_normal, msg_sender );
-}
-
-static std::string 	base_image_url = "http://w.qq.com/cgi-bin/get_group_pic?pic=";
-
-static void save_image(const boost::system::error_code & ec, boost::asio::streambuf & buf, std::string cface)
-{
-	if (!ec || ec == boost::asio::error::eof){
-		std::ofstream cfaceimg((std::string("images/") + cface).c_str(), std::ofstream::binary|std::ofstream::out);
-		cfaceimg.write(boost::asio::buffer_cast<const char*>(buf.data()), boost::asio::buffer_size(buf.data()));
-	}
-}
-
-static void on_group_msg( std::string group_code, std::string who, const std::vector<qqMsg> & msg, webqq & qqclient )
-{
-	qqBuddy *buddy = NULL;
-	qqGroup_ptr group = qqclient.get_Group_by_gid( group_code );
-	std::string groupname = group_code;
-
-	if( group )
-		groupname = group->name;
-
-	buddy = group ? group->get_Buddy_by_uin( who ) : NULL;
-
-	std::string message_nick = preamble_formater( buddy, who, group.get() );
-
-	std::string htmlmsg;
-	std::string textmsg;
-
-	BOOST_FOREACH( qqMsg qqmsg, msg ) {
-		std::string buf;
-
-		switch( qqmsg.type ) {
-			case qqMsg::LWQQ_MSG_TEXT: {
-				buf = qqmsg.text;
-				textmsg += buf;
-
-				if( !buf.empty() ) {
-					boost::replace_all( buf, "&", "&amp;" );
-					boost::replace_all( buf, "<", "&lt;" );
-					boost::replace_all( buf, ">", "&gt;" );
-					boost::replace_all( buf, "  ", "&nbsp;" );
-				}
-			}
-			break;
-			case qqMsg::LWQQ_MSG_CFACE: {
-				buf = boost::str( boost::format(
-									  "<img src=\"%s%s\" > " ) % base_image_url
-								  % url_encode( qqmsg.cface ) );
-				std::string imgurl = boost::str(
-										boost::format( " http://w.qq.com/cgi-bin/get_group_pic?pic=%s " )
-										% url_encode( qqmsg.cface )
-									);
-				textmsg += imgurl;
-				if (base_image_url != "http://w.qq.com/cgi-bin/get_group_pic?pic="){
-					// save to disk
-					// 先检查这样的图片本地有没有，有你fetch的P啊.
-					if (!fs::exists(std::string("images/") + qqmsg.cface))
-					{
-						if (!fs::exists("images"))
-							fs::create_directories("images");
-						qqclient.async_fetch_cface(qqmsg.cface, boost::bind(save_image, _1, _2, qqmsg.cface));
-					}
-				}
-			} break;
-			case qqMsg::LWQQ_MSG_FACE: {
-				buf = boost::str( boost::format(
-									  "<img src=\"http://0.web.qstatic.com/webqqpic/style/face/%d.gif\" >" ) % qqmsg.face );
-				textmsg += buf;
-			} break;
-		}
-
-		htmlmsg += buf;
-	}
-
-	// 统计发言.
-	if( buddy && buddy->qqnum.size() )
-		cnt.increace( buddy->qqnum );
-
-	cnt.save();
-
-	// 记录.
-	std::cout << console_out_str(message_nick) <<  console_out_str(htmlmsg) <<  std::endl;
-
-	if( !group )
-		return;
-
-	logfile.add_log( group->qqnum, message_nick + htmlmsg );
-	// send to irc
-
-	std::string from = std::string( "qq:" ) + group->qqnum;
-
-	forwardmessage( from, message_nick + textmsg );
-
-	// qq消息控制.
-	if( buddy ){
-		sender_flags sender_flag;
-	 	if( ( buddy->mflag & 21 ) == 21 || buddy->uin == group->owner )
-			sender_flag = sender_is_op;
-		else
-			sender_flag = sender_is_normal;
-
-		avbot_rpc_server::on_message("qq", groupname, buddy->nick, htmlmsg, sender_flag);
-		qqbot_control( qqclient, *group, *buddy, htmlmsg );
-	}
-}
-
-static void on_mail( mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune, webqq & qqclient )
-{
-	if( qqclient.is_online() ) {
-
-		forwardmessage( "mail",
-						boost::str(
-							boost::format( "[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s" )
-							% mail.from % mail.to % mail.subject % mail.content
-						)
-					  );
-	}
-
-	qqclient.get_ioservice().post( boost::bind( call_to_contiune, qqclient.is_online() ) );
-}
-
-static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qqclient, irc::IrcClient & ircclient, xmpp& xmppclient )
+static void on_verify_code( const boost::asio::const_buffer & imgbuf, avbot & mybot)
 {
 	const char * data = boost::asio::buffer_cast<const char*>( imgbuf );
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
@@ -431,8 +127,102 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qq
 	img.write( data, imgsize );
 	qqneedvc = true;
 	// send to xmpp and irc
-	ircclient.chat( boost::str( boost::format( "#%s" ) % ircvercodechannel ), "输入qq验证码：" );
+ 	mybot.broadcast_message( "请查看qqlog目录下的vercode.jpeg 然后输入验证码:" );
 	std::cerr << console_out_str("请查看qqlog目录下的vercode.jpeg 然后输入验证码:") ;
+}
+
+struct build_group_has_qq{
+	bool operator()(const std::string & str)
+	{
+		return str.substr(0, 3) == "qq:";
+	}
+};
+
+static void build_group(std::string chanelmapstring, avbot & mybot)
+{
+	std::vector<std::string> gs;
+	boost::split(gs, chanelmapstring, boost::is_any_of(";"));
+
+	int m = 1;
+
+	BOOST_FOREACH(std::string  pergroup, gs)
+	{
+		std::vector<std::string> groups;
+		boost::split(groups, pergroup, boost::is_any_of(","));
+
+		// 对于包含了 qq: 的那个组，组名就是 qq号码，而其他的嘛，组名使用 groupXXX
+		std::vector<std::string>::iterator qqgroup = std::find_if(groups.begin(), groups.end(), build_group_has_qq() );
+
+		if (qqgroup != groups.end())
+		{
+			BOOST_FOREACH(std::string  c, groups)
+			{
+				mybot.add_to_channel((*qqgroup).substr(3), c);
+			}
+		}else{
+			m ++;
+			std::string group_name = std::string("group") + boost::lexical_cast<std::string>(m);
+			BOOST_FOREACH(std::string  c, groups)
+			{
+				mybot.add_to_channel(group_name, c);
+			}
+		}
+	}
+}
+
+static void avbot_log(avbot::av_message_tree message, avbot & mybot)
+{
+	std::string linemessage;
+	// 首先是根据 nick 格式化
+	if ( message.get<std::string>("protocol") != "mail")
+	{
+		linemessage += message.get<std::string>("preamble");
+
+		BOOST_FOREACH(const avbot::av_message_tree::value_type & v, message.get_child("message"))
+		{
+			if (v.first == "text")
+			{
+				linemessage += v.second.data();
+			}else if (v.first == "url")
+			{
+				linemessage += boost::str(boost::format("<a href=\"%s\">%s</a>") % v.second.data()% v.second.data());
+			}else if (v.first == "cface"){
+				if (mybot.fetch_img)
+					linemessage += boost::str(boost::format("<img src=\"../images/%s\" />") % v.second.data());
+				else
+					linemessage += boost::str(boost::format("<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" />") % v.second.data());
+			}else if (v.first == "img"){
+				linemessage += boost::str(boost::format("<img src=\"%s\" />") % v.second.data());
+			}
+		}
+		std::string group = message.get<std::string>("channel");
+		logfile.add_log(group, linemessage);
+	}else{
+		// TODO ,  暂时不记录邮件吧！
+
+// 		mybot.get_channel_name("room");
+//
+// 		linemessage  = boost::str(
+// 			boost::format( "[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s" )
+// 			% message.get<std::string>("from") % message.get<std::string>("to") % message.get<std::string>("subject")
+// 			% message.get_child("message").data()
+// 		);
+ 	}
+}
+
+static void avbot_rpc_server(boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket, avbot & mybot)
+{
+	detail::avbot_rpc_server(m_socket, mybot.on_message);
+}
+
+static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
+{
+	try{
+		std::string textmessage = message.get<std::string>("message.text");
+
+		on_bot_command(message, mybot);
+	}catch (...){}
+
 }
 
 #ifdef WIN32
@@ -456,7 +246,11 @@ int main( int argc, char *argv[] )
 	std::string chanelmap;
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
-	bool localimage, runrpc;
+	bool runrpc;
+
+	boost::asio::io_service io_service;
+
+	avbot mybot(io_service);
 
 	progname = fs::basename( argv[0] );
 
@@ -485,7 +279,7 @@ int main( int argc, char *argv[] )
 	( "pop3server",	po::value<std::string>( &pop3server ), 	"pop server of mail,  default to pop.[domain]" )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
 
-	( "localimage", po::value<bool>( &localimage)->default_value(false),	"fetch qq image to local disk and store it there")
+	( "localimage", po::value<bool>( &(mybot.fetch_img) )->default_value(false),	"fetch qq image to local disk and store it there")
 	( "runrpc",		po::value<bool>( &runrpc)->default_value(false),	"run rpc server on port 6176")
 
 	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a)：") ),
@@ -541,9 +335,6 @@ int main( int argc, char *argv[] )
 		if( !fs::exists( logdir ) )
 			fs::create_directory( logdir );
 	}
-
-	if (localimage)
-		base_image_url = "../images/";
 
 	// 设置到中国的时区，否则 qq 消息时间不对啊.
 	putenv( ( char* )"TZ=Asia/Shanghai" );
@@ -684,52 +475,53 @@ int main( int argc, char *argv[] )
 		exit( 1 );
 	}
 
-	boost::asio::io_service asio;
+	mybot.preamble_irc_fmt = preamble_irc_fmt;
+	mybot.preamble_qq_fmt = preamble_qq_fmt;
+	mybot.preamble_xmpp_fmt = preamble_xmpp_fmt;
 
-	xmpp		xmppclient( asio, xmppuser, xmpppwd, xmppserver, xmppnick );
-	webqq		qqclient( asio, qqnumber, qqpwd );
-	irc::IrcClient	ircclient( asio, ircnick, ircpwd );
-	mx::mx		mx( asio, mailaddr, mailpasswd, pop3server, smtpserver );
+	mybot.set_qq_account(qqnumber, qqpwd, boost::bind(on_verify_code, _1, boost::ref(mybot)));
+	mybot.set_irc_account(ircnick, ircpwd);
+	mybot.set_xmpp_account(xmppuser, xmpppwd, xmppserver, xmppnick);
+	mybot.set_mail_account(mailaddr, mailpasswd, pop3server, smtpserver);
 
-	build_group( chanelmap, qqclient, xmppclient, ircclient, mx );
-
-	xmppclient.on_room_message( boost::bind( &om_xmpp_message, boost::ref( xmppclient ), _1, _2, _3 ) );
-	ircclient.login( boost::bind( &on_irc_message, _1, boost::ref( ircclient ), boost::ref( qqclient ) ) );
-
-	qqclient.on_verify_code( boost::bind( on_verify_code, _1, boost::ref( qqclient ), boost::ref( ircclient ), boost::ref( xmppclient ) ) );
-	qqclient.login();
-	qqclient.on_group_msg( boost::bind( on_group_msg, _1, _2, _3, boost::ref( qqclient ) ) );
-
-	mx.async_fetch_mail( boost::bind( on_mail, _1, _2, boost::ref( qqclient ) ) );
+	build_group( chanelmap, mybot );
+	// 记录到日志.
+	mybot.on_message.connect(boost::bind(avbot_log, _1, boost::ref(mybot)));
+	// 开启 bot 控制.
+ 	mybot.on_message.connect(boost::bind(my_on_bot_command, _1, boost::ref(mybot)));
 
 	std::vector<std::string> ircrooms;
 	boost::split( ircrooms, ircroom, boost::is_any_of( "," ) );
-	ircvercodechannel = ircrooms[0];
-	BOOST_FOREACH( std::string room , ircrooms ) {
-		ircclient.join( std::string( "#" ) + room );
+	BOOST_FOREACH( std::string room , ircrooms )
+	{
+		mybot.irc_join_room(std::string( "#" ) + room);
 	}
 
 	std::vector<std::string> xmpprooms;
 	boost::split( xmpprooms, xmpproom, boost::is_any_of( "," ) );
-	BOOST_FOREACH( std::string room , xmpprooms ) {
-		xmppclient.join( room );
+	BOOST_FOREACH( std::string room , xmpprooms )
+	{
+		mybot.xmpp_join_room(room);
 	}
 
-	boost::asio::io_service::work work( asio );
+	boost::asio::io_service::work work( io_service );
 
 	if( !vm.count( "daemon" ) ) {
 #ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
-		boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin( new boost::asio::posix::stream_descriptor( asio, 0 ) );
+		boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin( new boost::asio::posix::stream_descriptor( io_service, 0 ) );
 		boost::shared_ptr<boost::asio::streambuf> inputbuffer( new boost::asio::streambuf );
-		boost::asio::async_read_until( *stdin, *inputbuffer, '\n', boost::bind( inputread , _1, _2, stdin, inputbuffer, boost::ref( qqclient ) ) );
+		boost::asio::async_read_until( *stdin, *inputbuffer, '\n', boost::bind( inputread , _1, _2, stdin, inputbuffer, boost::ref( mybot ) ) );
 #else
-		boost::thread( boost::bind( input_thread, boost::ref( asio ), boost::ref( qqclient ) ) );
+		boost::thread( boost::bind( input_thread, boost::ref( io_service ), boost::ref( mybot ) ) );
 #endif
 	}
 	if (runrpc){
 		// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
-		boost::acceptor_server<avbot_rpc_server>(asio, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), 6176));
+ 		boost::acceptor_server(io_service,
+ 				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), 6176),
+ 				boost::bind(avbot_rpc_server, _1, boost::ref(mybot))
+ 		);
 	}
-	asio.run();
+	io_service.run();
 	return 0;
 }
