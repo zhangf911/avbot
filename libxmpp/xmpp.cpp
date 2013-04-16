@@ -25,7 +25,7 @@ xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmp
 		xmppnick = "avbot";
 
 	if( !xmppuser.empty() && !xmpppasswd.empty() )
-		impl.reset( new XMPP::xmpp_impl( asio, xmppuser, xmpppasswd, xmppserver, xmppnick ) );
+		impl.reset( new xmppimpl::xmpp( asio, xmppuser, xmpppasswd, xmppserver, xmppnick ) );
 }
 
 void xmpp::join( std::string roomjid )

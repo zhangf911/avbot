@@ -79,12 +79,13 @@ add_subdirectory(libirc)
 endif()
 add_subdirectory(libxmpp)
 add_subdirectory(libmailexchange)
+add_subdirectory(libavbot)
 
 add_definitions(-DQQBOT_VERSION=\"3.999\")
-add_executable(avbot main.cpp botctl.cpp messagegroup.cpp avbot.rc)
+add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp messagegroup.cpp avbot.rc)
 
 if(WIN32)
-target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 )
+target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 -lmswsock)
 endif()
 
 target_link_libraries(avbot webqq xmpp mailexchange)

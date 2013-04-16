@@ -24,8 +24,8 @@
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 
-namespace XMPP {
-class xmpp_impl;
+namespace xmppimpl {
+class xmpp;
 }
 
 class xmpp {
@@ -37,7 +37,7 @@ public:
 	void send_room_message( std::string xmpproom, std::string message );
 	boost::asio::io_service& get_ioservice();
 private:
-	boost::scoped_ptr<XMPP::xmpp_impl>		impl;
+	boost::scoped_ptr<xmppimpl::xmpp>		impl;
 };
 
 #endif // XMPP_H

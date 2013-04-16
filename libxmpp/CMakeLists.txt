@@ -1,4 +1,4 @@
-find_package(Boost 1.48 REQUIRED COMPONENTS date_time regex signals system)
+find_package(Boost 1.48 REQUIRED COMPONENTS date_time regex system)
 include_directories(${Boost_INCLUDE_DIRS})
 
 option(INTERNALGLOOX "use bundled gloox" ON)

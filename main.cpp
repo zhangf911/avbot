@@ -23,6 +23,7 @@ namespace po = boost::program_options;
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/locale.hpp>
+#include <boost/signals2.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <locale.h>
 #include <cstring>
@@ -75,6 +76,8 @@ namespace po = boost::program_options;
 #include "botctl.hpp"
 
 #include "boost/consolestr.hpp"
+#include "boost/acceptor_server.hpp"
+#include "avbot_rpc_server.hpp"
 
 #ifndef QQBOT_VERSION
 #define QQBOT_VERSION "unknow"
@@ -136,6 +139,8 @@ static std::string progname;
 static std::string ircvercodechannel;
 
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
+
+avbot_rpc_server::on_message_signal_type avbot_rpc_server::on_message;
 
 // 简单的消息命令控制.
 static void qqbot_control( webqq & qqclient, qqGroup & group, qqBuddy &who, std::string cmd )
@@ -211,7 +216,7 @@ static std::string	preamble_formater( qqBuddy *buddy, std::string falbacknick, q
 	return preamble;
 }
 
-static std::string	preamble_formater( IrcMsg pmsg )
+static std::string	preamble_formater( irc::IrcMsg pmsg )
 {
 	// 格式化神器, 哦耶.
 	// 获取格式化描述字符串.
@@ -238,7 +243,7 @@ static std::string	preamble_formater( std::string who, std::string room )
 	return preamble;
 }
 
-static void on_irc_message( IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient )
+static void on_irc_message( irc::IrcMsg pMsg, irc::IrcClient & ircclient, webqq & qqclient )
 {
 	std::cout << console_out_str(pMsg.msg) << std::endl;
 
@@ -266,7 +271,7 @@ static void on_irc_message( IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient
 	if( groups ) {
 		msg_sender = boost::bind( &messagegroup::broadcast, groups,  _1 );
 	} else {
-		msg_sender = boost::bind( &IrcClient::chat, &ircclient, pMsg.from, _1 );
+		msg_sender = boost::bind( &irc::IrcClient::chat, &ircclient, pMsg.from, _1 );
 	}
 
 	sender_flags sender_flag = sender_is_normal;
@@ -274,7 +279,7 @@ static void on_irc_message( IrcMsg pMsg, IrcClient & ircclient, webqq & qqclient
 	// a hack, later should be fixed to fetch channel op list.
 	if( pMsg.whom == "microcai" )
 		sender_flag = sender_is_op;
-
+	avbot_rpc_server::on_message("irc", pMsg.from, pMsg.whom, pMsg.msg, sender_flag);
 	on_bot_command( qqclient.get_ioservice(), pMsg.msg, from, pMsg.whom, sender_flag, msg_sender, &qqclient );
 }
 
@@ -294,6 +299,7 @@ static void om_xmpp_message( xmpp & xmppclient, std::string xmpproom, std::strin
 		msg_sender = boost::bind( &xmpp::send_room_message, &xmppclient, xmpproom, _1 );
 	}
 
+	avbot_rpc_server::on_message("xmpp", from, who, message, sender_is_normal);
 	on_bot_command( xmppclient.get_ioservice(), message, from, who, sender_is_normal, msg_sender );
 }
 
@@ -389,8 +395,16 @@ static void on_group_msg( std::string group_code, std::string who, const std::ve
 	forwardmessage( from, message_nick + textmsg );
 
 	// qq消息控制.
-	if( buddy )
+	if( buddy ){
+		sender_flags sender_flag;
+	 	if( ( buddy->mflag & 21 ) == 21 || buddy->uin == group->owner )
+			sender_flag = sender_is_op;
+		else
+			sender_flag = sender_is_normal;
+
+		avbot_rpc_server::on_message("qq", groupname, buddy->nick, htmlmsg, sender_flag);
 		qqbot_control( qqclient, *group, *buddy, htmlmsg );
+	}
 }
 
 static void on_mail( mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune, webqq & qqclient )
@@ -408,7 +422,7 @@ static void on_mail( mailcontent mail, mx::pop3::call_to_continue_function call_
 	qqclient.get_ioservice().post( boost::bind( call_to_contiune, qqclient.is_online() ) );
 }
 
-static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qqclient, IrcClient & ircclient, xmpp& xmppclient )
+static void on_verify_code( const boost::asio::const_buffer & imgbuf, webqq & qqclient, irc::IrcClient & ircclient, xmpp& xmppclient )
 {
 	const char * data = boost::asio::buffer_cast<const char*>( imgbuf );
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
@@ -442,7 +456,7 @@ int main( int argc, char *argv[] )
 	std::string chanelmap;
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
-	bool localimage;
+	bool localimage, runrpc;
 
 	progname = fs::basename( argv[0] );
 
@@ -472,6 +486,7 @@ int main( int argc, char *argv[] )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
 
 	( "localimage", po::value<bool>( &localimage)->default_value(false),	"fetch qq image to local disk and store it there")
+	( "runrpc",		po::value<bool>( &runrpc)->default_value(false),	"run rpc server on port 6176")
 
 	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a)：") ),
 		console_out_str("为QQ设置的发言前缀, 默认是 qq(%a):").c_str() )
@@ -673,7 +688,7 @@ int main( int argc, char *argv[] )
 
 	xmpp		xmppclient( asio, xmppuser, xmpppwd, xmppserver, xmppnick );
 	webqq		qqclient( asio, qqnumber, qqpwd );
-	IrcClient	ircclient( asio, ircnick, ircpwd );
+	irc::IrcClient	ircclient( asio, ircnick, ircpwd );
 	mx::mx		mx( asio, mailaddr, mailpasswd, pop3server, smtpserver );
 
 	build_group( chanelmap, qqclient, xmppclient, ircclient, mx );
@@ -711,9 +726,10 @@ int main( int argc, char *argv[] )
 		boost::thread( boost::bind( input_thread, boost::ref( asio ), boost::ref( qqclient ) ) );
 #endif
 	}
-
+	if (runrpc){
+		// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
+		boost::acceptor_server<avbot_rpc_server>(asio, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), 6176));
+	}
 	asio.run();
 	return 0;
 }
-
-extern "C" void OPENSSL_add_all_algorithms_noconf(){}

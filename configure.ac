@@ -10,15 +10,19 @@ AC_PREREQ([2.69])
 # 1.35.0.
 BOOST_DEFUN([Locale],
 [
+
 case $host_os in
   (*mingw*)
-    BOOST_LOCALE_LIBS+="-liconv"
+    LIBS+=" -liconv "
+    AC_DEFINE_UNQUOTED(BOOST_LOCALE_NO_POSIX_BACKEND,1)
   ;;
 esac
 
 BOOST_FIND_LIB([locale], [$1],
                 [boost/locale.hpp],
-                [boost::locale::conv::between( "nihao", "UTF-8", "GBK" );])
+                [])
+
+
 ])# BOOST_LOCALE
 
 # BOOST_THREAD([PREFERRED-RT-OPT])
@@ -138,12 +142,12 @@ AC_DEFINE_UNQUOTED(BOOST_THREAD_USE_LIB,"1",[define this to use static version o
 
 case $host_os in
   (*mingw*)
-    LIBS+=" -static-libstdc++  -static-libgcc -lws2_32 -lcrypt32 -lsecur32 -luuid -ladvapi32 -lgdi32 -lcomctl32 -lkernel32 -luser32 -lwinspool -lshell32 -lole32 -loleaut32 -lcomdlg32"
+    LIBS+=" -static-libstdc++  -static-libgcc -lws2_32 -lmswsock -lcrypt32 -lsecur32 -luuid -ladvapi32 -lgdi32 -lcomctl32 -lkernel32 -luser32 -lwinspool -lshell32 -lole32 -loleaut32 -lcomdlg32"
     OS_WINNT=yes
   ;;
 esac
 
-AM_CONDITIONAL(OS_WINNT,[test "x$OS_WINNT" = "xyes"])
+AM_CONDITIONAL(OS_WINNT,[test "x$OS_WINNT" != "xno"])
 
 
 # Checks for typedefs, structures, and compiler characteristics.
