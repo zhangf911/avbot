@@ -22,3 +22,14 @@ static fs::path configfilepath()
 	throw "not configfileexit";
 }
 
+static bool exist_config_file()
+{
+	try {
+		configfilepath();
+		return true;
+	}
+	catch (...) {
+		return false;
+	}
+}
+
