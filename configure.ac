@@ -158,6 +158,7 @@ AC_CHECK_FUNCS([dup2 gettimeofday memset putenv setlocale socket strchr strcspn 
 
 AC_CONFIG_FILES([
                  Makefile
+                 libavbot/Makefile
                  libirc/Makefile
                  libmailexchange/Makefile
                  libwebqq/Makefile
