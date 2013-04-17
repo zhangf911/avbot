@@ -4,7 +4,7 @@ EXTRA_DIST = m4 avproxy boost libirc CMakeLists.txt fsconfig.ipp  input.ipp avbo
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AUTOMAKE_OPTIONS = color-tests parallel-tests
 
-SUBDIRS = libmailexchange libwebqq libxmpp libirc libavbot
+SUBDIRS = libmailexchange libwebqq libxmpp libirc libavlog libavbot
 
 AM_CPPFLAGS = -I ${srcdir}/avproxy/include
 
