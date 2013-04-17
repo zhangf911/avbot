@@ -63,7 +63,7 @@ static void write_vcode(const std::string & vc_img_data)
 	vcode.close();
 }
 
-static boost::function<void (std::string)> do_vc_code;
+boost::function<void (std::string)> do_vc_code;
 
 static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string & vc_img_data, webqq * qqclient, boost::function<void( std::string )> msg_sender)
 {

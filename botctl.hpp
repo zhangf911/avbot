@@ -3,7 +3,7 @@
 #include "libavbot/avbot.hpp"
 
 //-------------
-
+extern boost::function<void (std::string)> do_vc_code;
 // 命令控制, 所有的协议都能享受的命令控制在这里实现.
 // msg_sender 是一个函数, on_command 用它发送消息.
 void on_bot_command(avbot::av_message_tree message, avbot & mybot);
