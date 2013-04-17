@@ -280,7 +280,7 @@ int main( int argc, char *argv[] )
 	( "pop3server",	po::value<std::string>( &pop3server ), 	"pop server of mail,  default to pop.[domain]" )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
 
-	( "localimage", po::value<bool>( &(mybot.fetch_img) )->default_value(false),	"fetch qq image to local disk and store it there")
+	( "localimage", po::value<bool>( &(mybot.fetch_img) )->default_value(true),	"fetch qq image to local disk and store it there")
 	( "runrpc",		po::value<bool>( &runrpc)->default_value(false),	"run rpc server on port 6176")
 
 	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a)：") ),
