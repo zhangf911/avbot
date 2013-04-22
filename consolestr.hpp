@@ -7,6 +7,9 @@
 
 #include "utf8.hpp"
 
+#ifdef _WIN32
+# include <windows.h>
+#endif
 
 inline std::wstring ansi_wide( std::string const &source )
 {
