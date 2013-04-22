@@ -108,11 +108,11 @@ void avbot::add_to_channel( std::string channel_name, std::string room_name )
 {
 	if( m_channels.find( channel_name ) != m_channels.end() )
 	{
-		av_chanel_map & c = m_channels[channel_name];
+		av_chanel_map c = m_channels[channel_name];
 
-		if( std::find( c.begin(), c.end(), room_name ) != c.end() )
+		if( std::find( c.begin(), c.end(), room_name ) == c.end() )
 		{
-			c.push_back( room_name );
+			m_channels[channel_name].push_back( room_name );
 		}
 	}
 	else
