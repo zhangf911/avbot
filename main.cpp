@@ -59,7 +59,11 @@ namespace po = boost::program_options;
 #include "avbot_rpc_server.hpp"
 
 #ifndef QQBOT_VERSION
-#define QQBOT_VERSION "unknow"
+#ifdef PACKAGE_VERSION
+#   define QQBOT_VERSION PACKAGE_VERSION
+#   else
+#	define QQBOT_VERSION "unknow"
+#   endif
 #endif
 
 #if defined(_WIN32)

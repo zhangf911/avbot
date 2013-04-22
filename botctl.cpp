@@ -43,7 +43,11 @@
 #include "botctl.hpp"
 
 #ifndef QQBOT_VERSION
-#define QQBOT_VERSION "unknow"
+#ifdef PACKAGE_VERSION
+#   define QQBOT_VERSION PACKAGE_VERSION
+#   else
+#	define QQBOT_VERSION "unknow"
+#   endif
 #endif
 
 static auto_question question;	// 自动问问题.

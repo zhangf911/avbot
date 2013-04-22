@@ -1,4 +1,6 @@
 4.0
+	* avbot 重构，使用 libavbot 提供的 class avbot。 方便其他程序包含 avbot 功能
+	* url 记录方式重构。
 	* better support for windows platform - via mingw
 	* 修复在 windows 控制台下输出乱码的问题
 
