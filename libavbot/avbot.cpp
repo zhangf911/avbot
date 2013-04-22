@@ -4,7 +4,7 @@
 namespace fs = boost::filesystem;
 #include <boost/format.hpp>
 #include <boost/foreach.hpp>
-#include <boost/lambda/core.hpp>
+#include <boost/lambda/lambda.hpp>
 #include <fstream>
 
 #include "avbot.hpp"
@@ -106,12 +106,20 @@ avbot::avbot( boost::asio::io_service& io_service )
 
 void avbot::add_to_channel( std::string channel_name, std::string room_name )
 {
-	if (m_channels.find(channel_name)!=m_channels.end()){
-		m_channels[channel_name].push_back(room_name);
-	}else{
+	if( m_channels.find( channel_name ) != m_channels.end() )
+	{
+		av_chanel_map & c = m_channels[channel_name];
+
+		if( std::find( c.begin(), c.end(), room_name ) != c.end() )
+		{
+			c.push_back( room_name );
+		}
+	}
+	else
+	{
 		av_chanel_map c;
-		c.push_back(room_name);
-		m_channels.insert(std::make_pair(channel_name, c));
+		c.push_back( room_name );
+		m_channels.insert( std::make_pair( channel_name, c ) );
 	}
 }
 
@@ -163,7 +171,7 @@ void avbot::broadcast_message(std::string channel_name, std::string exclude_room
 				m_xmpp_account->send_room_message(chatgroupmember.substr(5), msg);
 		} else if (chatgroupmember.substr(0,2)=="qq" )
 		{
-			if (!m_xmpp_account)
+			if (!m_qq_account)
 				continue;
 			std::string qqnum = chatgroupmember.substr(3);
 
