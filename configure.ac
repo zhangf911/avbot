@@ -53,7 +53,7 @@ LDFLAGS="$LDFLAGS $BOOST_SYSTEM_LDFLAGS"
 CPPFLAGS="$CPPFLAGS $boost_cv_pthread_flag"
 
 if test $1 = "s" ; then
-	CPPFLAGS+="-DBOOST_THREAD_USE_LIB"
+	CPPFLAGS+=" -DBOOST_THREAD_USE_LIB "
 fi
 
 BOOST_FIND_LIB([thread], [$1],
@@ -138,10 +138,9 @@ BOOST_BIND
 BOOST_FUNCTION
 BOOST_ASIO
 
-AC_DEFINE_UNQUOTED(BOOST_THREAD_USE_LIB,"1",[define this to use static version of boost thread])
-
 case $host_os in
   (*mingw*)
+	AC_DEFINE_UNQUOTED(BOOST_THREAD_USE_LIB,"1",[define this to use static version of boost thread])
     LIBS+=" -static-libstdc++  -static-libgcc -lws2_32 -lmswsock -lcrypt32 -lsecur32 -luuid -ladvapi32 -lgdi32 -lcomctl32 -lkernel32 -luser32 -lwinspool -lshell32 -lole32 -loleaut32 -lcomdlg32"
     OS_WINNT=yes
   ;;

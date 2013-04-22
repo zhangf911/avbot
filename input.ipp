@@ -1,4 +1,4 @@
-static void input_got_one_line(std::string line_input, webqq & qqclient);
+static void input_got_one_line(std::string line_input, avbot & mybot);
 
 
 #ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
@@ -13,7 +13,7 @@ static void input_thread(boost::asio::io_service & io_service, avbot & mybot )
 	while ( !boost::this_thread::interruption_requested() && !std::cin.eof()){
 		std::string line;
 		std::getline(std::cin, line);
-		io_service.post(boost::asio::detail::bind_handler(input_got_one_line, ansi_utf8(line), boost::ref(mybot)));
+		io_service.post(boost::bind(input_got_one_line, ansi_utf8(line), boost::ref(mybot)));
 	}
 }
 #endif
