@@ -289,7 +289,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 	on_message(message);
 }
 
-void avbot::callback_on_xmpp_group_message( std::string xmpproom, std::string who, std::string textmsg )
+void avbot::callback_on_xmpp_group_message( std::string xmpproom, std::string who, std::string msg )
 {
 	using boost::property_tree::ptree;
 	ptree message;
@@ -299,7 +299,10 @@ void avbot::callback_on_xmpp_group_message( std::string xmpproom, std::string wh
 	message.put("room", xmpproom);
 	message.put("who", who);
 	message.put("preamble", preamble_formater( preamble_xmpp_fmt, who, xmpproom ));
-	message.add_child("message", ptree().add("text", textmsg));
+
+	ptree textmsg;
+	textmsg.add("text", msg);
+	message.add_child("message", textmsg);
 
 	on_message(message);
 }
