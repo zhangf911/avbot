@@ -310,9 +310,9 @@ int main( int argc, char *argv[] )
 	}
 #ifdef WIN32
 	// 从 windows 控制台输入的能有啥好编码，转到utf8吧.
-	preamble_qq_fmt = ansi_utf8(preamble_qq_fmt);
-	preamble_irc_fmt = ansi_utf8(preamble_irc_fmt);
-	preamble_xmpp_fmt = ansi_utf8(preamble_xmpp_fmt);
+	preamble_qq_fmt = console_utf8(preamble_qq_fmt);
+	preamble_irc_fmt = console_utf8(preamble_irc_fmt);
+	preamble_xmpp_fmt = console_utf8(preamble_xmpp_fmt);
 #endif
 
 	if( qqnumber.empty() ) {
