@@ -60,3 +60,24 @@ smtpserver=
 # map=qq:123,irc:gentoo-cn;qq:345,irc:gentoo-zh,mail
 
 map=
+
+
+
+# preambleqq preambleirc preamblexmpp
+# 这三个用来控制 avbot 转发时使用的前缀。默认qq转发出去使用的是 "qq(昵称）："
+# 也就是 preambleqq 的默认设置是 preambleqq=qq(%a):
+# 在这里 %a 表示自动选择合适的昵称。有群名片则使用名片，无则使用QQ昵称。因为有时一个人是没有设置群名片的。
+# 可以使用的格式字符有 %r = QQ号， %n QQ昵称 %q QQ号， %c 群名片
+# 比如说，我要 QQ转发的时候使用的前缀为 QQ(群号：QQ号：昵称) 则 preambleqq 的设置字符串就是
+# preambleqq=QQ(%r:%q:%n)
+
+# IRC 和 XMPP 与此类似， %r 在 IRC 里指 IRC 频道名， %a 是发言者的 IRC 昵称。
+# %r 在  XMPP 里指的是 XMPP 房间名。%a 是发言者的昵称。
+
+
+preambleqq=qq(%a):
+preambleirc=%a说:
+preamblexmpp=(%a)
+
+
+
