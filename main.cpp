@@ -523,7 +523,11 @@ int main( int argc, char *argv[] )
 	if (runrpc){
 		// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
  		boost::acceptor_server(io_service,
- 				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), 6176),
+#ifdef _WIN32
+ 				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 6176),
+#else
+				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), 6176),
+#endif
  				boost::bind(avbot_rpc_server, _1, boost::ref(mybot))
  		);
 	}
