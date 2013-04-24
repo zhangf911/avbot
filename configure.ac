@@ -156,6 +156,7 @@ AC_FUNC_FORK
 AC_CHECK_FUNCS([dup2 gettimeofday memset putenv setlocale socket strchr strcspn strstr strtol])
 
 AC_CONFIG_FILES([
+		avbot.spec
                  Makefile
                  libavbot/Makefile
                  libavlog/Makefile
