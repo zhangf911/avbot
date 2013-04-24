@@ -35,7 +35,7 @@ inline std::string console_utf8( std::string const &source)
 inline std::string console_out_str(std::wstring in )
 {
 #ifdef _WIN32
-	std::vector<char> szBuf(in.length()*2);
+	std::vector<char> szBuf(in.length()*6);
 	WideCharToMultiByte(CP_ACP, 0, in.c_str(), -1, &szBuf[0], szBuf.capacity(), NULL, NULL);
 	return std::string(szBuf.data());
 #else
@@ -46,7 +46,7 @@ inline std::string console_out_str(std::wstring in )
 // convert utf8 for console output aka native encoding
 // for linux ,  it does nothing (linux console always use utf8)
 // for windows, it convert to CP_ACP
-inline std::string console_out_str(std::string in)
+inline std::string console_out_str(const std::string & in)
 {
 #ifdef _WIN32
 	return console_out_str(utf8_wide(in.c_str()).c_str());
