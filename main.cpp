@@ -287,11 +287,11 @@ int main( int argc, char *argv[] )
 	( "localimage", po::value<bool>( &(mybot.fetch_img) )->default_value(true),	"fetch qq image to local disk and store it there")
 	( "runrpc",		po::value<bool>( &runrpc)->default_value(false),	"run rpc server on port 6176")
 
-	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a)：") ),
+	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a) :") ),
 		console_out_str("为QQ设置的发言前缀, 默认是 qq(%a):").c_str() )
-	( "preambleirc",	po::value<std::string>( &preamble_irc_fmt )->default_value( console_out_str("%a 说：") ),
+	( "preambleirc",	po::value<std::string>( &preamble_irc_fmt )->default_value( console_out_str("%a 说 :") ),
 	  console_out_str("为IRC设置的发言前缀, 默认是 %a 说: ").c_str() )
-	( "preamblexmpp",	po::value<std::string>( &preamble_xmpp_fmt )->default_value( console_out_str("(%a)：") ),
+	( "preamblexmpp",	po::value<std::string>( &preamble_xmpp_fmt )->default_value( console_out_str("(%a) :") ),
 		console_out_str(
 	  "为XMPP设置的发言前缀, 默认是 (%a): \n\n "
 	  "前缀里的含义 \n"
