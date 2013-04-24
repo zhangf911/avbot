@@ -68,7 +68,7 @@ CPPFLAGS=$boost_threads_save_CPPFLAGS
 ])# BOOST_THREAD
 
 
-AC_INIT([avbot], [4.0.1], [discuss@avplayer.org])
+AC_INIT([avbot], [4.0.2], [discuss@avplayer.org])
 AC_CONFIG_SRCDIR([main.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 

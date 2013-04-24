@@ -1,3 +1,7 @@
+4.0.2
+	* fix strange win32 qq message send error
+4.0.1
+	* fix XMPP not forward error
 4.0
 	* avbot 重构，使用 libavbot 提供的 class avbot。 方便其他程序包含 avbot 功能
 	* url 记录方式重构。
