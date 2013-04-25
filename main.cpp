@@ -251,7 +251,7 @@ int main( int argc, char *argv[] )
 	std::string chanelmap;
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
-	bool runrpc;
+	uint rpcport = 6176;
 
 	boost::asio::io_service io_service;
 
@@ -283,9 +283,9 @@ int main( int argc, char *argv[] )
 	( "mailpasswd",	po::value<std::string>( &mailpasswd ), 	"password of mail" )
 	( "pop3server",	po::value<std::string>( &pop3server ), 	"pop server of mail,  default to pop.[domain]" )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
+	( "rpcport",	po::value<uint>(&rpcport), 				"run rpc server on port 6176")
 
 	( "localimage", po::value<bool>( &(mybot.fetch_img) )->default_value(true),	"fetch qq image to local disk and store it there")
-	( "runrpc",		po::value<bool>( &runrpc)->default_value(false),	"run rpc server on port 6176")
 
 	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a) :") ),
 		console_out_str("为QQ设置的发言前缀, 默认是 qq(%a):").c_str() )
@@ -520,13 +520,15 @@ int main( int argc, char *argv[] )
 		boost::thread( boost::bind( input_thread, boost::ref( io_service ), boost::ref( mybot ) ) );
 #endif
 	}
-	if (runrpc){
+
+	if (vm.count("rpcport") && rpcport > 0)
+	{
 		// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
  		boost::acceptor_server(io_service,
 #ifdef _WIN32
- 				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 6176),
+ 				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), rpcport),
 #else
-				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), 6176),
+				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), rpcport),
 #endif
  				boost::bind(avbot_rpc_server, _1, boost::ref(mybot))
  		);
