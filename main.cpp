@@ -251,7 +251,7 @@ int main( int argc, char *argv[] )
 	std::string chanelmap;
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
 
-	uint rpcport;
+	unsigned rpcport;
 
 	boost::asio::io_service io_service;
 
@@ -285,7 +285,7 @@ int main( int argc, char *argv[] )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
 
 	( "localimage", po::value<bool>( &(mybot.fetch_img) )->default_value(true),	"fetch qq image to local disk and store it there")
-	( "rpcport",	po::value<uint>(&rpcport)->default_value(6176),				"run rpc server on port 6176")
+	( "rpcport",	po::value<unsigned>(&rpcport)->default_value(6176),				"run rpc server on port 6176")
 
 	( "preambleqq",		po::value<std::string>( &preamble_qq_fmt )->default_value( console_out_str("qq(%a) :") ),
 		console_out_str("为QQ设置的发言前缀, 默认是 qq(%a):").c_str() )
