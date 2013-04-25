@@ -376,7 +376,8 @@ void avbot::set_irc_account( std::string nick, std::string password, std::string
 
 void avbot::irc_join_room( std::string room_name )
 {
-	m_irc_account->join(room_name);
+	if (m_irc_account)
+		m_irc_account->join(room_name);
 }
 
 void avbot::set_xmpp_account( std::string user, std::string password, std::string nick, std::string server )
@@ -387,7 +388,8 @@ void avbot::set_xmpp_account( std::string user, std::string password, std::strin
 
 void avbot::xmpp_join_room( std::string room )
 {
-	m_xmpp_account->join(room);
+	if (m_xmpp_account)
+		m_xmpp_account->join(room);
 }
 
 void avbot::set_mail_account( std::string mailaddr, std::string password, std::string pop3server, std::string smtpserver )
