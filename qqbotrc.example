@@ -1,4 +1,3 @@
-
 # 配置文件示例, avbot 运行的时候读取配置文件 /etc/qqbotrc 或则 ~/.qqbotrc
 # 配置文件的字段就是 --help 提示的字段
 # 例如 --help 提示使用  --qqnum 设置 QQ号码, 则配置文件里就用 qqnum=XX 来设置
@@ -61,13 +60,11 @@ smtpserver=
 
 map=
 
-
-
 # preambleqq preambleirc preamblexmpp
 # 这三个用来控制 avbot 转发时使用的前缀。默认qq转发出去使用的是 "qq(昵称）："
 # 也就是 preambleqq 的默认设置是 preambleqq=qq(%a):
 # 在这里 %a 表示自动选择合适的昵称。有群名片则使用名片，无则使用QQ昵称。因为有时一个人是没有设置群名片的。
-# 可以使用的格式字符有 %r = QQ号， %n QQ昵称 %q QQ号， %c 群名片
+# 可以使用的格式字符有 %r(QQ群号)，%R(QQ群名称)  %n(发言QQ昵称) %q(发言QQ号)， %c(发言QQ群名片)
 # 比如说，我要 QQ转发的时候使用的前缀为 QQ(群号：QQ号：昵称) 则 preambleqq 的设置字符串就是
 # preambleqq=QQ(%r:%q:%n)
 
@@ -78,6 +75,5 @@ map=
 preambleqq=qq(%a):
 preambleirc=%a说:
 preamblexmpp=(%a)
-
 
 
