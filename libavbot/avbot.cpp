@@ -369,7 +369,7 @@ void avbot::set_irc_account( std::string nick, std::string password, std::string
 	else
 	{
 		server_host = server;
-		server_port = 6667;
+		server_port = "6667";
 	}
 	m_irc_account.reset(new irc::IrcClient(m_io_service, nick, password, server_host, server_port));
 	m_irc_account->login(boost::bind(&avbot::callback_on_irc_message, this, _1));
