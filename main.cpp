@@ -475,19 +475,21 @@ int main( int argc, char *argv[] )
 		exit( 1 );
 	}
 
-	if( ircnick.empty() ) {
-		std::cerr << console_out_str("请设置irc昵称") << std::endl;
-		exit( 1 );
-	}
 
 	mybot.preamble_irc_fmt = preamble_irc_fmt;
 	mybot.preamble_qq_fmt = preamble_qq_fmt;
 	mybot.preamble_xmpp_fmt = preamble_xmpp_fmt;
 
-	mybot.set_qq_account(qqnumber, qqpwd, boost::bind(on_verify_code, _1, boost::ref(mybot)));
-	mybot.set_irc_account(ircnick, ircpwd);
-	mybot.set_xmpp_account(xmppuser, xmpppwd, xmppserver, xmppnick);
-	mybot.set_mail_account(mailaddr, mailpasswd, pop3server, smtpserver);
+	mybot.set_qq_account( qqnumber, qqpwd, boost::bind( on_verify_code, _1, boost::ref( mybot ) ) );
+
+	if( !ircnick.empty() )
+		mybot.set_irc_account( ircnick, ircpwd );
+
+	if( !xmppnick.empty() )
+		mybot.set_xmpp_account( xmppuser, xmpppwd, xmppserver, xmppnick );
+
+	if( !mailaddr.empty() )
+		mybot.set_mail_account( mailaddr, mailpasswd, pop3server, smtpserver );
 
 	build_group( chanelmap, mybot );
 	// 记录到日志.
