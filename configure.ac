@@ -85,6 +85,10 @@ LT_PROG_RC
 
 AC_LANG(C++)
 
+AC_CHECK_LIB(c, clock_gettime,[],[
+	AC_CHECK_LIB(rt, clock_gettime)
+])
+
 # Checks for libraries.
 
   dnl OpenSSL
