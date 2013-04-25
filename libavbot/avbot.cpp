@@ -47,9 +47,10 @@ static std::string	preamble_formater(std::string preamble_qq_fmt, qqBuddy *buddy
 	boost::replace_all( preamble, "%q", buddy->qqnum );
 	boost::replace_all( preamble, "%c", buddy->card );
 
-	if( grpup )
+	if( grpup ){
 		boost::replace_all( preamble, "%r", grpup->qqnum );
-
+		boost::replace_all( preamble, "%R", grpup->name );
+	}
 	return preamble;
 }
 
