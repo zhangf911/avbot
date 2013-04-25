@@ -24,3 +24,12 @@ avbot_LDADD +=${BOOST_THREAD_LIBS} ${BOOST_SYSTEM_LIBS} ${BOOST_PROGRAM_OPTIONS_
 
 .rc.o:
 	${RC} -o $@ $<
+
+rpm: dist @PACKAGE_NAME@.spec
+	rpmbuild -bb \
+		--define "_sourcedir `pwd`" \
+		--define "_builddir `pwd`" \
+		--define "_specdir `pwd`" \
+		--define "_rpmdir `pwd`" \
+		--define "_srcrpmdir `pwd`" \
+		@PACKAGE_NAME@.spec
