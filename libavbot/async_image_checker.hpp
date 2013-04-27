@@ -144,7 +144,10 @@ async_image_checker_op make_image_checker_op( boost::asio::io_service & io_servi
 
 void async_image_checker( boost::asio::io_service & __io_service )
 {
-	detail::make_image_checker_op( __io_service );
+	// 防止 images 文件不存在的时候退出.
+	try{
+		detail::make_image_checker_op( __io_service );
+	}catch (...){}
 }
 
 #include "boost/coro/unyield.hpp"
