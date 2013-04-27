@@ -11,8 +11,10 @@
 #include "boost/coro/coro.hpp"
 #include "boost/coro/yield.hpp"
 #include "boost/timedcall.hpp"
+#include "boost/avloop.hpp"
 
 #include "libwebqq/webqq.h"
+
 
 namespace detail
 {
@@ -128,7 +130,7 @@ public:
 				// 好，处理 dir_it_cur dir_it_;
 				_yield async_image_check_and_download( io_service, dir_it_cur->path(), boost::bind( *this, coro ) );
 
-				_yield boost::delayedcallms( io_service, 1, boost::bind( *this, coro ) );
+				_yield avloop_idle_post(io_service, boost::bind( *this, coro ) );
 			}
 		}
 	}
