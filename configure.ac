@@ -20,8 +20,9 @@ esac
 
 BOOST_FIND_LIB([locale], [$1],
                 [boost/locale.hpp],
-                [])
-
+                [
+					boost::locale::conv::between( "", "UTF-8", "" )
+                ])
 
 ])# BOOST_LOCALE
 
@@ -66,6 +67,33 @@ LIBS=$boost_threads_save_LIBS
 LDFLAGS=$boost_threads_save_LDFLAGS
 CPPFLAGS=$boost_threads_save_CPPFLAGS
 ])# BOOST_THREAD
+
+# BOOST_FILESYSTEMS([PREFERRED-RT-OPT])
+# ------------------------------------
+# Look for Boost.Filesystem.  For the documentation of PREFERRED-RT-OPT, see
+# the documentation of BOOST_FIND_LIB above.
+# Do not check for boost/filesystem.hpp because this file was introduced in
+# 1.34.
+BOOST_DEFUN([Filesystems],
+[# Do we have to check for Boost.System?  This link-time dependency was
+# added as of 1.35.0.  If we have a version <1.35, we must not attempt to
+# find Boost.System as it didn't exist by then.
+if test $boost_major_version -ge 135; then
+BOOST_SYSTEM([$1])
+fi # end of the Boost.System check.
+boost_filesystem_save_LIBS=$LIBS
+boost_filesystem_save_LDFLAGS=$LDFLAGS
+m4_pattern_allow([^BOOST_SYSTEM_(LIBS|LDFLAGS)$])dnl
+LIBS="$LIBS $BOOST_SYSTEM_LIBS"
+LDFLAGS="$LDFLAGS $BOOST_SYSTEM_LDFLAGS"
+BOOST_FIND_LIB([filesystem], [$1],
+                [boost/filesystem.hpp], [boost::filesystem::exists(".");])
+if test $enable_static_boost = yes && test $boost_major_version -ge 135; then
+    AC_SUBST([BOOST_FILESYSTEM_LIBS], ["$BOOST_FILESYSTEM_LIBS $BOOST_SYSTEM_LIBS"])
+fi
+LIBS=$boost_filesystem_save_LIBS
+LDFLAGS=$boost_filesystem_save_LDFLAGS
+])# BOOST_FILESYSTEMS
 
 
 AC_INIT([avbot], [4.1], [discuss@avplayer.org])
@@ -131,7 +159,7 @@ BOOST_REQUIRE(1.48)
 BOOST_LOCALE([s])
 BOOST_THREAD([s])
 BOOST_SYSTEM([s])
-BOOST_FILESYSTEM([s])
+BOOST_FILESYSTEMS([s])
 BOOST_DATE_TIME([s])
 BOOST_PROGRAM_OPTIONS([s])
 BOOST_REGEX([s])
