@@ -3,7 +3,7 @@
 #include <boost/asio.hpp>
 #include <boost/function/function0.hpp>
 #include <list>
-
+namespace detail{
 class IdleService
 	: public boost::asio::detail::service_base<IdleService>
 {
@@ -34,10 +34,12 @@ public:
 		op_queue.pop_front();
 	}
 };
+}
 
 template<class Handler>
 void avloop_idle_post(boost::asio::io_service & io_service, Handler handler)
 {
+	using namespace detail;
 	if (!boost::asio::has_service<IdleService>(io_service))
 	{
 		boost::asio::add_service(io_service, new IdleService(io_service));
@@ -49,6 +51,7 @@ void avloop_idle_post(boost::asio::io_service & io_service, Handler handler)
 
 static inline void avloop_run(boost::asio::io_service & io_service)
 {
+	using namespace detail;
 	if (!boost::asio::has_service<IdleService>(io_service))
 	{
 		boost::asio::add_service(io_service, new IdleService(io_service));
