@@ -1,5 +1,6 @@
-
+4.1
 	* avbot will check for image file and redownload corrupted one, aka say, the checksum does not match
+	* avbot 启动的时候会对 images 文件夹下的文件执行校验检查。发现文件检验和文件名不符合的时候重新从腾讯服务器下载。
 
 4.0.2
 	* fix strange win32 qq message send error
