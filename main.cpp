@@ -48,6 +48,7 @@ namespace po = boost::program_options;
 
 #include "boost/consolestr.hpp"
 #include "boost/acceptor_server.hpp"
+#include "boost/avloop.hpp"
 
 #include "libavbot/avbot.hpp"
 #include "libavlog/avlog.hpp"
@@ -535,6 +536,6 @@ int main( int argc, char *argv[] )
  				boost::bind(avbot_rpc_server, _1, boost::ref(mybot))
  		);
 	}
-	io_service.run();
+	avloop_run(io_service);
 	return 0;
 }
