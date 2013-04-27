@@ -18,7 +18,8 @@ namespace detail
 {
 
 // 比较文件名和 md5 数值是否一致.
-bool compare_image_degest_and_filename( std::string filename, std::string md5 )
+template<typename SequenceT>
+bool compare_image_degest_and_filename( SequenceT filename, const SequenceT & md5 )
 {
 	boost::replace_all( filename, "{", "" );
 	boost::replace_all( filename, "}", "" );
@@ -41,12 +42,12 @@ public:
 	{
 		using namespace boost::filesystem;
 		using namespace boost::asio::detail;
-		using namespace boost::system;
+		using namespace boost::system::errc;
 
 		if( !exists( item ) )
 		{
 			// 这事实上应该算是严重的错误了 :)
-			io_service.post( bind_handler( handler, errc::make_error_code( errc::no_such_file_or_directory ) ) );
+			io_service.post( bind_handler( handler, make_error_code(no_such_file_or_directory)));
 		}
 		else
 		{
