@@ -9,8 +9,8 @@
 //
 #pragma once
 
-#ifndef __BOOST_ASIO_CORO_H
-#define __BOOST_ASIO_CORO_H
+#ifndef __BOOST_ASIO_CORO_H__
+#define __BOOST_ASIO_CORO_H__
 
 namespace boost {
 	namespace coro {
