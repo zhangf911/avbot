@@ -190,8 +190,9 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 	boost::function<void( std::string )> msg_sender =
 		boost::bind( &avbot::broadcast_message, &mybot, jsonmessage.get<std::string>("channel"), _1);
 
-	boost::function<void( std::string )> sendmsg =
-		boost::bind( iopost_msg, boost::ref( mybot.get_io_service() ), msg_sender, _1, jsonmessage.get<std::string>("channel") );
+	boost::function<void( std::string )> sendmsg = mybot.get_io_service().wrap(
+		boost::bind( iopost_msg, boost::ref( mybot.get_io_service() ), msg_sender, _1, jsonmessage.get<std::string>("channel") )
+	);
 
 	std::string message = boost::trim_copy(jsonmessage.get<std::string>("message.text"));
 
