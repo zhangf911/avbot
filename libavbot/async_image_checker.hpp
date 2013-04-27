@@ -56,7 +56,7 @@ public:
 			std::vector<char>  content( boost::filesystem::file_size( item ) );
 
 			// 读取文件，然后执行 MD5 校验.
-			std::ifstream imgfile( item.c_str(), std::ofstream::binary | std::ofstream::in );
+			std::ifstream imgfile( item.string().c_str(), std::ifstream::openmode(std::ifstream::binary | std::ifstream::in) );
 			imgfile.read( &content[0], content.capacity() );
 
 			boost::hashes::md5::digest_type	md5 = boost::hashes::compute_digest<boost::hashes::md5>( content );
@@ -87,7 +87,7 @@ public:
 
 		if( !ec || ec == boost::asio::error::eof )
 		{
-			std::ofstream cfaceimg( ( std::string( "images/" ) + cface ).c_str(), std::ofstream::binary | std::ofstream::out );
+			std::ofstream cfaceimg( ( std::string( "images/" ) + cface ).c_str(), std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
 			cfaceimg.write( boost::asio::buffer_cast<const char*>( buf.data() ), boost::asio::buffer_size( buf.data() ) );
 			ec = boost::system::error_code();
 		}
