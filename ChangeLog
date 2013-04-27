@@ -1,3 +1,6 @@
+
+	* avbot will check for image file and redownload corrupted one, aka say, the checksum does not match
+
 4.0.2
 	* fix strange win32 qq message send error
 4.0.1
