@@ -54,7 +54,6 @@ public:
 
 			// 好了，连接上了.
 			m_readbuf.reset( new streambuf );
-			m_writebuf.reset( new streambuf );
 			// "+OK QQMail POP3 Server v1.0 Service Ready(QQMail v2.0)"
 			_yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;

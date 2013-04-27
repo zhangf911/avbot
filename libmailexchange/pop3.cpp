@@ -126,7 +126,8 @@ void pop3::process_mail( std::istream &mail, Handler handler )
 pop3::pop3( boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver )
 	: io_service( _io_service ),
 	  m_mailaddr( user ), m_passwd( passwd ),
-	  m_mailserver( _mailserver )
+	  m_mailserver( _mailserver ),
+	  m_writebuf( new boost::asio::streambuf )
 {
 	if( m_mailserver.empty() ) { // 自动从　mailaddress 获得.
 		if( m_mailaddr.find( "@" ) == std::string::npos )
