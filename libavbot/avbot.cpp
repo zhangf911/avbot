@@ -272,7 +272,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 					{
 						if (!fs::exists("images"))
 							fs::create_directories("images");
-						m_qq_account->async_fetch_cface(qqmsg.cface, boost::bind(&avbot::callback_save_qq_image, this, _1, _2, qqmsg.cface));
+						webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&avbot::callback_save_qq_image, this, _1, _2, qqmsg.cface));
 					}
 				}
 				// 接收方，需要把 cfage 格式化为 url , loger 格式化为 ../images/XX ,
