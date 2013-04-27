@@ -28,7 +28,8 @@ public:
 
 		std::string		status;
 		std::string		maillength;
-		std::istream	inbuffer( m_streambuf.get() );
+		std::istream	inbuffer( m_readbuf.get() );
+		std::ostream	outbuffer( m_writebuf.get() );
 		std::string		msg;
 
 		reenter( this ) {
@@ -52,9 +53,10 @@ public:
 			} while( ec );  // 尝试到连接成功为止!
 
 			// 好了，连接上了.
-			m_streambuf.reset( new streambuf );
+			m_readbuf.reset( new streambuf );
+			m_writebuf.reset( new streambuf );
 			// "+OK QQMail POP3 Server v1.0 Service Ready(QQMail v2.0)"
-			_yield	async_read_until( *m_socket, *m_streambuf, "\n", *this );
+			_yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;
 
 			if( status != "+OK" ) {
@@ -63,13 +65,13 @@ public:
 			}
 
 			// 发送用户名.
-			_yield m_socket->async_write_some( buffer( std::string( "user " ) + m_mailaddr + "\n" ), *this );
+			_yield async_write( std::string("user ") + m_mailaddr + "\n" , *this );
 
 			if( ec ) goto restart;
 
 			// 接受返回状态.
-			m_streambuf.reset( new streambuf );
-			_yield	async_read_until( *m_socket, *m_streambuf, "\n", *this );
+			m_readbuf.reset( new streambuf );
+			_yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;
 
 			// 解析是不是　OK.
@@ -79,10 +81,11 @@ public:
 			}
 
 			// 发送密码.
-			_yield m_socket->async_write_some( buffer( std::string( "pass " ) + m_passwd + "\n" ), *this );
+			outbuffer << "pass " <<  m_passwd <<  "\r\n";
+			_yield async_write(*this );
 			// 接受返回状态.
-			m_streambuf.reset( new streambuf );
-			_yield	async_read_until( *m_socket, *m_streambuf, "\n", *this );
+			m_readbuf.reset( new streambuf );
+			_yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;
 
 			// 解析是不是　OK.
@@ -94,10 +97,10 @@ public:
 			// 完成登录. 开始接收邮件.
 
 			// 发送　list 命令.
-			_yield m_socket->async_write_some( buffer( std::string( "list\n" ) ), *this );
+			_yield async_write( "list\n", *this );
 			// 接受返回的邮件.
-			m_streambuf.reset( new streambuf );
-			_yield	async_read_until( *m_socket, *m_streambuf, "\n", *this );
+			m_readbuf.reset( new streambuf );
+			_yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;
 
 			// 解析是不是　OK.
@@ -108,8 +111,8 @@ public:
 
 			// 开始进入循环处理邮件.
 			maillist.clear();
-			_yield	m_socket->async_read_some( m_streambuf->prepare( 8192 ), *this );
-			m_streambuf->commit( length );
+			_yield	m_socket->async_read_some( m_readbuf->prepare( 8192 ), *this );
+			m_readbuf->commit( length );
 
 			while( status != "." ) {
 				maillength.clear();
@@ -122,17 +125,17 @@ public:
 					maillist.push_back( status );
 
 				if( inbuffer.eof() && status != "." )
-					_yield	m_socket->async_read_some( m_streambuf->prepare( 8192 ), *this );
+					_yield	m_socket->async_read_some( m_readbuf->prepare( 8192 ), *this );
 			}
 
 			// 获取邮件.
 			while( !maillist.empty() ) {
 				// 发送　retr #number 命令.
-				msg = boost::str( boost::format( "retr %s\r\n" ) %  maillist[0] );
-				_yield m_socket->async_write_some( buffer( msg ), *this );
+				outbuffer << "retr " << maillist[0] <<  "\r\n";
+				_yield async_write(*this );
 				// 获得　+OK
-				m_streambuf.reset( new streambuf );
-				_yield	async_read_until( *m_socket, *m_streambuf, "\n", *this );
+				m_readbuf.reset( new streambuf );
+				_yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 				inbuffer >> status;
 
 				// 解析是不是　OK.
@@ -142,7 +145,7 @@ public:
 				}
 
 				// 获取邮件内容，邮件一单行的 . 结束.
-				_yield	async_read_until( *m_socket, *m_streambuf, "\r\n.\r\n", *this );
+				_yield	async_read_until( *m_socket, *m_readbuf, "\r\n.\r\n", *this );
 				// 然后将邮件内容给处理.
 				_yield process_mail( inbuffer ,  boost::bind( *this, ec, _1 ) );
 
@@ -150,12 +153,12 @@ public:
 				if( length ) {
 #	ifndef DEBUG
 					// 删除邮件啦.
-					msg = boost::str( boost::format( "dele %s\r\n" ) %  maillist[0] );
-					_yield m_socket->async_write_some( buffer( msg ), *this );
+					outbuffer << "dele " << maillist[0] <<  "\r\n";
+					_yield async_write(*this);
 
 					// 获得　+OK
-					m_streambuf.reset( new streambuf );
-					_yield	async_read_until( *m_socket, *m_streambuf, "\n", *this );
+					m_readbuf.reset( new streambuf );
+					_yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 					inbuffer >> status;
 
 					// 解析是不是　OK.
@@ -175,7 +178,7 @@ public:
 			}
 
 			// 处理完毕.
-			_yield async_write( *m_socket, buffer( "quit\n" ), *this );
+			_yield async_write("quit\n" , *this );
 			_yield ::boost::delayedcallsec( io_service, 1, boost::bind( *this, ec, 0 ) );
 
 			if( m_socket->is_open() ) {
@@ -193,6 +196,20 @@ public:
 		}
 	}
 
+	template <typename WriteHandler>
+	void async_write(BOOST_ASIO_MOVE_ARG( WriteHandler ) handler )
+	{
+		boost::asio::async_write( *m_socket, *m_writebuf, handler );
+	}
+
+	template <typename WriteHandler>
+	void async_write(const std::string & str, BOOST_ASIO_MOVE_ARG( WriteHandler ) handler )
+	{
+		std::ostream writebuf(m_writebuf.get());
+		writebuf <<  str ;
+		boost::asio::async_write( *m_socket, *m_writebuf, handler );
+	}
+
 	void async_fetch_mail( on_mail_function handler );
 
 private:
@@ -204,7 +221,8 @@ private:
 	std::string m_mailaddr, m_passwd, m_mailserver;
 	// 必须是可拷贝的，所以只能用共享指针.
 	boost::shared_ptr<boost::asio::ip::tcp::socket>	m_socket;
-	boost::shared_ptr<boost::asio::streambuf>	m_streambuf;
+	boost::shared_ptr<boost::asio::streambuf>	m_readbuf;
+	boost::shared_ptr<boost::asio::streambuf>	m_writebuf;
 	boost::shared_ptr<on_mail_function>		m_sig_gotmail;
 	std::vector<std::string>	maillist;
 };
