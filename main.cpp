@@ -203,6 +203,13 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot)
 		}
 		std::string group = message.get<std::string>("channel");
 		logfile.add_log(group, linemessage);
+		if (message.get<std::string>("protocol") == "qq"){
+			// 第二个群也记录到自己的 log file 吧
+			std::string groupnumber = message.get<std::string>("room.groupnumber");
+			if (!groupnumber.empty() && groupnumber != group){
+				logfile.add_log(groupnumber, linemessage);
+			}
+		}
 	}else{
 		// TODO ,  暂时不记录邮件吧！
 
