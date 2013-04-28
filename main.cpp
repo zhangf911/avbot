@@ -201,15 +201,17 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot)
 				linemessage += boost::str(boost::format("<img src=\"%s\" />") % v.second.data());
 			}
 		}
-		std::string group = message.get<std::string>("channel");
-		logfile.add_log(group, linemessage);
-		if (message.get<std::string>("protocol") == "qq"){
-			// 第二个群也记录到自己的 log file 吧
-			std::string groupnumber = message.get<std::string>("room.groupnumber");
-			if (!groupnumber.empty() && groupnumber != group){
-				logfile.add_log(groupnumber, linemessage);
+		std::string channel_name = message.get<std::string>("channel");
+		// 如果最好的办法就是遍历组里的所有QQ群，都记录一次.
+		avbot::av_chanel_map channelmap = mybot.get_channel_map(channel_name);
+
+		BOOST_FOREACH(std::string roomname, channelmap)
+		{
+			if (roomname.substr(0, 3) == "qq:"){
+				logfile.add_log(roomname.substr(3), linemessage);
 			}
 		}
+
 	}else{
 		// TODO ,  暂时不记录邮件吧！
 

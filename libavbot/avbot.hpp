@@ -12,15 +12,15 @@
 #include "libmailexchange/mx.hpp"
 
 class avbot : boost::noncopyable{
+public:
+	typedef std::vector<std::string> av_chanel_map;
+private:
 	boost::asio::io_service & m_io_service;
 
 	boost::scoped_ptr<webqq> m_qq_account;
 	boost::scoped_ptr<irc::IrcClient> m_irc_account;
 	boost::scoped_ptr<xmpp> m_xmpp_account;
 	boost::scoped_ptr<mx::mx> m_mail_account;
-
-	typedef std::vector<std::string> av_chanel_map;
-
 	// channel have a name :)
 	std::map<std::string, av_chanel_map> m_channels;
 
@@ -65,6 +65,9 @@ public:
 public:
 	// NOTE: webqq will create a channel_name name after qq group number automantically
 	void add_to_channel(std::string channel_name, std::string room_name);
+	av_chanel_map get_channel_map(std::string channel_name){
+		return m_channels[channel_name];
+	}
 	// 从 "irc:avplayer" 这样的名字获得组合频道的名字.
 	std::string get_channel_name(std::string room_name);
 	boost::asio::io_service & get_io_service(){return m_io_service;}
