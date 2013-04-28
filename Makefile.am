@@ -33,3 +33,12 @@ rpm: dist-bzip2 @PACKAGE_NAME@.spec
 		--define "_rpmdir `pwd`" \
 		--define "_srcrpmdir `pwd`" \
 		@PACKAGE_NAME@.spec
+
+rpm32: dist-bzip2 @PACKAGE_NAME@.spec
+	CXXFLAGS="-m32 -Os -g0" CFLAGS="-m32 -Os -g0" rpmbuild -bb --target=i686 \
+		--define "_sourcedir `pwd`" \
+		--define "_builddir `pwd`" \
+		--define "_specdir `pwd`" \
+		--define "_rpmdir `pwd`" \
+		--define "_srcrpmdir `pwd`" \
+		@PACKAGE_NAME@.spec
