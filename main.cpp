@@ -540,19 +540,28 @@ int main( int argc, char *argv[] )
 		boost::thread( boost::bind( input_thread, boost::ref( io_service ), boost::ref( mybot ) ) );
 #endif
 	}
-
 	if (rpcport > 0)
 	{
-		// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
- 		boost::acceptor_server(io_service,
+		try
+		{
+			// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
+			boost::acceptor_server( io_service,
 #ifdef _WIN32
- 				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), rpcport),
+									boost::asio::ip::tcp::endpoint( boost::asio::ip::tcp::v4(), rpcport ),
 #else
-				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), rpcport),
+									boost::asio::ip::tcp::endpoint( boost::asio::ip::tcp::v6(), rpcport ),
 #endif
- 				boost::bind(avbot_rpc_server, _1, boost::ref(mybot))
- 		);
+									boost::bind( avbot_rpc_server, _1, boost::ref( mybot ) )
+								  );
+		}
+		catch( ... )
+		{
+			std::cerr <<  "bind to port " <<  rpcport <<  " failed!" << std::endl;
+			std::cerr <<  "Did you happened to already run an avbot? " << std::endl;
+			std::cerr <<  "Now avbot will run without RPC support. " << std::endl;
+		}
 	}
-	avloop_run(io_service);
+
+	avloop_run( io_service);
 	return 0;
 }
