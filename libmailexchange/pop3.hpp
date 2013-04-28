@@ -195,6 +195,9 @@ public:
 		}
 	}
 
+	void async_fetch_mail( on_mail_function handler );
+
+private:
 	template <typename WriteHandler>
 	void async_write(BOOST_ASIO_MOVE_ARG( WriteHandler ) handler )
 	{
@@ -209,9 +212,6 @@ public:
 		boost::asio::async_write( *m_socket, *m_writebuf, handler );
 	}
 
-	void async_fetch_mail( on_mail_function handler );
-
-private:
 	template<class Handler>
 	void process_mail( std::istream &mail, Handler handler );
 private:
