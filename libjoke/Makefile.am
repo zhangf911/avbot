@@ -1,7 +1,7 @@
 
 EXTRA_DIST = CMakeLists.txt
 
-AM_CPPFLAGS = -I${top_srcdir}
+AM_CPPFLAGS = -I${top_srcdir} -I${top_srcdir}/avhttp/include
 
 noinst_LTLIBRARIES = libjoke.la
 
