@@ -20,9 +20,12 @@
  * libjoke 使用 avhttp 从笑话网站获取笑话，然后贴到群里.
  */
 
+#include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/asio/streambuf.hpp>
+#include <avhttp.hpp>
 
 #include <boost/coro/coro.hpp>
 
@@ -30,10 +33,61 @@
 
 #include <boost/coro/yield.hpp>
 
+static std::string get_joke_content( std::istream response_stream )
+{
+	std::string joketitlestart = "lastT lan14b";
+	std::string jokemessagestart = "class=\"lastC\"";
+
+	std::string message;
+	std::string jokestring;
+
+	while( std::getline( response_stream, message ) )
+	{
+		if( message.find( joketitlestart ) != std::string::npos )
+		{
+			jokestring.append( message.substr( message.find( ">" ), ( message.rfind( "<" ) - message.find( ">" ) - 1 ) ) );
+			jokestring.append( "\r\n" );
+		}
+
+		if( message.find( jokemessagestart ) != std::string::npos )
+		{
+			std::getline( response_stream, message );
+
+			while( message.find( "\r" ) != std::string::npos )
+				message.erase( message.find( "\r" ), 1 );
+
+			while( message.find( "&nbsp;" ) != std::string::npos )
+				message.erase( message.find( "&nbsp;" ), 6 );
+
+			while( message.find( "\t" ) != std::string::npos )
+				message.erase( message.find( "\t" ), 1 );
+
+			while( message.find( " " ) != std::string::npos )
+				message.erase( message.find( " " ), 1 );
+
+			while( message.find( "\n" ) != std::string::npos )
+				message.erase( message.find( "\n" ), 1 );
+
+			while( message.find( "<br><br>" ) != std::string::npos )
+				message.replace( message.find( "<br><br>" ), 8, "\r\n" );
+
+			while( message.find( "<br>" ) != std::string::npos )
+				message.replace( message.find( "<br>" ), 4, "\r\n" );
+
+			jokestring.append( message );
+		}
+	}
+	return jokestring;
+}
+
 class jokefecher{
 	boost::asio::io_service & io_service;
-	boost::function<void (const boost::system::error_code &, std::string)>	m_handler;
+// 	boost::function<void (const boost::system::error_code &, std::string)>	m_handler;
+	boost::shared_ptr<avhttp::http_stream>	m_http_stream;
+	boost::shared_ptr<boost::asio::streambuf> m_read_buf;
 public:
+	typedef void result_type;
+
 	jokefecher(boost::asio::io_service &_io_service)
 	  : io_service(_io_service)
 	{
@@ -43,10 +97,6 @@ public:
 	template<class Handler>
 	void operator()(Handler handler)
 	{
-		m_handler = handler;
-
-		using namespace boost::system;
-		using namespace boost::asio::detail;
 		// 第一步，构造一个 URL, 然后调用 avhttp 去读取.
 		boost::mt19937 rannum(time(0));
 		int num = 1 + rannum() % 20000;
@@ -54,10 +104,37 @@ public:
 
 		std::string url = boost::str(boost::format("http://xiaohua.zol.com.cn/detail/%d/%d.html") % numcl % num);
 
-		std::string jokestr = boost::str(boost::format("到 %s 看笑话 ") % url);
+		m_http_stream.reset(new avhttp::http_stream(io_service));
 
-		io_service.post( bind_handler(m_handler, error_code(), jokestr) );
+		m_http_stream->async_open(url,  boost::bind(*this, _1, handler));
 	}
+
+	template<class Handler>
+	void operator()(const boost::system::error_code &ec, Handler handler)
+	{
+		using namespace boost::system;
+		using namespace boost::asio::detail;
+
+		if (ec){
+			io_service.post( bind_handler(handler, ec, std::string("获取笑话出错")) );
+		}else{
+			m_read_buf.reset(new boost::asio::streambuf);
+			boost::asio::async_read(*m_http_stream, *m_read_buf, boost::asio::transfer_all(), boost::bind(*this, _1, handler));
+		}
+	}
+
+	template<class Handler>
+	void operator()(const boost::system::error_code &ec, std::size_t bytes_transferred, Handler handler)
+	{
+		using namespace boost::system;
+		using namespace boost::asio::detail;
+
+		std::string jokestr = get_joke_content(std::istream(m_read_buf.get()));
+
+		io_service.post( bind_handler(handler, error_code(), jokestr) );
+	}
+
+
 };
 
 void joke::set_joke_fecher()
