@@ -27,6 +27,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/asio/streambuf.hpp>
+#include <boost/regex.hpp>
 #include <fstream>
 #include <avhttp.hpp>
 
@@ -194,6 +195,7 @@ void joke::operator()( boost::property_tree::ptree msg )
 				// 其实关闭不掉的, 就是延长到 24 个小时了, 嘻嘻.
 				* m_interval = boost::posix_time::seconds( 3600 * 24 );
 				m_sender( "笑话关闭" );
+				save_setting();
 			}
 			else if( textmsg == ".qqbot joke on" )
 			{
@@ -201,6 +203,25 @@ void joke::operator()( boost::property_tree::ptree msg )
 				* m_interval = boost::posix_time::seconds( 600 );
 
 				m_sender( "笑话开启" );
+				save_setting();
+			}
+			else
+			{
+				// .qqbot joke interval XXX
+				boost::cmatch what;
+				boost::regex ex( "\\.qqbot joke interval (.*)" );
+
+				if( boost::regex_match( textmsg.c_str(), what, ex ) )
+				{
+					try
+					{
+						int sec =  boost::lexical_cast<int>( what[1] );
+						* m_interval = boost::posix_time::seconds( sec );
+						m_sender( boost::str( boost::format( "笑话间隔为 %d 秒" ) % sec ) );
+						save_setting();
+					}
+					catch( const boost::bad_lexical_cast & err ) {}
+				}
 			}
 		}// else ignore other channel message
 	}
