@@ -52,6 +52,7 @@ namespace po = boost::program_options;
 
 #include "libavbot/avbot.hpp"
 #include "libavlog/avlog.hpp"
+#include "libjoke/joke.hpp"
 
 #include "counter.hpp"
 
@@ -262,6 +263,22 @@ static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
 		on_bot_command(message, mybot);
 	}catch (...){}
 
+}
+
+static void sender(avbot & mybot,std::string channel_name, std::string txt)
+{
+	mybot.broadcast_message(channel_name, txt);
+}
+
+static void new_channel_set_joke(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name)
+{
+	mybot.on_message.connect(
+		joke(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1)),
+				channel_name, boost::posix_time::seconds(20)
+		)
+	);
 }
 
 #ifdef WIN32
@@ -513,6 +530,8 @@ int main( int argc, char *argv[] )
 	mybot.preamble_irc_fmt = preamble_irc_fmt;
 	mybot.preamble_qq_fmt = preamble_qq_fmt;
 	mybot.preamble_xmpp_fmt = preamble_xmpp_fmt;
+
+	mybot.signal_new_channel.connect(boost::bind(new_channel_set_joke, boost::ref(io_service), boost::ref(mybot), _1));
 
 	mybot.set_qq_account( qqnumber, qqpwd, boost::bind( on_verify_code, _1, boost::ref( mybot ) ) );
 

@@ -90,7 +90,7 @@ if(WIN32)
 target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 -lmswsock)
 endif()
 
-target_link_libraries(avbot libavbot avlog)
+target_link_libraries(avbot libavbot avlog joke)
 if(WIN32)
 target_link_libraries(avbot -Wl,--disable-auto-import)
 endif()

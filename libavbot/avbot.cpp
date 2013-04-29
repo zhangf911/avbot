@@ -122,6 +122,7 @@ void avbot::add_to_channel( std::string channel_name, std::string room_name )
 		av_chanel_map c;
 		c.push_back( room_name );
 		m_channels.insert( std::make_pair( channel_name, c ) );
+		signal_new_channel(channel_name);
 	}
 }
 
@@ -328,7 +329,9 @@ void avbot::callback_on_mail( mailcontent mail, mx::pop3::call_to_continue_funct
 
 void avbot::callback_on_qq_group_found( qqGroup_ptr group)
 {
-	add_to_channel(group->qqnum, std::string("qq:") + group->qqnum);
+	// 先检查 QQ 群有没有被加入过，没有再新加入个吧.
+	if (get_channel_name(group->qqnum)!="none")
+		add_to_channel(group->qqnum, std::string("qq:") + group->qqnum);
 }
 
 void avbot::callback_save_qq_image( const boost::system::error_code& ec, boost::asio::streambuf& buf, std::string cface )

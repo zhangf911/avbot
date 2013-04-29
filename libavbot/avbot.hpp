@@ -27,11 +27,20 @@ private:
 	std::string base_image_url;
 public:
 	avbot(boost::asio::io_service & io_service);
+
+
 public:
+	// 这里是一些公开的成员变量.
 	typedef boost::function<void (const boost::asio::const_buffer &) > need_verify_image;
 	typedef boost::property_tree::ptree av_message_tree;
 
+	// 每当有消息的时候激发.
 	boost::signals2::signal< void (av_message_tree) > on_message;
+	// 每当有新的频道被创建的时候激发
+	// 还记得吗？如果libweqq找到了一个QQ群，会自动创建和QQ群同名的频道的（如果不存在的话）
+	// 这样就保证没有被加入 map= 的群也能及时的被知道其存在.
+	// 呵呵，主要是 libjoke 用来知道都有那些频道存在
+	boost::signals2::signal< void (std::string) > signal_new_channel;
 
 	std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 	bool fetch_img;

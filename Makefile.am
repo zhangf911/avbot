@@ -18,7 +18,7 @@ endif
 
 avbot_LDFLAGS=${BOOST_THREAD_LDFLAGS}
 
-avbot_LDADD = ${top_builddir}/libavbot/libavbot.la ${top_builddir}/libavlog/libavlog.la
+avbot_LDADD = ${top_builddir}/libavbot/libavbot.la ${top_builddir}/libavlog/libavlog.la ${top_builddir}/libavlog/libjoke.la
 
 avbot_LDADD +=${BOOST_THREAD_LIBS} ${BOOST_SYSTEM_LIBS} ${BOOST_PROGRAM_OPTIONS_LIBS} ${BOOST_FILESYSTEM_LIBS}  ${BOOST_REGEX_LIBS} ${BOOST_SIGNALS_LIBS} ${BOOST_LOCALE_LIBS}
 
