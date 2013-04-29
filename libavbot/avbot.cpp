@@ -408,16 +408,24 @@ void avbot::set_mail_account( std::string mailaddr, std::string password, std::s
 
 void avbot::forward_message( const boost::property_tree::ptree& message )
 {
-	std::string channel_name = message.get<std::string>("channel");
+	std::string channel_name = message.get<std::string>( "channel" );
 	// 根据 channels 的配置，执行消息转发.
 	// 转发前格式化消息.
 
-	std::string formated = format_message(message);
+	std::string formated = format_message( message );
 
-	if (m_channels.find(channel_name)!=m_channels.end())
+	if( channel_name.empty() )
 	{
-		// 好，发消息!
-		broadcast_message(channel_name, room_name(message), formated);
+		// do broadcast_message
+		broadcast_message(formated);
+	}
+	else
+	{
+		if( m_channels.find( channel_name ) != m_channels.end() )
+		{
+			// 好，发消息!
+			broadcast_message( channel_name, room_name( message ), formated );
+		}
 	}
 }
 
@@ -428,7 +436,7 @@ std::string avbot::format_message( const avbot::av_message_tree& message )
 	// 首先是根据 nick 格式化
 	if ( message.get<std::string>("protocol") != "mail")
 	{
-		linermessage += message.get<std::string>("preamble");
+		linermessage += message.get<std::string>("preamble", "");
 
 		BOOST_FOREACH(const avbot::av_message_tree::value_type & v, message.get_child("message"))
 		{
