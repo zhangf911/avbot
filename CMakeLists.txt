@@ -71,7 +71,7 @@ endif()
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(avproxy/include)
-include_directories(process/)
+include_directories(avhttp/include)
 
 add_subdirectory(libwebqq)
 if(ENABLE_TEST)

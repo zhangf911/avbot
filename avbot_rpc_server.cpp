@@ -22,6 +22,8 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <avhttp/detail/parsers.hpp>
+
 #include "boost/avloop.hpp"
 #include "boost/coro/coro.hpp"
 
@@ -30,177 +32,6 @@
 #include "boost/coro/yield.hpp"
 
 namespace detail{
-
-static const char hex_chars[] = "0123456789abcdef";
-
-inline bool is_char(int c)
-{
-	return c >= 0 && c <= 127;
-}
-
-inline bool is_digit(char c)
-{
-	return c >= '0' && c <= '9';
-}
-
-inline bool is_ctl(int c)
-{
-	return (c >= 0 && c <= 31) || c == 127;
-}
-
-inline bool is_tspecial(int c)
-{
-	switch (c)
-	{
-	case '(': case ')': case '<': case '>': case '@':
-	case ',': case ';': case ':': case '\\': case '"':
-	case '/': case '[': case ']': case '?': case '=':
-	case '{': case '}': case ' ': case '\t':
-		return true;
-	default:
-		return false;
-	}
-}
-
-inline bool tolower_compare(char a, char b)
-{
-	return std::tolower(a) == std::tolower(b);
-}
-
-inline bool headers_equal(const std::string &a, const std::string &b)
-{
-	if (a.length() != b.length())
-		return false;
-	return std::equal(a.begin(), a.end(), b.begin(), tolower_compare);
-}
-
-inline void check_header(const std::string &name, const std::string &value,
-	std::string &content_type, std::size_t &content_length,
-	std::string &location)
-{
-	if (headers_equal(name, "Content-Type"))
-		content_type = value;
-	else if (headers_equal(name, "Content-Length"))
-		content_length = boost::lexical_cast<std::size_t>(value);
-	else if (headers_equal(name, "Location"))
-		location = value;
-}
-
-template <typename Iterator>
-bool parse_http_headers(Iterator begin, Iterator end,
-	std::string &content_type, std::size_t &content_length,
-	std::string &location)
-{
-	enum
-	{
-		first_header_line_start,
-		header_line_start,
-		header_lws,
-		header_name,
-		space_before_header_value,
-		header_value,
-		linefeed,
-		final_linefeed,
-		fail
-	} state = first_header_line_start;
-
-	Iterator iter = begin;
-	std::string reason;
-	std::string name;
-	std::string value;
-	while (iter != end && state != fail)
-	{
-		char c = *iter++;
-		switch (state)
-		{
-		case first_header_line_start:
-			if (c == '\r')
-				state = final_linefeed;
-			else if (!is_char(c) || is_ctl(c) || is_tspecial(c))
-				state = fail;
-			else
-			{
-				name.push_back(c);
-				state = header_name;
-			}
-			break;
-		case header_line_start:
-			if (c == '\r')
-			{
-				boost::trim(name);
-				boost::trim(value);
-				check_header(name, value, content_type, content_length, location);
-				name.clear();
-				value.clear();
-				state = final_linefeed;
-			}
-			else if (c == ' ' || c == '\t')
-				state = header_lws;
-			else if (!is_char(c) || is_ctl(c) || is_tspecial(c))
-				state = fail;
-			else
-			{
-				boost::trim(name);
-				boost::trim(value);
-				check_header(name, value, content_type, content_length, location);
-				name.clear();
-				value.clear();
-				name.push_back(c);
-				state = header_name;
-			}
-			break;
-		case header_lws:
-			if (c == '\r')
-				state = linefeed;
-			else if (c == ' ' || c == '\t')
-				; // Discard character.
-			else if (is_ctl(c))
-				state = fail;
-			else
-			{
-				state = header_value;
-				value.push_back(c);
-			}
-			break;
-		case header_name:
-			if (c == ':')
-				state = space_before_header_value;
-			else if (!is_char(c) || is_ctl(c) || is_tspecial(c))
-				state = fail;
-			else
-				name.push_back(c);
-			break;
-		case space_before_header_value:
-			if (c == ' ')
-				state = header_value;
-			else if (is_ctl(c))
-				state = fail;
-			else
-			{
-				value.push_back(c);
-				state = header_value;
-			}
-			break;
-		case header_value:
-			if (c == '\r')
-				state = linefeed;
-			else if (is_ctl(c))
-				state = fail;
-			else
-				value.push_back(c);
-			break;
-		case linefeed:
-			state = (c == '\n') ? header_line_start : fail;
-			break;
-		case final_linefeed:
-			return (c == '\n');
-		default:
-			return false;
-		}
-	}
-	return false;
-}
-
 
 avbot_rpc_server::http_request avbot_rpc_server::parse_http(std::size_t bytestransfered)
 {
@@ -225,7 +56,7 @@ avbot_rpc_server::http_request avbot_rpc_server::parse_http(std::size_t bytestra
 // 		// strstream
 		std::string headers = strstream.str();
 		std::string location;
-		parse_http_headers(headers.begin(), headers.end(), m_request_content_type, m_request_content_length, location);
+		avhttp::detail::parse_http_headers(headers.begin(), headers.end(), m_request_content_type, m_request_content_length, location);
 		return HTTP_POST;
 	}else{
 		return HTTP_GET;
