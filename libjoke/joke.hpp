@@ -31,9 +31,9 @@ class joke : boost::coro::coroutine
 {
 private:
 	boost::asio::io_service &io_service;
+	boost::shared_ptr<boost::posix_time::seconds> m_interval;
 	boost::shared_ptr<boost::asio::deadline_timer> m_timer;
 	std::string	m_channel_name;
-	boost::posix_time::seconds m_interval;
 
 	boost::function<void (std::string) > m_sender;
 
@@ -42,19 +42,23 @@ private:
 
 	void start();
 	void set_joke_fecher();
+	void load_setting();
+	void save_setting();
 public:
 	template<class MsgSender>
 	joke(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name, boost::posix_time::seconds interval = boost::posix_time::seconds(3600))
-	  : io_service(_io_service),m_timer(new boost::asio::deadline_timer(_io_service)), m_interval(interval), m_sender(sender), m_channel_name(channel_name)
+	  : io_service(_io_service),m_timer(new boost::asio::deadline_timer(_io_service)), m_sender(sender), m_channel_name(channel_name), m_interval(new boost::posix_time::seconds(interval))
 	{
+		load_setting();
 		set_joke_fecher();
 		start();
 	}
 
 	template<class MsgSender, class AsyncJokeFetcher>
 	joke(boost::asio::io_service & _io_service, MsgSender sender, AsyncJokeFetcher _async_jokefecher, std::string channel_name, boost::posix_time::seconds interval = boost::posix_time::seconds(3600))
-	  : io_service(_io_service),m_timer(new boost::asio::deadline_timer(_io_service)), m_interval(interval), m_sender(sender), m_channel_name(channel_name), m_async_jokefecher(_async_jokefecher)
+	  : io_service(_io_service),m_timer(new boost::asio::deadline_timer(_io_service)), m_sender(sender), m_channel_name(channel_name), m_async_jokefecher(_async_jokefecher), m_interval(new boost::posix_time::seconds(interval))
 	{
+		load_setting();
 		start();
 	}
 

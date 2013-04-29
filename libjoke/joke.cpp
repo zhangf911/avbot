@@ -25,7 +25,9 @@
 #include <boost/random.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/asio/streambuf.hpp>
+#include <fstream>
 #include <avhttp.hpp>
 
 #include <boost/coro/coro.hpp>
@@ -161,7 +163,7 @@ void joke::operator()( const boost::system::error_code& error, std::string joke 
 	reenter( this )
 	{
 		// 发送 joke
-		m_sender(joke);//"到时了，发送 joke" );
+		m_sender(joke);
 		// 发一个 joke,  heh
 	}
 }
@@ -178,24 +180,76 @@ void joke::operator()(const boost::system::error_code& error )
 	start();
 }
 
-
 void joke::operator()( boost::property_tree::ptree msg )
 {
 	try
 	{
 		if( msg.get<std::string>( "channel" ) == m_channel_name )
 		{
-			start();
+			// do joke control here
+			std::string textmsg = boost::trim_copy( msg.get<std::string>( "message.text" ) );
+
+			if( textmsg ==  ".qqbot joke off" )
+			{
+				// 其实关闭不掉的, 就是延长到 24 个小时了, 嘻嘻.
+				* m_interval = boost::posix_time::seconds( 3600 * 24 );
+				m_sender( "笑话关闭" );
+			}
+			else if( textmsg == ".qqbot joke on" )
+			{
+
+				* m_interval = boost::posix_time::seconds( 600 );
+
+				m_sender( "笑话开启" );
+			}
 		}// else ignore other channel message
 	}
 	catch( const boost::property_tree::ptree_error & err )
 	{
 
 	}
+
+	start();
 }
 
 void joke::start()
 {
-	m_timer->expires_from_now(m_interval);
+	m_timer->expires_from_now(*m_interval);
 	m_timer->async_wait(*this);
 }
+
+void joke::load_setting()
+{
+	boost::property_tree::ptree set;
+
+	try
+	{
+		std::ifstream settings( (std::string( "joke_setting_" ) + m_channel_name).c_str() );
+
+		boost::property_tree::json_parser::read_json( settings, set );
+
+		*m_interval = boost::posix_time::seconds( set.get<int>( "interval" ) );
+	}
+	catch( const std::exception & err )
+	{
+	}
+}
+
+void joke::save_setting()
+{
+	boost::property_tree::ptree set;
+	set.put<std::size_t>("interval", m_interval->total_seconds());
+
+	try
+	{
+		std::ofstream settings( (std::string( "joke_setting_" ) + m_channel_name).c_str() );
+
+		boost::property_tree::json_parser::write_json( settings, set );
+	}
+	catch( const std::exception & err )
+	{
+
+	}
+}
+
+
