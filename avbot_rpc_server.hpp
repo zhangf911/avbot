@@ -104,9 +104,12 @@ private:
 
 	boost::shared_ptr<boost::asio::streambuf>	m_request;
 	std::size_t									m_request_content_length;
+	std::string									m_request_content_type;
+
 	boost::shared_ptr< boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> > >	m_responses;
 
 	http_request parse_http( std::size_t );
+	void process_post( std::size_t bytestransfered );
 };
 }
 
