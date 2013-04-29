@@ -276,7 +276,7 @@ static void new_channel_set_joke(boost::asio::io_service &io_service, avbot & my
 		joke(
 				io_service,
 				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1)),
-				channel_name, boost::posix_time::seconds(20)
+				channel_name, boost::posix_time::seconds(600)
 		)
 	);
 }
