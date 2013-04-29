@@ -3,7 +3,6 @@
 	* RPC 功能允许 POST
 
 4.1
-	* 每
 	* 修正错误的 asio 用法，由 asio 爸爸的演讲视频指出的
 	* avbot will check for image file and redownload corrupted one, aka say, the checksum does not match
 	* avbot 启动的时候会对 images 文件夹下的文件执行校验检查。发现文件检验和文件名不符合的时候重新从腾讯服务器下载。
