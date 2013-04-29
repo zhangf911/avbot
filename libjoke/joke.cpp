@@ -181,6 +181,17 @@ void joke::operator()(const boost::system::error_code& error )
 	start();
 }
 
+static bool can_joke(std::string msg)
+{
+	if (msg == ".qqbot joke")
+		return true;
+	if (msg == ".qqbot 给大爷来一个笑话")
+		return true;
+	if ( (msg.find("大爷") != std::string::npos) && (msg.find("笑话")!= std::string::npos) )
+		return true;
+	return false;
+}
+
 void joke::operator()( boost::property_tree::ptree msg )
 {
 	try
@@ -204,6 +215,10 @@ void joke::operator()( boost::property_tree::ptree msg )
 
 				m_sender( "笑话开启" );
 				save_setting();
+			}
+			else if (can_joke(textmsg)){
+				m_timer->expires_from_now(boost::posix_time::seconds(1));
+				m_timer->async_wait(*this);
 			}
 			else
 			{
