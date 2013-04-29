@@ -33,20 +33,32 @@
 
 #include <boost/coro/yield.hpp>
 
-static std::string get_joke_content( std::istream response_stream )
+static std::string get_joke_content(std::istream &response_stream )
 {
 	std::string joketitlestart = "lastT lan14b";
 	std::string jokemessagestart = "class=\"lastC\"";
 
 	std::string message;
 	std::string jokestring;
+	std::string charset;
 
 	while( std::getline( response_stream, message ) )
 	{
-		if( message.find( joketitlestart ) != std::string::npos )
+		if (charset.empty() && message.find("charset=") != std::string::npos)
+		{
+			std::string tmp =  message.substr(message.find("charset="));
+
+			// 从 charset=gb2312" /> 中获取 gb2312
+			char _charset[256] = {0};
+
+			std::sscanf(tmp.c_str(), "charset=%[^\"]", _charset);
+			charset = _charset;
+			continue;
+		}else if( message.find( joketitlestart ) != std::string::npos )
 		{
 			jokestring.append( message.substr( message.find( ">" ), ( message.rfind( "<" ) - message.find( ">" ) - 1 ) ) );
 			jokestring.append( "\r\n" );
+			continue;
 		}
 
 		if( message.find( jokemessagestart ) != std::string::npos )
@@ -77,12 +89,13 @@ static std::string get_joke_content( std::istream response_stream )
 			jokestring.append( message );
 		}
 	}
-	return jokestring;
+	if (charset.empty())
+		charset = "7bit";
+	return boost::locale::conv::between(jokestring, "UTF-8", charset);
 }
 
 class jokefecher{
 	boost::asio::io_service & io_service;
-// 	boost::function<void (const boost::system::error_code &, std::string)>	m_handler;
 	boost::shared_ptr<avhttp::http_stream>	m_http_stream;
 	boost::shared_ptr<boost::asio::streambuf> m_read_buf;
 public:
@@ -91,7 +104,6 @@ public:
 	jokefecher(boost::asio::io_service &_io_service)
 	  : io_service(_io_service)
 	{
-
 	}
 
 	template<class Handler>
@@ -102,7 +114,7 @@ public:
 		int num = 1 + rannum() % 20000;
 		int numcl = num / 1000 + 1;
 
-		std::string url = boost::str(boost::format("http://xiaohua.zol.com.cn/detail/%d/%d.html") % numcl % num);
+		std::string url = boost::str(boost::format("http://xiaohua.zol.com.cn/detail%d/%d.html") % numcl % num);
 
 		m_http_stream.reset(new avhttp::http_stream(io_service));
 
@@ -119,7 +131,7 @@ public:
 			io_service.post( bind_handler(handler, ec, std::string("获取笑话出错")) );
 		}else{
 			m_read_buf.reset(new boost::asio::streambuf);
-			boost::asio::async_read(*m_http_stream, *m_read_buf, boost::asio::transfer_all(), boost::bind(*this, _1, handler));
+			boost::asio::async_read(*m_http_stream, *m_read_buf, boost::asio::transfer_all(), boost::bind(*this, _1, _2, handler));
 		}
 	}
 
@@ -128,8 +140,9 @@ public:
 	{
 		using namespace boost::system;
 		using namespace boost::asio::detail;
+		std::istream htmlstream(m_read_buf.get());
 
-		std::string jokestr = get_joke_content(std::istream(m_read_buf.get()));
+		std::string jokestr = get_joke_content(htmlstream);
 
 		io_service.post( bind_handler(handler, error_code(), jokestr) );
 	}
