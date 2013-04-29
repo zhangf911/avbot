@@ -1,5 +1,5 @@
-[submodule "libwebqq/avhttp"]
-	path = libwebqq/avhttp
+[submodule "avhttp"]
+	path = avhttp
 	url = git://github.com/avplayer/avhttp.git
 [submodule "avproxy"]
 	path = avproxy
