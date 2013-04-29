@@ -16,4 +16,8 @@
  *
  */
 
+/*
+ * libjoke 使用 avhttp 从笑话网站获取笑话，然后贴到群里.
+ */
+
 #include "joke.hpp"
