@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = color-tests parallel-tests
 
 SUBDIRS = libmailexchange libwebqq libxmpp libirc libavbot libavlog libjoke
 
-AM_CPPFLAGS = -I ${srcdir}/avproxy/include
+AM_CPPFLAGS = -I ${srcdir}/avproxy/include -I ${srcdir}/avhttp/include
 
 bin_PROGRAMS = avbot
 
