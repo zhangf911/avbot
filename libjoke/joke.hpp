@@ -24,10 +24,8 @@
 #include <boost/asio.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include <boost/coro/coro.hpp>
 
-
-class joke : boost::coro::coroutine
+class joke
 {
 private:
 	boost::asio::io_service &io_service;

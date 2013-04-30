@@ -31,11 +31,7 @@
 #include <fstream>
 #include <avhttp.hpp>
 
-#include <boost/coro/coro.hpp>
-
 #include "joke.hpp"
-
-#include <boost/coro/yield.hpp>
 
 static std::string get_joke_content(std::istream &response_stream )
 {
@@ -117,7 +113,7 @@ public:
 	void operator()(Handler handler)
 	{
 		// 第一步，构造一个 URL, 然后调用 avhttp 去读取.
-		boost::mt19937 rannum(time(0));
+		static boost::mt19937 rannum(std::time(0));
 		int num = 1 + rannum() % 20000;
 		int numcl = num / 1000 + 1;
 
@@ -168,12 +164,9 @@ void joke::set_joke_fecher()
 
 void joke::operator()( const boost::system::error_code& error, std::string joke )
 {
-	reenter( this )
-	{
-		// 发送 joke
-		m_sender(joke);
-		// 发一个 joke,  heh
-	}
+	// 发送 joke
+	m_sender(joke);
+	// 发一个 joke,  heh
 }
 
 void joke::operator()(const boost::system::error_code& error )
