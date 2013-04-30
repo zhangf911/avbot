@@ -50,8 +50,6 @@
 #   endif
 #endif
 
-static auto_question question;	// 自动问问题.
-
 extern avlog logfile;			// 用于记录日志文件.
 
 static void iopost_msg( boost::asio::io_service& io_service, boost::function<void( std::string )> msg_sender, std::string msg , std::string groupid)
@@ -329,6 +327,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 
 		auto_question::value_qq_list list;
 		list.push_back( nick );
+		auto_question question(jsonmessage.get<std::string>("channel") + "/welcome.txt");
 
 		question.add_to_list( list );
 		question.on_handle_message( msg_sender );

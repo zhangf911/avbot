@@ -98,7 +98,6 @@ protected:
 	template<class Msgsender>
 	void handle_question(Msgsender msgsender)
 	{
-		boost::asio::io_service io;
 		std::map<std::string, int>::iterator iter;
 		std::string str_msg_body = build_message();
 		
@@ -109,10 +108,6 @@ protected:
 			std::cout << str_msg << std::endl;
 			
 			msgsender(str_msg);
-			
-			io.reset();
-			boost::asio::deadline_timer timer(io, boost::posix_time::seconds(1));
-			timer.wait();
 		}
 	}
 	
