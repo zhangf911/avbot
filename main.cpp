@@ -24,6 +24,7 @@
 
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 namespace fs = boost::filesystem;
@@ -258,7 +259,16 @@ static void avbot_rpc_server(boost::shared_ptr<boost::asio::ip::tcp::socket> m_s
 static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
 {
 	try{
-		std::string textmessage = message.get<std::string>("message.text");
+		std::string textmessage;
+		try{
+			textmessage = message.get<std::string>("newbee");
+			// 如果没有发生异常, 那就是新人入群消息了, 嘻嘻.
+			// 格式化为 .qqbot newbee XXX, 哼!
+			std::string nick = message.get<std::string>("who.name");
+			textmessage = boost::str(boost::format(".qqbot newbee %s") % nick);
+		}catch (const boost::property_tree::ptree_bad_path &){
+			textmessage = message.get<std::string>("message.text");
+		}
 
 		on_bot_command(message, mybot);
 	}catch (...){}
