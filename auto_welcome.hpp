@@ -74,6 +74,9 @@ protected:
 		std::ifstream file(_filename.c_str());
 
 		std::size_t fsize = boost::filesystem::file_size(_filename);
+		if (fsize > 81920){
+			throw std::runtime_error("message file to big");
+		}
 		_welcome_message.resize(fsize);
 		file.read(&_welcome_message[0], fsize);
 	}
