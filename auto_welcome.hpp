@@ -41,27 +41,21 @@ public:
 	
 	auto_welcome(std::string filename = "welcome.txt")
 		: _filename(filename)
-		, _is_processing(false)
 	{
 		try
 		{
 			load_question();
 		}
-		catch (std::exception& ex)
+		catch (const std::exception& ex)
 		{
 			_welcome_message =  "欢迎加入本群.\n"
 								"[请在群对应的 log 文件夹下放置一个 welcome.txt 文件存放欢迎内容.]";
-			std::cerr << "load questioin error." << std::endl;
+			std::cerr << "load questioin error." <<  ex.what() << std::endl;
 		}
 	}
 	
 	void add_to_list(value_qq_list list)
 	{
-		if (_is_processing)
-		{
-			_is_processing = false;
-		}
-		
 		BOOST_FOREACH(std::string item, list)
 		{
 			_process_count.push_back(item);
@@ -72,7 +66,6 @@ public:
 	void on_handle_message(Msgsender msgsender)
 	{
 		handle_question(msgsender);
-		_process_count.clear();
 	}
 	
 protected:
@@ -88,15 +81,22 @@ protected:
 	void handle_question(Msgsender msgsender) const
 	{
 		std::string str_msg_body = build_message();
-		
-		BOOST_FOREACH(std::string item, _process_count)
-		{
-			std::string str_msg = boost::str(boost::format("@%1 %2\n") % item % str_msg_body);
 
-			msgsender(str_msg);
+		BOOST_FOREACH( std::string item, _process_count )
+		{
+			try
+			{
+				std::string str_msg = boost::str( boost::format( "%s %s %s\n" ) % "@" % item % str_msg_body );
+				msgsender( str_msg );
+			}
+			catch( std::exception err )
+			{
+				std::cerr <<  err.what() <<  std::endl;
+			}
+
 		}
 	}
-	
+
 	std::string build_message() const
 	{
 		return _welcome_message;
@@ -106,8 +106,6 @@ private:
 	std::string _filename;
 	
 	std::string _welcome_message;
-
-	bool _is_processing;
 
 	std::vector<std::string> _process_count;
 };
