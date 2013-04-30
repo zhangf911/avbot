@@ -266,6 +266,8 @@ static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
 			// 格式化为 .qqbot newbee XXX, 哼!
 			std::string nick = message.get<std::string>("who.name");
 			textmessage = boost::str(boost::format(".qqbot newbee %s") % nick);
+			message.put("message.text", textmessage);
+			message.put("op", 1);
 		}catch (const boost::property_tree::ptree_bad_path &){
 			textmessage = message.get<std::string>("message.text");
 		}
