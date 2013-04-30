@@ -1,3 +1,5 @@
+	* allow change joke interval
+	* allow to switchoff joke
 4.2
 	* 每十分钟冷场就讲一个笑话.
 	* RPC 功能允许 POST
