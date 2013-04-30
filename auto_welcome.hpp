@@ -89,7 +89,7 @@ protected:
 		{
 			try
 			{
-				std::string str_msg = boost::str( boost::format( "%s %s %s\n" ) % "@" % item % str_msg_body );
+				std::string str_msg = boost::str( boost::format( "%s%s %s\n" ) % "@" % item % str_msg_body );
 				msgsender( str_msg );
 			}
 			catch( std::exception err )
