@@ -95,6 +95,9 @@ static std::string get_joke_content(std::istream &response_stream )
 	}
 	if (charset.empty())
 		charset = "7bit";
+	if (charset == "gb2132"){
+		charset = "gb18030";
+	}
 	return boost::locale::conv::between(jokestring, "UTF-8", charset);
 }
 
@@ -146,8 +149,12 @@ public:
 		using namespace boost::asio::detail;
 		std::istream htmlstream(m_read_buf.get());
 
-		std::string jokestr = get_joke_content(htmlstream);
-
+		std::string jokestr;
+		try{
+			jokestr = get_joke_content(htmlstream);
+		}catch (const boost::locale::conv::invalid_charset_error &err){
+			jokestr =  "解码笑话网页的时候出现编码错误";
+		}
 		io_service.post( bind_handler(handler, error_code(), jokestr) );
 	}
 
