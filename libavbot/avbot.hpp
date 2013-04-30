@@ -92,6 +92,7 @@ private:
 
 private:
 	void callback_on_qq_group_found(qqGroup_ptr);
+	void callback_on_qq_group_newbee(qqGroup_ptr, qqBuddy*);
 	void callback_save_qq_image(const boost::system::error_code & ec, boost::asio::streambuf & buf, std::string cface);
 
 private:

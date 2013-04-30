@@ -334,6 +334,50 @@ void avbot::callback_on_qq_group_found( qqGroup_ptr group)
 		add_to_channel(group->qqnum, std::string("qq:") + group->qqnum);
 }
 
+void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
+{
+	// 新人入群咯.
+	if (get_channel_name(group->qqnum)=="none")
+		return;
+	// 构造 json 消息,  格式同 QQ 消息, 就是多了个 newbee 字段
+
+	using boost::property_tree::ptree;
+	ptree message;
+	message.put("protocol", "qq");
+	ptree ptreee_group;
+	ptreee_group.add("code", group->code);
+
+	std::string groupname = group->name;
+
+	ptreee_group.add("groupnumber", group->qqnum);
+	ptreee_group.add("name", group->name);
+
+	message.put("channel", get_channel_name(std::string("qq:") + group->qqnum));
+	message.add_child("room", ptreee_group);
+
+	ptree ptree_who;
+	ptree_who.add("code", buddy->uin);
+
+	ptree_who.add("name", buddy->nick);
+	ptree_who.add("qqnumber", buddy->qqnum);
+	ptree_who.add("card", buddy->card);
+	if( ( buddy->mflag & 21 ) == 21 || buddy->uin == group->owner )
+		message.add("op", "1");
+	else
+		message.add("op", "0");
+
+	message.add_child("who", ptree_who);
+	ptree textmsg;
+
+	message.add("preamble", "群系统消息");
+
+	message.add("message.text", boost::str(boost::format("新人 %s 入群") % buddy->nick ));
+
+	message.add("newbee", buddy->uin);
+
+	on_message(message);
+}
+
 void avbot::callback_save_qq_image( const boost::system::error_code& ec, boost::asio::streambuf& buf, std::string cface )
 {
 	if (!ec || ec == boost::asio::error::eof){
@@ -349,6 +393,7 @@ void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::n
 	m_qq_account->login();
 	m_qq_account->on_group_msg(boost::bind(&avbot::callback_on_qq_group_message, this, _1, _2, _3));
 	m_qq_account->on_group_found(boost::bind(&avbot::callback_on_qq_group_found, this, _1));
+	m_qq_account->on_group_newbee(boost::bind(&avbot::callback_on_qq_group_newbee, this, _1, _2));
 
 	// 异步发起一个操作，用来进行 images 目录下图片的校验.
 	// 因为有时一个图片没有写入完整avbot就被关闭了，对吧.
