@@ -49,7 +49,8 @@ public:
 		}
 		catch (std::exception& ex)
 		{
-
+			_welcome_message =  "欢迎加入本群.\n"
+								"[请在群对应的 log 文件夹下放置一个 welcome.txt 文件存放欢迎内容.]";
 			std::cerr << "load questioin error." << std::endl;
 		}
 	}
