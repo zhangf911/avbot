@@ -217,8 +217,9 @@ void joke::operator()( boost::property_tree::ptree msg )
 				save_setting();
 			}
 			else if (can_joke(textmsg)){
-				m_timer->expires_from_now(boost::posix_time::seconds(1));
+				m_timer->expires_from_now(boost::posix_time::seconds(2));
 				m_timer->async_wait(*this);
+				return;
 			}
 			else
 			{
