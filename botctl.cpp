@@ -39,7 +39,7 @@
 
 #include "counter.hpp"
 
-#include "auto_question.hpp"
+#include "auto_welcome.hpp"
 #include "botctl.hpp"
 
 #ifndef QQBOT_VERSION
@@ -325,9 +325,9 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		if( nick.empty() )
 			return;
 
-		auto_question::value_qq_list list;
+		auto_welcome::value_qq_list list;
 		list.push_back( nick );
-		auto_question question(jsonmessage.get<std::string>("channel") + "/welcome.txt");
+		auto_welcome question(jsonmessage.get<std::string>("channel") + "/welcome.txt");
 
 		question.add_to_list( list );
 		question.on_handle_message( msg_sender );

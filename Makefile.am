@@ -11,7 +11,7 @@ AM_CPPFLAGS = -I ${srcdir}/avproxy/include -I ${srcdir}/avhttp/include
 bin_PROGRAMS = avbot
 
 avbot_SOURCES = main.cpp botctl.cpp avbot_rpc_server.cpp avbot_rpc_server.hpp \
-		auto_question.hpp  botctl.hpp  counter.hpp resource.h
+		auto_welcome.hpp  botctl.hpp  counter.hpp resource.h
 if OS_WINNT
 avbot_SOURCES += avbot.rc
 endif
