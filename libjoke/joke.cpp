@@ -145,16 +145,14 @@ public:
 		using namespace boost::asio::detail;
 		std::istream htmlstream(m_read_buf.get());
 
-		std::string jokestr;
 		try{
-			jokestr = get_joke_content(htmlstream);
+			std::string jokestr = get_joke_content(htmlstream);
+			io_service.post( bind_handler(handler, error_code(), jokestr) );
 		}catch (const boost::locale::conv::invalid_charset_error &err){
-			jokestr =  "解码笑话网页的时候出现编码错误";
+			// 应该重新开始, 而不是把这个错误的编码帖上去.
+			(*this)(handler);
 		}
-		io_service.post( bind_handler(handler, error_code(), jokestr) );
 	}
-
-
 };
 
 void joke::set_joke_fecher()
