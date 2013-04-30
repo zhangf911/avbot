@@ -1,4 +1,6 @@
 
+4.4
+	* fix a bug that new group is not created automantically
 	* 自动欢迎新人使用的是 $qqlogdir/$qqgroup/welcome.txt 的内容
 	* 新人加群自动欢迎新人
 	* try to re-fetch the joke page if decoding error occurs

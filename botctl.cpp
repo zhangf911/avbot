@@ -256,8 +256,48 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		}
 	}
 
+	// 向新人问候.
+	ex.set_expression( ".qqbot newbee ?(.*)?" );
+
+	if( boost::regex_match( message.c_str(), what, ex ) ) {
+		std::string nick = what[1];
+
+		if( nick.empty() )
+			return;
+
+		auto_welcome::value_qq_list list;
+		list.push_back( nick );
+		auto_welcome question(jsonmessage.get<std::string>("channel") + "/welcome.txt");
+
+		question.add_to_list( list );
+		question.on_handle_message( msg_sender );
+	}
+
 	if( jsonmessage.get<int>("op") != 1 )
 		return;
+
+	// 开始讲座记录.
+	ex.set_expression( ".qqbot begin class ?\"(.*)?\"" );
+
+	if( boost::regex_match( message.c_str(), what, ex ) ) {
+		std::string title = what[1];
+
+		if( title.empty() ) return ;
+
+		group = mybot.get_qq().get_Group_by_qq(jsonmessage.get<std::string>("channel"));
+
+		if(group &&  !logfile.begin_lecture( group->qqnum, title ) ) {
+			sendmsg( "lecture failed!\n" );
+		}
+
+		return;
+	}
+
+	// 停止讲座记录.
+	if( message == ".qqbot end class" ) {
+		logfile.end_lecture();
+		return;
+	}
 
 	if( message == ".qqbot relogin" ) {
 		mybot.get_io_service().post(
@@ -292,45 +332,4 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 
 		return;
 	}
-
-	// 开始讲座记录.
-	ex.set_expression( ".qqbot begin class ?\"(.*)?\"" );
-
-	if( boost::regex_match( message.c_str(), what, ex ) ) {
-		std::string title = what[1];
-
-		if( title.empty() ) return ;
-
-		group = mybot.get_qq().get_Group_by_qq(jsonmessage.get<std::string>("channel"));
-
-		if(group &&  !logfile.begin_lecture( group->qqnum, title ) ) {
-			sendmsg( "lecture failed!\n" );
-		}
-
-		return;
-	}
-
-	// 停止讲座记录.
-	if( message == ".qqbot end class" ) {
-		logfile.end_lecture();
-		return;
-	}
-
-	// 向新人问候.
-	ex.set_expression( ".qqbot newbee ?(.*)?" );
-
-	if( boost::regex_match( message.c_str(), what, ex ) ) {
-		std::string nick = what[1];
-
-		if( nick.empty() )
-			return;
-
-		auto_welcome::value_qq_list list;
-		list.push_back( nick );
-		auto_welcome question(jsonmessage.get<std::string>("channel") + "/welcome.txt");
-
-		question.add_to_list( list );
-		question.on_handle_message( msg_sender );
-	}
-
 }
