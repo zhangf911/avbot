@@ -164,7 +164,9 @@ void joke::operator()( const boost::system::error_code& error, std::string joke 
 {
 	// 发送 joke
 	m_sender(joke);
-	// 发一个 joke,  heh
+
+	// 重启自己.
+	start();
 }
 
 void joke::operator()(const boost::system::error_code& error )
@@ -175,8 +177,6 @@ void joke::operator()(const boost::system::error_code& error )
 	}
 
 	m_async_jokefecher( *this );
-	// 重启自己.
-	start();
 }
 
 static bool can_joke(std::string msg)
