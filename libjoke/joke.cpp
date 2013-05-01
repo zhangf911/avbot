@@ -230,9 +230,17 @@ void joke::operator()( boost::property_tree::ptree msg )
 					try
 					{
 						int sec =  boost::lexical_cast<int>( what[1] );
-						* m_interval = boost::posix_time::seconds( sec );
-						m_sender( boost::str( boost::format( "笑话间隔为 %d 秒" ) % sec ) );
-						save_setting();
+
+						if( sec < 10 )
+						{
+							m_sender( boost::str( boost::format( "混蛋, %d 秒太短了!" ) % sec ) );
+						}
+						else
+						{
+							* m_interval = boost::posix_time::seconds( sec );
+							m_sender( boost::str( boost::format( "笑话间隔为 %d 秒" ) % sec ) );
+							save_setting();
+						}
 					}
 					catch( const boost::bad_lexical_cast & err ) {}
 				}
