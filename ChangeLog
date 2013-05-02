@@ -1,3 +1,5 @@
+	* allow to -c to specify the location of the config file
+
 4.5
 	* sync webqq protocol
 	* clean cache file when startup
