@@ -30,6 +30,7 @@
 #include <boost/regex.hpp>
 #include <fstream>
 #include <avhttp.hpp>
+#include <limits>
 
 #include "joke.hpp"
 
@@ -202,7 +203,7 @@ void joke::operator()( boost::property_tree::ptree msg )
 			if( textmsg ==  ".qqbot joke off" )
 			{
 				// 其实关闭不掉的, 就是时间延长到超长了, 嘻嘻.
-				* m_interval = boost::posix_time::seconds(boost::posix_time::max_date_time);
+				* m_interval = boost::posix_time::seconds(std::numeric_limits<long>::max());
 				m_sender( "笑话关闭" );
 				save_setting();
 			}
