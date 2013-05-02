@@ -18,7 +18,7 @@ private:
 	boost::asio::io_service & m_io_service;
 
 	boost::scoped_ptr<webqq> m_qq_account;
-	boost::scoped_ptr<irc::IrcClient> m_irc_account;
+	boost::scoped_ptr<irc::client> m_irc_account;
 	boost::scoped_ptr<xmpp> m_xmpp_account;
 	boost::scoped_ptr<mx::mx> m_mail_account;
 	// channel have a name :)
@@ -49,7 +49,7 @@ public:
 	webqq &get_qq(){return * m_qq_account;}
 	xmpp &get_xmpp(){return * m_xmpp_account;}
 	mx::mx &get_mx(){return * m_mail_account;}
-	irc::IrcClient &get_irc(){return * m_irc_account;}
+	irc::client &get_irc(){return * m_irc_account;}
 public:
 	// 调用这个添加 QQ 帐号. need_verify_image 会在需要登录验证码的时候调用，buffer 里包含了验证码图片.
 	void set_qq_account(std::string qqnumber, std::string password, need_verify_image cb);
@@ -85,7 +85,7 @@ public:
 	void broadcast_message(std::string channel_name, std::string msg);
 	void broadcast_message(std::string channel_name, std::string exclude_room, std::string msg);
 private:
-	void callback_on_irc_message(irc::IrcMsg pMsg);
+	void callback_on_irc_message(irc::irc_msg pMsg);
 	void callback_on_qq_group_message(std::string group_code, std::string who, const std::vector<qqMsg> & msg);
 	void callback_on_xmpp_group_message(std::string xmpproom, std::string who, std::string message);
 	void callback_on_mail(mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune);

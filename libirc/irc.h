@@ -40,7 +40,7 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 #include "boost/coro/yield.hpp"
 
 namespace irc{
-struct IrcMsg
+struct irc_msg
 {
 	std::string whom;
 	std::string from;
@@ -48,15 +48,15 @@ struct IrcMsg
 	std::string msg;
 };
 
-typedef boost::function<void( IrcMsg msg )> privmsg_cb;
+typedef boost::function<void( irc_msg msg )> privmsg_cb;
 
-class IrcClient
+class client
 {
 public:
-	IrcClient( boost::asio::io_service &_io_service, const std::string& user, const std::string& user_pwd = "", const std::string& server = "irc.freenode.net", const std::string& port = "6667", const unsigned int max_retry_count = 1000 )
+	client( boost::asio::io_service &_io_service, const std::string& user, const std::string& user_pwd = "", const std::string& server = "irc.freenode.net", const std::string& port = "6667", const unsigned int max_retry_count = 1000 )
 		: io_service( _io_service ), cb_( 0 ), socket_( io_service ), user_( user ), pwd_( user_pwd ), server_( server ), port_( port ), retry_count_( max_retry_count ), c_retry_cuont( max_retry_count ), login_( false ), insending( false )
 	{
-		io_service.post(boost::bind(&IrcClient::connect, this));
+		io_service.post(boost::bind(&client::connect, this));
 	}
 
 public:
@@ -116,7 +116,7 @@ private:
 		else
 		{
 			boost::asio::async_read_until( socket_, response_, "\r\n",
-										   boost::bind( &IrcClient::handle_read_request, this, _1, _2 )
+										   boost::bind( &client::handle_read_request, this, _1, _2 )
 										 );
 
 			process_request( response_ );
@@ -143,15 +143,15 @@ private:
 						line.append( "\n" );
 
 						_yield  boost::asio::async_write( socket_, boost::asio::buffer( line ),
-														  boost::bind( &IrcClient::handle_write_request, this, _1, _2, coro )
+														  boost::bind( &client::handle_write_request, this, _1, _2, coro )
 														);
 
-						boost::delayedcallms( io_service, 450, boost::bind( &IrcClient::handle_write_request, this, boost::system::error_code(), 0,  boost::coro::coroutine() ) );
+						boost::delayedcallms( io_service, 450, boost::bind( &client::handle_write_request, this, boost::system::error_code(), 0,  boost::coro::coroutine() ) );
 
 					}
 					else
 					{
-						_yield boost::delayedcallms( io_service, 5, boost::bind( &IrcClient::handle_write_request, this, boost::system::error_code(), 0, coro ) );
+						_yield boost::delayedcallms( io_service, 5, boost::bind( &client::handle_write_request, this, boost::system::error_code(), 0, coro ) );
 					}
 
 				}
@@ -178,12 +178,12 @@ private:
 			connected();
 
 			boost::asio::async_read_until( socket_, response_, "\r\n",
-										   boost::bind( &IrcClient::handle_read_request, this,
+										   boost::bind( &client::handle_read_request, this,
 												   boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred ) );
 		}
 		else if( err != boost::asio::error::eof )
 		{
-			io_service.post( boost::bind( &IrcClient::relogin, this ) );
+			io_service.post( boost::bind( &client::relogin, this ) );
 
 #ifdef DEBUG
 			std::cerr << "irc: connect error: " << err.message() << std::endl;
@@ -210,7 +210,7 @@ private:
 			insending = true;
 
 			boost::asio::async_write( socket_, boost::asio::null_buffers(),
-									  boost::bind( &IrcClient::handle_write_request, this,
+									  boost::bind( &client::handle_write_request, this,
 												   boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred, boost::coro::coroutine() ) );
 		}
 	}
@@ -224,6 +224,21 @@ private:
 
 		while( req.clear(), std::getline( is, req ), ( !is.eof() && ! req.empty() ) )
 		{
+#ifdef DEBUG
+            std::cout << req << std::endl;
+#endif
+            //add auto modify a nick
+            if( req.find( "Nickname is already in use." )!=std::string::npos)
+            {
+                user_+="_";
+                send_request( "NICK " + user_ );
+                send_request( "USER " + user_ + " 0 * " + user_ );
+
+                BOOST_FOREACH( std::string & str, join_queue_ )
+                    send_request( str );
+
+                continue;
+            }
 			if( req.substr( 0, 4 ) == "PING" )
 			{
 				send_request( "PONG " + req.substr( 6, req.length() - 8 ) );
@@ -236,7 +251,7 @@ private:
 				continue;
 
 			std::string msg = req;
-			IrcMsg m;
+			irc_msg m;
 
 			pos = msg.find( "!" ) + 1;
 
@@ -287,7 +302,7 @@ private:
 	{
 		using namespace boost::asio::ip;
 		avproxy::async_proxy_connect( avproxy::autoproxychain( socket_, tcp::resolver::query( server_, port_ ) ),
-									  boost::bind( &IrcClient::handle_connect_request, this, boost::asio::placeholders::error ) );
+									  boost::bind( &client::handle_connect_request, this, boost::asio::placeholders::error ) );
 	}
 
 	void relogin()
@@ -307,7 +322,7 @@ private:
 		std::cout << "retry in 10s..." <<  std::endl;
 		socket_.close();
 
-		boost::delayedcallsec( io_service, 10, boost::bind( &IrcClient::relogin_delayed, this ) );
+		boost::delayedcallsec( io_service, 10, boost::bind( &client::relogin_delayed, this ) );
 	}
 
 	void relogin_delayed()
