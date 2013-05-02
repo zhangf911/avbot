@@ -36,7 +36,7 @@ public:
 			for( ; dir_it_cur != dir_it_end ; dir_it_cur++ )
 			{
 				// 好，处理 dir_it_cur dir_it_;
-				_yield dir_walk_handler(dir_it_cur->path(), boost::bind( *this, coro ) );
+				_yield dir_walk_handler(dir_it_cur->path(), io_service.wrap(boost::bind( *this, coro )) );
 
 				_yield avloop_idle_post(io_service, boost::bind( *this, coro ) );
 			}
