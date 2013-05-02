@@ -201,8 +201,8 @@ void joke::operator()( boost::property_tree::ptree msg )
 
 			if( textmsg ==  ".qqbot joke off" )
 			{
-				// 其实关闭不掉的, 就是延长到 24 个小时了, 嘻嘻.
-				* m_interval = boost::posix_time::seconds( 3600 * 24 );
+				// 其实关闭不掉的, 就是时间延长到超长了, 嘻嘻.
+				* m_interval = boost::posix_time::seconds(boost::posix_time::max_date_time);
 				m_sender( "笑话关闭" );
 				save_setting();
 			}
