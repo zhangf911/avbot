@@ -23,7 +23,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include <time.h>
 #include <wchar.h>
 #if defined(_MSC_VER)
@@ -312,7 +312,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 #ifndef _WIN32
 	if( message == ".qqbot reexec" ) {
 		if (fork()==0){
-			char * argv[]={"avbot", NULL};
+			char * argv[]={(char *)"avbot", NULL}; // 我就要转换到 char*，编译器给我闭嘴！
 			execvp("avbot", argv);
 		}
 	}
