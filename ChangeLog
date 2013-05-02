@@ -1,6 +1,7 @@
 4.5
 	* sync webqq protocol
 	* clean cache file when startup
+	* a bug that cause xmpp no connection
 
 4.4
 	* fix a bug that new group is not created automantically

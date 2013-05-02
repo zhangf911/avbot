@@ -55,7 +55,7 @@ static std::string	preamble_formater(std::string preamble_qq_fmt, qqBuddy *buddy
 	return preamble;
 }
 
-static std::string	preamble_formater(std::string preamble_irc_fmt, irc::IrcMsg pmsg )
+static std::string	preamble_formater(std::string preamble_irc_fmt, irc::irc_msg pmsg )
 {
 	// 格式化神器, 哦耶.
 	// 获取格式化描述字符串.
@@ -190,7 +190,7 @@ void avbot::broadcast_message(std::string channel_name, std::string exclude_room
 }
 
 
-void avbot::callback_on_irc_message( irc::IrcMsg pMsg )
+void avbot::callback_on_irc_message( irc::irc_msg pMsg )
 {
 	using boost::property_tree::ptree;
 	// formate irc message to JSON and call on_message
@@ -424,7 +424,7 @@ void avbot::set_irc_account( std::string nick, std::string password, std::string
 		server_host = server;
 		server_port = "6667";
 	}
-	m_irc_account.reset(new irc::IrcClient(m_io_service, nick, password, server_host, server_port));
+	m_irc_account.reset(new irc::client(m_io_service, nick, password, server_host, server_port));
 	m_irc_account->login(boost::bind(&avbot::callback_on_irc_message, this, _1));
 }
 

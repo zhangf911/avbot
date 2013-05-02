@@ -21,7 +21,7 @@ using namespace irc;
 // };
 
 
-void my_cb( const IrcMsg pMsg )
+void my_cb( const irc_msg pMsg )
 {
 
 }
@@ -31,9 +31,9 @@ main( int argc, char **argv )
 {
 	boost::asio::io_service io_service;
 
-	IrcClient client( io_service, "testbot123", "" );
-	client.login( my_cb );
-	client.join( "#avplayertest" );
+	client irc_client( io_service, "testbot123", "" );
+	irc_client.login( my_cb );
+	irc_client.join( "#avplayertest" );
 
 	io_service.run();
 
