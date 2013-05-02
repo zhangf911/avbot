@@ -6,6 +6,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "boost/async_dir_walk.hpp"
 #include "boost/hash/md5.hpp"
 #include "boost/hash/compute_digest.hpp"
 #include "boost/coro/coro.hpp"
@@ -100,55 +101,18 @@ public:
 /**
  * 给定一个 path, 检查文件是否存在，如果不存在就从 TX 的服务器重新下载. 主要依据文件名啦.
  */
-template<class Handler>
-void async_image_check_and_download( boost::asio::io_service & io_service, const boost::filesystem::path & item, const Handler & handler )
+void async_image_check_and_download( boost::asio::io_service & io_service, const boost::filesystem::path & item, boost::function<void(const boost::system::error_code&)> handler )
 {
-	async_image_check_and_download_op<Handler> op( io_service, item, handler );
-}
-
-class async_image_checker_op
-{
-	boost::asio::io_service &io_service;
-	boost::filesystem::directory_iterator dir_it_end;
-	boost::filesystem::directory_iterator dir_it_cur;
-public:
-	typedef void result_type;
-
-	async_image_checker_op( boost::asio::io_service & _io_service )
-		: io_service( _io_service ), dir_it_cur( boost::filesystem::path( "images" ) )
-	{
-		io_service.post( boost::asio::detail::bind_handler( *this, boost::coro::coroutine() ) );
-	}
-
-	void operator()( boost::coro::coroutine coro )
-	{
-		// 好了，每次回调检查一个文件，这样才好，对吧.
-		reenter( &coro )
-		{
-			for( ; dir_it_cur != dir_it_end ; dir_it_cur++ )
-			{
-				// 好，处理 dir_it_cur dir_it_;
-				_yield async_image_check_and_download( io_service, dir_it_cur->path(), boost::bind( *this, coro ) );
-
-				_yield avloop_idle_post(io_service, boost::bind( *this, coro ) );
-			}
-		}
-	}
-
-};
-
-async_image_checker_op make_image_checker_op( boost::asio::io_service & io_service )
-{
-	return async_image_checker_op( io_service );
+	async_image_check_and_download_op<boost::function<void(const boost::system::error_code&)> > op( io_service, item, handler );
 }
 
 }
 
-void async_image_checker( boost::asio::io_service & __io_service )
+void async_image_checker( boost::asio::io_service & io_service )
 {
 	// 防止 images 文件不存在的时候退出.
 	try{
-		detail::make_image_checker_op( __io_service );
+		boost::async_dir_walk(io_service, boost::filesystem::path("images"), boost::bind(detail::async_image_check_and_download, boost::ref(io_service), _1, _2) );
 	}catch (...){}
 }
 
