@@ -268,6 +268,9 @@ static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
 			textmessage = boost::str(boost::format(".qqbot newbee %s") % nick);
 			message.put("message.text", textmessage);
 			message.put("op", 1);
+
+			boost::delayedcallsec(mybot.get_io_service(), 6, boost::bind(on_bot_command, message, boost::ref(mybot)));
+			return;
 		}catch (const boost::property_tree::ptree_bad_path &){
 			textmessage = message.get<std::string>("message.text");
 		}

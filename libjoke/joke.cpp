@@ -251,8 +251,10 @@ void joke::operator()( boost::property_tree::ptree msg )
 	{
 
 	}
-
-	start();
+	boost::system::error_code ec;
+	// 如果已经超时了, 只不过是在 fetch 笑话网页, 就不要在这里无意间重启了 timer.
+	if (m_timer->cancel(ec)>0)
+		start();
 }
 
 void joke::start()
