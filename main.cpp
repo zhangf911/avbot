@@ -553,7 +553,7 @@ int main( int argc, char *argv[] )
 	if( !ircnick.empty() )
 		mybot.set_irc_account( ircnick, ircpwd );
 
-	if( !xmppnick.empty() )
+	if( !xmppuser.empty() )
 		mybot.set_xmpp_account( xmppuser, xmpppwd, xmppserver, xmppnick );
 
 	if( !mailaddr.empty() )
