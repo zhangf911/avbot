@@ -210,7 +210,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 						 "== 以下命令需要管理员才能使用==\n"
 						 "\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
 						 "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
-						 "\t.qqbot newbee SB\n"
+						 "\t.qqbot welcome newbie\n"
 						 "以上!" );
 	}
 
@@ -257,9 +257,11 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 	}
 
 	// 向新人问候.
-	ex.set_expression( ".qqbot newbee ?(.*)?" );
 
-	if( boost::regex_match( message.c_str(), what, ex ) ) {
+	if( boost::regex_match( message.c_str(), what, boost::regex( ".qqbot newbee (.*)") ) ||
+		boost::regex_match( message.c_str(), what, boost::regex( ".qqbot newbie (.*)") ) ||
+		boost::regex_match( message.c_str(), what, boost::regex( ".qqbot welcome (.*)") )
+	) {
 		std::string nick = what[1];
 
 		if( nick.empty() )
