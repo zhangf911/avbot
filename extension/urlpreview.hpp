@@ -127,7 +127,7 @@ struct urlpreview{
 		if (boost::regex_search(content.c_str(), what, ex))
 		{
 			std::string title = what[1];
-			if (charset!="utf8"){
+			if (charset!="utf8" || charset !="utf" || charset!="utf-8"){
 				title = boost::locale::conv::between(title, "UTF-8", charset);
 			}
 			boost::trim(title);
