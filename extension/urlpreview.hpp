@@ -11,7 +11,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <avhttp.hpp>
 
-namespace detail {
+namespace detail
+{
 
 static inline bool is_html( const std::string contenttype )
 {
@@ -25,24 +26,30 @@ static inline bool is_html( const std::string contenttype )
 		return true;
 }
 
-static inline std::string get_char_set(std::string type,  const std::string & header)
+static inline std::string get_char_set( std::string type,  const std::string & header )
 {
 	boost::cmatch what;
 	// 首先是 text/html; charset=XXX
-	boost::regex ex("charset=([a-zA-Z0-9\-]+)");
-	boost::regex ex2("<meta charset=([a-zA-Z0-9]+)\"?>");
-	if (boost::regex_search(type.c_str(), what, ex)){
-		return what[1];
-	}else if (boost::regex_search(type.c_str(), what, ex2)){
+	boost::regex ex( "charset=([a-zA-Z0-9\-]+)" );
+	boost::regex ex2( "<meta charset=([a-zA-Z0-9]+)\"?>" );
+
+	if( boost::regex_search( type.c_str(), what, ex ) )
+	{
 		return what[1];
 	}
+	else if( boost::regex_search( type.c_str(), what, ex2 ) )
+	{
+		return what[1];
+	}
+
 	return "utf8";
 }
 
 //
-struct urlpreview{
+struct urlpreview
+{
 	boost::asio::io_service &io_service;
-	boost::function<void (std::string) > m_sender;
+	boost::function<void ( std::string ) > m_sender;
 	std::string m_channel_name;
 	std::string m_speaker;
 	std::string m_url;
@@ -52,15 +59,15 @@ struct urlpreview{
 
 
 	template<class MsgSender>
-	urlpreview(boost::asio::io_service &_io_service,
+	urlpreview( boost::asio::io_service &_io_service,
 				MsgSender sender, std::string channel_name,
-				std::string speaker, std::string url)
-		:io_service(_io_service), m_sender(sender), m_channel_name(channel_name)
-		, m_speaker(speaker), m_url(url), m_httpstream(new avhttp::http_stream(io_service))
+				std::string speaker, std::string url )
+		: io_service( _io_service ), m_sender( sender ), m_channel_name( channel_name )
+		, m_speaker( speaker ), m_url( url ), m_httpstream( new avhttp::http_stream( io_service ) )
 	{
 		// 开启 avhttp 下载页面
-		m_httpstream->check_certificate(false);
-		m_httpstream->async_open(url, *this);
+		m_httpstream->check_certificate( false );
+		m_httpstream->async_open( url, *this );
 	}
 
 	// 打开在这里
@@ -76,7 +83,7 @@ struct urlpreview{
 		// 根据 content_type 了， 如果不是 text/html 的就不要继续下去了.
 		avhttp::response_opts opt = m_httpstream->response_options();
 
-		if(! is_html( opt.find( avhttp::http_options::content_type ) ) )
+		if( ! is_html( opt.find( avhttp::http_options::content_type ) ) )
 		{
 			// 报告类型就可以
 			m_sender( boost::str( boost::format( "%s 发的 ⇪ 类型是 %s " ) % m_speaker % opt.find( avhttp::http_options::content_type ) ) );
@@ -100,64 +107,81 @@ struct urlpreview{
 		{
 			content_length = 4096;
 		}
-		boost::asio::async_read(*m_httpstream, m_content->prepare( std::min<unsigned>( content_length, 4096 ) ), *this );
+
+		boost::asio::async_read( *m_httpstream, m_content->prepare( std::min<unsigned>( content_length, 4096 ) ), *this );
 	}
 
-	void operator()(const boost::system::error_code &ec, int bytes_transferred)
+	void operator()( const boost::system::error_code &ec, int bytes_transferred )
 	{
-		if (ec && ec != boost::asio::error::eof){
-			m_sender(boost::str(boost::format("@%s, 获取url有错 %s") % m_speaker % ec.message() ));
+		if( ec && ec != boost::asio::error::eof )
+		{
+			m_sender( boost::str( boost::format( "@%s, 获取url有错 %s" ) % m_speaker % ec.message() ) );
 			return;
 		}
-		m_content->commit(bytes_transferred);
+
+		m_content->commit( bytes_transferred );
 		// 解析 <title>
 		std::string content;
-		content.resize(bytes_transferred);
-		m_content->sgetn(&content[0], bytes_transferred);
+		content.resize( bytes_transferred );
+		m_content->sgetn( &content[0], bytes_transferred );
 
 		//去掉换行.
-		boost::replace_all(content, "\r", "");
-		boost::replace_all(content, "\n", "");
+		boost::replace_all( content, "\r", "" );
+		boost::replace_all( content, "\n", "" );
 		// 获取charset
-		std::string charset = get_char_set(m_httpstream->response_options().find(avhttp::http_options::content_type), content);
+		std::string charset = get_char_set( m_httpstream->response_options().find( avhttp::http_options::content_type ), content );
 
 		// 匹配.
-		boost::regex ex("<title[^>]*>(.*)</title>");
+		boost::regex ex( "<title[^>]*>(.*)</title>" );
 		boost::cmatch what;
-		if (boost::regex_search(content.c_str(), what, ex))
+
+		if( boost::regex_search( content.c_str(), what, ex ) )
 		{
 			std::string title = what[1];
-			if (charset!="utf8" && charset !="utf" && charset!="utf-8"){
-				title = boost::locale::conv::between(title, "UTF-8", charset);
-			}
-			boost::trim(title);
 
-			boost::replace_all(title, "&nbsp;", " ");
-			// 将 &bnp 这种反格式化.
-			m_sender(boost::str(boost::format("@%s ⇪ 标题： %s ") % m_speaker % title ));
-		}else{
+			try
+			{
+				if( charset != "utf8" && charset != "utf" && charset != "utf-8" )
+				{
+					title = boost::locale::conv::between( title, "UTF-8", charset );
+				}
+
+				boost::trim( title );
+
+				boost::replace_all( title, "&nbsp;", " " );
+				// 将 &bnp 这种反格式化.
+				m_sender( boost::str( boost::format( "@%s ⇪ 标题： %s " ) % m_speaker % title ) );
+			}
+			catch( const std::runtime_error & )
+			{
+				m_sender( boost::str( boost::format( "@%s ⇪ 解码网页发生错误 " ) % m_speaker ) );
+			}
+		}
+		else
+		{
 			// title 都没有！
-			m_sender(boost::str(boost::format("@%s ⇪ url 无标题") % m_speaker  ));
+			m_sender( boost::str( boost::format( "@%s ⇪ url 无标题" ) % m_speaker ) );
 		}
 	}
 };
 
 }
 
-class urlpreview{
+class urlpreview
+{
 	boost::asio::io_service &io_service;
-	boost::function<void (std::string) > m_sender;
+	boost::function<void ( std::string ) > m_sender;
 	std::string m_channel_name;
 
 public:
 	template<class MsgSender>
-	urlpreview(boost::asio::io_service &_io_service,  MsgSender sender, std::string channel_name)
-		:io_service(_io_service), m_sender(sender), m_channel_name(channel_name)
+	urlpreview( boost::asio::io_service &_io_service,  MsgSender sender, std::string channel_name )
+		: io_service( _io_service ), m_sender( sender ), m_channel_name( channel_name )
 	{
 	}
 
 	// on_message 回调.
-	void operator()(boost::property_tree::ptree message) const
+	void operator()( boost::property_tree::ptree message ) const
 	{
 		if( message.get<std::string>( "channel" ) != m_channel_name )
 		{
@@ -165,8 +189,8 @@ public:
 		}
 
 		// 检查 URL
-		std::string txt = message.get<std::string>("message.text");
-		std::string speaker = message.get<std::string>("who.nick");; // 发了 url 的人的 nick
+		std::string txt = message.get<std::string>( "message.text" );
+		std::string speaker = message.get<std::string>( "who.nick" );; // 发了 url 的人的 nick
 
 		// 用正则表达式
 		// http://.*
@@ -174,13 +198,15 @@ public:
 		// 统一为
 		// http[s]?://[^ ].*
 		// 使用 boost_regex_search
-		boost::regex ex("https?://[^ ]*");
+		boost::regex ex( "https?://[^ ]*" );
 		boost::cmatch what;
-		if (boost::regex_search(txt.c_str(), what, ex)){
+
+		if( boost::regex_search( txt.c_str(), what, ex ) )
+		{
 			// 检查到 URL ?
 			std::string url = what[0];
 			// 把真正的工作交给真正的 urlpreview
-			detail::urlpreview(io_service, m_sender, m_channel_name, speaker, url);
+			detail::urlpreview( io_service, m_sender, m_channel_name, speaker, url );
 		}
 	}
 };
