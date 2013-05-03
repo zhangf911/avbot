@@ -289,20 +289,14 @@ static void sender(avbot & mybot,std::string channel_name, std::string txt)
 
 static void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name)
 {
+	boost::function<void (std::string)> msg_sender =
+		io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1));
 	mybot.on_message.connect(
-		joke(
-				io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1)),
-				channel_name, boost::posix_time::seconds(600)
-		)
+		joke(io_service, msg_sender, channel_name, boost::posix_time::seconds(600) )
 	);
 
 	mybot.on_message.connect(
-		::urlpreview(
-				io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1)),
-				channel_name
-		)
+		::urlpreview(io_service, msg_sender, channel_name)
 	);
 }
 

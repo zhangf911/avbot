@@ -85,13 +85,12 @@ struct urlpreview{
 		{
 			content_length = 4096;
 		}
-
-		m_httpstream->async_read_some( m_content->prepare( std::min<unsigned>( content_length, 4096 ) ), *this );
+		boost::asio::async_read(*m_httpstream, m_content->prepare( std::min<unsigned>( content_length, 4096 ) ), *this );
 	}
 
 	void operator()(const boost::system::error_code &ec, int bytes_transferred)
 	{
-		if (ec){
+		if (ec && ec != boost::asio::error::eof){
 			m_sender(boost::str(boost::format("@%s, 获取url有错 %s") % m_speaker % ec.message() ));
 			return;
 		}
