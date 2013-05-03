@@ -30,7 +30,7 @@ static inline std::string get_char_set( std::string type,  const std::string & h
 {
 	boost::cmatch what;
 	// 首先是 text/html; charset=XXX
-	boost::regex ex( "charset=([a-zA-Z0-9\-]+)" );
+	boost::regex ex( "charset=([a-zA-Z0-9\\-]+)" );
 	boost::regex ex2( "<meta charset=([a-zA-Z0-9]+)\"?>" );
 
 	if( boost::regex_search( type.c_str(), what, ex ) )
@@ -159,8 +159,14 @@ struct urlpreview
 		}
 		else
 		{
+			// 解析是不是 html 重定向
+			boost::regex ex("<meta +http-equiv=\"refresh\" +content=\"[^;];url=(.*)\" *>");
 			// title 都没有！
-			m_sender( boost::str( boost::format( "@%s ⇪ url 无标题" ) % m_speaker ) );
+			if (boost::regex_match(.c_str(), what, ex)){
+				urlpreview(io_service, m_sender, m_channel_name, m_speaker, what[1]);
+			}else{
+				m_sender( boost::str( boost::format( "@%s ⇪ url 无标题" ) % m_speaker ) );
+			}
 		}
 	}
 };
