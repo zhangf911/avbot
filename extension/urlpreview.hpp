@@ -50,20 +50,21 @@ struct urlpreview
 {
 	boost::asio::io_service &io_service;
 	boost::function<void ( std::string ) > m_sender;
-	std::string m_channel_name;
 	std::string m_speaker;
 	std::string m_url;
 	boost::shared_ptr<avhttp::http_stream> m_httpstream;
 
 	boost::shared_ptr<boost::asio::streambuf> m_content;
-
+	int m_redirect ;
 
 	template<class MsgSender>
 	urlpreview( boost::asio::io_service &_io_service,
-				MsgSender sender, std::string channel_name,
-				std::string speaker, std::string url )
-		: io_service( _io_service ), m_sender( sender ), m_channel_name( channel_name )
-		, m_speaker( speaker ), m_url( url ), m_httpstream( new avhttp::http_stream( io_service ) )
+				MsgSender sender,
+				std::string speaker, std::string url, int redirectlevel = 0 )
+		: io_service( _io_service ), m_sender( sender )
+		, m_speaker( speaker ), m_url( url )
+		, m_httpstream( new avhttp::http_stream( io_service ) )
+		, m_redirect(redirectlevel)
 	{
 		// 开启 avhttp 下载页面
 		m_httpstream->check_certificate( false );
@@ -162,8 +163,8 @@ struct urlpreview
 			// 解析是不是 html 重定向
 			boost::regex ex("<meta +http-equiv=\"refresh\" +content=\"[^;];url=(.*)\" *>");
 			// title 都没有！
-			if (boost::regex_match(.c_str(), what, ex)){
-				urlpreview(io_service, m_sender, m_channel_name, m_speaker, what[1]);
+			if (m_redirect < 10 && boost::regex_match(content.c_str(), what, ex)){
+				urlpreview(io_service, m_sender, m_speaker, what[1], m_redirect ++);
 			}else{
 				m_sender( boost::str( boost::format( "@%s ⇪ url 无标题" ) % m_speaker ) );
 			}
@@ -212,7 +213,7 @@ public:
 			// 检查到 URL ?
 			std::string url = what[0];
 			// 把真正的工作交给真正的 urlpreview
-			detail::urlpreview( io_service, m_sender, m_channel_name, speaker, url );
+			detail::urlpreview( io_service, m_sender, speaker, url );
 		}
 	}
 };
