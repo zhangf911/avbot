@@ -2,6 +2,7 @@
 #pragma once
 
 #include <algorithm>
+#include <boost/locale.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
@@ -22,6 +23,20 @@ static inline bool is_html( const std::string contenttype )
 
 	if( contenttype.find( "text/html" ) != std::string::npos )
 		return true;
+}
+
+static inline std::string get_char_set(std::string type,  const std::string & header)
+{
+	boost::cmatch what;
+	// 首先是 text/html; charset=XXX
+	boost::regex ex("charset=([a-zA-Z0-9]+)");
+	boost::regex ex2("<meta charset=([a-zA-Z0-9]+)\"?>");
+	if (boost::regex_search(type.c_str(), what, ex)){
+		return what[1];
+	}else if (boost::regex_search(type.c_str(), what, ex2)){
+		return what[1];
+	}
+	return "utf8";
 }
 
 //
@@ -103,13 +118,20 @@ struct urlpreview{
 		//去掉换行.
 		boost::replace_all(content, "\r", "");
 		boost::replace_all(content, "\n", "");
+		// 获取charset
+		std::string charset = get_char_set(m_httpstream->response_options().find(avhttp::http_options::content_type), content);
+
 		// 匹配.
 		boost::regex ex("<title[^>]*>(.*)</title>");
 		boost::cmatch what;
 		if (boost::regex_search(content.c_str(), what, ex))
 		{
 			std::string title = what[1];
+			if (charset!="utf8"){
+				title = boost::locale::conv::between(title, "UTF-8", charset);
+			}
 			boost::trim(title);
+
 			boost::replace_all(title, "&nbsp;", " ");
 			// 将 &bnp 这种反格式化.
 			m_sender(boost::str(boost::format("@%s ⇪ 标题： %s ") % m_speaker % title ));
