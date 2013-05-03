@@ -198,7 +198,7 @@ void avbot::callback_on_irc_message( irc::irc_msg pMsg )
 	ptree message;
 	message.put("protocol", "irc");
 	message.put("room", pMsg.from.substr(1));
-	message.put("who", pMsg.whom);
+	message.put("who.nick", pMsg.whom);
 	message.put("channel", get_channel_name(std::string("irc:") + pMsg.from.substr(1)));
 	message.put("preamble", preamble_formater( preamble_irc_fmt, pMsg ));
 
@@ -238,6 +238,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 
 	buddy = group ? group->get_Buddy_by_uin( who ) : NULL;
 	if (buddy){
+		ptree_who.add("nick", buddy->nick.empty()? buddy->uin : buddy->nick) ;
 		ptree_who.add("name", buddy->nick);
 		ptree_who.add("qqnumber", buddy->qqnum);
 		ptree_who.add("card", buddy->card);
@@ -300,7 +301,7 @@ void avbot::callback_on_xmpp_group_message( std::string xmpproom, std::string wh
 	message.put("protocol", "xmpp");
 	message.put("channel", get_channel_name(std::string("xmpp:") + xmpproom));
 	message.put("room", xmpproom);
-	message.put("who", who);
+	message.put("who.nick", who);
 	message.put("preamble", preamble_formater( preamble_xmpp_fmt, who, xmpproom ));
 
 	ptree textmsg;
