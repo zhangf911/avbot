@@ -137,6 +137,11 @@ public:
 	// on_message 回调.
 	void operator()(boost::property_tree::ptree message) const
 	{
+		if( message.get<std::string>( "channel" ) != m_channel_name )
+		{
+			return;
+		}
+
 		// 检查 URL
 		std::string txt = message.get<std::string>("message.text");
 		std::string speaker = message.get<std::string>("who.nick");; // 发了 url 的人的 nick
