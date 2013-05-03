@@ -135,7 +135,7 @@ public:
 	}
 
 	// on_message 回调.
-	void operator()(boost::property_tree::ptree message)
+	void operator()(boost::property_tree::ptree message) const
 	{
 		// 检查 URL
 		std::string txt = message.get<std::string>("message.text");
