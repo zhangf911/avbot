@@ -44,6 +44,7 @@ struct urlpreview{
 		, m_speaker(speaker), m_url(url), m_httpstream(new avhttp::http_stream(io_service))
 	{
 		// 开启 avhttp 下载页面
+		m_httpstream->check_certificate(false);
 		m_httpstream->async_open(url, *this);
 	}
 
