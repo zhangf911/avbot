@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = color-tests parallel-tests
 
 SUBDIRS = libmailexchange libwebqq libxmpp libirc libavbot libavlog libjoke extension
 
-AM_CPPFLAGS = -I ${srcdir}/avproxy/include -I ${srcdir}/avhttp/include
+AM_CPPFLAGS = -DAVHTTP_ENABLE_OPENSSL -I ${srcdir}/avproxy/include -I ${srcdir}/avhttp/include
 
 bin_PROGRAMS = avbot
 

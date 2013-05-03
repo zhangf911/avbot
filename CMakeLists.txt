@@ -68,6 +68,8 @@ add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
 add_definitions(-DBOOST_ALL_STATIC_LINK)
 endif()
 
+add_definitions(-DAVHTTP_ENABLE_OPENSSL)
+
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(avproxy/include)
