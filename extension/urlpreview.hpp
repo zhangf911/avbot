@@ -29,7 +29,7 @@ static inline std::string get_char_set(std::string type,  const std::string & he
 {
 	boost::cmatch what;
 	// 首先是 text/html; charset=XXX
-	boost::regex ex("charset=([a-zA-Z0-9]+)");
+	boost::regex ex("charset=([a-zA-Z0-9\-]+)");
 	boost::regex ex2("<meta charset=([a-zA-Z0-9]+)\"?>");
 	if (boost::regex_search(type.c_str(), what, ex)){
 		return what[1];
@@ -127,7 +127,7 @@ struct urlpreview{
 		if (boost::regex_search(content.c_str(), what, ex))
 		{
 			std::string title = what[1];
-			if (charset!="utf8" || charset !="utf" || charset!="utf-8"){
+			if (charset!="utf8" && charset !="utf" && charset!="utf-8"){
 				title = boost::locale::conv::between(title, "UTF-8", charset);
 			}
 			boost::trim(title);
