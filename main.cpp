@@ -61,6 +61,8 @@ namespace po = boost::program_options;
 
 #include "avbot_rpc_server.hpp"
 
+#include "extension/urlpreview.hpp"
+
 #ifndef QQBOT_VERSION
 #ifdef PACKAGE_VERSION
 #   define QQBOT_VERSION PACKAGE_VERSION
@@ -285,13 +287,21 @@ static void sender(avbot & mybot,std::string channel_name, std::string txt)
 	mybot.broadcast_message(channel_name, txt);
 }
 
-static void new_channel_set_joke(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name)
+static void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name)
 {
 	mybot.on_message.connect(
 		joke(
 				io_service,
 				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1)),
 				channel_name, boost::posix_time::seconds(600)
+		)
+	);
+
+	mybot.on_message.connect(
+		::urlpreview(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1)),
+				channel_name
 		)
 	);
 }
@@ -553,7 +563,7 @@ int main( int argc, char *argv[] )
 	mybot.preamble_qq_fmt = preamble_qq_fmt;
 	mybot.preamble_xmpp_fmt = preamble_xmpp_fmt;
 
-	mybot.signal_new_channel.connect(boost::bind(new_channel_set_joke, boost::ref(io_service), boost::ref(mybot), _1));
+	mybot.signal_new_channel.connect(boost::bind(new_channel_set_extension, boost::ref(io_service), boost::ref(mybot), _1));
 
 	mybot.set_qq_account( qqnumber, qqpwd, boost::bind( on_verify_code, _1, boost::ref( mybot ) ) );
 

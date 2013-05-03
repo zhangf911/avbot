@@ -102,3 +102,5 @@ install(TARGETS avbot RUNTIME DESTINATION bin)
 if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
 endif()
+
+add_subdirectory(extension)

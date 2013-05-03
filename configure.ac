@@ -196,7 +196,8 @@ AC_CONFIG_FILES([
                  libirc/Makefile
                  libmailexchange/Makefile
                  libwebqq/Makefile
-                 libxmpp/Makefile])
+                 libxmpp/Makefile
+                 extension/Makefile])
 
 AC_CONFIG_SUBDIRS([libxmpp/gloox])
 
