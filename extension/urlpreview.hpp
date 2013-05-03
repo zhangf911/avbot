@@ -60,7 +60,7 @@ struct urlpreview{
 		// 根据 content_type 了， 如果不是 text/html 的就不要继续下去了.
 		avhttp::response_opts opt = m_httpstream->response_options();
 
-		if( is_html( opt.find( avhttp::http_options::content_type ) ) )
+		if(! is_html( opt.find( avhttp::http_options::content_type ) ) )
 		{
 			// 报告类型就可以
 			m_sender( boost::str( boost::format( "%s 发的 ⇪ 类型是 %s " ) % m_speaker % opt.find( avhttp::http_options::content_type ) ) );
