@@ -12,6 +12,18 @@
 
 namespace detail {
 
+static inline bool is_html( const std::string contenttype )
+{
+	if( contenttype.empty() )
+		return false;
+
+	if( contenttype == "text/html" )
+		return true;
+
+	if( contenttype.find( "text/html" ) != std::string::npos )
+		return true;
+}
+
 //
 struct urlpreview{
 	boost::asio::io_service &io_service;
@@ -48,7 +60,7 @@ struct urlpreview{
 		// 根据 content_type 了， 如果不是 text/html 的就不要继续下去了.
 		avhttp::response_opts opt = m_httpstream->response_options();
 
-		if( opt.find( avhttp::http_options::content_type ) != "text/html" )
+		if( is_html( opt.find( avhttp::http_options::content_type ) ) )
 		{
 			// 报告类型就可以
 			m_sender( boost::str( boost::format( "%s 发的 ⇪ 类型是 %s " ) % m_speaker % opt.find( avhttp::http_options::content_type ) ) );
