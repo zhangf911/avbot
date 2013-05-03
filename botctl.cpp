@@ -207,10 +207,10 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 						 "\t 将命令中间的聊天内容发送到邮件 emailaddress,  注意引号\n"
 						 "\t 使用 .qqbot mail subject 设置主题\n"
 						 "\t.qqbot mail end\n"
+						 "\t.qqbot welcome newbie 欢迎新人\n"
 						 "== 以下命令需要管理员才能使用==\n"
 						 "\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
 						 "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
-						 "\t.qqbot welcome newbie\n"
 						 "以上!" );
 	}
 
