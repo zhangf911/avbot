@@ -1,5 +1,5 @@
 
-EXTRA_DIST = m4 avproxy avhttp boost libirc CMakeLists.txt fsconfig.ipp  input.ipp avbot.rc avbot.manifest
+EXTRA_DIST = README.md m4 avproxy avhttp boost libirc CMakeLists.txt fsconfig.ipp  input.ipp avbot.rc avbot.manifest
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AUTOMAKE_OPTIONS = color-tests parallel-tests
