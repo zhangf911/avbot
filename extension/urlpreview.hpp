@@ -163,8 +163,8 @@ struct urlpreview
 			// 解析是不是 html 重定向
 			boost::regex ex("<meta +http-equiv=\"refresh\" +content=\"[^;];url=(.*)\" *>");
 			// title 都没有！
-			if (m_redirect < 10 && boost::regex_match(content.c_str(), what, ex)){
-				urlpreview(io_service, m_sender, m_speaker, what[1], m_redirect ++);
+			if (m_redirect < 10 && boost::regex_search(content.c_str(), what, ex)){
+				urlpreview(io_service, m_sender, m_speaker, what[1], m_redirect + 1);
 			}else{
 				m_sender( boost::str( boost::format( "@%s ⇪ url 无标题" ) % m_speaker ) );
 			}
