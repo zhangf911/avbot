@@ -16,8 +16,16 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LUAJIT REQUIRED luajit>=2.0)
 
 add_definitions(-DENABLE_LUA)
+include_directories(luabind)
 
-add_library(luascript STATIC luascript.cpp)
+add_library(luascript STATIC luascript.cpp
+		luabind/src/class_registry.cpp
+		luabind/src/scope.cpp
+		luabind/src/link_compatibility.cpp
+		luabind/src/function.cpp
+		luabind/src/exception_handler.cpp
+		)
+target_link_libraries(luascript ${LUAJIT_LIBRARIES})
 target_link_libraries(extension luascript)
 
 endif()
