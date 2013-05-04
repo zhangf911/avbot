@@ -295,7 +295,7 @@ public:
 			{
 				// 发送 STARTTLS
 				writestream <<  "STARTTLS\r\n";
-				_yield async_write( boost::bind( *this, _1, _2, handler, coro ) );
+				_yield boost::asio::async_write( *m_socket, *m_writebuf, boost::bind( *this, _1, _2, handler, coro ) );
 				_yield read_smtp_response_lines( *m_socket, boost::bind( *this, _1, _2, handler, coro ) );
 				// 220 2.0.0 SMTP server ready
 				_yield check_status_for<220>( boost::bind( *this, _1, 0, handler, coro ) );

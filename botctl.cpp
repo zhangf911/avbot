@@ -143,7 +143,7 @@ struct mail_recoder
 
 			std::string tmsg = boost::trim_copy(jsonmessage.get<std::string>( "message.text" ));
 
-			if( tmsg != ".qqbot end mail" )
+			if( tmsg != ".qqbot end mail" && tmsg != ".qqbot mail end")
 			{
 				if( boost::regex_match( tmsg.c_str(), what, ex ) )
 				{
@@ -236,6 +236,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
  			mrecoder.pimf->body = std::string( "" );
  			mrecoder.channel = jsonmessage.get<std::string>("channel");
  			mrecoder.mybot = & mybot;
+ 			mrecoder.sendmsg = msg_sender;
 			mybot.on_message.connect(mrecoder);
 		return;
 	}

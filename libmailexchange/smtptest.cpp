@@ -87,5 +87,6 @@ int main( int argc, char * argv[] )
 	std::string _mdata = boost::asio::buffer_cast<const char*>( buf.data() );
 
 	smtp.async_sendmail( imf, sended );
-	io.run();
+
+	avloop_run(io);
 }
