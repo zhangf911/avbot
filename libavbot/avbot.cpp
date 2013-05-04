@@ -246,7 +246,11 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 			message.add("op", "1");
 		else
 			message.add("op", "0");
+	}else{
+		ptree_who.add("nick", who)  ;
+
 	}
+
 
 	message.add_child("who", ptree_who);
 	ptree textmsg;
