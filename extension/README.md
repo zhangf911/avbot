@@ -4,6 +4,7 @@ avbot-extension avbot 扩展
 
 目前实现的一个扩展有
 
-urlpreview - 解析聊天中发送的 URL , 自动将 URL 的页面下载然后将标题贴到频道里。
+joke - 聊天的时候发个笑话活跃一下群里的气氛
 
+urlpreview - 解析聊天中发送的 URL , 自动将 URL 的页面下载然后将标题贴到频道里。
 

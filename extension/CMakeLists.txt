@@ -1,9 +1,21 @@
 
 option(ENABLE_LUA "enable lua script support" OFF)
+
+add_library(extension STATIC extension.cpp)
+
+add_library(joke STATIC joke.cpp)
+target_link_libraries(extension joke)
+
 if(ENABLE_LUA)
 
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(LUAJIT REQUIRED luajit>=2.0)
 
+add_definitions(-DENABLE_LUA)
+
+add_library(luascript STATIC luascript.cpp)
+target_link_libraries(extension luascript)
+
 endif()
+

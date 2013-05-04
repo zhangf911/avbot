@@ -1,4 +1,6 @@
 
+#include <lua.h>
+
 #include "luascript.hpp"
 
 void callluascript::operator()( boost::property_tree::ptree message ) const

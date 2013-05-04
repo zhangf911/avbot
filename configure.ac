@@ -192,7 +192,6 @@ AC_CONFIG_FILES([
                  Makefile
                  libavbot/Makefile
                  libavlog/Makefile
-                 libjoke/Makefile
                  libirc/Makefile
                  libmailexchange/Makefile
                  libwebqq/Makefile

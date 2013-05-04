@@ -4,7 +4,7 @@ EXTRA_DIST = README.md m4 avproxy avhttp boost libirc CMakeLists.txt fsconfig.ip
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AUTOMAKE_OPTIONS = color-tests parallel-tests
 
-SUBDIRS = libmailexchange libwebqq libxmpp libirc libavbot libavlog libjoke extension
+SUBDIRS = libmailexchange libwebqq libxmpp libirc libavbot libavlog extension
 
 AM_CPPFLAGS = -DAVHTTP_ENABLE_OPENSSL -I ${srcdir}/avproxy/include -I ${srcdir}/avhttp/include
 
@@ -18,7 +18,7 @@ endif
 
 avbot_LDFLAGS=${BOOST_THREAD_LDFLAGS}
 
-avbot_LDADD = ${top_builddir}/libavbot/libavbot.la ${top_builddir}/libavlog/libavlog.la ${top_builddir}/libjoke/libjoke.la
+avbot_LDADD = ${top_builddir}/libavbot/libavbot.la ${top_builddir}/libavlog/libavlog.la ${top_builddir}/extension/libextension.la
 
 avbot_LDADD +=${BOOST_THREAD_LIBS} ${BOOST_SYSTEM_LIBS} ${BOOST_PROGRAM_OPTIONS_LIBS} ${BOOST_FILESYSTEM_LIBS}  ${BOOST_REGEX_LIBS} ${BOOST_SIGNALS_LIBS} ${BOOST_LOCALE_LIBS}
 
