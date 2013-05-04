@@ -31,6 +31,7 @@ add_library(luascript STATIC luascript.cpp
 		luabind/src/exception_handler.cpp
 		luabind/src/error.cpp
 		luabind/src/inheritance.cpp
+		luabind/src/pcall.cpp
 		luabind/src/link_compatibility.cpp
 
 		)

@@ -21,7 +21,10 @@ class callluascript
 	boost::asio::io_service &io_service;
 	boost::function<void ( std::string ) > m_sender;
 	std::string m_channel_name;
-	boost::shared_ptr<lua_State> m_lua_State;
+	mutable boost::shared_ptr<lua_State> m_lua_State;
+
+	void load_lua() const;
+	void call_lua(std::string jsondata) const ;
 
 public:
 	callluascript( boost::asio::io_service &_io_service,  boost::function<void ( std::string ) >  sender, std::string channel_name );
