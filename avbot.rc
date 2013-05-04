@@ -121,8 +121,8 @@ IDI_AVBOT_ICON          ICON                    "avbot.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 4,5,0,1
- PRODUCTVERSION 4,5,0,1
+ FILEVERSION 4,6,0,1
+ PRODUCTVERSION 4,6,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -139,12 +139,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "avplayer.org"
             VALUE "FileDescription", "avbot 主程序"
-            VALUE "FileVersion", "4.5.0.1"
+            VALUE "FileVersion", "4.6.0.1"
             VALUE "InternalName", "avbot.exe"
             VALUE "LegalCopyright", "Copyright (C) 2013 avplayer.org"
             VALUE "OriginalFilename", "avbot.exe"
             VALUE "ProductName", "Q群云秘书"
-            VALUE "ProductVersion", "4.5.0.1"
+            VALUE "ProductVersion", "4.6.0.1"
         END
     END
     BLOCK "VarFileInfo"
