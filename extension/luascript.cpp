@@ -5,6 +5,10 @@ extern "C"{
 #include <luajit-2.0/lauxlib.h>
 }
 
+#include <boost/filesystem/fstream.hpp>
+namespace fs = boost::filesystem;
+
+
 #include "luabind/object.hpp"
 #include "luabind/luabind.hpp"
 #include "luabind/tag_function.hpp"
@@ -38,7 +42,9 @@ callluascript::callluascript( boost::asio::io_service &_io_service,  boost::func
 		luabind::def("send_channel_message", luabind::tag_function<void(const char *)>(lua_sender(m_sender)) )
 	];
 
-	luaL_dofile(L, "main.lua");
+	std::string luafile = (fs::path(getenv("O_PWD")) /  "main.lua" ).string();
+
+	luaL_dofile(L, luafile.c_str() );
 
 }
 
