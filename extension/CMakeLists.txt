@@ -16,7 +16,11 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LUAJIT REQUIRED luajit>=2.0)
 
 add_definitions(-DENABLE_LUA)
-include_directories(luabind)
+include_directories(
+	luabind
+	${LUAJIT_INCLUDE_DIRS}
+	)
+
 
 add_library(luascript STATIC luascript.cpp
 		luabind/src/open.cpp
