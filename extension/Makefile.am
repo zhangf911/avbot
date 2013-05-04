@@ -3,7 +3,7 @@ EXTRA_DIST = CMakeLists.txt README.md
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_srcdir}/avhttp/include -I${top_srcdir}/avproxy/include
 
-noinst_LTLIBRARIES = libextension.la libjoke.la
+noinst_LTLIBRARIES = libextension.la
 
 libextension_la_SOURCES = joke.hpp joke.cpp urlpreview.hpp urlpreview.cpp extension.hpp extension.cpp
 
