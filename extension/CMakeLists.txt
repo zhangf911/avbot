@@ -6,6 +6,9 @@ add_library(extension STATIC extension.cpp)
 add_library(joke STATIC joke.cpp)
 target_link_libraries(extension joke)
 
+add_library(urlpreview STATIC urlpreview.cpp)
+target_link_libraries(extension urlpreview)
+
 if(ENABLE_LUA)
 
 find_package(PkgConfig REQUIRED)
