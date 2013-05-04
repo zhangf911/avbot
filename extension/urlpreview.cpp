@@ -16,6 +16,7 @@ static inline bool is_html( const std::string contenttype )
 
 	if( contenttype.find( "text/html" ) != std::string::npos )
 		return true;
+	return false;
 }
 
 static inline std::string get_char_set( std::string type,  const std::string & header )
