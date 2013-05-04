@@ -11,25 +11,6 @@ extern "C"{
 
 #include "luascript.hpp"
 
-
-callluascript::callluascript( boost::asio::io_service &_io_service,  boost::function<void ( std::string ) >  sender, std::string channel_name )
-	: io_service( _io_service ), m_sender( sender ), m_channel_name( channel_name )
-{
-	m_lua_State.reset(luaL_newstate(), lua_close);
-
-	luaopen_base(m_lua_State.get());
-	luaopen_string(m_lua_State.get());
-	luaopen_table(m_lua_State.get());
-	luaopen_math(m_lua_State.get());
-	luaopen_io(m_lua_State.get());
-	luaopen_debug(m_lua_State.get());
-}
-
-callluascript::~callluascript()
-{
-
-}
-
 struct lua_sender{
 	boost::function<void ( std::string ) > m_sender;
 
@@ -42,6 +23,30 @@ struct lua_sender{
 	}
 };
 
+callluascript::callluascript( boost::asio::io_service &_io_service,  boost::function<void ( std::string ) >  sender, std::string channel_name )
+	: io_service( _io_service ), m_sender( sender ), m_channel_name( channel_name )
+{
+	m_lua_State.reset(luaL_newstate(), lua_close);
+
+	luaopen_base(m_lua_State.get());
+	luaopen_string(m_lua_State.get());
+	luaopen_table(m_lua_State.get());
+	luaopen_math(m_lua_State.get());
+	luaopen_io(m_lua_State.get());
+	luaopen_debug(m_lua_State.get());
+
+
+	using namespace luabind;
+	// 准备调用 LUA 脚本.
+ 	module(this->m_lua_State.get())[
+ 		def("send_channel_message", tag_function<void(const char *)>(lua_sender(m_sender)) )
+ 	];
+}
+
+callluascript::~callluascript()
+{
+
+}
 
 void callluascript::operator()( boost::property_tree::ptree message ) const
 {
@@ -50,11 +55,5 @@ void callluascript::operator()( boost::property_tree::ptree message ) const
 		return;
 	}
 	// m_sender 这个函数就可以用来发消息到群里.
-
-	using namespace luabind;
-	// 准备调用 LUA 脚本.
- 	module(this->m_lua_State.get())[
- 		def("send_message", tag_function<void(const char *)>(lua_sender(m_sender)) )
- 	];
 
 }
