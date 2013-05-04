@@ -45,6 +45,19 @@ static inline std::string get_char_set( std::string type,  const std::string & h
 	return "utf8";
 }
 
+inline std::size_t read_until_title(boost::system::error_code ec, std::size_t bytes_transferred, std::size_t max_transfer, boost::asio::streambuf & buf)
+{
+	// 有 </title> 就不读了, 或则已经读取到 4096 个字节也就不读了
+	// 或则已经读到 content_length 也不读了.
+	if (bytes_transferred >= max_transfer)
+		return 0;
+	std::string data(boost::asio::buffer_cast<const char*>(buf.data()), boost::asio::buffer_size(buf.data()));
+	if (data.find("</title>")==std::string::npos){
+		return max_transfer - bytes_transferred;
+	}
+	return 0;
+}
+
 //
 struct urlpreview
 {
@@ -108,8 +121,11 @@ struct urlpreview
 		{
 			content_length = 4096;
 		}
-
-		boost::asio::async_read( *m_httpstream, m_content->prepare( std::min<unsigned>( content_length, 4096 ) ), *this );
+		//boost::asio::async_read( *m_httpstream, m_content->prepare(  ), *this );
+		boost::asio::async_read(*m_httpstream, *m_content,
+						boost::bind(read_until_title, _1, _2, std::min<unsigned>( content_length, 4096 ), boost::ref(*m_content) ),
+						*this
+		);
 	}
 
 	void operator()( const boost::system::error_code &ec, int bytes_transferred )
