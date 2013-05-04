@@ -2,7 +2,7 @@
 	* allow to -c to specify the location of the config file
 	* automantically show url content then some one post an url
 	* change .qqbot newbee command to .qqbot welcome
-	* add support for luascripting
+	* add experimental support for luascripting
 
 4.5
 	* sync webqq protocol
