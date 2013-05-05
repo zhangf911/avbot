@@ -79,12 +79,13 @@ void callluascript::call_lua( std::string jsondata ) const
 
 	if( L )
 	{
-		try
-		{
-			luabind::call_function<void>( L, "channel_message", jsondata );
+		try{
+		luabind::call_function<void>( L, "channel_message", jsondata);
 		}
-		catch( const luabind::error & err) {
-			std::cerr << "err will calling lua "<<  err.what() << std::endl;
+		catch(luabind::error e)
+		{
+			std::cout << "\t" << e.what() << std::endl;
+			std::cout<< lua_tostring(L, -1);
 		}
 	}
 }

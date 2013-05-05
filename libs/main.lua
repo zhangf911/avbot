@@ -6,7 +6,7 @@
 -- 每当频道有消息发生, 就调用这个函数.
 -- 注意, 不要在这里阻塞, 会导致整个 avbot 都被卡住
 -- 因为 avbot 是单线程程序.
-testjson=[[
+--[=[examplejson=[[
 {
     "protocol": "qq",
     "channel": "8734129",
@@ -32,13 +32,79 @@ testjson=[[
     }
 }
 ]]
-package.path="lua_libraries/?.lua;?.lua"
-package.cpath="lua_libraries/?.so;lua_libraries/?.dll"
+]=]
+package.path="lua_libraries/?.lua;luascript/?.lua;?.lua"
+package.cpath="lua_libraries/?.so;lua_libraries/?.dll;"..package.cpath
 require('json')
---msg_table=json.decode(testjson)
+
 --print(msg_table.who.nick)
 --print(msg_table.message.text)
 
+main_help_table={
+"qqdicebot,第4版。开发者：BX。\n免责声明：本机器人提供的内容要么来自网上，要么来自一些会打字的大猩猩。对这些内容的真实可信性开发者概不负责。\n帮助链接：http://trow.cc/forum/index.php?showtopic=19753"
+}
+--loadfile("luascript\\random.lua")()
+--loadfile("luascript\\bet.lua")()
+--2月5日改用require
+require"dnddice"
+require"woddice"
+require"roll"
+--require"getlink"
+--require"dictionary"
+--require"wiki"
+require"knight"
+require"godmachine"
+require"zhan"
+require"fate"
+require"fruit"
+require"help"
+require"dnddice_detail"
+require"tishen"
+--require"escape"
+require"rememberip"
+require"TALK"
+require"seventhsea"
+require"scp"
+--loadfile("luascript\\router.lua")()
+--loadfile("luascript\\rss.lua")()
+
 function channel_message(jsonmsg)
-	print(jsonmsg)
+	msg_table=json.decode(jsonmsg)
+	msg=msg_table.message.text
+	msg_time=os.date("%H:%M:%S")
+	buddy_name=msg_table.who.card
+	buddy_num=msg_table.who.qqnumber
+	qun_name=msg_table.room.name
+	qun_num=msg_table.room.groupnumber
+	say_qun=function (the_msg, qun_num_nouse)
+		send_channel_message(the_msg)
+	end
+	--print(jsonmsg)
+		if msg==nil then return end
+--	escape(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	--bet(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+--	getlink(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	roll(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	dnddice(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	woddice(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	seventhsea(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+--	dictionary(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+--	wiki(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	knight(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	godmachine(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	zhan(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	fate(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	fruit(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	help(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	dnddice_detail(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	tishen(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	--ronind10(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+--	readip(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+--	setip(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	talk(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	scp(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	--router(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
+	--rss(msg,msg_time,buddy_name,buddy_num,qun_name,qun_num)
 end
+
+print("main.lua载入成功")
