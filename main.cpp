@@ -88,6 +88,11 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_NICK), FALSE);
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_PWD), FALSE);
 		}
+		if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IRC) != BST_CHECKED) {
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_CHANNEL), FALSE);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_NICK), FALSE);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_PWD), FALSE);
+		}
 		return TRUE;
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
@@ -101,14 +106,22 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			// 退出消息循环
 			PostMessage(NULL, WM_QUIT, 0, 0);
 			return TRUE;
-		case IDC_CHECK_XMPP:
+		case IDC_CHECK_XMPP:{
 			BOOL enable = FALSE;
 			if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_XMPP) == BST_CHECKED) enable = TRUE;
 
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_CHANNEL), enable);
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_NICK), enable);
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_PWD), enable);
-			return TRUE;
+			}return TRUE;
+		case IDC_CHECK_IRC:{
+			BOOL enable = FALSE;
+			if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IRC) == BST_CHECKED) enable = TRUE;
+
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_CHANNEL), enable);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_NICK), enable);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_PWD), enable);
+			}return TRUE;
 		}
 	}
 
@@ -318,6 +331,9 @@ int main( int argc, char *argv[] )
 	( "version,v", 	"output version" )
 	( "help,h", 	"produce help message" )
 	( "daemon,d", 	"go to background" )
+#ifdef WIN32
+	( "gui,g",	 	"pop up settings dialog" )
+#endif
 
 	( "config,c",	po::value<fs::path>( &config ),		"use an alternative configuration file." )
 	( "qqnum,u",	po::value<std::string>( &qqnumber ), 	"QQ number" )
@@ -410,7 +426,8 @@ int main( int argc, char *argv[] )
 #ifdef WIN32
 	::InitCommonControls();
 	// windows下面弹出选项设置框框
-	if( qqnumber.empty() || qqpwd.empty() || ircnick.empty() ) {
+	if( qqnumber.empty() || qqpwd.empty() || vm.count( "gui" )>0)
+	{
 		HMODULE hIns = GetModuleHandle(NULL);
 		HWND hDlg = NULL;
 
@@ -421,14 +438,14 @@ int main( int argc, char *argv[] )
 		// 启动windows消息循环
 		MSG msg;
 		while (true) {
-			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			if (GetMessage(&msg, NULL, 0, 0)) {
 				if (msg.message == WM_QUIT) exit(1);
 
 				if (msg.message == WM_RESTART_AV_BOT) {
 					// 看起来avbot用的是多字节,std::string not std::wstring
 					TCHAR temp[MAX_PATH];
 					bool use_xmpp = false;
-
+					bool use_irc = false;
 					// qq setting
 					GetDlgItemText(hDlg, IDC_EDIT_USER_NAME, temp, MAX_PATH);
 					qqnumber = temp;
@@ -437,17 +454,22 @@ int main( int argc, char *argv[] )
 					qqpwd = temp;
 
 					// irc setting
-					GetDlgItemText(hDlg, IDC_EDIT_IRC_CHANNEL, temp, MAX_PATH);
-					ircroom = temp;
+					if (IsDlgButtonChecked(hDlg, IDC_CHECK_IRC) == BST_CHECKED)
+					{
+						GetDlgItemText(hDlg, IDC_EDIT_IRC_CHANNEL, temp, MAX_PATH);
+						ircroom = temp;
 
-					GetDlgItemText(hDlg, IDC_EDIT_IRC_NICK, temp, MAX_PATH);
-					ircnick = temp;
+						GetDlgItemText(hDlg, IDC_EDIT_IRC_NICK, temp, MAX_PATH);
+						ircnick = temp;
 
-					GetDlgItemText(hDlg, IDC_EDIT_IRC_PWD, temp, MAX_PATH);
-					ircpwd = temp;
+						GetDlgItemText(hDlg, IDC_EDIT_IRC_PWD, temp, MAX_PATH);
+						ircpwd = temp;
+						use_irc = true;
+					}
 
 					// xmpp setting
-					if (IsDlgButtonChecked(hDlg, IDC_CHECK_XMPP) == BST_CHECKED) {
+					if (IsDlgButtonChecked(hDlg, IDC_CHECK_XMPP) == BST_CHECKED)
+					{
 						GetDlgItemText(hDlg, IDC_EDIT_XMPP_CHANNEL, temp, MAX_PATH);
 						xmpproom = temp;
 
@@ -481,13 +503,17 @@ int main( int argc, char *argv[] )
 						file << "qqpwd=" << qqpwd << std::endl;
 						file << std::endl;
 
-						file << "# irc config" << std::endl;
-						file << "ircnick=" << ircnick << std::endl;
-						file << "ircpwd=" << ircpwd << std::endl;
-						file << "ircrooms=" << ircroom << std::endl;
-						file << std::endl;
+						if(use_irc)
+						{
+							file << "# irc config" << std::endl;
+							file << "ircnick=" << ircnick << std::endl;
+							file << "ircpwd=" << ircpwd << std::endl;
+							file << "ircrooms=" << ircroom << std::endl;
+							file << std::endl;
+						}
 
-						if (use_xmpp) {
+						if (use_xmpp)
+						{
 							file << "# xmpp config" << std::endl;
 							file << "xmppuser=" << xmppnick << std::endl;
 							file << "xmpppwd=" << xmpppwd << std::endl;
