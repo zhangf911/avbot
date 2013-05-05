@@ -56,7 +56,7 @@ if(NOT Boost_FOUND)
 	set(Boost_USE_STATIC_RUNTIME    OFF)
 	find_package(Boost 1.48 REQUIRED COMPONENTS date_time filesystem system program_options regex)
 	if(NOT Boost_FOUND )
-		message(FATAL_ERROR "need boost >= 1.48")
+		message(FATAL_ERROR "need boost >= 1.50")
 	endif()
 endif()
 
@@ -103,9 +103,16 @@ endif()
 
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
+add_custom_command(TARGET avbot POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_SOURCE_DIR}/libs"
+        $<TARGET_FILE_DIR:avbot>)
+
 install(TARGETS avbot RUNTIME DESTINATION bin)
 
 if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
 endif()
+
+
 
