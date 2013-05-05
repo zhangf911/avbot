@@ -601,19 +601,24 @@ int main( int argc, char *argv[] )
 		{
 			// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
 			boost::acceptor_server( io_service,
-#ifdef _WIN32
-									boost::asio::ip::tcp::endpoint( boost::asio::ip::tcp::v4(), rpcport ),
-#else
 									boost::asio::ip::tcp::endpoint( boost::asio::ip::tcp::v6(), rpcport ),
-#endif
 									boost::bind( avbot_rpc_server, _1, boost::ref( mybot ) )
 								  );
 		}
 		catch( ... )
 		{
-			std::cerr <<  "bind to port " <<  rpcport <<  " failed!" << std::endl;
-			std::cerr <<  "Did you happened to already run an avbot? " << std::endl;
-			std::cerr <<  "Now avbot will run without RPC support. " << std::endl;
+			try
+			{
+				boost::acceptor_server( io_service,
+										boost::asio::ip::tcp::endpoint( boost::asio::ip::tcp::v4(), rpcport ),
+										boost::bind( avbot_rpc_server, _1, boost::ref( mybot ) )
+									  );
+			}catch(...)
+			{
+				std::cerr <<  "bind to port " <<  rpcport <<  " failed!" << std::endl;
+				std::cerr <<  "Did you happened to already run an avbot? " << std::endl;
+				std::cerr <<  "Now avbot will run without RPC support. " << std::endl;			
+			}
 		}
 	}
 
