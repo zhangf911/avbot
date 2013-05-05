@@ -36,5 +36,6 @@ add_library(luascript STATIC luascript.cpp
 target_link_libraries(luascript ${LUAJIT_LIBRARIES})
 target_link_libraries(extension luascript)
 
+add_subdirectory(slnunicode)
 endif()
 
