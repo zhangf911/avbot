@@ -1,13 +1,7 @@
 
 option(ENABLE_LUA "enable lua script support" OFF)
 
-add_library(extension STATIC extension.cpp)
-
-add_library(joke STATIC joke.cpp)
-target_link_libraries(extension joke)
-
-add_library(urlpreview STATIC urlpreview.cpp)
-target_link_libraries(extension urlpreview)
+add_library(extension STATIC extension.cpp joke.cpp urlpreview.cpp bulletin.cpp )
 
 if(ENABLE_LUA)
 
