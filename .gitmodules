@@ -4,3 +4,6 @@
 [submodule "avproxy"]
 	path = avproxy
 	url = git://github.com/avplayer/avproxy.git
+[submodule "extension/slnunicode"]
+	path = extension/slnunicode
+	url = git://github.com/LuaDist/slnunicode.git
