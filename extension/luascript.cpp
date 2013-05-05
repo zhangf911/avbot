@@ -16,6 +16,8 @@ namespace fs = boost::filesystem;
 
 #include "luascript.hpp"
 
+#include "boost/json_create_escapes_utf8.hpp"
+
 struct lua_sender
 {
 	boost::function<void ( std::string ) > m_sender;

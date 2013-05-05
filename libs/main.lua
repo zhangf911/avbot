@@ -35,8 +35,9 @@ testjson=[[
 package.path="lua_libraries/?.lua;?.lua"
 package.cpath="lua_libraries/?.so;lua_libraries/?.dll"
 require('json')
-msg_table=json.decode(testjson)
-print(msg_table.who.nick)
+--msg_table=json.decode(testjson)
+--print(msg_table.who.nick)
+--print(msg_table.message.text)
 
 function channel_message(jsonmsg)
 	print(jsonmsg)
