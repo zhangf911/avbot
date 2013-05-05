@@ -97,9 +97,6 @@ target_link_libraries(avbot -liconv)
 endif()
 
 target_link_libraries(avbot libavbot avlog extension)
-if(WIN32)
-target_link_libraries(avbot -Wl,--disable-auto-import)
-endif()
 
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
