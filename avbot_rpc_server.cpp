@@ -18,6 +18,8 @@
  *
  */
 
+#include <boost/json_create_escapes_utf8.hpp>
+
 #include <boost/concept_check.hpp>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
