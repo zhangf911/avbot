@@ -1,5 +1,6 @@
 
 option(ENABLE_LUA "enable lua script support" OFF)
+option(INTERNAL_LUABIND "enable lua script support" ON)
 
 add_library(extension STATIC extension.cpp joke.cpp urlpreview.cpp bulletin.cpp )
 
@@ -15,25 +16,31 @@ include_directories(
 	${LUAJIT_INCLUDE_DIRS}
 	)
 
+add_library(luascript STATIC luascript.cpp)
 
-add_library(luascript STATIC luascript.cpp
-		luabind/src/open.cpp
-		luabind/src/create_class.cpp
-		luabind/src/class.cpp
-		luabind/src/class_info.cpp
-		luabind/src/class_rep.cpp
-		luabind/src/class_registry.cpp
-		luabind/src/object_rep.cpp
-		luabind/src/scope.cpp
-		luabind/src/function.cpp
-		luabind/src/exception_handler.cpp
-		luabind/src/error.cpp
-		luabind/src/inheritance.cpp
-		luabind/src/pcall.cpp
-		luabind/src/link_compatibility.cpp
-
+if(INTERNAL_LUABIND)
+	add_library(luabind STATIC
+			luabind/src/open.cpp
+			luabind/src/create_class.cpp
+			luabind/src/class.cpp
+			luabind/src/class_info.cpp
+			luabind/src/class_rep.cpp
+			luabind/src/class_registry.cpp
+			luabind/src/object_rep.cpp
+			luabind/src/scope.cpp
+			luabind/src/function.cpp
+			luabind/src/exception_handler.cpp
+			luabind/src/error.cpp
+			luabind/src/inheritance.cpp
+			luabind/src/pcall.cpp
+			luabind/src/link_compatibility.cpp
 		)
-target_link_libraries(luascript ${LUAJIT_LIBRARIES})
+	target_link_libraries(luabind ${LUAJIT_LIBRARIES})
+	target_link_libraries(luascript luabind)
+else()
+	target_link_libraries(luascript -lluabind ${LUAJIT_LIBRARIES})
+endif()
+
 target_link_libraries(extension luascript)
 
 add_subdirectory(slnunicode)
