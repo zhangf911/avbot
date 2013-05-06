@@ -205,7 +205,13 @@ static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 		{
 			if( v.first == "text" )
 			{
-				linemessage += v.second.data();
+				std::string txt = v.second.data();
+				// 将 < > 给转义.
+				boost::replace_all( txt, "&", "&amp;" );
+				boost::replace_all( txt, "<", "&lt;" );
+				boost::replace_all( txt, ">", "&gt;" );
+				boost::replace_all( txt, " ", "&nbsp;" );
+				linemessage += txt;
 			}
 			else if( v.first == "url" )
 			{
