@@ -37,5 +37,11 @@ target_link_libraries(luascript ${LUAJIT_LIBRARIES})
 target_link_libraries(extension luascript)
 
 add_subdirectory(slnunicode)
+
+add_custom_command(TARGET avbot POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_SOURCE_DIR}/libs"
+        $<TARGET_FILE_DIR:avbot>)
+
 endif()
 

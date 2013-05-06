@@ -100,11 +100,6 @@ target_link_libraries(avbot libavbot avlog extension)
 
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
-add_custom_command(TARGET avbot POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${PROJECT_SOURCE_DIR}/libs"
-        $<TARGET_FILE_DIR:avbot>)
-
 install(TARGETS avbot RUNTIME DESTINATION bin)
 
 if( NOT Boost_USE_STATIC_RUNTIME )
