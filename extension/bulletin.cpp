@@ -1,4 +1,6 @@
 
+#include <boost/date_time.hpp>
+
 #include "bulletin.hpp"
 
 void bulletin::load_settings()
@@ -23,7 +25,7 @@ void bulletin::schedule_next() const
 	// 或则超过 24h
 	// 如果这样就直接设定一天以后再重新跑
 	// 避免 cpu 无限下去
-	
+	boost::posix_time::ptime now =  boost::posix_time::from_time_t(std::time(0));
 
 }
 

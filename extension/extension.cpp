@@ -12,6 +12,7 @@
 
 #include "urlpreview.hpp"
 #include "joke.hpp"
+#include "bulletin.hpp"
 
 // dummy file
 
@@ -48,4 +49,10 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		)
 	);
 #endif
+	mybot.on_message.connect(
+		::bulletin(io_service,
+					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
+					channel_name
+		)
+	);
 }
