@@ -144,6 +144,7 @@ struct urlpreview
 		// 获取charset
 		std::string charset = get_char_set( m_httpstream->response_options().find( avhttp::http_options::content_type ), content );
 
+		content =  content.substr(0, content.find("</title>")+8);
 		// 匹配.
 		boost::regex ex( "<title[^>]*>(.*)</title>" );
 		boost::cmatch what;
