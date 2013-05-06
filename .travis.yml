@@ -8,7 +8,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install  -qq boost1.53
   - sudo apt-get install libluajit-5.1-dev
-  - sudo apt-get install liblua-dev
+  - sudo apt-get install liblua5.1-dev
   - git submodule init
   - git submodule update
 
