@@ -27,11 +27,14 @@ static void input_got_one_line(std::string line_input, avbot & mybot)
 		qqneedvc = false;
 		return;
 	}else{
-		mybot.broadcast_message(
-			boost::str(
-				boost::format("来自 avbot 命令行的消息: %s") % line_input
-			)
-		);
+		boost::trim_right(line_input);
+		if(line_input.size() > 1){
+			mybot.broadcast_message(
+				boost::str(
+					boost::format("来自 avbot 命令行的消息: %s") % line_input
+				)
+			);
+		}
 	}	
 }
 
