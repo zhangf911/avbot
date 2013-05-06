@@ -129,11 +129,10 @@ struct urlpreview
 			return;
 		}
 
-		m_content->commit( bytes_transferred );
 		// 解析 <title>
 		std::string content;
-		content.resize( bytes_transferred );
-		m_content->sgetn( &content[0], bytes_transferred );
+		content.resize( m_content->size() );
+		m_content->sgetn( &content[0], m_content->size() );
 
 		//去掉换行.
 		boost::replace_all( content, "\r", "" );
