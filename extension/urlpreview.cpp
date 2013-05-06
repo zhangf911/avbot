@@ -48,6 +48,10 @@ inline std::size_t read_until_title(boost::system::error_code ec, std::size_t by
 	if (data.find("</title>")==std::string::npos){
 		return max_transfer - bytes_transferred;
 	}
+	if (data.find("<meta>")==std::string::npos){
+		return max_transfer - bytes_transferred;
+	}
+
 	return 0;
 }
 
