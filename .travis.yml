@@ -12,7 +12,7 @@ before_install:
   - git submodule update
 
 before_script:
-  cmake -DENABKE_LUA .
+  cmake -DENABLE_LUA .
 
 script:
   make
