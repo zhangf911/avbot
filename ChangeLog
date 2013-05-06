@@ -1,5 +1,7 @@
 4.7
 	* win32: settings dialog make irc optional
+	* htmlog: log HTML correttly.
+	* lua: add more lua example code.
 
 4.6
 	* allow to -c to specify the location of the config file
