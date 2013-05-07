@@ -138,8 +138,6 @@ void bulletin::send_msg_file( std::string msgfile ) const
 		std::ifstream msgstream( msgfilepath.string().c_str() );
 		bulletinmsg.resize(fsize);
 		msgstream.read(&bulletinmsg[0], fsize);
-		// 读取
-		//
 	}
 	catch( std::runtime_error )
 	{
