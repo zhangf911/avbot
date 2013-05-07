@@ -50,7 +50,8 @@ void bulletin::schedule_next() const
 	// 比对 年月日.
 	boost::posix_time::ptime::date_type date = now.date();
 
-	boost::regex ex("([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+) (.*)?");
+	boost::regex ex1("([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+)[ \t]+(.*)");
+	boost::regex ex2("([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+)\\-([0-9\\*]+)");
 	boost::cmatch what;
 
 	// 以一分钟为步进.
@@ -61,15 +62,9 @@ void bulletin::schedule_next() const
 		BOOST_FOREACH(std::string cronline, *m_settings)
 		{
 			// 使用 regex 提取 *-*-*-*-* 的各个数字.
-			if (boost::regex_match(cronline.c_str(), what, ex))
+			if (boost::regex_match(cronline.c_str(), what, ex1))
 			{
 				// 然后为各个 filed 执行比较吧.
-// 				what[1];
-// 				what[2];
-// 				what[3];
-// 				what[4];
-// 				what[5];
-
 				if( is_match( what[1], titr->date().year())
 					&& is_match( what[2], titr->date().month())
 					&& is_match( what[3], titr->date().day())
@@ -82,6 +77,19 @@ void bulletin::schedule_next() const
 					m_timer->async_wait(boost::bind( *this, _1, std::string(what[6])));
 					return;
 				}
+			}else if (boost::regex_match(cronline.c_str(), what, ex2)){
+				if( is_match( what[1], titr->date().year())
+					&& is_match( what[2], titr->date().month())
+					&& is_match( what[3], titr->date().day())
+					&& is_match( what[4], titr->time_of_day().hours())
+					&& is_match( what[5], titr->time_of_day().minutes())
+				)
+				{
+					// 设定 expires
+					m_timer->expires_from_now(*titr - now + boost::posix_time::seconds( std::rand() % 30 +2 ));
+					m_timer->async_wait(boost::bind( *this, _1, std::string("")));
+					return;
+				}
 			}
 		}
 	}
@@ -92,7 +100,7 @@ void bulletin::schedule_next() const
 
 	// 设定 expires
 	m_timer->expires_from_now(boost::posix_time::hours(24));
-	m_timer->async_wait(boost::bind( *this, _1, std::string("")));
+	m_timer->async_wait(*this);
 	return;
 }
 
@@ -108,5 +116,10 @@ void bulletin::operator()( boost::system::error_code, std::string msgfile ) cons
 	// 打开 bulletin 文件然后发送文件内容.
 	// 就是这么回事.
 //	m_sender("定时到了");
-	std::cerr <<  "定时到了" <<  std::endl;
+	std::cerr <<  "定时到了" <<  msgfile <<  std::endl;
+}
+
+void bulletin::operator()( boost::system::error_code) const
+{
+	schedule_next();
 }

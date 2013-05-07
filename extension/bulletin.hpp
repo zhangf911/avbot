@@ -45,6 +45,8 @@ public:
 
 	// on_message 回调.
 	void operator()( boost::property_tree::ptree message ) const;
-	// 超时的回调.
+	// 超时的回调 - 重算调度.
+	void operator()( boost::system::error_code) const;
+	// 超时的回调 - 回显.
 	void operator()( boost::system::error_code, std::string ) const;
 };
