@@ -1,4 +1,5 @@
 4.7
+	* bulletin: broadcast a bulletin message @ desired time
 	* win32: settings dialog make irc optional
 	* htmlog: log HTML correttly.
 	* lua: add more lua example code.
