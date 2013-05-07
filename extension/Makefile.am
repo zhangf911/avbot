@@ -1,5 +1,5 @@
 
-EXTRA_DIST = CMakeLists.txt README.md luabind
+EXTRA_DIST = CMakeLists.txt README.md luabind slnuicode lpeg-0.11
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_srcdir}/avhttp/include -I${top_srcdir}/avproxy/include @LUAJIT_CFLAGS@
 
