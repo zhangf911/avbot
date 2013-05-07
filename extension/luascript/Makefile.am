@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_srcdir}/avhttp/include -I${top_srcdir}/avp
 
 if ENABLE_LUA
 
-noinst_LTLIBRARIES += libluascript.la
+noinst_LTLIBRARIES = libluascript.la
 
 libluascript_la_SOURCES = luascript.hpp  luascript.cpp \
 		luabind/src/open.cpp\
