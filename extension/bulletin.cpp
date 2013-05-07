@@ -87,7 +87,7 @@ void bulletin::schedule_next() const
 				{
 					// 设定 expires
 					m_timer->expires_from_now(*titr - now + boost::posix_time::seconds( std::rand() % 30 +2 ));
-					m_timer->async_wait(boost::bind( *this, _1, std::string("")));
+					m_timer->async_wait(boost::bind( *this, _1, std::string("bulletin.txt")));
 					return;
 				}
 			}
