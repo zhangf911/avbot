@@ -1,11 +1,15 @@
 
+project(avbotluascript)
+
+if(ENABLE_LUA)
+
 add_definitions(-DENABLE_LUA)
 include_directories(
 	luabind
 	${LUAJIT_INCLUDE_DIRS}
 	)
 
-add_library(luascript STATIC luascript.cpp
+add_library(libluascript STATIC luascript.cpp
 		luabind/src/open.cpp
 		luabind/src/create_class.cpp
 		luabind/src/class.cpp
@@ -22,10 +26,9 @@ add_library(luascript STATIC luascript.cpp
 		luabind/src/link_compatibility.cpp
 
 		)
-target_link_libraries(luascript ${LUAJIT_LIBRARIES})
+target_link_libraries(libluascript ${LUAJIT_LIBRARIES})
 
 add_custom_command(TARGET avbot POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${PROJECT_SOURCE_DIR}/libs"
-        $<TARGET_FILE_DIR:avbot>)
+    COMMAND ${CMAKE_COMMAND} -E copy_directory libs $<TARGET_FILE_DIR:avbot>)
 
+endif()

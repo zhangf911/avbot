@@ -3,6 +3,7 @@ option(ENABLE_LUA "enable lua script support" OFF)
 
 add_library(extension STATIC extension.cpp joke.cpp urlpreview.cpp bulletin.cpp )
 
+
 if(ENABLE_LUA)
 
 
@@ -17,7 +18,8 @@ include_directories(
 
 add_subdirectory(luascript)
 
-target_link_libraries(extension luascript)
+target_link_libraries(extension libluascript)
 
 endif()
+
 
