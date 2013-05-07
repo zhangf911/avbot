@@ -7,7 +7,7 @@
 #include "libavlog/avlog.hpp"
 
 #ifdef ENABLE_LUA
-#	include "luascript.hpp"
+#	include "luascript/luascript.hpp"
 #endif
 
 #include "urlpreview.hpp"
