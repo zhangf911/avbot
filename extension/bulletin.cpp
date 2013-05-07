@@ -7,6 +7,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "bulletin.hpp"
+#include <libavlog/avlog.hpp>
 
 void bulletin::load_settings()
 {
@@ -110,16 +111,46 @@ void bulletin::operator()( boost::property_tree::ptree message ) const
 
 }
 
-void bulletin::operator()( boost::system::error_code, std::string msgfile ) const
+void bulletin::operator()( boost::system::error_code ec, std::string msgfile ) const
 {
+	if (ec)
+		return;
 	schedule_next();
+
 	// 打开 bulletin 文件然后发送文件内容.
 	// 就是这么回事.
-//	m_sender("定时到了");
-	std::cerr <<  "定时到了" <<  msgfile <<  std::endl;
+	send_msg_file(msgfile);
 }
 
 void bulletin::operator()( boost::system::error_code) const
 {
 	schedule_next();
+}
+
+void bulletin::send_msg_file( std::string msgfile ) const
+{
+	std::string bulletinmsg;
+	fs::path msgfilepath =  fs::current_path() / m_channel_name / msgfile ;
+
+	try
+	{
+		boost::uintmax_t fsize = fs::file_size(msgfilepath);
+		std::ifstream msgstream( msgfilepath.string().c_str() );
+		bulletinmsg.resize(fsize);
+		msgstream.read(&bulletinmsg[0], fsize);
+		// 读取
+		//
+	}
+	catch( std::runtime_error )
+	{
+		// 文件无法打开 ...
+		bulletinmsg = "无法打开 [logdir]/";
+		bulletinmsg += "/";
+		bulletinmsg += m_channel_name;
+		bulletinmsg += "/";
+		bulletinmsg += msgfile;
+		bulletinmsg += " 请检查文件是否存在.";
+	}
+
+	m_sender(bulletinmsg);
 }

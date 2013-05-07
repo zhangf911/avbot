@@ -18,6 +18,7 @@ class bulletin : public avbotextension
 	boost::shared_ptr<std::vector<std::string> > m_settings;
 	void load_settings();
 	void schedule_next() const;
+	void send_msg_file( std::string msgfile)const;
 public:
 
 	template<class MsgSender>
