@@ -1,22 +1,20 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
 #include <algorithm>
-#include <boost/locale.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/format.hpp>
-#include <boost/regex.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/filesystem.hpp>
 
-#include <avhttp.hpp>
-
 #include "extension.hpp"
 
 class bulletin : avbotextension
 {
+	boost::shared_ptr<boost::asio::deadline_timer> m_timer;
 	boost::shared_ptr<std::vector<std::string> > m_settings;
 	void load_settings();
 	void schedule_next() const;
@@ -24,6 +22,7 @@ public:
 	template<class MsgSender>
 	bulletin( boost::asio::io_service &_io_service,  MsgSender sender, std::string channel_name )
 	  : avbotextension(_io_service, sender, channel_name), m_settings(new std::vector<std::string>)
+   , m_timer(new boost::asio::deadline_timer(_io_service))
 	{
 		// 读取公告配置.
 		// 公告配置分两个部分, 一个是公告文件  $qqlog/$channel_name/bulletin.txt

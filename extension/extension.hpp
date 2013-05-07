@@ -2,6 +2,7 @@
 #pragma once
 
 #include <string>
+#include <boost/function.hpp>
 #include <boost/asio/io_service.hpp>
 
 #include "libavbot/avbot.hpp"
