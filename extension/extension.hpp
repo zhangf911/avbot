@@ -19,6 +19,8 @@ protected:
 		: io_service( _io_service ), m_sender( sender ), m_channel_name( channel_name )
 	{
 	}
+public:
+	typedef void result_type;
 };
 
 

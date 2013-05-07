@@ -12,13 +12,14 @@
 
 #include "extension.hpp"
 
-class bulletin : avbotextension
+class bulletin : public avbotextension
 {
 	boost::shared_ptr<boost::asio::deadline_timer> m_timer;
 	boost::shared_ptr<std::vector<std::string> > m_settings;
 	void load_settings();
 	void schedule_next() const;
 public:
+
 	template<class MsgSender>
 	bulletin( boost::asio::io_service &_io_service,  MsgSender sender, std::string channel_name )
 	  : avbotextension(_io_service, sender, channel_name), m_settings(new std::vector<std::string>)
@@ -44,4 +45,6 @@ public:
 
 	// on_message 回调.
 	void operator()( boost::property_tree::ptree message ) const;
+	// 超时的回调.
+	void operator()( boost::system::error_code, std::string ) const;
 };
