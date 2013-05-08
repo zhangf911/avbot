@@ -282,7 +282,10 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 						// 如果顶层目录已经有了的话 ... ...
 						fs::path oldimgfile = fs::path("images") / qqmsg.cface;
 						if (fs::exists(oldimgfile)){
-							fs::copy(oldimgfile, imgfile);
+							boost::system::error_code ec;
+							fs::create_hard_link(oldimgfile, imgfile, ec);
+							if (ec)
+								fs::copy(oldimgfile, imgfile);
 						}else{
 							webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface, imgfile.parent_path()));
 						}
