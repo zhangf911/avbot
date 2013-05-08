@@ -31,17 +31,19 @@ bool compare_image_degest_and_filename( SequenceT filename, const SequenceT & md
 	return filename == md5;
 }
 
-template<class Handler>
 class async_image_check_and_download_op
 {
-	Handler handler;
 	boost::asio::io_service &io_service;
 
 public:
 	typedef void result_type;
+	async_image_check_and_download_op( boost::asio::io_service & _io_service)
+		: io_service( _io_service )
+	{
+	}
 
-	async_image_check_and_download_op( boost::asio::io_service & _io_service, boost::filesystem::path item, Handler _handler )
-		: handler( _handler ), io_service( _io_service )
+	// boost::async_dir_walk 回调.
+	void operator()(const boost::filesystem::path & item, boost::function<void(const boost::system::error_code&)> handler)
 	{
 		using namespace boost::filesystem;
 		using namespace boost::asio::detail;
@@ -51,6 +53,13 @@ public:
 		{
 			// 这事实上应该算是严重的错误了 :)
 			io_service.post( bind_handler( handler, make_error_code(no_such_file_or_directory)));
+		}
+		else if (boost::filesystem::is_directory(item)){
+			// 递归啊递归.
+			boost::async_dir_walk(io_service, item,
+				async_image_check_and_download_op(io_service),
+				handler
+			);
 		}
 		else
 		{
@@ -68,8 +77,7 @@ public:
 			if( compare_image_degest_and_filename( imgfilename, imgfilemd5 ) )
 			{
 				// do nothing
-				io_service.post( bind_handler( handler, boost::system::error_code() ) );
-
+				avloop_idle_post(io_service, bind_handler( handler, boost::system::error_code() ) );
 			}
 			else
 			{
@@ -77,12 +85,14 @@ public:
 
 				std::string cface = basename( item ) + extension( item );
 				// 重新执行图片下载.
-				webqq::async_fetch_cface( io_service, cface, boost::bind( *this, _1, _2, cface ) );
+				webqq::async_fetch_cface( io_service, cface, boost::bind( *this, _1, _2, cface, handler) );
 			}
 		}
 	}
 
-	void operator()( boost::system::error_code ec, boost::asio::streambuf & buf, std::string cface )
+	// 那个webqq::async_fetch_cface回调.
+	template<class Handler>
+	void operator()( boost::system::error_code ec, boost::asio::streambuf & buf, std::string cface , Handler handler)
 	{
  		using namespace boost::asio::detail;
 
@@ -98,21 +108,19 @@ public:
 
 };
 
+
+}
+
 /**
  * 给定一个 path, 检查文件是否存在，如果不存在就从 TX 的服务器重新下载. 主要依据文件名啦.
  */
-void async_image_check_and_download( boost::asio::io_service & io_service, const boost::filesystem::path & item, boost::function<void(const boost::system::error_code&)> handler )
-{
-	async_image_check_and_download_op<boost::function<void(const boost::system::error_code&)> > op( io_service, item, handler );
-}
-
-}
-
 void async_image_checker( boost::asio::io_service & io_service )
 {
 	// 防止 images 文件不存在的时候退出.
 	try{
-		boost::async_dir_walk(io_service, boost::filesystem::path("images"), boost::bind(detail::async_image_check_and_download, boost::ref(io_service), _1, _2) );
+		boost::async_dir_walk(io_service, boost::filesystem::path("images"),
+				detail::async_image_check_and_download_op(io_service)
+		);
 	}catch (...){}
 }
 
