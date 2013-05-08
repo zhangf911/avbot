@@ -5,6 +5,7 @@
 #include <boost/foreach.hpp>
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/timedcall.hpp>
 
 #include "bulletin.hpp"
 #include <libavlog/avlog.hpp>
@@ -56,7 +57,7 @@ void bulletin::schedule_next() const
 	boost::cmatch what;
 
 	// 以一分钟为步进.
-	for (	boost::posix_time::time_iterator titr(now, boost::posix_time::minutes(1));
+	for (	boost::posix_time::time_iterator titr(now + boost::posix_time::seconds(45), boost::posix_time::minutes(1));
 			titr < end;
 			++ titr )
 	{
@@ -74,7 +75,7 @@ void bulletin::schedule_next() const
 				)
 				{
 					// 设定 expires
-					m_timer->expires_from_now(*titr - now + boost::posix_time::seconds( std::rand() % 30 +2 ));
+					m_timer->expires_from_now(*titr - now + boost::posix_time::seconds( std::rand() % 30 +15 ));
 					m_timer->async_wait(boost::bind( *this, _1, std::string(what[6])));
 					return;
 				}
@@ -87,7 +88,7 @@ void bulletin::schedule_next() const
 				)
 				{
 					// 设定 expires
-					m_timer->expires_from_now(*titr - now + boost::posix_time::seconds( std::rand() % 30 +2 ));
+					m_timer->expires_from_now(*titr - now + boost::posix_time::seconds( std::rand() % 30 + 15 ));
 					m_timer->async_wait(boost::bind( *this, _1, std::string("bulletin.txt")));
 					return;
 				}

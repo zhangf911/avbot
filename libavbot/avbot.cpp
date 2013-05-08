@@ -384,10 +384,17 @@ void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
 	on_message(message);
 }
 
+static std::string build_img_path(std::string cface)
+{
+	std::string("images/") + cface;
+	// 提取前2位.
+	
+}
+
 void avbot::callback_save_qq_image( const boost::system::error_code& ec, boost::asio::streambuf& buf, std::string cface )
 {
 	if (!ec || ec == boost::asio::error::eof){
-		std::ofstream cfaceimg((std::string("images/") + cface).c_str(), std::ofstream::binary|std::ofstream::out);
+		std::ofstream cfaceimg(build_img_path(cface).c_str(), std::ofstream::binary|std::ofstream::out);
 		cfaceimg.write(boost::asio::buffer_cast<const char*>(buf.data()), boost::asio::buffer_size(buf.data()));
 	}
 }
