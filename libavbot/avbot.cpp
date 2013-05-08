@@ -384,19 +384,22 @@ void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
 	on_message(message);
 }
 
-static std::string build_img_path(std::string cface)
+static std::string build_img_path(const std::string & cface)
 {
 	// 提取前2位.
-	boost::replace_all( cface, "{", "" );
-	boost::replace_all( cface, "}", "" );
-	boost::replace_all( cface, "-", "" );
-	return std::string("images/") + cface.substr(0, 2) + "/" + cface;
+	std::string _cface = cface;
+	boost::replace_all( _cface, "{", "" );
+	boost::replace_all( _cface, "}", "" );
+	boost::replace_all( _cface, "-", "" );
+	return std::string("images/") + _cface.substr(0, 2) + "/" + cface;
 }
 
 void avbot::callback_save_qq_image( const boost::system::error_code& ec, boost::asio::streambuf& buf, std::string cface )
 {
 	if (!ec || ec == boost::asio::error::eof){
-		std::ofstream cfaceimg(build_img_path(cface).c_str(), std::ofstream::binary|std::ofstream::out);
+		std::string imgfilename = build_img_path(cface);
+		fs::create_directories(fs::path(imgfilename).parent_path());
+		std::ofstream cfaceimg(imgfilename.c_str(), std::ofstream::binary|std::ofstream::out);
 		cfaceimg.write(boost::asio::buffer_cast<const char*>(buf.data()), boost::asio::buffer_size(buf.data()));
 	}
 }
