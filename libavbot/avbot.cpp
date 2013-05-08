@@ -211,6 +211,15 @@ void avbot::callback_on_irc_message( irc::irc_msg pMsg )
 	on_message(message);
 }
 
+static std::string build_img_subpath(std::string cface)
+{
+	// 提取前2位.
+	boost::replace_all( cface, "{", "" );
+	boost::replace_all( cface, "}", "" );
+	boost::replace_all( cface, "-", "" );
+	return cface.substr(0, 2);
+}
+
 void avbot::callback_on_qq_group_message( std::string group_code, std::string who, const std::vector< qqMsg >& msg )
 {
 	using boost::property_tree::ptree;
@@ -278,7 +287,9 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 					{
 						if (!fs::exists("images"))
 							fs::create_directories("images");
-						webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface));
+						fs::path imgpath = fs::path("images") / build_img_subpath(qqmsg.cface);
+
+						webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface, imgpath));
 					}
 				}
 				// 接收方，需要把 cfage 格式化为 url , loger 格式化为 ../images/XX ,

@@ -85,18 +85,18 @@ public:
 
 				std::string cface = basename( item ) + extension( item );
 				// 重新执行图片下载.
-				webqq::async_fetch_cface( io_service, cface, boost::bind( *this, _1, _2, cface, handler) );
+				webqq::async_fetch_cface( io_service, cface, boost::bind( *this, _1, _2, item.parent_path(), cface, handler) );
 			}
 		}
 	}
 
 	// 那个webqq::async_fetch_cface回调.
 	template<class Handler>
-	void operator()( boost::system::error_code ec, boost::asio::streambuf & buf, std::string cface , Handler handler)
+	void operator()( boost::system::error_code ec, boost::asio::streambuf & buf, boost::filesystem::path parent_path, std::string cface , Handler handler)
 	{
  		using namespace boost::asio::detail;
 
- 		webqq::async_fetch_cface_std_saver(ec, buf, cface);
+ 		webqq::async_fetch_cface_std_saver(ec, buf, cface, parent_path);
 
 		avloop_idle_post(io_service, bind_handler( handler, ec));
 	}
