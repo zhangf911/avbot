@@ -386,9 +386,11 @@ void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
 
 static std::string build_img_path(std::string cface)
 {
-	std::string("images/") + cface;
 	// 提取前2位.
-	
+	boost::replace_all( cface, "{", "" );
+	boost::replace_all( cface, "}", "" );
+	boost::replace_all( cface, "-", "" );
+	return std::string("images/") + cface.substr(0, 2) + "/" + cface;
 }
 
 void avbot::callback_save_qq_image( const boost::system::error_code& ec, boost::asio::streambuf& buf, std::string cface )
