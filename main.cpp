@@ -192,6 +192,14 @@ static void build_group(std::string chanelmapstring, avbot & mybot)
 	}
 }
 
+static std::string get_first(std::string cface)
+{
+	boost::replace_all( cface, "{", "" );
+	boost::replace_all( cface, "}", "" );
+	boost::replace_all( cface, "-", "" );
+	return cface.substr(0, 2);
+}
+
 static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 {
 	std::string linemessage;
@@ -219,8 +227,9 @@ static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 			}
 			else if( v.first == "cface" )
 			{
-				if( mybot.fetch_img )
-					linemessage += boost::str( boost::format( "<img src=\"../images/%s\" />" ) % v.second.data() );
+				if( mybot.fetch_img ){
+					linemessage += boost::str( boost::format( "<img src=\"../images/%s/%s\" />" ) % get_first(v.second.data()) % v.second.data() );
+				}
 				else
 					linemessage += boost::str( boost::format( "<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" />" ) % v.second.data() );
 			}
