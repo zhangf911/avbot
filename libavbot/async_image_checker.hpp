@@ -96,14 +96,9 @@ public:
 	{
  		using namespace boost::asio::detail;
 
-		if( !ec || ec == boost::asio::error::eof )
-		{
-			std::ofstream cfaceimg( ( std::string( "images/" ) + cface ).c_str(), std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
-			cfaceimg.write( boost::asio::buffer_cast<const char*>( buf.data() ), boost::asio::buffer_size( buf.data() ) );
-			ec = boost::system::error_code();
-		}
+ 		webqq::async_fetch_cface_std_saver(ec, buf, cface);
 
-		io_service.post( bind_handler( handler, ec));
+		avloop_idle_post(io_service, bind_handler( handler, ec));
 	}
 
 };

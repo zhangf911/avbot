@@ -278,7 +278,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 					{
 						if (!fs::exists("images"))
 							fs::create_directories("images");
-						webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&avbot::callback_save_qq_image, this, _1, _2, qqmsg.cface));
+						webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface));
 					}
 				}
 				// 接收方，需要把 cfage 格式化为 url , loger 格式化为 ../images/XX ,
@@ -382,26 +382,6 @@ void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
 	message.add("newbee", buddy->uin);
 
 	on_message(message);
-}
-
-static std::string build_img_path(const std::string & cface)
-{
-	// 提取前2位.
-	std::string _cface = cface;
-	boost::replace_all( _cface, "{", "" );
-	boost::replace_all( _cface, "}", "" );
-	boost::replace_all( _cface, "-", "" );
-	return std::string("images/") + _cface.substr(0, 2) + "/" + cface;
-}
-
-void avbot::callback_save_qq_image( const boost::system::error_code& ec, boost::asio::streambuf& buf, std::string cface )
-{
-	if (!ec || ec == boost::asio::error::eof){
-		std::string imgfilename = build_img_path(cface);
-		fs::create_directories(fs::path(imgfilename).parent_path());
-		std::ofstream cfaceimg(imgfilename.c_str(), std::ofstream::binary|std::ofstream::out);
-		cfaceimg.write(boost::asio::buffer_cast<const char*>(buf.data()), boost::asio::buffer_size(buf.data()));
-	}
 }
 
 void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::need_verify_image cb )
