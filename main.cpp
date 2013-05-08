@@ -192,14 +192,6 @@ static void build_group(std::string chanelmapstring, avbot & mybot)
 	}
 }
 
-static std::string get_imgsubname(std::string cface)
-{
-	boost::replace_all( cface, "{", "" );
-	boost::replace_all( cface, "}", "" );
-	boost::replace_all( cface, "-", "" );
-	return cface.substr(0, 2);
-}
-
 static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 {
 	std::string linemessage;
@@ -228,7 +220,8 @@ static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 			else if( v.first == "cface" )
 			{
 				if( mybot.fetch_img ){
-					linemessage += boost::str( boost::format( "<img src=\"../images/%s/%s\" />" ) % get_imgsubname(v.second.data()) % v.second.data() );
+					std::string cface = v.second.data();
+					linemessage += boost::str( boost::format( "<img src=\"../images/%s/%s\" />" ) % avbot::image_subdir_name(cface) % cface );
 				}
 				else
 					linemessage += boost::str( boost::format( "<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" />" ) % v.second.data() );

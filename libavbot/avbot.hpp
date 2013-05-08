@@ -100,4 +100,5 @@ public:
 	// auto pick an nick name for IRC
 	static std::string autonick();
 	static std::string format_message( const avbot::av_message_tree& message );
+	static std::string image_subdir_name(std::string cface);
 };
