@@ -319,7 +319,7 @@ private:
 			return;
 		}
 
-		std::cout << "retry in 10s..." <<  std::endl;
+		std::cout << "irc: retry in 10s..." <<  std::endl;
 		socket_.close();
 
 		boost::delayedcallsec( io_service, 10, boost::bind( &client::relogin_delayed, this ) );
