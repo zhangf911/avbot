@@ -274,13 +274,18 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 				if (fetch_img){
 					// save to disk
 					// 先检查这样的图片本地有没有，有你fetch的P啊.
-					if (!fs::exists(std::string("images/") + qqmsg.cface))
+					fs::path imgfile = fs::path("images") / image_subdir_name(qqmsg.cface) / qqmsg.cface;
+					if (!fs::exists(imgfile))
 					{
 						if (!fs::exists("images"))
 							fs::create_directories("images");
-						fs::path imgpath = fs::path("images") / image_subdir_name(qqmsg.cface);
-
-						webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface, imgpath));
+						// 如果顶层目录已经有了的话 ... ...
+						fs::path oldimgfile = fs::path("images") / qqmsg.cface;
+						if (fs::exists(oldimgfile)){
+							fs::copy(oldimgfile, imgfile);
+						}else{
+							webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface, imgfile.parent_path()));
+						}
 					}
 				}
 				// 接收方，需要把 cfage 格式化为 url , loger 格式化为 ../images/XX ,
