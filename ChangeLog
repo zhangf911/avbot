@@ -1,5 +1,6 @@
 4.8
 	* htmlog: distribute image files to sub dirs.
+	* libwebqq: move cache file to cache/ sub directory
 
 4.7
 	* bulletin: broadcast a bulletin message @ desired time
