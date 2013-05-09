@@ -281,14 +281,19 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 							fs::create_directories("images");
 						// 如果顶层目录已经有了的话 ... ...
 						fs::path oldimgfile = fs::path("images") / qqmsg.cface;
+						if (!fs::exists(imgfile.parent_path()))
+							fs::create_directories(imgfile.parent_path());
 						if (fs::exists(oldimgfile)){
 							boost::system::error_code ec;
-							if (!fs::exists(imgfile.parent_path()))
-								fs::create_directories(imgfile.parent_path());
 							fs::create_hard_link(oldimgfile, imgfile, ec);
 							if (ec)
 								fs::copy(oldimgfile, imgfile);
 						}else{
+							// 在下载前,  先写入个空白的文件比较好,  这样就算下载的时候崩溃或者推出, 下次启动文件还是会被继续下载的.
+							boost::system::error_code ec;
+							boost::asio::streambuf buf;
+
+							webqq::async_fetch_cface_std_saver(ec, buf, qqmsg.cface, imgfile.parent_path());
 							webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface, imgfile.parent_path()));
 						}
 					}
