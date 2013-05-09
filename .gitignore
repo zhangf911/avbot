@@ -18,6 +18,7 @@ m4/
 *.m4
 autom4te.cache
 config.*
+!config.hpp
 depcomp
 ltmain.sh
 install-sh
