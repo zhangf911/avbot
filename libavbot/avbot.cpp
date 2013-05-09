@@ -283,6 +283,8 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 						fs::path oldimgfile = fs::path("images") / qqmsg.cface;
 						if (fs::exists(oldimgfile)){
 							boost::system::error_code ec;
+							if (!fs::exists(imgfile.parent_path()))
+								fs::create_directories(imgfile.parent_path());
 							fs::create_hard_link(oldimgfile, imgfile, ec);
 							if (ec)
 								fs::copy(oldimgfile, imgfile);
