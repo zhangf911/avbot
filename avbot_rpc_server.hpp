@@ -103,7 +103,7 @@ private:
 	boost::shared_ptr<boost::signals2::connection> m_connect;
 
 	boost::shared_ptr<boost::asio::streambuf>	m_request;
-	std::size_t									m_request_content_length;
+	boost::int64_t								m_request_content_length;
 	std::string									m_request_content_type;
 
 	boost::shared_ptr< boost::circular_buffer_space_optimized<boost::shared_ptr<boost::asio::streambuf> > >	m_responses;
