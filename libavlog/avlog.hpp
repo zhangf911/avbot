@@ -59,6 +59,8 @@ public:
 		// 写入信息头.
 		std::string info = "<head><meta http-equiv=\"Content-Type\" content=\"text/plain; charset=UTF-8\">\n";
 		m_lecture_file->write( info.c_str(), info.length() );
+		std::string htmltitle = std::string("<title>") + title + "</title>\r\n" ;
+		m_lecture_file->write( htmltitle.c_str(), htmltitle.length() );
 
 		return true;
 	}
