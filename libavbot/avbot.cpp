@@ -242,13 +242,12 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 		ptree_who.add("name", buddy->nick);
 		ptree_who.add("qqnumber", buddy->qqnum);
 		ptree_who.add("card", buddy->card);
-		if( ( buddy->mflag & 21 ) == 21 || buddy->uin == group->owner )
+		if( ( buddy->mflag & 1 ) == 1 || buddy->uin == group->owner )
 			message.add("op", "1");
 		else
 			message.add("op", "0");
 	}else{
-		ptree_who.add("nick", who)  ;
-
+		ptree_who.add("nick", who);
 	}
 
 
