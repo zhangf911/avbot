@@ -98,7 +98,6 @@ static std::string room_name( const avbot::av_message_tree& message )
 avbot::avbot( boost::asio::io_service& io_service )
   : m_io_service(io_service), fetch_img(false)
 {
-	base_image_url = "http://w.qq.com/cgi-bin/get_group_pic?pic=";
 	preamble_irc_fmt = "%a 说：";
 	preamble_qq_fmt = "qq(%a)说：";
 	preamble_xmpp_fmt = "(%a)说：";

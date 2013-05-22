@@ -24,7 +24,6 @@ private:
 	// channel have a name :)
 	std::map<std::string, av_chanel_map> m_channels;
 
-	std::string base_image_url;
 public:
 	avbot(boost::asio::io_service & io_service);
 
