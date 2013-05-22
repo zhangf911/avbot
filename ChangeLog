@@ -1,4 +1,5 @@
-4.8
+5.0
+	* webqq: fix webqq group chat picture
 	* htmlog: distribute image files to sub dirs.
 	* libwebqq: move cache file to cache/ sub directory
 
