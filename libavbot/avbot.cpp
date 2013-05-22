@@ -299,7 +299,13 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 				}
 				// 接收方，需要把 cfage 格式化为 url , loger 格式化为 ../images/XX ,
 				// 而 forwarder 则格式化为 http://http://w.qq.com/cgi-bin/get_group_pic?pic=XXX
-				textmsg.add("cface", qqmsg.cface.name);
+				textmsg.add("cface.name", qqmsg.cface.name);
+				textmsg.add("cface.gid", qqmsg.cface.gid);
+				textmsg.add("cface.uin", qqmsg.cface.uin);
+				textmsg.add("cface.key", qqmsg.cface.key);
+				textmsg.add("cface.server", qqmsg.cface.server);
+				textmsg.add("cface.file_id", qqmsg.cface.file_id);
+				textmsg.add("cface.vfwebqq", qqmsg.cface.vfwebqq);
 			}
 			break;
 			case qqMsg::LWQQ_MSG_FACE:
@@ -511,7 +517,16 @@ std::string avbot::format_message( const avbot::av_message_tree& message )
 				linermessage += v.second.data();
 				linermessage += " ";
 			}else if (v.first == "cface"){
-				linermessage += boost::str(boost::format("http://w.qq.com/cgi-bin/get_group_pic?pic=%s") % v.second.data());
+				std::string url = boost::str(
+								boost::format( "http://web.qq.com/cgi-bin/get_group_pic?gid=%s&uin=%s&fid=%s&pic=%s&vfwebqq=%s " )
+								% v.second.get<std::string>("gid")
+								% v.second.get<std::string>("uin")
+								% v.second.get<std::string>("file_id")
+								% url_encode ( v.second.get<std::string>("name") )
+								% v.second.get<std::string>("vfwebqq")
+							);
+
+				linermessage += url;
 			}
 		}
 	}else{

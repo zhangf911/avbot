@@ -51,6 +51,8 @@ namespace po = boost::program_options;
 #include "boost/acceptor_server.hpp"
 #include "boost/avloop.hpp"
 
+#include "libwebqq/url.hpp"
+
 #include "libavbot/avbot.hpp"
 #include "libavlog/avlog.hpp"
 
@@ -220,15 +222,25 @@ static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 			else if( v.first == "cface" )
 			{
 				if( mybot.fetch_img ){
-					std::string cface = v.second.data();
+					std::string cface = v.second.get<std::string>("name");
 					linemessage += boost::str( boost::format( "<img src=\"../images/%s/%s\" />" ) % avbot::image_subdir_name(cface) % cface );
 				}
-				else
-					linemessage += boost::str( boost::format( "<img src=\"http://w.qq.com/cgi-bin/get_group_pic?pic=%s\" />" ) % v.second.data() );
+				else{
+
+					std::string url = boost::str(
+								boost::format( "http://web.qq.com/cgi-bin/get_group_pic?gid=%s&uin=%s&fid=%s&pic=%s&vfwebqq=%s " )
+								% v.second.get<std::string>("gid")
+								% v.second.get<std::string>("uin")
+								% v.second.get<std::string>("file_id")
+								% url_encode ( v.second.get<std::string>("name") )
+								% v.second.get<std::string>("vfwebqq")
+							);
+					linemessage += boost::str( boost::format( "\t\t<img src=\"%s\" />\r\n" ) % url );
+				}
 			}
 			else if( v.first == "img" )
 			{
-				linemessage += boost::str( boost::format( "<img src=\"%s\" />" ) % v.second.data() );
+				linemessage += boost::str( boost::format( "\t\t<img src=\"%s\" />\r\n" ) % v.second.data() );
 			}
 		}
 		std::string channel_name = message.get<std::string>( "channel", "" );
