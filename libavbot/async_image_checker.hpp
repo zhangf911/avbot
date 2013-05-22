@@ -85,7 +85,9 @@ public:
 
 				std::string cface = basename( item ) + extension( item );
 				// 重新执行图片下载.
-				webqq::async_fetch_cface( io_service, cface, boost::bind( *this, _1, _2, item.parent_path(), cface, handler) );
+				//
+				// FIXME 好像已经失败了,  这个功能! 5555
+				// webqq::async_fetch_cface( io_service, cface, boost::bind( *this, _1, _2, item.parent_path(), cface, handler) );
 			}
 		}
 	}

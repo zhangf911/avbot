@@ -273,13 +273,13 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 				if (fetch_img){
 					// save to disk
 					// 先检查这样的图片本地有没有，有你fetch的P啊.
-					fs::path imgfile = fs::path("images") / image_subdir_name(qqmsg.cface) / qqmsg.cface;
+					fs::path imgfile = fs::path("images") / image_subdir_name(qqmsg.cface.name) / qqmsg.cface.name;
 					if (!fs::exists(imgfile))
 					{
 						if (!fs::exists("images"))
 							fs::create_directories("images");
 						// 如果顶层目录已经有了的话 ... ...
-						fs::path oldimgfile = fs::path("images") / qqmsg.cface;
+						fs::path oldimgfile = fs::path("images") / qqmsg.cface.name;
 						if (!fs::exists(imgfile.parent_path()))
 							fs::create_directories(imgfile.parent_path());
 						if (fs::exists(oldimgfile)){
@@ -292,14 +292,14 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 							boost::system::error_code ec;
 							boost::asio::streambuf buf;
 
-							webqq::async_fetch_cface_std_saver(ec, buf, qqmsg.cface, imgfile.parent_path());
-							webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface, imgfile.parent_path()));
+							webqq::async_fetch_cface_std_saver(ec, buf, qqmsg.cface.name, imgfile.parent_path());
+							webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface.name, imgfile.parent_path()));
 						}
 					}
 				}
 				// 接收方，需要把 cfage 格式化为 url , loger 格式化为 ../images/XX ,
 				// 而 forwarder 则格式化为 http://http://w.qq.com/cgi-bin/get_group_pic?pic=XXX
-				textmsg.add("cface", qqmsg.cface);
+				textmsg.add("cface", qqmsg.cface.name);
 			}
 			break;
 			case qqMsg::LWQQ_MSG_FACE:
