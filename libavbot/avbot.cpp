@@ -305,6 +305,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 				textmsg.add("cface.server", qqmsg.cface.server);
 				textmsg.add("cface.file_id", qqmsg.cface.file_id);
 				textmsg.add("cface.vfwebqq", qqmsg.cface.vfwebqq);
+				textmsg.add("cface.gchatpicurl", qqmsg.cface.gchatpicurl);
 			}
 			break;
 			case qqMsg::LWQQ_MSG_FACE:
@@ -516,16 +517,9 @@ std::string avbot::format_message( const avbot::av_message_tree& message )
 				linermessage += v.second.data();
 				linermessage += " ";
 			}else if (v.first == "cface"){
-				std::string url = boost::str(
-								boost::format( "http://web.qq.com/cgi-bin/get_group_pic?gid=%s&uin=%s&fid=%s&pic=%s&vfwebqq=%s " )
-								% v.second.get<std::string>("gid")
-								% v.second.get<std::string>("uin")
-								% v.second.get<std::string>("file_id")
-								% url_encode ( v.second.get<std::string>("name") )
-								% v.second.get<std::string>("vfwebqq")
-							);
-
-				linermessage += url;
+				// 执行 HTTP 访问获得 302 跳转后的 URL.
+				linermessage += v.second.get<std::string>("gchatpicurl");
+				linermessage += " ";
 			}
 		}
 	}else{
