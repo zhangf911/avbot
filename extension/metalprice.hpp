@@ -38,13 +38,17 @@ struct metalprice_fetcher_op{
 	metalprice_fetcher_op(boost::asio::io_service & _io_service, MsgSender _sender, std::string _metal)
 	  : io_service(_io_service), sender(_sender), stream(new avhttp::http_stream(_io_service)), metal(_metal)
 	{
-		std::string list = "hf_GC";
+		std::string list;
 		if (metal == "黄金")
 			list = "hf_GC";
-		if ( metal == "白银")
-			list == "hf_SI";
-		std::string url = boost::str(boost::format("http://hq.sinajs.cn/?_=%d&list=%s") % std::time(0) % list);
-		async_http_download(stream, url, *this);
+		else if ( metal == "白银")
+			list = "hf_SI";
+		if (list.empty()){
+			sender( std::string( metal + " 无报价或avbot暂不支持"));
+		}else{
+			std::string url = boost::str(boost::format("http://hq.sinajs.cn/?_=%d&list=%s") % std::time(0) % list);
+			async_http_download(stream, url, *this);
+		}
 	}
 
 	void operator()(boost::system::error_code ec, read_streamptr stream,  boost::asio::streambuf & buf)
@@ -75,7 +79,7 @@ struct metalprice_fetcher_op{
 };
 
 template<class MsgSender>
-void metalprice_fetcher(boost::asio::io_service & io_service, MsgSender sender, std::string metal = "黄金")
+void metalprice_fetcher(boost::asio::io_service & io_service, MsgSender sender, std::string metal)
 {
 	metalprice_fetcher_op<MsgSender>(io_service, sender, metal);
 }
