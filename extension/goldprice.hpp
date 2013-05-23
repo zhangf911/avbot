@@ -55,7 +55,7 @@ struct goldprice_fetcher_op{
 			if (boost::regex_search(jscript.c_str(), what, ex))
 			{
 				std::string price = what[1];
-				std::string msg = boost::str(boost::format("当前金价 $ %s /盎司") % price );
+				std::string msg = boost::str(boost::format("当前价 %s") % price );
 
 				sender(msg);
 			}
