@@ -61,11 +61,12 @@ struct metalprice_fetcher_op{
 			buf.sgetn(&jscript[0], buf.size());
 
 			boost::cmatch what;
-			boost::regex ex("var ([^=]*)=\"([0-9.\\-]*),(.*)");
+			boost::regex ex("var ([^=]*)=\"([0-9\\.\\-]*),([0-9\\.\\-]*),(.*)");
 			if (boost::regex_search(jscript.c_str(), what, ex))
 			{
 				std::string price = what[2];
-				std::string msg = boost::str(boost::format("%s 当前价 %s") % metal % price );
+				std::string zhangfu = what[3];
+				std::string msg = boost::str(boost::format("%s 当前价 %s 涨幅 %s%%") % metal % price % zhangfu);
 
 				sender(msg);
 			}
