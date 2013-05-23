@@ -589,8 +589,9 @@ int main( int argc, char *argv[] )
 		logfile.log_path( logdir );
 		chdir( logdir.c_str() );
 	}
-
-	INIT_LOGGER(".", "multi_download.log");
+#ifdef DEBUG
+	INIT_LOGGER(".", "avbot_avhttp.log");
+#endif
 
 	if( qqnumber.empty() || qqpwd.empty() ) {
 		std::cerr << console_out_str("请设置qq号码和密码") << std::endl;
