@@ -189,7 +189,6 @@ public:
 				}
 			}
 
-			std::cout << "邮件处理完毕" << std::endl;
 			_yield ::boost::delayedcallsec( io_service, 10, boost::bind( *this, ec, 0 ) );
 			goto restart;
 		}
