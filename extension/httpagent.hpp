@@ -22,13 +22,13 @@
 #ifndef __HTTP_AGENT_HPP__
 #define __HTTP_AGENT_HPP__
 
+#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <avhttp.hpp>
 
 #include "boost/coro/coro.hpp"
 #include "boost/coro/yield.hpp"
-
 #ifndef SYMBOL_HIDDEN
 
 #if defined _WIN32 || defined __CYGWIN__
@@ -42,6 +42,7 @@
 #endif
 
 #endif // SYMBOL_HIDDEN
+
 
 typedef boost::shared_ptr<avhttp::http_stream> read_streamptr;
 
