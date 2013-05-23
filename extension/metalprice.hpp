@@ -29,16 +29,22 @@
 #include "extension.hpp"
 #include "httpagent.hpp"
 
-namespace gold{
+namespace metal{
 
 // 向 http://hq.sinajs.cn/?_=1369230050901/&list=hf_GC 查询金价.
 template<class MsgSender>
-struct goldprice_fetcher_op{
+struct metalprice_fetcher_op{
 
-	goldprice_fetcher_op(boost::asio::io_service & _io_service, MsgSender _sender)
-	  : io_service(_io_service), sender(_sender), stream(new avhttp::http_stream(_io_service))
+	metalprice_fetcher_op(boost::asio::io_service & _io_service, MsgSender _sender, std::string _metal)
+	  : io_service(_io_service), sender(_sender), stream(new avhttp::http_stream(_io_service)), metal(_metal)
 	{
-		async_http_download(stream, "http://hq.sinajs.cn/?_=1369230050901/&list=hf_GC", *this);
+		std::string list = "hf_GC";
+		if (metal == "黄金")
+			list = "hf_GC";
+		if ( metal == "白银")
+			list == "hf_SI";
+		std::string url = boost::str(boost::format("http://hq.sinajs.cn/?_=%d&list=%s") % std::time(0) % list);
+		async_http_download(stream, url, *this);
 	}
 
 	void operator()(boost::system::error_code ec, read_streamptr stream,  boost::asio::streambuf & buf)
@@ -51,11 +57,11 @@ struct goldprice_fetcher_op{
 			buf.sgetn(&jscript[0], buf.size());
 
 			boost::cmatch what;
-			boost::regex ex("var hq_str_hf_GC=\"([0-9.\\-]*),(.*)");
+			boost::regex ex("var ([^=]*)=\"([0-9.\\-]*),(.*)");
 			if (boost::regex_search(jscript.c_str(), what, ex))
 			{
-				std::string price = what[1];
-				std::string msg = boost::str(boost::format("当前价 %s") % price );
+				std::string price = what[2];
+				std::string msg = boost::str(boost::format("%s 当前价 %s") % metal % price );
 
 				sender(msg);
 			}
@@ -65,24 +71,24 @@ struct goldprice_fetcher_op{
 	boost::asio::io_service & io_service;
 	MsgSender sender;
 	boost::shared_ptr<avhttp::http_stream> stream;
-
+	std::string metal;
 };
 
 template<class MsgSender>
-void goldprice_fetcher(boost::asio::io_service & io_service, MsgSender sender)
+void metalprice_fetcher(boost::asio::io_service & io_service, MsgSender sender, std::string metal = "黄金")
 {
-	goldprice_fetcher_op<MsgSender>(io_service, sender);
+	metalprice_fetcher_op<MsgSender>(io_service, sender, metal);
 }
 
 }
 
-class goldprice : avbotextension
+class metalprice : avbotextension
 {
 private:
 
 public:
 	template<class MsgSender>
-	goldprice(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name)
+	metalprice(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name)
 	  : avbotextension(_io_service, sender, channel_name)
 	{
 	}
@@ -96,8 +102,10 @@ public:
 
 		std::string textmsg = boost::trim_copy( msg.get<std::string>( "message.text" ) );
 
-		if (textmsg == ".qqbot 黄金报价"){
-			gold::goldprice_fetcher(io_service, m_sender);
+		boost::cmatch what;
+		if (boost::regex_search(textmsg.c_str(), what, boost::regex(".qqbot (.*)报价")))
+		{
+			metal::metalprice_fetcher(io_service, m_sender, what[1]);
 		}
 	}
 };

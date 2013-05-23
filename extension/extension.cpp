@@ -13,7 +13,7 @@
 #include "urlpreview.hpp"
 #include "joke.hpp"
 #include "bulletin.hpp"
-#include "goldprice.hpp"
+#include "metalprice.hpp"
 
 // dummy file
 
@@ -57,7 +57,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		)
 	);
 	mybot.on_message.connect(
-		::goldprice(io_service,
+		::metalprice(io_service,
 					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
 					channel_name
 		)
