@@ -47,8 +47,6 @@ namespace po = boost::program_options;
 #include <time.h>
 #include <wchar.h>
 
-#include "avhttp/logging.hpp"
-
 #include "boost/consolestr.hpp"
 #include "boost/acceptor_server.hpp"
 #include "boost/avloop.hpp"
@@ -590,9 +588,6 @@ int main( int argc, char *argv[] )
 		logfile.log_path( logdir );
 		chdir( logdir.c_str() );
 	}
-#ifdef DEBUG
-	INIT_LOGGER(".", "avbot_avhttp.log");
-#endif
 
 	if( qqnumber.empty() || qqpwd.empty() ) {
 		std::cerr << console_out_str("请设置qq号码和密码") << std::endl;
