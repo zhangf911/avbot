@@ -327,6 +327,7 @@ private:
 
 	void relogin_delayed()
 	{
+		msg_queue_.clear();
 		BOOST_FOREACH( std::string & str, join_queue_ )
 		msg_queue_.push_back( str );
 		join_queue_.clear();
