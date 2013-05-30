@@ -31,7 +31,6 @@
 #include <fstream>
 #include <avhttp.hpp>
 #include <limits>
-#include <boost/timedcall.hpp>
 
 #include "joke.hpp"
 
@@ -135,6 +134,7 @@ public:
 		if (ec){
 			io_service.post( bind_handler(handler, ec, std::string("获取笑话出错")) );
 		}else{
+			m_read_buf.reset(new boost::asio::streambuf);
 			boost::asio::async_read(*m_http_stream, *m_read_buf, boost::asio::transfer_all(), boost::bind(*this, _1, _2, handler));
 		}
 	}
@@ -151,7 +151,7 @@ public:
 			io_service.post( bind_handler(handler, error_code(), jokestr) );
 		}catch (const boost::locale::conv::invalid_charset_error &err){
 			// 应该重新开始, 而不是把这个错误的编码帖上去.
-			boost::delayedcallms(io_service, 100, boost::bind(*this, handler));
+			(*this)(handler);
 		}
 	}
 };
