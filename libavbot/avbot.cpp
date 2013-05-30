@@ -9,7 +9,6 @@ namespace fs = boost::filesystem;
 
 #include "avbot.hpp"
 #include "libwebqq/url.hpp"
-#include "async_image_checker.hpp"
 
 static std::string	preamble_formater(std::string preamble_qq_fmt, qqBuddy *buddy, std::string falbacknick, qqGroup * grpup = NULL )
 {
@@ -414,10 +413,6 @@ void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::n
 	m_qq_account->on_group_msg(boost::bind(&avbot::callback_on_qq_group_message, this, _1, _2, _3));
 	m_qq_account->on_group_found(boost::bind(&avbot::callback_on_qq_group_found, this, _1));
 	m_qq_account->on_group_newbee(boost::bind(&avbot::callback_on_qq_group_newbee, this, _1, _2));
-
-	// 异步发起一个操作，用来进行 images 目录下图片的校验.
-	// 因为有时一个图片没有写入完整avbot就被关闭了，对吧.
-	async_image_checker(m_io_service);
 }
 
 void avbot::feed_login_verify_code( std::string vcode )
