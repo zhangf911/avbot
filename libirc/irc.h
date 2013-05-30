@@ -127,7 +127,7 @@ private:
 	void handle_write_request( const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro )
 	{
 		std::istream  req( &request_ );
-		std::string line;
+		line.clear();
 
 		reenter( &coro )
 		{
@@ -369,6 +369,9 @@ private:
 	unsigned int                    retry_count_;
 	const unsigned int              c_retry_cuont;
 	bool insending;
+
+	std::string line;
+
 };
 
 }
