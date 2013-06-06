@@ -40,6 +40,8 @@ static inline std::string get_char_set( std::string type,  const std::string & h
 
 inline std::size_t read_until_title(boost::system::error_code ec, std::size_t bytes_transferred, std::size_t max_transfer, boost::asio::streambuf & buf)
 {
+ 	if (ec)
+ 		return 0;
 	// 有 </title> 就不读了, 或则已经读取到 4096 个字节也就不读了
 	// 或则已经读到 content_length 也不读了.
 	if (bytes_transferred >= max_transfer)
