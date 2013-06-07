@@ -47,6 +47,8 @@ namespace po = boost::program_options;
 #include <time.h>
 #include <wchar.h>
 
+#include <avhttp.hpp>
+
 #include "boost/consolestr.hpp"
 #include "boost/acceptor_server.hpp"
 #include "boost/avloop.hpp"
@@ -325,6 +327,14 @@ int daemon( int nochdir, int noclose )
 
 #include "input.ipp"
 #include "fsconfig.ipp"
+
+static void tj_sended(const boost::system::error_code &ec, avhttp::http_stream &s)
+{
+	if (!ec){
+		std::cerr << "avbot 使用统计(匿名)发送成功!"  << std::endl;
+	}
+	s.close();
+}
 
 int main( int argc, char *argv[] )
 {
@@ -668,6 +678,9 @@ int main( int argc, char *argv[] )
 			}
 		}
 	}
+
+	avhttp::http_stream s(io_service);
+	s.async_open("https://avlog.avplayer.org/cache/tj.php", boost::bind(&tj_sended, _1, boost::ref(s)) );
 
 	avloop_run( io_service);
 	return 0;
