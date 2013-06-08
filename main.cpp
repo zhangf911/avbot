@@ -548,7 +548,7 @@ int main( int argc, char *argv[] )
 							file << "# xmpp config" << std::endl;
 							file << "xmppuser=" << xmppnick << std::endl;
 							file << "xmpppwd=" << xmpppwd << std::endl;
-							file << "xmpproom=" << xmpproom << std::endl;
+							file << "xmpprooms=" << xmpproom << std::endl;
 							file << std::endl;
 						}
 					}
