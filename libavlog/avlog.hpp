@@ -16,6 +16,7 @@ public:
 	typedef boost::shared_ptr<std::ofstream> ofstream_ptr;
 	typedef std::map<std::string, ofstream_ptr> loglist;
 
+	static std::string html_escape(std::string);
 public:
 	std::string log_path()
 	{

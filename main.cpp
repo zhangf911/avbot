@@ -210,13 +210,7 @@ static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 		{
 			if( v.first == "text" )
 			{
-				std::string txt = v.second.data();
-				// 将 < > 给转义.
-				boost::replace_all( txt, "&", "&amp;" );
-				boost::replace_all( txt, "<", "&lt;" );
-				boost::replace_all( txt, ">", "&gt;" );
-				boost::replace_all( txt, " ", "&nbsp;" );
-				linemessage += txt;
+				linemessage += avlog::html_escape(v.second.data());
 			}
 			else if( v.first == "url" )
 			{
@@ -230,14 +224,7 @@ static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 				}
 				else{
 
-					std::string url = boost::str(
-								boost::format( "http://web.qq.com/cgi-bin/get_group_pic?gid=%s&uin=%s&fid=%s&pic=%s&vfwebqq=%s " )
-								% v.second.get<std::string>("gid")
-								% v.second.get<std::string>("uin")
-								% v.second.get<std::string>("file_id")
-								% url_encode ( v.second.get<std::string>("name") )
-								% v.second.get<std::string>("vfwebqq")
-							);
+					std::string url = v.second.get<std::string>("gchatpicurl");
 					linemessage += boost::str( boost::format( "\t\t<img src=\"%s\" />\r\n" ) % url );
 				}
 			}
