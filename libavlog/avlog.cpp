@@ -1,6 +1,17 @@
 
 #include "avlog.hpp"
 
+std::string avlog::html_escape(std::string txt )
+{
+	// escape html strings.
+	// 将 < > 给转义.
+	boost::replace_all( txt, "&", "&amp;" );
+	boost::replace_all( txt, "<", "&lt;" );
+	boost::replace_all( txt, ">", "&gt;" );
+	boost::replace_all( txt, " ", "&nbsp;" );
+	return txt;
+}
+
 bool avlog::add_log( const std::string& groupid, const std::string& msg )
 {
 	// 在qq群列表中查找已有的项目, 如果没找到则创建一个新的.
