@@ -140,12 +140,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "avplayer.org"
             VALUE "FileDescription", "avbot 主程序"
-            VALUE "FileVersion", "5.1.0.1"
+            VALUE "FileVersion", "5.2.0.1"
             VALUE "InternalName", "avbot.exe"
             VALUE "LegalCopyright", "Copyright (C) 2013 avplayer.org"
             VALUE "OriginalFilename", "avbot.exe"
             VALUE "ProductName", "Q群云秘书"
-            VALUE "ProductVersion", "5.1.0.1"
+            VALUE "ProductVersion", "5.2.0.1"
         END
     END
     BLOCK "VarFileInfo"
