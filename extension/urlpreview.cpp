@@ -1,5 +1,5 @@
-
 #include "urlpreview.hpp"
+#include <boost/algorithm/string.hpp>
 
 
 
@@ -47,6 +47,7 @@ inline std::size_t read_until_title(boost::system::error_code ec, std::size_t by
 	if (bytes_transferred >= max_transfer)
 		return 0;
 	std::string data(boost::asio::buffer_cast<const char*>(buf.data()), boost::asio::buffer_size(buf.data()));
+	boost::to_lower( data );
 	if (data.find("</title>")==std::string::npos){
 		return max_transfer - bytes_transferred;
 	}
@@ -140,6 +141,9 @@ struct urlpreview
 		std::string content;
 		content.resize( m_content->size() );
 		m_content->sgetn( &content[0], m_content->size() );
+
+		// 转换成小写, 统一处理, 避免遗漏大写的title标签.
+		boost::to_lower( content );
 
 		//去掉换行.
 		boost::replace_all( content, "\r", "" );
