@@ -150,8 +150,7 @@ struct urlpreview
 		boost::replace_all( content, "\n", "" );
 		// 获取charset
 		std::string charset = get_char_set( m_httpstream->response_options().find( avhttp::http_options::content_type ), content );
-
-		content =  content.substr(0, content.find("</title>")+8);
+		content = content.substr(0, content.find("</title>")+8);
 		// 匹配.
 		boost::regex ex( "<title[^>]*>(.*)</title>" );
 		boost::cmatch what;
@@ -159,6 +158,7 @@ struct urlpreview
 		if( boost::regex_search( content.c_str(), what, ex ) )
 		{
 			std::string title = what[1];
+			boost::trim_left(title);
 
 			try
 			{
