@@ -96,7 +96,7 @@ LDFLAGS=$boost_filesystem_save_LDFLAGS
 ])# BOOST_FILESYSTEMS
 
 
-AC_INIT([avbot], [5.1], [discuss@avplayer.org])
+AC_INIT([avbot], [5.2], [discuss@avplayer.org])
 AC_CONFIG_SRCDIR([main.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 

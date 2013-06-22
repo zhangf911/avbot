@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I${top_srcdir}/avproxy/include -I${top_srcdir}
 
 noinst_LTLIBRARIES = libavbot.la
 
-libavbot_la_SOURCES = avbot.cpp avbot.hpp async_image_checker.hpp
+libavbot_la_SOURCES = avbot.cpp avbot.hpp
 
 libavbot_la_LDFLAGS = -static
 
