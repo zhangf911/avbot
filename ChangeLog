@@ -1,6 +1,7 @@
 
-5.1
+6.0
 	* fix 100% cpu bug
+	* fix random relogin
 
 5.0
 	* 支持白银黄金现货报价
