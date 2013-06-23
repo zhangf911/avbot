@@ -318,7 +318,7 @@ int daemon( int nochdir, int noclose )
 static void tj_sended(const boost::system::error_code &ec, avhttp::http_stream &s)
 {
 	if (!ec){
-		std::cerr << "avbot 使用统计(匿名)发送成功!"  << std::endl;
+		std::cerr << console_out_str("avbot 使用统计(匿名)发送成功!") << std::endl;
 	}
 	s.close();
 }
