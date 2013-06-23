@@ -232,14 +232,15 @@ void urlpreview::do_urlpreview(std::string speaker, std::string url, boost::posi
 {
 	boost::posix_time::time_duration jiange = boost::posix_time::minutes(99);
 	// 到 urllist 里找一下是否有重复的.
-	urllist_type::iterator prev_url_iter = std::find_if(urllist->begin(), urllist->end(), boost::bind(find_url, url, _1));
-	if (prev_url_iter != urllist->end()){
-		// 有找到啊! 检查时间.
-		jiange = current -  prev_url_iter->second;
+	if (!urllist->empty()){
+		urllist_type::iterator prev_url_iter = std::find_if(urllist->begin(), urllist->end(), boost::bind(find_url, url, _1));
+		if (prev_url_iter != urllist->end()){
+			// 有找到啊! 检查时间.
+			jiange = current -  prev_url_iter->second;
 
-		urllist->erase(prev_url_iter);
+			urllist->erase(prev_url_iter);
+		}
 	}
-
 	urllist->push_back(std::make_pair(url, current));
 
 	if (jiange.minutes() >= 1){
