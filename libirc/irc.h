@@ -34,10 +34,10 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/asio/yield.hpp>
 
 #include "avproxy.hpp"
 #include "boost/timedcall.hpp"
-#include "boost/asio/yield.hpp"
 
 namespace irc{
 struct irc_msg

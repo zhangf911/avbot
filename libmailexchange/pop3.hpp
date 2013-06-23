@@ -6,7 +6,7 @@
 #include <boost/asio.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
-#include "boost/asio/yield.hpp"
+#include <boost/asio/yield.hpp>
 
 #include "boost/timedcall.hpp"
 #include "avproxy.hpp"
