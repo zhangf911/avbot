@@ -74,7 +74,7 @@ static std::string html_unescape_char(std::string escaped)
 		if (escaped== "nbsp")
 			return " ";
 		if (escaped== "ndash")
-			return "-";
+			return "–";
 		if (escaped== "mdash")
 			return "-";
 		if (escaped == "euro")
