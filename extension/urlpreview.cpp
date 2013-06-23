@@ -73,6 +73,10 @@ static std::string html_unescape_char(std::string escaped)
 	}else{
 		if (escaped== "nbsp")
 			return " ";
+		if (escaped== "ndash")
+			return "-";
+		if (escaped== "mdash")
+			return "-";
 		if (escaped == "euro")
 			return "€";
 		if (escaped == "quot")
