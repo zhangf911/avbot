@@ -192,6 +192,9 @@ esac
 
 AM_CONDITIONAL(OS_WINNT,[test "x$OS_WINNT" != "xno"])
 
+my_srcdir=$(cd ${srcdir} && pwd )
+
+CXXFLAGS+=" -I ${my_srcdir}/asiocoro"
 
 # Checks for typedefs, structures, and compiler characteristics.
 
