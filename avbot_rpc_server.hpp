@@ -30,11 +30,9 @@ namespace pt = boost::property_tree;
 namespace js = boost::property_tree::json_parser;
 #include <boost/circular_buffer.hpp>
 
-#include "boost/coro/coro.hpp"
-
 #include "botctl.hpp"
 
-#include "boost/coro/yield.hpp"
+#include <boost/asio/yield.hpp>
 
 namespace detail
 {
@@ -65,15 +63,15 @@ public:
 		, on_message( _on_message )
 	{
 		m_socket->get_io_service().post(
-			boost::asio::detail::bind_handler( *this, boost::coro::coroutine(), boost::system::error_code(), 0 )
+			boost::asio::detail::bind_handler( *this, boost::asio::coroutine(), boost::system::error_code(), 0 )
 		);
 	}
 
 	// 数据操作跑这里，嘻嘻.
-	void operator()( boost::coro::coroutine coro, boost::system::error_code ec, std::size_t bytestransfered );
+	void operator()( boost::asio::coroutine coro, boost::system::error_code ec, std::size_t bytestransfered );
 
 	// signal 的回调到了这里, 这里我们要区分对方是不是用了 keep-alive 呢.
-	void operator()( boost::coro::coroutine coro, const boost::property_tree::ptree & jsonmessage )
+	void operator()( boost::asio::coroutine coro, const boost::property_tree::ptree & jsonmessage )
 	{
 		boost::shared_ptr<boost::asio::streambuf> buf( new boost::asio::streambuf );
 		std::ostream	stream( buf.get() );
@@ -112,5 +110,3 @@ private:
 	void process_post( std::size_t bytestransfered );
 };
 }
-
-#include "boost/coro/unyield.hpp"

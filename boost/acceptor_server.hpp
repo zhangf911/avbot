@@ -7,14 +7,13 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
-#include "boost/coro/coro.hpp"
-#include "boost/coro/yield.hpp"
+#include <boost/asio/yield.hpp>
 
 namespace boost{
 namespace detail{
 
 template<typename Protocol, typename ProtocolProcesser>
-class acceptor_server_op :  boost::coro::coroutine
+class acceptor_server_op :  boost::asio::coroutine
 {
 	boost::asio::io_service & io_service;
 	boost::shared_ptr<boost::asio::basic_socket_acceptor<Protocol> > m_acceptor_socket;
@@ -42,13 +41,13 @@ public:
 
 	void operator()(const boost::system::error_code & ec)
 	{
-		CORO_REENTER(this)
+		reenter(this)
 		{
 			do{
 				m_client_socket.reset(new boost::asio::basic_stream_socket<Protocol>(io_service));
-				_yield m_acceptor_socket->async_accept(*m_client_socket, *this);
+				yield m_acceptor_socket->async_accept(*m_client_socket, *this);
 				if (!ec)
-					_fork acceptor_server_op<Protocol, ProtocolProcesser>(*this)(ec);
+					BOOST_ASIO_CORO_FORK acceptor_server_op<Protocol, ProtocolProcesser>(*this)(ec);
 			}while (is_parent());
 			protocolprocesser(m_client_socket);
 		}
@@ -66,6 +65,5 @@ void acceptor_server(boost::asio::io_service & io, const boost::asio::ip::basic_
 
 }
 
-#include "boost/coro/unyield.hpp"
 
 #endif // AV_ACCEPTOR_SERVER_H
