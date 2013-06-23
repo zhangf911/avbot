@@ -60,6 +60,10 @@ if(NOT Boost_FOUND)
 	endif()
 endif()
 
+if( Boost_VERSION LESS 105400)
+	include_directories(asiocoro)
+endif()
+
 find_package(Threads)
 
 if(WIN32 AND Boost_USE_STATIC_LIBS)
