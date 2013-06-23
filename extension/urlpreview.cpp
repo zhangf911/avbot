@@ -1,7 +1,8 @@
+#include <algorithm>
+#include <boost/date_time/time_duration.hpp>
+
 #include "urlpreview.hpp"
 #include <boost/algorithm/string.hpp>
-
-
 
 namespace detail
 {
@@ -194,7 +195,7 @@ struct urlpreview
 
 }
 
-void urlpreview::operator()( boost::property_tree::ptree message ) const
+void urlpreview::operator()( boost::property_tree::ptree message )
 {
 	if( message.get<std::string>( "channel" ) != m_channel_name )
 	{
@@ -211,14 +212,40 @@ void urlpreview::operator()( boost::property_tree::ptree message ) const
 	// 统一为
 	// http[s]?://[^ ].*
 	// 使用 boost_regex_search
-	boost::regex ex( "https?://[^ ]*" );
+	boost::regex ex( "https?://[^ 】]*" );
 	boost::cmatch what;
 
 	if( boost::regex_search( txt.c_str(), what, ex ) )
 	{
 		// 检查到 URL ?
 		std::string url = what[0];
-		// 把真正的工作交给真正的 urlpreview
-		detail::urlpreview( io_service, m_sender, speaker, boost::trim_copy(url) );
+		do_urlpreview(speaker, boost::trim_copy(url), boost::posix_time::from_time_t(std::time(NULL)));
 	}
 }
+
+static bool find_url(std::string url, const std::pair<std::string, boost::posix_time::ptime> & item)
+{
+	return item.first == url;
+}
+
+void urlpreview::do_urlpreview(std::string speaker, std::string url, boost::posix_time::ptime current )
+{
+	boost::posix_time::time_duration jiange = boost::posix_time::minutes(99);
+	// 到 urllist 里找一下是否有重复的.
+	urllist_type::iterator prev_url_iter = std::find_if(urllist->begin(), urllist->end(), boost::bind(find_url, url, _1));
+	if (prev_url_iter != urllist->end()){
+		// 有找到啊! 检查时间.
+		jiange = current -  prev_url_iter->second;
+
+		urllist->erase(prev_url_iter);
+	}
+
+	urllist->push_back(std::make_pair(url, current));
+
+	if (jiange.minutes() >= 1){
+		// 超过一分钟了,  应该说了.
+		// 把真正的工作交给真正的 urlpreview
+		detail::urlpreview( io_service, m_sender, speaker, url);
+	}
+}
+
