@@ -150,7 +150,7 @@ bool analysis_stock_data(std::string &data, stock_data &sd)
 		for (int i = 1; i < size; i++) {
 			str = std::string(what[i]);
 			if (count == 1) {				// NAME.
-				sd.stock_name = boost::locale::conv::between( boost::trim_copy(str) , "UTF-8", "gbk");
+				sd.stock_name = boost::locale::conv::between(boost::trim_copy(str) , "UTF-8", "gbk");
 			} else if (count == 2) {		// 今.
 				TYPE_CONVERT(sd.current_open_price, double);
 			} else if (count == 3) {		// 昨.
@@ -238,7 +238,7 @@ bool analysis_stock_data_public(std::string &data, stock_public &sp)
 		for (int i = 1; i < size; i++) {
 			str = std::string(what[i]);
 			if (count == 1) {				// NAME.
-				sp.stock_name = boost::locale::conv::between( boost::trim_copy(str) , "UTF-8", "gbk");
+				sp.stock_name = boost::locale::conv::between(boost::trim_copy(str) , "UTF-8", "gbk");
 			} else if (count == 2) {		// 今.
 				TYPE_CONVERT(sp.current_open_price, double);
 			} else if (count == 3) {		// 昨.
