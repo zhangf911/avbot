@@ -300,8 +300,8 @@ struct stock_fetcher_op
 		if (!ec || ec == boost::asio::error::eof) {
 
 			std::string jscript;
-			jscript.resize(buf.size());
-			buf.sgetn(&jscript[0], buf.size());
+			jscript.resize(response.size());
+			response.sgetn(&jscript[0], response.size());
 
 			if (m_query == "000001") {
 				stock_public sh;
