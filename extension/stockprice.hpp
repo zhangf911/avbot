@@ -374,6 +374,9 @@ public:
 		if (boost::regex_search(textmsg.c_str(), what, boost::regex(".qqbot 股票(.*)"))) {
 			stock::stock_fetcher(io_service, m_sender, std::string(what[1]));
 		}
+		if (boost::regex_search(textmsg.c_str(), what, boost::regex(".qqbot stock(.*)"))) {
+			stock::stock_fetcher(io_service, m_sender, std::string(what[1]));
+		}
 	}
 };
 
