@@ -309,7 +309,7 @@ struct stock_fetcher_op
 				stock_public sh;
 				if (parser_stock_data_public(jscript, sh)) {
 					double change_rate = ((sh.current_price - sh.before_close_price) / sh.before_close_price) * 100.0f;
-					std::string msg = boost::str(boost::format("%s : %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%%")
+					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%%")
 						% sh.stock_name % sh.current_price % sh.current_open_price % change_rate);
 					m_sender(msg);
 				}
@@ -328,7 +328,7 @@ struct stock_fetcher_op
 						return;
 					}
 					double change_rate = ((sd.current_price - sd.before_close_price) / sd.before_close_price) * 100.0f;
-					std::string msg = boost::str(boost::format("%s : %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%%")
+					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%%")
 						% sd.stock_name % sd.current_price % sd.current_open_price % change_rate);
 					m_sender(msg);
 				}
