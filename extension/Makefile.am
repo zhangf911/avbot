@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_srcdir}/avhttp/include -I${top_srcdir}/avp
 
 noinst_LTLIBRARIES = libextension.la
 
-libextension_la_SOURCES = joke.hpp joke.cpp urlpreview.hpp urlpreview.cpp extension.hpp extension.cpp bulletin.hpp bulletin.cpp metalprice.hpp httpagent.hpp
+libextension_la_SOURCES = joke.hpp joke.cpp urlpreview.hpp urlpreview.cpp extension.hpp extension.cpp bulletin.hpp bulletin.cpp metalprice.hpp httpagent.hpp stockprice.hpp
 
 libextension_la_LDFLAGS = -static
 

@@ -14,7 +14,7 @@
 #include "joke.hpp"
 #include "bulletin.hpp"
 #include "metalprice.hpp"
-#include "stock.hpp"
+#include "stockprice.hpp"
 
 // dummy file
 
