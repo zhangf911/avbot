@@ -295,7 +295,7 @@ struct stock_fetcher_op
 		async_http_download(m_stream, url, *this);
 	}
 
-	void operator()(boost::system::error_code ec, read_streamptr stream, boost::asio::streambuf &buf)
+	void operator()(boost::system::error_code ec, read_streamptr stream, boost::asio::streambuf &response)
 	{
 		if (!ec || ec == boost::asio::error::eof) {
 
