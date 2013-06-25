@@ -149,7 +149,7 @@ bool analysis_stock_data(std::string &data, stock_data &sd)
 		for (int i = 1; i < size; i++) {
 			str = std::string(what[i]);
 			if (count == 1) {				// NAME.
-				sd.stock_name = boost::trim(str);
+				sd.stock_name = boost::trim_copy(str);
 			} else if (count == 2) {		// 今.
 				TYPE_CONVERT(sd.current_open_price, double);
 			} else if (count == 3) {		// 昨.
@@ -237,7 +237,7 @@ bool analysis_stock_data_public(std::string &data, stock_public &sp)
 		for (int i = 1; i < size; i++) {
 			str = std::string(what[i]);
 			if (count == 1) {				// NAME.
-				sd.stock_name = boost::trim(str);
+				sp.stock_name = boost::trim_copy(str);
 			} else if (count == 2) {		// 今.
 				TYPE_CONVERT(sp.current_open_price, double);
 			} else if (count == 3) {		// 昨.
@@ -284,7 +284,7 @@ struct stock_fetcher_op
 				if (*i >= '0' && *i <= '9') {
 					continue;
 				} else {
-					sender(std::string(m_query + " avbot暂不支持该股票查询"));
+					m_sender(std::string(m_query + " avbot暂不支持该股票查询"));
 					return;
 				}
 			}
@@ -292,10 +292,10 @@ struct stock_fetcher_op
 
 		// OK, 开始查询股票.
 		std::string url = "http://hq.sinajs.cn/?list=sh" + m_query;
-		async_http_download(stream, url, *this);
+		async_http_download(m_stream, url, *this);
 	}
 
-	void operator()(boost::system::error_code ec, read_streamptr stream, boost::asio::streambuf &response)
+	void operator()(boost::system::error_code ec, read_streamptr stream, boost::asio::streambuf &buf)
 	{
 		if (!ec || ec == boost::asio::error::eof) {
 
@@ -308,14 +308,14 @@ struct stock_fetcher_op
 				if (analysis_stock_data_public(jscript, sh)) {
 					std::string msg = boost::str(boost::format("%s : %0.2f 开盘价: %0.2f")
 						% sh.stock_name % sh.current_price % sh.current_open_price);
-					sender(msg);
+					m_sender(msg);
 				}
 			} else {
 				stock_data sd;
 				if (analysis_stock_data(jscript, sd)) {
 					std::string msg = boost::str(boost::format("%s : %0.2f 开盘价: %0.2f")
-						% sh.stock_name % sh.current_price % sh.current_open_price);
-					sender(msg);
+						% sd.stock_name % sd.current_price % sd.current_open_price);
+					m_sender(msg);
 				}
 			}
 		}
@@ -336,13 +336,13 @@ void stock_fetcher(boost::asio::io_service & io_service, MsgSender sender, std::
 } // namespace stock
 
 
-class stock : avbotextension
+class stockprice : avbotextension
 {
 private:
 
 public:
 	template<class MsgSender>
-	stock(boost::asio::io_service &io, MsgSender sender, std::string channel_name)
+	stockprice(boost::asio::io_service &io, MsgSender sender, std::string channel_name)
 	  : avbotextension(io, sender, channel_name)
 	{}
 

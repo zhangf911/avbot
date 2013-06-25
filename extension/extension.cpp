@@ -14,6 +14,7 @@
 #include "joke.hpp"
 #include "bulletin.hpp"
 #include "metalprice.hpp"
+#include "stock.hpp"
 
 // dummy file
 
@@ -59,6 +60,12 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	);
 	mybot.on_message.connect(
 		::metalprice(io_service,
+					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
+					channel_name
+		)
+	);
+	mybot.on_message.connect(
+		::stockprice(io_service,
 					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
 					channel_name
 		)
