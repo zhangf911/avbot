@@ -273,6 +273,7 @@ struct stock_fetcher_op
 	  , m_sender(s)
 	  , m_stream(new avhttp::http_stream(io))
 	  , m_query(q)
+	  , m_status(0)
 	{
 		boost::trim(m_query);
 		if (m_query == "上证指数" && m_query == "大盘" && m_query == "") {
@@ -313,6 +314,17 @@ struct stock_fetcher_op
 			} else {
 				stock_data sd;
 				if (analysis_stock_data(jscript, sd)) {
+					if (sd.stock_name == "") {
+						if (m_status != 0) {
+							m_sender(std::string("avbot没有查询到 " + m_query + " 相关信息."));
+							return;
+						}
+						m_status++;
+						// 上市没有查询到, 从深市查询.
+						std::string url = "http://hq.sinajs.cn/?list=sz" + m_query;
+						async_http_download(m_stream, url, *this);
+						return;
+					}
 					std::string msg = boost::str(boost::format("%s : %0.2f 开盘价: %0.2f")
 						% sd.stock_name % sd.current_price % sd.current_open_price);
 					m_sender(msg);
@@ -325,6 +337,7 @@ struct stock_fetcher_op
 	MsgSender m_sender;
 	boost::shared_ptr<avhttp::http_stream> m_stream;
 	std::string m_query;
+	int m_status;
 };
 
 template<class MsgSender>
