@@ -277,7 +277,7 @@ struct stock_fetcher_op
 	  , m_status(0)
 	{
 		boost::trim(m_query);
-		if (m_query == "上证指数" && m_query == "大盘" && m_query == "") {
+		if (m_query == "上证指数" || m_query == "大盘" || m_query == "") {
 			m_query = "000001";
 		} else {
 			// 检查股票参数是否是数字字符串, 如果不是, 则输出不支持的查询.
