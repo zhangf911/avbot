@@ -129,6 +129,7 @@ typedef struct stock_public
 
 } stock_public;
 
+
 // 分析个股数据.
 bool parser_stock_data(std::string &data, stock_data &sd)
 {
@@ -309,8 +310,11 @@ struct stock_fetcher_op
 				stock_public sh;
 				if (parser_stock_data_public(jscript, sh)) {
 					double change_rate = ((sh.current_price - sh.before_close_price) / sh.before_close_price) * 100.0f;
-					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%%")
-						% sh.stock_name % sh.current_price % sh.current_open_price % change_rate);
+					double change = sh.current_price - sh.before_close_price;
+					double volume_of_trade = (double)sh.turnover / 100000000.0f;
+					double business = (double)sh.business / 100000000.0f;
+					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f亿手 成交额: %0.2f亿元")
+						% sh.stock_name % sh.current_price % sh.current_open_price % change_rate % change % volume_of_trade % business);
 					m_sender(msg);
 				}
 			} else {
@@ -328,8 +332,11 @@ struct stock_fetcher_op
 						return;
 					}
 					double change_rate = ((sd.current_price - sd.before_close_price) / sd.before_close_price) * 100.0f;
-					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%%")
-						% sd.stock_name % sd.current_price % sd.current_open_price % change_rate);
+					double change = sd.current_price - sd.before_close_price;
+					double volume_of_trade = (double)sd.volume / 1000000.0f;
+					double amount = (double)sd.amount / 10000.0f;
+					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f万手 成交额: %0.2f万元")
+						% sd.stock_name % sd.current_price % sd.current_open_price % change_rate % change % volume_of_trade % amount);
 					m_sender(msg);
 				}
 			}
