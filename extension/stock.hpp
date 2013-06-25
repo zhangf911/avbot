@@ -314,7 +314,7 @@ struct stock_fetcher_op
 				stock_data sd;
 				if (analysis_stock_data(jscript, sd)) {
 					std::string msg = boost::str(boost::format("%s : %0.2f 开盘价: %0.2f")
-						% sh.stock_name % sh.current_price % sh.current_open_price);
+						% sd.stock_name % sd.current_price % sd.current_open_price);
 					sender(msg);
 				}
 			}
