@@ -129,6 +129,16 @@ typedef struct stock_public
 
 } stock_public;
 
+std::string to_price(double price)
+{
+	std::string ret = "元";
+	if (price > 10000.0f)
+		ret = "万元";
+	else if (price > 100000000.0f)
+		ret = "亿元";
+	ret = boost::str(boost::format("%0.2f%s") % price % ret);
+	return ret;
+}
 
 // 分析个股数据.
 bool parser_stock_data(std::string &data, stock_data &sd)
