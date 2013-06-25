@@ -130,7 +130,7 @@ typedef struct stock_public
 } stock_public;
 
 // 分析个股数据.
-bool analysis_stock_data(std::string &data, stock_data &sd)
+bool parser_stock_data(std::string &data, stock_data &sd)
 {
 	boost::regex ex;
 	boost::smatch what;
@@ -218,7 +218,7 @@ bool analysis_stock_data(std::string &data, stock_data &sd)
 }
 
 // 分析大盘数据.
-bool analysis_stock_data_public(std::string &data, stock_public &sp)
+bool parser_stock_data_public(std::string &data, stock_public &sp)
 {
 	boost::regex ex;
 	boost::smatch what;
@@ -307,7 +307,7 @@ struct stock_fetcher_op
 
 			if (m_query == "000001") {
 				stock_public sh;
-				if (analysis_stock_data_public(jscript, sh)) {
+				if (parser_stock_data_public(jscript, sh)) {
 					double change_rate = ((sh.current_price - sh.before_close_price) / sh.before_close_price) * 100.0f;
 					std::string msg = boost::str(boost::format("%s : %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%%")
 						% sh.stock_name % sh.current_price % sh.current_open_price % change_rate);
@@ -315,7 +315,7 @@ struct stock_fetcher_op
 				}
 			} else {
 				stock_data sd;
-				if (analysis_stock_data(jscript, sd)) {
+				if (parser_stock_data(jscript, sd)) {
 					if (sd.stock_name == "") {
 						if (m_status != 0) {
 							m_sender(std::string("avbot没有查询到 " + m_query + " 相关信息."));
