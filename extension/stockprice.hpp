@@ -286,7 +286,7 @@ struct stock_fetcher_op
 				if (*i >= '0' && *i <= '9') {
 					continue;
 				} else {
-					m_sender(std::string(m_query + " avbot暂不支持该股票查询"));
+					m_sender(std::string("avbot暂不支持该查询 " + m_query + " 格式, 请使用股票代码进行查询."));
 					return;
 				}
 			}
