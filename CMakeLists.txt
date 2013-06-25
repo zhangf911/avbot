@@ -60,6 +60,10 @@ if(NOT Boost_FOUND)
 	endif()
 endif()
 
+if( Boost_VERSION LESS 105400)
+	include_directories(asiocoro)
+endif()
+
 find_package(Threads)
 
 if(WIN32 AND Boost_USE_STATIC_LIBS)
@@ -85,7 +89,7 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-add_definitions(-DQQBOT_VERSION=\"5.2\")
+add_definitions(-DQQBOT_VERSION=\"6.0\")
 add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp avbot.rc)
 
 if(WIN32)

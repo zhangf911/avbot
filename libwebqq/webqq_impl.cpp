@@ -33,6 +33,7 @@ namespace js = boost::property_tree::json_parser;
 #include <boost/regex/pending/unicode_iterator.hpp>
 #include "boost/timedcall.hpp"
 #include "boost/multihandler.hpp"
+#include "boost/consolestr.hpp"
 
 #include "constant.hpp"
 #include "webqq.h"
@@ -40,8 +41,8 @@ namespace js = boost::property_tree::json_parser;
 #include "md5.hpp"
 #include "url.hpp"
 #include "utf8.hpp"
+#include "lwqq_status.hpp"
 #include "webqq_login.hpp"
-#include "boost/consolestr.hpp"
 #include "clean_cache.hpp"
 
 #include "process_group_msg.hpp"
@@ -106,7 +107,7 @@ void WebQQ::login()
 	m_cookies.clear();
 	// start login process, will call login_withvc later
 	if (m_status == LWQQ_STATUS_OFFLINE)
-		detail::corologin( *this );
+		detail::corologin op( shared_from_this() );
 }
 
 // login to server with vc. called by login code or by user
@@ -115,7 +116,14 @@ void WebQQ::login()
 void WebQQ::login_withvc( std::string vccode )
 {
 	std::cout << "vc code is \"" << vccode << "\"" << std::endl;
-	detail::corologin_vc( *this, vccode );
+	detail::corologin_vc op( shared_from_this(), vccode );
+}
+
+// last step of a login process
+// and this will be callded every other minutes to prevent foce kick off.
+void  WebQQ::change_status(LWQQ_STATUS status, boost::function<void (boost::system::error_code) > handler)
+{
+	detail::lwqq_change_status op(shared_from_this(), status, handler);
 }
 
 void WebQQ::send_group_message( qqGroup& group, std::string msg, send_group_message_cb donecb )
@@ -290,19 +298,19 @@ public:
 	typedef void result_type;
 	// 将　qqBuddy 里的　uin 转化为　qq 号码.
 	template<class Handler>
-	buddy_uin_to_qqnumber( WebQQ & _webqq, std::string uin, Handler handler )
-		: _io_service( _webqq.get_ioservice() ) {
+	buddy_uin_to_qqnumber( boost::shared_ptr<WebQQ> _webqq, std::string uin, Handler handler )
+		: _io_service( _webqq->get_ioservice() ) {
 		read_streamptr stream;
 		std::string url = boost::str(
 							  boost::format( "%s/api/get_friend_uin2?tuin=%s&verifysession=&type=1&code=&vfwebqq=%s" )
-							  % "http://s.web2.qq.com" % uin % _webqq.m_vfwebqq
+							  % "http://s.web2.qq.com" % uin % _webqq->m_vfwebqq
 						  );
 
-		stream.reset( new avhttp::http_stream( _webqq.get_ioservice() ) );
+		stream.reset( new avhttp::http_stream( _webqq->get_ioservice() ) );
 		stream->request_options(
 			avhttp::request_opts()
 			( avhttp::http_options::http_version , "HTTP/1.0" )
-			( avhttp::http_options::cookie, _webqq.m_cookies.lwcookies )
+			( avhttp::http_options::cookie, _webqq->m_cookies.lwcookies )
 			( avhttp::http_options::referer, "http://s.web2.qq.com/proxy.html?v=201304220930&callback=1&id=3" )
 			( avhttp::http_options::content_type, "UTF-8" )
 			( avhttp::http_options::connection, "close" )
@@ -344,13 +352,13 @@ private:
 	boost::asio::io_service& _io_service;
 };
 
-class SYMBOL_HIDDEN update_group_member_qq : boost::coro::coroutine {
+class SYMBOL_HIDDEN update_group_member_qq : boost::asio::coroutine {
 public:
 	typedef void result_type;
 
-	update_group_member_qq( WebQQ & _webqq, boost::shared_ptr<qqGroup> _group )
+	update_group_member_qq( boost::shared_ptr<WebQQ>  _webqq, boost::shared_ptr<qqGroup> _group )
 		: group( _group ), m_webqq( _webqq ) {
-		m_webqq.get_ioservice().post( boost::bind( *this, "" ) );
+		m_webqq->get_ioservice().post( boost::bind( *this, "" ) );
 	}
 
 	void operator()( std::string qqnum )
@@ -361,7 +369,7 @@ public:
 			for( it = group->memberlist.begin(); it != group->memberlist.end(); it++ ) {
 				if (it->second.qqnum.empty())
 				{
-					_yield buddy_uin_to_qqnumber( m_webqq, it->second.uin, *this );
+					yield buddy_uin_to_qqnumber( m_webqq, it->second.uin, *this );
 					if ( qqnum == "-1")
 					return;
 				}
@@ -371,14 +379,14 @@ public:
 	}
 private:
 	std::map< std::string, qqBuddy >::iterator it;
-	boost::shared_ptr<qqGroup>	group;
-	WebQQ&						m_webqq;
+	boost::shared_ptr<qqGroup> group;
+	boost::shared_ptr<WebQQ> m_webqq;
 };
 
 //　将组成员的 QQ 号码一个一个更新过来.
 void WebQQ::update_group_member_qq(boost::shared_ptr<qqGroup> group )
 {
-	::update_group_member_qq( *this, group );
+	::update_group_member_qq( shared_from_this(), group );
 }
 
 qqGroup_ptr WebQQ::get_Group_by_gid( std::string gid )
@@ -480,7 +488,7 @@ void WebQQ::cb_poll_msg( const boost::system::error_code& ec, read_streamptr str
 	try
 	{
 		pt::json_parser::read_json( jsondata, jsonobj );
-		process_msg( jsonobj );
+		process_msg( jsonobj, ptwebqq );
 		//开启新的 poll
 		do_poll_one_msg(ptwebqq);
 
@@ -506,16 +514,24 @@ void WebQQ::process_group_message( const boost::property_tree::wptree& jstree )
 	qqimpl::detail::process_group_message_op(*this, jstree);
 }
 
-void WebQQ::process_msg( const pt::wptree &jstree )
+void WebQQ::process_msg( const pt::wptree &jstree , std::string & ptwebqq )
 {
 	//在这里解析json数据.
 	int retcode = jstree.get<int>( L"retcode" );
 
 	if( retcode ) {
-		if( retcode != 102 ) {
+		if( retcode == 116)
+		{
+			// 更新 ptwebqq
+			ptwebqq = this->m_cookies.ptwebqq = wide_utf8( jstree.get<std::wstring>( L"p") );
+			m_cookies.update();
+			
+		}else if( retcode != 102 )
+		{
 			m_status = LWQQ_STATUS_OFFLINE;
 			m_cookies.clear();
 			boost::delayedcallsec( m_io_service, 15, boost::bind( &WebQQ::login, this ) );
+			js::write_json(std::wcerr, jstree);
 		}
 
 		return;
@@ -541,7 +557,7 @@ void WebQQ::process_msg( const pt::wptree &jstree )
 				qqGroup_ptr group = get_Group_by_qq(wide_utf8(groupnumber));
 
 				// 报告一下新人入群!
-				update_group_member(group, boost::bind(&WebQQ::cb_newbee_group_join, this, group, wide_utf8(newuseruid)));
+				update_group_member(group, boost::bind(&WebQQ::cb_newbee_group_join, shared_from_this(), group, wide_utf8(newuseruid)));
 			}else if(result.second.get<std::wstring>( L"value.type" ) == L"group_leave")
 			{
 				// 旧人滚蛋.
@@ -556,7 +572,7 @@ void WebQQ::process_msg( const pt::wptree &jstree )
 			if (m_status == LWQQ_STATUS_ONLINE){
 				m_status = LWQQ_STATUS_OFFLINE;
 				m_cookies.ptwebqq = "";
-				boost::delayedcallsec( m_io_service, 15, boost::bind( &WebQQ::login, this ) );
+				boost::delayedcallsec( m_io_service, 15, boost::bind( &WebQQ::login, shared_from_this() ) );
 			}
 		}
 	}
@@ -601,11 +617,11 @@ void WebQQ::cb_group_list( const boost::system::error_code& ec, read_streamptr s
 	}
 
 	if( retry ) {
-		boost::delayedcallsec( m_io_service, 5, boost::bind( &WebQQ::update_group_list, this ) );
+		boost::delayedcallsec( m_io_service, 5, boost::bind( &WebQQ::update_group_list, shared_from_this() ) );
 	} else {
 		int groupcount = m_groups.size();
 
-		done_callback_handler groupmembercb = boost::bindmultihandler(groupcount, boost::bind( &WebQQ::do_poll_one_msg, this, m_cookies.ptwebqq ));
+		done_callback_handler groupmembercb = boost::bindmultihandler(groupcount, boost::bind( &WebQQ::do_poll_one_msg, shared_from_this(), m_cookies.ptwebqq ));
 		// fetching more budy info.
 		BOOST_FOREACH( grouplist::value_type & v, m_groups ) {
 			update_group_qqnumber( v.second );
@@ -637,7 +653,7 @@ void WebQQ::cb_group_qqnumber( const boost::system::error_code& ec, read_streamp
 			//start polling messages, 2 connections!
 			std::cerr << "start polling messages" <<  std::endl;
 
-			boost::delayedcallsec( get_ioservice(), 3, boost::bind( &WebQQ::do_poll_one_msg, this, m_cookies.ptwebqq ) );
+			boost::delayedcallsec( get_ioservice(), 3, boost::bind( &WebQQ::do_poll_one_msg, shared_from_this(), m_cookies.ptwebqq ) );
 
 			siggroupnumber(group);
 
@@ -662,7 +678,7 @@ void WebQQ::cb_group_qqnumber( const boost::system::error_code& ec, read_streamp
 		siggroupnumber(group);
 		return;
 	}catch (...){
-		boost::delayedcallsec( m_io_service, 50 + boost::rand48()() % 100 , boost::bind( &WebQQ::update_group_qqnumber, this, group) );
+		boost::delayedcallsec( m_io_service, 50 + boost::rand48()() % 100 , boost::bind( &WebQQ::update_group_qqnumber, shared_from_this(), group) );
 	}
 }
 
@@ -732,7 +748,7 @@ void WebQQ::cb_group_member( const boost::system::error_code& ec, read_streamptr
 	} catch( const pt::json_parser_error & jserr ) {
 		std::cerr <<  __FILE__ << " : " << __LINE__ << " : " <<  "parse json error : " <<  jserr.what() << std::endl;
 
-		boost::delayedcallsec( m_io_service, 20, boost::bind( &WebQQ::update_group_member, this, group, dummy) );
+		boost::delayedcallsec( m_io_service, 20, boost::bind( &WebQQ::update_group_member, shared_from_this(), group, dummy) );
 		// 在重试之前，获取缓存文件.
 		try{
 		pt::ptree jsonobj;
@@ -770,7 +786,7 @@ void WebQQ::fetch_aid(std::string arg, boost::function<void(const boost::system:
 			(avhttp::http_options::connection, "close")
 	);
 
-	async_http_download(stream, url, boost::bind(&WebQQ::cb_fetch_aid, this, _1, _2, _3, handler ));
+	async_http_download(stream, url, boost::bind(&WebQQ::cb_fetch_aid, shared_from_this(), _1, _2, _3, handler ));
 }
 
 static void cb_search_group_vcode(const boost::system::error_code& ec, std::string vcodedata, webqq::search_group_handler handler, qqGroup_ptr group)
@@ -829,7 +845,7 @@ void WebQQ::search_group(std::string groupqqnum, std::string vfcode, webqq::sear
 		(avhttp::http_options::cookie, m_cookies.lwcookies)
 		(avhttp::http_options::connection, "close")
 	);
-	async_http_download(stream, url, boost::bind(&WebQQ::cb_search_group, this, groupqqnum, _1, _2, _3, handler));
+	async_http_download(stream, url, boost::bind(&WebQQ::cb_search_group, shared_from_this(), groupqqnum, _1, _2, _3, handler));
 }
 
 static void cb_join_group_vcode(const boost::system::error_code& ec, std::string vcodedata, webqq::join_group_handler handler, qqGroup_ptr group)
@@ -898,7 +914,7 @@ void WebQQ::join_group(qqGroup_ptr group, std::string vfcode, webqq::join_group_
 		(avhttp::http_options::request_body, postdata)
 		(avhttp::http_options::content_length, boost::lexical_cast<std::string>(postdata.length()))
 	);
-	async_http_download(stream, url, boost::bind(&WebQQ::cb_join_group, this, group, _1, _2, _3, handler));
+	async_http_download(stream, url, boost::bind(&WebQQ::cb_join_group, shared_from_this(), group, _1, _2, _3, handler));
 }
 
 // 把 boost::u8_to_u32_iterator 封装一下，提供 * 解引用操作符.

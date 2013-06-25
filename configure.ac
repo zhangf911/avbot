@@ -96,7 +96,7 @@ LDFLAGS=$boost_filesystem_save_LDFLAGS
 ])# BOOST_FILESYSTEMS
 
 
-AC_INIT([avbot], [5.2], [discuss@avplayer.org])
+AC_INIT([avbot], [6.0], [discuss@avplayer.org])
 AC_CONFIG_SRCDIR([main.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -192,6 +192,9 @@ esac
 
 AM_CONDITIONAL(OS_WINNT,[test "x$OS_WINNT" != "xno"])
 
+my_srcdir=$(cd ${srcdir} && pwd )
+
+CXXFLAGS+=" -I ${my_srcdir}/asiocoro"
 
 # Checks for typedefs, structures, and compiler characteristics.
 

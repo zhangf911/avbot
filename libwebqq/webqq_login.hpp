@@ -26,10 +26,10 @@
 namespace js = boost::property_tree::json_parser;
 
 #include <avhttp.hpp>
+#include <boost/asio/yield.hpp>
 
 #include "boost/timedcall.hpp"
-#include "boost/coro/coro.hpp"
-#include "boost/coro/yield.hpp"
+
 
 #include "httpagent.hpp"
 
@@ -208,44 +208,7 @@ static void update_cookies(  LwqqCookies *cookies, const std::string & httpheade
 #undef FREE_AND_STRDUP
 
 	if( update_cache ) {
-
-		cookies->lwcookies.clear();
-
-		if( cookies->ptvfsession.length() ) {
-			cookies->lwcookies += "ptvfsession=" + cookies->ptvfsession + "; ";
-		}
-
-		if( cookies->ptcz.length() ) {
-			cookies->lwcookies += "ptcz=" + cookies->ptcz + "; ";
-		}
-
-		if( cookies->skey.length() ) {
-			cookies->lwcookies += "skey=" + cookies->skey + "; ";
-		}
-
-		if( cookies->ptwebqq.length() ) {
-			cookies->lwcookies += "ptwebqq=" + cookies->ptwebqq + "; ";
-		}
-
-		if( cookies->ptuserinfo.length() ) {
-			cookies->lwcookies += "ptuserinfo=" + cookies->ptuserinfo + "; ";
-		}
-
-		if( cookies->uin.length() ) {
-			cookies->lwcookies += "uin=" + cookies->uin + "; ";
-		}
-
-		if( cookies->ptisp.length() ) {
-			cookies->lwcookies += "ptisp=" + cookies->ptisp + "; ";
-		}
-
-		if( cookies->pt2gguin.length() ) {
-			cookies->lwcookies += "pt2gguin=" + cookies->pt2gguin + "; ";
-		}
-
-		if( cookies->verifysession.length() ) {
-			cookies->lwcookies += "verifysession=" + cookies->verifysession + "; ";
-		}
+		cookies->update();
 	}
 }
 
@@ -283,24 +246,10 @@ static std::string generate_clientid()
 #endif
 }
 
-static std::string lwqq_status_to_str( LWQQ_STATUS status )
-{
-	switch( status ) {
-		case LWQQ_STATUS_ONLINE: return "online"; break;
-		case LWQQ_STATUS_OFFLINE: return "offline"; break;
-		case LWQQ_STATUS_AWAY: return "away"; break;
-		case LWQQ_STATUS_HIDDEN: return "hidden"; break;
-		case LWQQ_STATUS_BUSY: return "busy"; break;
-		case LWQQ_STATUS_CALLME: return "callme"; break;
-		case LWQQ_STATUS_SLIENT: return "slient"; break;
-		default: return "unknow"; break;
-	}
-}
-
 // qq 登录办法
-class SYMBOL_HIDDEN corologin : boost::coro::coroutine {
+class SYMBOL_HIDDEN corologin : boost::asio::coroutine {
 public:
-	corologin( qqimpl::WebQQ & webqq )
+	corologin( boost::shared_ptr<qqimpl::WebQQ> webqq )
 		: m_webqq( webqq ) {
 		read_streamptr stream;
 		boost::asio::streambuf buf;
@@ -311,32 +260,32 @@ public:
 	void operator()( const boost::system::error_code& ec, read_streamptr stream, boost::asio::streambuf & buf ) {
 		//　登录步骤.
 		reenter( this ) {
-			stream.reset( new avhttp::http_stream( m_webqq.get_ioservice() ) );
+			stream.reset( new avhttp::http_stream( m_webqq->get_ioservice() ) );
 			std::cout << "Get webqq version from " <<  LWQQ_URL_VERSION <<  std::endl;
 			// 首先获得版本.
-			_yield async_http_download( stream, LWQQ_URL_VERSION, *this );
+			yield async_http_download( stream, LWQQ_URL_VERSION, *this );
 
-			m_webqq.m_version = parse_version( buf );
+			m_webqq->m_version = parse_version( buf );
 
 			// 接着获得验证码.
-			stream.reset( new avhttp::http_stream( m_webqq.get_ioservice() ) );
+			stream.reset( new avhttp::http_stream( m_webqq->get_ioservice() ) );
 
-			m_webqq.m_clientid.clear();
-			m_webqq.m_cookies.clear();
-			m_webqq.m_groups.clear();
-			m_webqq.m_psessionid.clear();
-			m_webqq.m_vfwebqq.clear();
-			m_webqq.m_status = LWQQ_STATUS_OFFLINE;
+			m_webqq->m_clientid.clear();
+			m_webqq->m_cookies.clear();
+			m_webqq->m_groups.clear();
+			m_webqq->m_psessionid.clear();
+			m_webqq->m_vfwebqq.clear();
+			m_webqq->m_status = LWQQ_STATUS_OFFLINE;
 			//获取验证码.
 
 			stream->request_options(
 				avhttp::request_opts()
-				( avhttp::http_options::cookie, boost::str( boost::format( "chkuin=%s" ) % m_webqq.m_qqnum ) )
+				( avhttp::http_options::cookie, boost::str( boost::format( "chkuin=%s" ) % m_webqq->m_qqnum ) )
 				( avhttp::http_options::connection, "close" )
 			);
 
-			_yield async_http_download( stream,
-										/*url*/ boost::str( boost::format( "%s%s?uin=%s&appid=%s" ) % LWQQ_URL_CHECK_HOST % VCCHECKPATH % m_webqq.m_qqnum % APPID ),
+			yield async_http_download( stream,
+										/*url*/ boost::str( boost::format( "%s%s?uin=%s&appid=%s" ) % LWQQ_URL_CHECK_HOST % VCCHECKPATH % m_webqq->m_qqnum % APPID ),
 										*this );
 
 			// 解析验证码，然后带验证码登录.
@@ -368,10 +317,10 @@ public:
 			/* We got the verify code. */
 
 			/* Parse uin first */
-			m_webqq.m_verifycode.uin = parse_verify_uin( response );
+			m_webqq->m_verifycode.uin = parse_verify_uin( response );
 
-			if( m_webqq.m_verifycode.uin.empty() ) {
-				m_webqq.sigerror( 1, 0 );
+			if( m_webqq->m_verifycode.uin.empty() ) {
+				m_webqq->sigerror( 1, 0 );
 				return;
 			}
 
@@ -384,14 +333,14 @@ public:
 			*c = '\0';
 
 			/* We need get the ptvfsession from the header "Set-Cookie" */
-			update_cookies( &( m_webqq.m_cookies ), stream->response_options().header_string(), "ptvfsession", 1 );
+			update_cookies( &( m_webqq->m_cookies ), stream->response_options().header_string(), "ptvfsession", 1 );
 
-			m_webqq.login_withvc( s );
+			m_webqq->login_withvc( s );
 		} else if( *c == '1' ) {
 			/* We need get the verify image. */
 
 			/* Parse uin first */
-			m_webqq.m_verifycode.uin = parse_verify_uin( response );
+			m_webqq->m_verifycode.uin = parse_verify_uin( response );
 			s = c;
 			c = strstr( s, "'" );
 			s = c + 1;
@@ -401,19 +350,21 @@ public:
 			*c = '\0';
 
 			//TODO, get verify image, and call signeedvc
-			m_webqq.get_verify_image( s );
+			m_webqq->get_verify_image( s );
 		}
 	}
 private:
-	qqimpl::WebQQ & m_webqq;
+	boost::shared_ptr<qqimpl::WebQQ> m_webqq;
 };
 
 // qq 登录办法-验证码登录
-class SYMBOL_HIDDEN corologin_vc : boost::coro::coroutine {
+class SYMBOL_HIDDEN corologin_vc : boost::asio::coroutine {
 public:
-	corologin_vc( WebQQ & webqq, std::string _vccode )
+	typedef void result_type;
+
+	corologin_vc( boost::shared_ptr<qqimpl::WebQQ> webqq, std::string _vccode )
 		: m_webqq( webqq ), vccode( _vccode ) {
-		std::string md5 = lwqq_enc_pwd( m_webqq.m_passwd.c_str(), vccode.c_str(), m_webqq.m_verifycode.uin.c_str() );
+		std::string md5 = lwqq_enc_pwd( m_webqq->m_passwd.c_str(), vccode.c_str(), m_webqq->m_verifycode.uin.c_str() );
 
 		// do login !
 		std::string url = boost::str(
@@ -425,91 +376,60 @@ public:
 								  "ptlang=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&"
 								  "action=2-11-7438&mibao_css=m_webqq&t=1&g=1" )
 							  % LWQQ_URL_LOGIN_HOST
-							  % m_webqq.m_qqnum
+							  % m_webqq->m_qqnum
 							  % md5
 							  % vccode
-							  % m_webqq.m_status
+							  % m_webqq->m_status
 							  % APPID
 						  );
 
-		read_streamptr stream( new avhttp::http_stream( m_webqq.get_ioservice() ) );
+		read_streamptr stream( new avhttp::http_stream( m_webqq->get_ioservice() ) );
 		stream->request_options(
 			avhttp::request_opts()
-			( avhttp::http_options::cookie, m_webqq.m_cookies.lwcookies )
+			( avhttp::http_options::cookie, m_webqq->m_cookies.lwcookies )
 			( avhttp::http_options::connection, "close" )
 		);
 		async_http_download( stream, url , *this );
 	}
 
 	// 在这里实现　QQ 的登录.
-	void operator()( const boost::system::error_code& ec, read_streamptr stream, boost::asio::streambuf & buffer ) {
-		std::string msg;
-		pt::ptree json;
+	void operator()( const boost::system::error_code& ec, read_streamptr stream, boost::asio::streambuf & buffer )
+	{
 		std::istream response( &buffer );
-		//　登录步骤.
-		reenter( this ) {
-			//set_online_status(lc, lwqq_status_to_str(lc->stat), err);
-			if( ( check_login( ec, stream, buffer ) == 0 ) && ( m_webqq.m_status == LWQQ_STATUS_ONLINE ) ) {
-				m_webqq.siglogin();
-				m_webqq.m_clientid = generate_clientid();
+		if( ( check_login( ec, stream, buffer ) == 0 ) && ( m_webqq->m_status == LWQQ_STATUS_ONLINE ) )
+		{
+			m_webqq->siglogin();
+			m_webqq->m_clientid = generate_clientid();
+			//change status,  this is the last step for login
+			// 设定在线状态.
+			m_webqq->change_status(LWQQ_STATUS_ONLINE, *this);
+		}else
+		{
+			m_webqq->get_ioservice().post( boost::bind( &WebQQ::login, m_webqq->shared_from_this() ) );
+		}
+	}
+	
+	void operator()(const boost::system::error_code& ec)
+	{
+		if(ec)
+		{
+			// 修改在线状态失败!
+		}
+		else
+		{
+			//polling group list
+			m_webqq->update_group_list();
+			
+			// 每 10 分钟修改一下在线状态.
+			lwqq_update_status(m_webqq, m_webqq->m_cookies.ptwebqq);
 
-				//change status,  this is the last step for login
-				// 设定在线状态.
+			m_webqq->m_group_msg_insending = !m_webqq->m_msg_queue.empty();
 
-				msg = boost::str(
-						  boost::format( "{\"status\":\"%s\",\"ptwebqq\":\"%s\","
-										 "\"passwd_sig\":""\"\",\"clientid\":\"%s\""
-										 ", \"psessionid\":null}" )
-						  % lwqq_status_to_str( LWQQ_STATUS_ONLINE )
-						  % m_webqq.m_cookies.ptwebqq
-						  % m_webqq.m_clientid
-					  );
-
-				msg = boost::str( boost::format( "r=%s" ) % url_encode( msg.c_str() ) );
-
-				stream.reset( new avhttp::http_stream( m_webqq.get_ioservice() ) );
-				stream->request_options(
-					avhttp::request_opts()
-					( avhttp::http_options::request_method, "POST" )
-					( avhttp::http_options::cookie, m_webqq.m_cookies.lwcookies )
-					( avhttp::http_options::referer, "http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2" )
-					( avhttp::http_options::content_type, "application/x-www-form-urlencoded; charset=UTF-8" )
-					( avhttp::http_options::request_body, msg )
-					( avhttp::http_options::content_length, boost::lexical_cast<std::string>( msg.length() ) )
-					( avhttp::http_options::connection, "close" )
-				);
-
-				_yield async_http_download( stream, LWQQ_URL_SET_STATUS , * this );
-
-				//处理!
-				try {
-					js::read_json( response, json );
-					js::write_json( std::cout, json );
-
-					if( json.get<std::string>( "retcode" ) == "0" ) {
-						m_webqq.m_psessionid = json.get_child( "result" ).get<std::string>( "psessionid" );
-						m_webqq.m_vfwebqq = json.get_child( "result" ).get<std::string>( "vfwebqq" );
-						m_webqq.m_status = LWQQ_STATUS_ONLINE;
-						//polling group list
-						m_webqq.update_group_list();
-
-					}
-				} catch( const pt::json_parser_error & jserr ) {
-					std::cerr <<  __FILE__ << " : " <<__LINE__ << " :" <<  "parse json error :" <<  jserr.what() <<  std::endl;
-				} catch( const pt::ptree_bad_path & jserr ) {
-					std::cerr <<  __FILE__ << " : " <<__LINE__ << " :" << "parse bad path error : " <<  jserr.what() <<  std::endl;
-				}
-
-				m_webqq.m_group_msg_insending = !m_webqq.m_msg_queue.empty();
-
-				if( m_webqq.m_group_msg_insending ) {
-					boost::tuple<std::string, std::string, WebQQ::send_group_message_cb> v = m_webqq.m_msg_queue.front();
-					boost::delayedcallms( m_webqq.get_ioservice(), 500, boost::bind( &WebQQ::send_group_message_internal, &m_webqq, boost::get<0>( v ), boost::get<1>( v ), boost::get<2>( v ) ) );
-					m_webqq.m_msg_queue.pop_front();
-				}
-
-			} else {
-				m_webqq.get_ioservice().post( boost::bind( &WebQQ::login, &m_webqq ) );
+			if( m_webqq->m_group_msg_insending )
+			{
+				boost::tuple<std::string, std::string, WebQQ::send_group_message_cb> v = m_webqq->m_msg_queue.front();
+				boost::delayedcallms( m_webqq->get_ioservice(), 500, boost::bind( &WebQQ::send_group_message_internal, m_webqq->shared_from_this(), boost::get<0>( v ), boost::get<1>( v ), boost::get<2>( v ) ) );
+				m_webqq->m_msg_queue.pop_front();
 			}
 		}
 	}
@@ -532,8 +452,8 @@ private:
 
 		switch( status ) {
 			case 0:
-				m_webqq.m_status = LWQQ_STATUS_ONLINE;
-				save_cookie( &( m_webqq.m_cookies ), stream->response_options().header_string() );
+				m_webqq->m_status = LWQQ_STATUS_ONLINE;
+				save_cookie( &( m_webqq->m_cookies ), stream->response_options().header_string() );
 				std::cerr <<  "login success!" << std::endl;
 				break;
 
@@ -592,7 +512,7 @@ private:
 	}
 
 private:
-	WebQQ & m_webqq;
+	boost::shared_ptr<qqimpl::WebQQ> m_webqq;
 	std::string vccode;
 };
 

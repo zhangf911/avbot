@@ -34,10 +34,10 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/asio/yield.hpp>
 
 #include "avproxy.hpp"
 #include "boost/timedcall.hpp"
-#include "boost/coro/yield.hpp"
 
 namespace irc{
 struct irc_msg
@@ -124,7 +124,7 @@ private:
 	}
 
 
-	void handle_write_request( const boost::system::error_code& err, std::size_t bytewrited, boost::coro::coroutine coro )
+	void handle_write_request( const boost::system::error_code& err, std::size_t bytewrited, boost::asio::coroutine coro )
 	{
 		std::istream  req( &request_ );
 		line.clear();
@@ -142,16 +142,16 @@ private:
 
 						line.append( "\n" );
 
-						_yield  boost::asio::async_write( socket_, boost::asio::buffer( line ),
+						yield  boost::asio::async_write( socket_, boost::asio::buffer( line ),
 														  boost::bind( &client::handle_write_request, this, _1, _2, coro )
 														);
 
-						boost::delayedcallms( io_service, 450, boost::bind( &client::handle_write_request, this, boost::system::error_code(), 0,  boost::coro::coroutine() ) );
+						boost::delayedcallms( io_service, 450, boost::bind( &client::handle_write_request, this, boost::system::error_code(), 0,  boost::asio::coroutine() ) );
 
 					}
 					else
 					{
-						_yield boost::delayedcallms( io_service, 5, boost::bind( &client::handle_write_request, this, boost::system::error_code(), 0, coro ) );
+						yield boost::delayedcallms( io_service, 5, boost::bind( &client::handle_write_request, this, boost::system::error_code(), 0, coro ) );
 					}
 
 				}
@@ -211,7 +211,7 @@ private:
 
 			boost::asio::async_write( socket_, boost::asio::null_buffers(),
 									  boost::bind( &client::handle_write_request, this,
-												   boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred, boost::coro::coroutine() ) );
+												   boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred, boost::asio::coroutine() ) );
 		}
 	}
 

@@ -108,6 +108,45 @@ typedef struct LwqqCookies {
 		verifysession.clear();
 		lwcookies.clear();
 	}
+	void update(){
+		this->lwcookies.clear();
+
+		if( this->ptvfsession.length() ) {
+			this->lwcookies += "ptvfsession=" + this->ptvfsession + "; ";
+		}
+
+		if( this->ptcz.length() ) {
+			this->lwcookies += "ptcz=" + this->ptcz + "; ";
+		}
+
+		if( this->skey.length() ) {
+			this->lwcookies += "skey=" + this->skey + "; ";
+		}
+
+		if( this->ptwebqq.length() ) {
+			this->lwcookies += "ptwebqq=" + this->ptwebqq + "; ";
+		}
+
+		if( this->ptuserinfo.length() ) {
+			this->lwcookies += "ptuserinfo=" + this->ptuserinfo + "; ";
+		}
+
+		if( this->uin.length() ) {
+			this->lwcookies += "uin=" + this->uin + "; ";
+		}
+
+		if( this->ptisp.length() ) {
+			this->lwcookies += "ptisp=" + this->ptisp + "; ";
+		}
+
+		if( this->pt2gguin.length() ) {
+			this->lwcookies += "pt2gguin=" + this->pt2gguin + "; ";
+		}
+
+		if( this->verifysession.length() ) {
+			this->lwcookies += "verifysession=" + this->verifysession + "; ";
+		}
+	}
 } LwqqCookies;
 
 typedef std::map<std::string, boost::shared_ptr<qqGroup> > grouplist;
@@ -115,11 +154,14 @@ typedef std::map<std::string, boost::shared_ptr<qqGroup> > grouplist;
 namespace detail {
 class corologin;
 class corologin_vc;
+class lwqq_change_status;
+class lwqq_update_status;
 class process_group_message_op;
 }
 
-class SYMBOL_HIDDEN WebQQ {
+class SYMBOL_HIDDEN WebQQ  : public boost::enable_shared_from_this<WebQQ> {
 	typedef boost::function0<void>		done_callback_handler;
+	using boost::enable_shared_from_this<WebQQ>::shared_from_this;
 public:
 	WebQQ( boost::asio::io_service & asioservice, std::string qqnum, std::string passwd);
 
@@ -128,6 +170,9 @@ public:
 	// login with vc, call this if you got signeedvc signal.
 	// in signeedvc signal, you can retreve images from server.
 	void login_withvc( std::string vccode );
+	
+	// change status. This is the last step of login process.
+	void change_status(LWQQ_STATUS status, boost::function<void (boost::system::error_code) > handler);
 
 	typedef boost::function<void ( const boost::system::error_code& ec )> send_group_message_cb;
 	void send_group_message( std::string group, std::string msg, send_group_message_cb donecb );
@@ -179,7 +224,7 @@ private:
 	void do_poll_one_msg( std::string ptwebqq );
 	void cb_poll_msg( const boost::system::error_code& ec, read_streamptr stream, boost::asio::streambuf& buf, std::string ptwebqq );
 
-	void process_msg( const pt::wptree & jstree );
+	void process_msg( const pt::wptree & jstree,std::string & ptwebqq );
 	void process_group_message( const pt::wptree & jstree );
 	void cb_group_list( const boost::system::error_code& ec, read_streamptr stream, boost::asio::streambuf& );
 	void cb_group_member_process_json(pt::ptree	&jsonobj, boost::shared_ptr<qqGroup>);
@@ -222,6 +267,7 @@ private:
 	friend class ::webqq;
 	friend class detail::corologin;
 	friend class detail::corologin_vc;
+	friend class detail::lwqq_change_status;
 	friend class detail::process_group_message_op;
 };
 

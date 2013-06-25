@@ -6,8 +6,8 @@
 #include <boost/bind.hpp>
 #include <boost/format.hpp>
 #include <boost/foreach.hpp>
-#include "boost/coro/coro.hpp"
-#include "boost/coro/yield.hpp"
+#include <boost/asio/yield.hpp>
+
 #include "boost/timedcall.hpp"
 #include "boost/avloop.hpp"
 #include "avproxy.hpp"
@@ -72,7 +72,7 @@ public:
 
 // 发送 rcpt to 命令, 返回发送成功的个数. 如果没有一个成功, 返回错误.
 template<class AsioStream>
-class send_rcpt_tos_op : boost::coro::coroutine
+class send_rcpt_tos_op : boost::asio::coroutine
 {
 public:
 
@@ -98,13 +98,13 @@ public:
 			{
 				// 开始发送循环.
 				writestream << "rcpt to: " << m_rcpts[i] <<  "\r\n";
-				_yield boost::asio::async_write(m_socket, *m_writebuf, *this );
+				yield boost::asio::async_write(m_socket, *m_writebuf, *this );
 
 				if( ec )
 					break;
 
 				// 读取响应.
-				_yield read_smtp_response_lines( *this );
+				yield read_smtp_response_lines( *this );
 
 				if( ec )
 					break;
@@ -119,13 +119,13 @@ public:
 				else
 				{
 					writestream << "rcpt to: <" << m_rcpts[i] <<  ">\r\n";
-					_yield boost::asio::async_write(m_socket, *m_writebuf, *this );
+					yield boost::asio::async_write(m_socket, *m_writebuf, *this );
 
 					if( ec )
 						break;
 
 					// 读取响应.
-					_yield read_smtp_response_lines( *this );
+					yield read_smtp_response_lines( *this );
 
 					if( ec )
 						break;
@@ -232,11 +232,11 @@ public:
 		}
 		m_imf = imf;
 		m_writebuf.reset( new boost::asio::streambuf );
-		io_service.post( boost::bind( *this, boost::system::error_code(), 0, handler, boost::coro::coroutine() ) );
+		io_service.post( boost::bind( *this, boost::system::error_code(), 0, handler, boost::asio::coroutine() ) );
 	}
 
 	template<class Handler>
-	void operator()( boost::system::error_code ec, std::size_t bytetransfered, Handler handler, boost::coro::coroutine coro )
+	void operator()( boost::system::error_code ec, std::size_t bytetransfered, Handler handler, boost::asio::coroutine coro )
 	{
 		using namespace boost::asio;
 
@@ -251,7 +251,7 @@ public:
 			if( retry_count++ <= 20 )
 			{
 				// 如果失败, 等待 retry_count * 10 + 20 s 后, 重试
-				::boost::delayedcallsec( io_service, retry_count * 10 + 20, boost::bind( *this, boost::system::error_code(), 0, handler, boost::coro::coroutine() ) );
+				::boost::delayedcallsec( io_service, retry_count * 10 + 20, boost::bind( *this, boost::system::error_code(), 0, handler, boost::asio::coroutine() ) );
 				return ;
 			}
 			else
@@ -270,83 +270,83 @@ public:
 			m_socket.reset( new ip::tcp::socket( io_service ) );
 
 			// 首先链接到服务器. dns 解析并连接.
-			_yield avproxy::async_proxy_connect(
+			yield avproxy::async_proxy_connect(
 				avproxy::autoproxychain( *m_socket, m_mailserver_query ),
 				boost::bind( *this, _1, 0, handler, coro ) );
 
 			m_readbuf.reset( new boost::asio::streambuf );
 
 			// 读取欢迎信息. 以 220 XXX 终止.如果多行, 最后一个是 带空格的, 前面的都不带. 故而使用 "[0-9]*? .*?\n" 正则表达式
-			_yield read_smtp_response_lines( *m_socket, boost::bind( *this, _1, _2, handler, coro ) );
+			yield read_smtp_response_lines( *m_socket, boost::bind( *this, _1, _2, handler, coro ) );
 			// discard 220 message
-			_yield check_wellcome_msg( boost::bind( *this, _1, 0, handler, coro ) );
+			yield check_wellcome_msg( boost::bind( *this, _1, 0, handler, coro ) );
 
 			// 发送 EHLO 执行登录.
 			writestream << "EHLO " << m_mailserver <<  "\r\n";
-			_yield boost::asio::async_write(*m_socket, *m_writebuf, boost::bind( *this, _1, _2, handler, coro ) );
-			_yield read_smtp_response_lines( *m_socket, boost::bind( *this, _1, _2, handler, coro ) );
+			yield boost::asio::async_write(*m_socket, *m_writebuf, boost::bind( *this, _1, _2, handler, coro ) );
+			yield read_smtp_response_lines( *m_socket, boost::bind( *this, _1, _2, handler, coro ) );
 
 			// 读取 250 响应.
 			check_server_cap( ec );
-			_yield avloop_idle_post(io_service, boost::bind( *this, ec, 0, handler, coro ) );
+			yield avloop_idle_post(io_service, boost::bind( *this, ec, 0, handler, coro ) );
 
 			// 如果有 STARTTLS 支持, 就开启 TLS
 			if( m_sslsocket )
 			{
 				// 发送 STARTTLS
 				writestream <<  "STARTTLS\r\n";
-				_yield boost::asio::async_write( *m_socket, *m_writebuf, boost::bind( *this, _1, _2, handler, coro ) );
-				_yield read_smtp_response_lines( *m_socket, boost::bind( *this, _1, _2, handler, coro ) );
+				yield boost::asio::async_write( *m_socket, *m_writebuf, boost::bind( *this, _1, _2, handler, coro ) );
+				yield read_smtp_response_lines( *m_socket, boost::bind( *this, _1, _2, handler, coro ) );
 				// 220 2.0.0 SMTP server ready
-				_yield check_status_for<220>( boost::bind( *this, _1, 0, handler, coro ) );
+				yield check_status_for<220>( boost::bind( *this, _1, 0, handler, coro ) );
 
 				// SSL handshake
-				_yield m_sslsocket->async_handshake( ssl::stream_base::client, boost::bind( *this, _1, 0, handler, coro ) );
+				yield m_sslsocket->async_handshake( ssl::stream_base::client, boost::bind( *this, _1, 0, handler, coro ) );
 			}
 
 			// 发送 AUTH PLAIN XXX 登录认证.
 			writestream << "AUTH PLAIN " << m_AUTH <<  "\r\n";
-			_yield async_write( boost::bind( *this, _1, _2, handler, coro ) );
+			yield async_write( boost::bind( *this, _1, _2, handler, coro ) );
 
-			_yield read_smtp_response_lines( boost::bind( *this, _1, _2, handler, coro ) );
+			yield read_smtp_response_lines( boost::bind( *this, _1, _2, handler, coro ) );
 
 			// 读取 235 响应.
-			_yield check_login_status( boost::bind( *this, _1, 0, handler, coro ) );
+			yield check_login_status( boost::bind( *this, _1, 0, handler, coro ) );
 
 			// 进入邮件发送过程.
 			// 发送 mail from <>
 			writestream << "MAIL FROM: <" <<  m_mailaddr << ">\r\n";
-			_yield async_write( boost::bind(*this, _1, _2, handler, coro) );
+			yield async_write( boost::bind(*this, _1, _2, handler, coro) );
 
-			_yield read_smtp_response_lines( boost::bind( *this, _1, _2, handler, coro ) );
+			yield read_smtp_response_lines( boost::bind( *this, _1, _2, handler, coro ) );
 
 			// 检查 OK 返回值
-			_yield check_status_for_ok( boost::bind( *this, _1, 0, handler, coro ) );
+			yield check_status_for_ok( boost::bind( *this, _1, 0, handler, coro ) );
 
 			// 发送 rcpt to XXX
 			if( m_sslsocket )
 			{
-				_yield send_rcpt_tos( *m_sslsocket, m_readbuf, rcpts, boost::bind( *this, _1, _2, handler, coro ) );
+				yield send_rcpt_tos( *m_sslsocket, m_readbuf, rcpts, boost::bind( *this, _1, _2, handler, coro ) );
 			}
 			else
 			{
-				_yield send_rcpt_tos( *m_socket, m_readbuf, rcpts, boost::bind( *this, _1, _2, handler, coro ) );
+				yield send_rcpt_tos( *m_socket, m_readbuf, rcpts, boost::bind( *this, _1, _2, handler, coro ) );
 			}
 
 			// 发送 DATA
 			writestream << "DATA\r\n";
-			_yield async_write( boost::bind(*this, _1, _2, handler, coro) );
+			yield async_write( boost::bind(*this, _1, _2, handler, coro) );
 
-			_yield read_smtp_response_lines( boost::bind( *this, _1, _2, handler, coro ) );
+			yield read_smtp_response_lines( boost::bind( *this, _1, _2, handler, coro ) );
 			// 检查 OK 返回值
-			_yield check_status_for<354>( boost::bind( *this, _1, 0, handler, coro ) );
+			yield check_status_for<354>( boost::bind( *this, _1, 0, handler, coro ) );
 
 			// 发送 IMF 格式化后的数据.
-			_yield send_mail_data( boost::bind( *this, _1, _2, handler, coro ) );
+			yield send_mail_data( boost::bind( *this, _1, _2, handler, coro ) );
 
-			_yield read_smtp_response_lines( boost::bind( *this, _1, _2, handler, coro ) );
+			yield read_smtp_response_lines( boost::bind( *this, _1, _2, handler, coro ) );
 			// 检查 OK 返回值
-			_yield check_status_for_ok( boost::bind( *this, _1, 0, handler, coro ) );
+			yield check_status_for_ok( boost::bind( *this, _1, 0, handler, coro ) );
 			// 执行一起正常的回调.
 			io_service.post( boost::asio::detail::bind_handler( handler, ec ) );
 		}

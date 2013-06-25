@@ -1,6 +1,10 @@
 
-5.1
+	* urlpreview now prevent noticing user the same url if the url is typed too fast
+	* urlpreview now parse the html escape character correctly
+
+6.0
 	* fix 100% cpu bug
+	* fix random relogin
 
 5.0
 	* 支持白银黄金现货报价

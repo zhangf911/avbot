@@ -314,7 +314,8 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 	}
 #ifndef _WIN32
 	if( message == ".qqbot reexec" ) {
-		if (fork()==0){
+#undef fork
+		if (::fork()==0){
 			char * argv[]={(char *)"avbot", NULL}; // 我就要转换到 char*，编译器给我闭嘴！
 			execvp("avbot", argv);
 		}

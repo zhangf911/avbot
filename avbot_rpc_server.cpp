@@ -20,18 +20,15 @@
 
 #include <boost/json_create_escapes_utf8.hpp>
 
-#include <boost/concept_check.hpp>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <avhttp/detail/parsers.hpp>
 
 #include "boost/avloop.hpp"
-#include "boost/coro/coro.hpp"
+// #include <boost/asio/yield.hpp>
 
 #include "avbot_rpc_server.hpp"
-
-#include "boost/coro/yield.hpp"
 
 namespace detail{
 
@@ -125,7 +122,7 @@ struct readbody_completion_condition{
 };
 
 // 数据操作跑这里，嘻嘻.
-void avbot_rpc_server::operator()( boost::coro::coroutine coro, boost::system::error_code ec, std::size_t bytestransfered )
+void avbot_rpc_server::operator()( boost::asio::coroutine coro, boost::system::error_code ec, std::size_t bytestransfered )
 {
 	boost::shared_ptr<boost::asio::streambuf> sendbuf;
 
@@ -147,7 +144,7 @@ void avbot_rpc_server::operator()( boost::coro::coroutine coro, boost::system::e
 	reenter ( &coro )
 	{
 		// 发起 HTTP 处理操作.
-		_yield boost::asio::async_read_until( *m_socket, *m_request, "\r\n\r\n", boost::bind( *this, coro, _1, _2 ) );
+		yield boost::asio::async_read_until( *m_socket, *m_request, "\r\n\r\n", boost::bind( *this, coro, _1, _2 ) );
 
 		// 解析 HTTP
 		req = parse_http( bytestransfered );
@@ -162,7 +159,7 @@ void avbot_rpc_server::operator()( boost::coro::coroutine coro, boost::system::e
 				{
 					// 将自己注册到 avbot 的 signal 去
 					// 等 有消息的时候，on_message 被调用，也就是下面的 operator() 被调用.
-					_yield m_connect = boost::make_shared<boost::signals2::connection>
+					yield m_connect = boost::make_shared<boost::signals2::connection>
 										( on_message.connect( boost::bind( *this, coro, _1 ) ) );
 					// 就这么退出了，但是消息来的时候，om_message 被调用，然后下面的那个
 					// operator() 就被调用了，那个 operator() 接着就会重新回调本 operator()
@@ -182,7 +179,7 @@ void avbot_rpc_server::operator()( boost::coro::coroutine coro, boost::system::e
 
 			// 进入发送过程
 			sendbuf = m_responses->front();
-			_yield boost::asio::async_write( *m_socket, *sendbuf, boost::bind( *this, coro, _1, _2 ) );
+			yield boost::asio::async_write( *m_socket, *sendbuf, boost::bind( *this, coro, _1, _2 ) );
 			m_responses->pop_front();
 		}
 		else if( req == HTTP_POST )
@@ -194,7 +191,7 @@ void avbot_rpc_server::operator()( boost::coro::coroutine coro, boost::system::e
 			{
 				// 没有 content_length 的 POST! 不支持！ 哼
 				using namespace boost::system::errc;
-				_yield avloop_idle_post(m_socket->get_io_service(), boost::bind( *this, coro, make_error_code(protocol_error), 0 ));
+				yield avloop_idle_post(m_socket->get_io_service(), boost::bind( *this, coro, make_error_code(protocol_error), 0 ));
 				m_connect->disconnect();
 				return;
 			}
@@ -209,7 +206,7 @@ void avbot_rpc_server::operator()( boost::coro::coroutine coro, boost::system::e
 		}
 
 		// 这个步骤重新创建了一个新的 coro 对象，导致 reenter 会重新执行.
-		_yield avloop_idle_post(m_socket->get_io_service(), boost::bind( *this, boost::coro::coroutine(), boost::system::error_code(), 0 ));
+		yield avloop_idle_post(m_socket->get_io_service(), boost::bind( *this, boost::asio::coroutine(), boost::system::error_code(), 0 ));
 	}
 }
 
