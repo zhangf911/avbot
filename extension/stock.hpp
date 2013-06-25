@@ -31,39 +31,39 @@
 #include "extension.hpp"
 #include "httpagent.hpp"
 
-// Êı¾İÀàĞÍ×ª»».
+// æ•°æ®ç±»å‹è½¬æ¢.
 #define TYPE_CONVERT(val, type) do { \
 	try { val = boost::lexical_cast<type> (str); } \
 	catch (...) { val = 0.0f; } } while (false)
 
 namespace stock {
 
-// ¸ö¹Éµ±Ç°Êı¾İ.
+// ä¸ªè‚¡å½“å‰æ•°æ®.
 typedef struct stock_data
 {
-    std::string stock_id;	// ¹ÉÆ±´úÂë.
-    std::string stock_name; // ¹ÉÆ±Ãû³Æ.
-    int stock_state;		// ÕÇ»¹ÊÇµø, ÕÇÎª1, µøÎª-1, Æ½Îª0.
-    double current_price;	// µ±Ç°¼Û.
-    double head_price[10];  // ×îĞÂÂòÂôÅÌ¿Ú, 5¸öÂôÅÌ, 5¸öÂòÅÌ.
-    double head_number[10]; // ×îĞÂÂòÂôÅÌ¿ÚÊıÁ¿, Í¬ÉÏ.
-    double outamt;	// ÍâÅÌ.
-    double inamt;	// ÄÚÅÌ.
-    double before_close_price;	// ×òÊÕÅÌ.
-    double current_open_price;	// ½ñ¿ªÅÌ.
-    double best_high_price;		// ×î¸ß¼Û.
-    double best_low_price;	// ×îµÍ¼Û.
-    double amplitude;	    // Õñ¡¡·ù.
-    boost::int64_t volume;	// ³É½»Á¿.
-    boost::int64_t amount;	// ³É½»¶î.
-    double total_market_value;  // ×ÜÊĞÖµ.
-    double pearnings;	        // ÊĞÓ¯ÂÊ.
-    double rising_limit;	    // ÕÇÍ£¼Û.
-    double falling_limit;       // µøÍ£¼Û.
-    double vol_ratio;	// Á¿¡¡±È.
-    double bs_ratio;	// Î¯¡¡±È.
-    double bs_diff;		// Î¯¡¡²î.
-    double pnetasset;	// ÊĞ¾»ÂÊ.
+    std::string stock_id;	// è‚¡ç¥¨ä»£ç .
+    std::string stock_name; // è‚¡ç¥¨åç§°.
+    int stock_state;		// æ¶¨è¿˜æ˜¯è·Œ, æ¶¨ä¸º1, è·Œä¸º-1, å¹³ä¸º0.
+    double current_price;	// å½“å‰ä»·.
+    double head_price[10];  // æœ€æ–°ä¹°å–ç›˜å£, 5ä¸ªå–ç›˜, 5ä¸ªä¹°ç›˜.
+    double head_number[10]; // æœ€æ–°ä¹°å–ç›˜å£æ•°é‡, åŒä¸Š.
+    double outamt;	// å¤–ç›˜.
+    double inamt;	// å†…ç›˜.
+    double before_close_price;	// æ˜¨æ”¶ç›˜.
+    double current_open_price;	// ä»Šå¼€ç›˜.
+    double best_high_price;		// æœ€é«˜ä»·.
+    double best_low_price;	// æœ€ä½ä»·.
+    double amplitude;	    // æŒ¯ã€€å¹….
+    boost::int64_t volume;	// æˆäº¤é‡.
+    boost::int64_t amount;	// æˆäº¤é¢.
+    double total_market_value;  // æ€»å¸‚å€¼.
+    double pearnings;	        // å¸‚ç›ˆç‡.
+    double rising_limit;	    // æ¶¨åœä»·.
+    double falling_limit;       // è·Œåœä»·.
+    double vol_ratio;	// é‡ã€€æ¯”.
+    double bs_ratio;	// å§”ã€€æ¯”.
+    double bs_diff;		// å§”ã€€å·®.
+    double pnetasset;	// å¸‚å‡€ç‡.
 
     stock_data()
         : stock_id("")
@@ -93,22 +93,22 @@ typedef struct stock_data
 
 } stock_data;
 
-// ´óÅÌµ±Ç°Êı¾İ.
+// å¤§ç›˜å½“å‰æ•°æ®.
 typedef struct stock_public
 {
-    std::string stock_name;	    // ÉÏÖ¤»òÉîÖ¤.
+    std::string stock_name;	    // ä¸Šè¯æˆ–æ·±è¯.
     std::string stock_id;	    // id.
-    double current_price;	    // µ±Ç°¼Û.
-    double before_close_price;	// ×òÊÕÅÌ.
-    double current_open_price;  // ½ñ¿ªÅÌ.
-    double best_high_price;		// ×î¸ß¼Û.
-    double best_low_price;	    // ×îµÍ¼Û.
-    double amplitude;	        // Õñ¡¡·ù.
-    boost::int64_t turnover;	// ³É½»Á¿.
-    boost::int64_t business;	// ³É½»¶î.
-    double rise;	// ÉÏ ÕÇ.
-    double fair;	// ³Ö Æ½.
-    double fell;	// ÏÂ µø.
+    double current_price;	    // å½“å‰ä»·.
+    double before_close_price;	// æ˜¨æ”¶ç›˜.
+    double current_open_price;  // ä»Šå¼€ç›˜.
+    double best_high_price;		// æœ€é«˜ä»·.
+    double best_low_price;	    // æœ€ä½ä»·.
+    double amplitude;	        // æŒ¯ã€€å¹….
+    boost::int64_t turnover;	// æˆäº¤é‡.
+    boost::int64_t business;	// æˆäº¤é¢.
+    double rise;	// ä¸Š æ¶¨.
+    double fair;	// æŒ å¹³.
+    double fell;	// ä¸‹ è·Œ.
 
     stock_public()
         : stock_name("")
@@ -128,7 +128,7 @@ typedef struct stock_public
 
 } stock_public;
 
-// ·ÖÎö¸ö¹ÉÊı¾İ.
+// åˆ†æä¸ªè‚¡æ•°æ®.
 bool analysis_stock_data(std::string &data, stock_data &sd)
 {
 	boost::regex ex;
@@ -150,19 +150,19 @@ bool analysis_stock_data(std::string &data, stock_data &sd)
 			str = std::string(what[i]);
 			if (count == 1) {				// NAME.
 				sd.stock_name = boost::trim(str);
-			} else if (count == 2) {		// ½ñ.
+			} else if (count == 2) {		// ä»Š.
 				TYPE_CONVERT(sd.current_open_price, double);
-			} else if (count == 3) {		// ×ò.
+			} else if (count == 3) {		// æ˜¨.
 				TYPE_CONVERT(sd.before_close_price, double);
-			} else if (count == 4) {		// µ±.
+			} else if (count == 4) {		// å½“.
 				TYPE_CONVERT(sd.current_price, double);
-			} else if (count == 5) {		// ¸ß.
+			} else if (count == 5) {		// é«˜.
 				TYPE_CONVERT(sd.best_high_price, double);
-			} else if (count == 6) {		// µÍ.
+			} else if (count == 6) {		// ä½.
 				TYPE_CONVERT(sd.best_low_price, double);
-			} else if (count == 9) {		// Á¿.
+			} else if (count == 9) {		// é‡.
 				TYPE_CONVERT(sd.volume, boost::int64_t);
-			} else if (count == 10) {		// ¶î.
+			} else if (count == 10) {		// é¢.
 				TYPE_CONVERT(sd.amount, boost::int64_t);
 			} else if (count == 11) {		// m1...m5
 				TYPE_CONVERT(sd.head_number[0], double);
@@ -216,7 +216,7 @@ bool analysis_stock_data(std::string &data, stock_data &sd)
 	return true;
 }
 
-// ·ÖÎö´óÅÌÊı¾İ.
+// åˆ†æå¤§ç›˜æ•°æ®.
 bool analysis_stock_data_public(std::string &data, stock_public &sp)
 {
 	boost::regex ex;
@@ -238,19 +238,19 @@ bool analysis_stock_data_public(std::string &data, stock_public &sp)
 			str = std::string(what[i]);
 			if (count == 1) {				// NAME.
 				sd.stock_name = boost::trim(str);
-			} else if (count == 2) {		// ½ñ.
+			} else if (count == 2) {		// ä»Š.
 				TYPE_CONVERT(sp.current_open_price, double);
-			} else if (count == 3) {		// ×ò.
+			} else if (count == 3) {		// æ˜¨.
 				TYPE_CONVERT(sp.before_close_price, double);
-			} else if (count == 4) {		// µ±.
+			} else if (count == 4) {		// å½“.
 				TYPE_CONVERT(sp.current_price, double);
-			} else if (count == 5) {		// ¸ß.
+			} else if (count == 5) {		// é«˜.
 				TYPE_CONVERT(sp.best_high_price, double);
-			} else if (count == 6) {		// µÍ.
+			} else if (count == 6) {		// ä½.
 				TYPE_CONVERT(sp.best_low_price, double);
-			} else if (count == 9) {		// Á¿.
+			} else if (count == 9) {		// é‡.
 				TYPE_CONVERT(sp.turnover, boost::int64_t);
-			} else if (count == 10) {		// ¶î.
+			} else if (count == 10) {		// é¢.
 				TYPE_CONVERT(sp.business, boost::int64_t);
 			}
 		}
@@ -264,7 +264,7 @@ bool analysis_stock_data_public(std::string &data, stock_public &sp)
 	return true;
 }
 
-// Ïò http://hq.sinajs.cn/?list=sh000001 ²éÑ¯A¹ÉÖ¸Êı.
+// å‘ http://hq.sinajs.cn/?list=sh000001 æŸ¥è¯¢Aè‚¡æŒ‡æ•°.
 template<class MsgSender>
 struct stock_fetcher_op
 {
@@ -275,22 +275,22 @@ struct stock_fetcher_op
 	  , m_query(q)
 	{
 		boost::trim(m_query);
-		if (m_query == "ÉÏÖ¤Ö¸Êı" && m_query == "´óÅÌ" && m_query == "") {
+		if (m_query == "ä¸Šè¯æŒ‡æ•°" && m_query == "å¤§ç›˜" && m_query == "") {
 			m_query = "000001";
 		} else {
-			// ¼ì²é¹ÉÆ±²ÎÊıÊÇ·ñÊÇÊı×Ö×Ö·û´®, Èç¹û²»ÊÇ, ÔòÊä³ö²»Ö§³ÖµÄ²éÑ¯.
+			// æ£€æŸ¥è‚¡ç¥¨å‚æ•°æ˜¯å¦æ˜¯æ•°å­—å­—ç¬¦ä¸², å¦‚æœä¸æ˜¯, åˆ™è¾“å‡ºä¸æ”¯æŒçš„æŸ¥è¯¢.
 			for (std::string::iterator i = m_query.begin();
 				i != m_query.end(); i++) {
 				if (*i >= '0' && *i <= '9') {
 					continue;
 				} else {
-					sender(std::string(m_query + " avbotÔİ²»Ö§³Ö¸Ã¹ÉÆ±²éÑ¯"));
+					sender(std::string(m_query + " avbotæš‚ä¸æ”¯æŒè¯¥è‚¡ç¥¨æŸ¥è¯¢"));
 					return;
 				}
 			}
 		}
 
-		// OK, ¿ªÊ¼²éÑ¯¹ÉÆ±.
+		// OK, å¼€å§‹æŸ¥è¯¢è‚¡ç¥¨.
 		std::string url = "http://hq.sinajs.cn/?list=sh" + m_query;
 		async_http_download(stream, url, *this);
 	}
@@ -306,14 +306,14 @@ struct stock_fetcher_op
 			if (m_query == "000001") {
 				stock_public sh;
 				if (analysis_stock_data_public(jscript, sh)) {
-					std::string msg = boost::str(boost::format("%s : %0.2f ¿ªÅÌ¼Û: %0.2f")
+					std::string msg = boost::str(boost::format("%s : %0.2f å¼€ç›˜ä»·: %0.2f")
 						% sh.stock_name % sh.current_price % sh.current_open_price);
 					sender(msg);
 				}
 			} else {
 				stock_data sd;
 				if (analysis_stock_data(jscript, sd)) {
-					std::string msg = boost::str(boost::format("%s : %0.2f ¿ªÅÌ¼Û: %0.2f")
+					std::string msg = boost::str(boost::format("%s : %0.2f å¼€ç›˜ä»·: %0.2f")
 						% sh.stock_name % sh.current_price % sh.current_open_price);
 					sender(msg);
 				}
@@ -355,7 +355,7 @@ public:
 		std::string textmsg = boost::trim_copy(msg.get<std::string>("message.text"));
 
 		boost::cmatch what;
-		if (boost::regex_search(textmsg.c_str(), what, boost::regex(".qqbot ¹ÉÆ±(.*)"))) {
+		if (boost::regex_search(textmsg.c_str(), what, boost::regex(".qqbot è‚¡ç¥¨(.*)"))) {
 			stock::stock_fetcher(io_service, m_sender, std::string(what[1]));
 		}
 	}
