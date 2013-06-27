@@ -1,5 +1,6 @@
 
 6.1
+	* add stock price
 	* fix cookie process, make it more stable
 	* urlpreview now prevent noticing user the same url if the url is typed too fast
 	* urlpreview now parse the html escape character correctly
