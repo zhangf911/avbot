@@ -302,25 +302,10 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		return;
 	}
 
-	if( message == ".qqbot relogin" ) {
-		mybot.get_io_service().post(
-			boost::bind( &webqq::login, &mybot.get_qq() )
-		);
-		return;
-	}
-
 	if( message == ".qqbot exit" ) {
 		exit( 0 );
 	}
-#ifndef _WIN32
-	if( message == ".qqbot reexec" ) {
-#undef fork
-		if (::fork()==0){
-			char * argv[]={(char *)"avbot", NULL}; // 我就要转换到 char*，编译器给我闭嘴！
-			execvp("avbot", argv);
-		}
-	}
-#endif
+
 	ex.set_expression( ".qqbot join group ([0-9]+)" );
 	if (boost::regex_match( message.c_str(), what, ex ) )
 	{
