@@ -71,15 +71,12 @@ static std::string html_unescape_char(std::string escaped)
 		return boost::locale::conv::utf_to_utf<char>(unistr);
 
 	}else{
-#ifndef _MSC_VER	// 处理
 		if (escaped== "nbsp")
 			return " ";
 		if (escaped== "ndash")
 			return "–";
 		if (escaped== "mdash")
 			return "-";
-		if (escaped == "euro")
-			return "€";
 		if (escaped == "quot")
 			return "\"";
 		if (escaped == "amp")
@@ -88,6 +85,9 @@ static std::string html_unescape_char(std::string escaped)
 			return "<";
 		if (escaped == "gt")
 			return ">";
+#ifndef _MSC_VER	// 处理
+		if (escaped == "euro")
+			return "€";
 		if (escaped == "sup1")
 			return "¹";
 		if (escaped == "sup2")
