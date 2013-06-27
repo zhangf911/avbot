@@ -49,7 +49,7 @@ if(ENABLE_LTO)
 	set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -flto -Wl,-flto")
 endif()
 
-find_package(Boost 1.50 COMPONENTS date_time filesystem system program_options regex)
+find_package(Boost 1.50 COMPONENTS date_time filesystem system program_options regex locale)
 
 if(NOT Boost_FOUND)
 	set(Boost_USE_STATIC_LIBS        OFF)
