@@ -73,8 +73,6 @@ static std::string html_unescape_char(std::string escaped)
 	}else{
 		if (escaped== "nbsp")
 			return " ";
-		if (escaped== "ndash")
-			return "–";
 		if (escaped== "mdash")
 			return "-";
 		if (escaped == "quot")
@@ -86,6 +84,8 @@ static std::string html_unescape_char(std::string escaped)
 		if (escaped == "gt")
 			return ">";
 #ifndef _MSC_VER	// 处理
+		if (escaped== "ndash")
+			return "–";
 		if (escaped == "euro")
 			return "€";
 		if (escaped == "sup1")
