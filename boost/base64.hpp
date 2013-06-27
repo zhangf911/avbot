@@ -1,6 +1,16 @@
 #pragma once
 
 #include <string>
+#include <algorithm>
+#if defined(_MSC_VER)
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+#endif
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/transform_width.hpp>

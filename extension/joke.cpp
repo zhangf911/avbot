@@ -184,10 +184,12 @@ static bool can_joke(std::string msg)
 {
 	if (msg == ".qqbot joke")
 		return true;
+#ifndef _MSC_VER
 	if (msg == ".qqbot 给大爷来一个笑话")
 		return true;
 	if ( (msg.find("大爷") != std::string::npos) && (msg.find("笑话")!= std::string::npos) )
 		return true;
+#endif
 	return false;
 }
 
@@ -204,7 +206,7 @@ void joke::operator()( boost::property_tree::ptree msg )
 			{
 				// 其实关闭不掉的, 就是延长到 24 个小时了, 嘻嘻.
 				* m_interval = boost::posix_time::seconds( 3600 * 24 );
-				m_sender( "笑话关闭" );
+				m_sender( "笑话关闭." );
 				save_setting();
 			}
 			else if( textmsg == ".qqbot joke on" )
@@ -212,7 +214,7 @@ void joke::operator()( boost::property_tree::ptree msg )
 
 				* m_interval = boost::posix_time::seconds( 600 );
 
-				m_sender( "笑话开启" );
+				m_sender( "笑话开启." );
 				save_setting();
 			}
 			else if (can_joke(textmsg)){
@@ -239,7 +241,7 @@ void joke::operator()( boost::property_tree::ptree msg )
 						else
 						{
 							* m_interval = boost::posix_time::seconds( sec );
-							m_sender( boost::str( boost::format( "笑话间隔为 %d 秒" ) % sec ) );
+							m_sender( boost::str( boost::format( "笑话间隔为 %d 秒." ) % sec ) );
 							save_setting();
 						}
 					}

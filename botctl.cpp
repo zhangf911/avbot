@@ -86,9 +86,9 @@ static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string 
 								join_group_handler
 						);
 	}else if (group && !needvc){
-		msg_sender("哎呦妈呀，群加入了呢～等待对方管理员通过\n记得修改 qqbotrc 将群添加到频道组哦～");
+		msg_sender("哎呦妈呀，群加入了呢～等待对方管理员通过\n记得修改 qqbotrc 将群添加到频道组哦~");
 	}else{
-		msg_sender("哎呦妈呀，群加不了");
+		msg_sender("哎呦妈呀，群加不了!");
 	}
 }
 
@@ -119,7 +119,7 @@ static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool 
 		msg_sender("哈呀，验证码正确了个去的，申请加入ing");
 		qqclient->join_group(group, "", boost::bind(handle_join_group, _1, _2, _3, qqclient, msg_sender));
 	}else{
-		msg_sender("没找到没找到");
+		msg_sender("没找到没找到!");
 	}
 }
 
@@ -215,7 +215,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 	}
 
 	if( message == ".qqbot ping" ) {
-		sendmsg( "我还活着" );
+		sendmsg( "我还活着!" );
 		return;
 	}
 
@@ -253,7 +253,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		if ( do_vc_code)
 			do_vc_code(what[1]);
 		else{
-			sendmsg("哈？输入验证码干嘛？");
+			sendmsg("哈? 输入验证码干嘛?");
 		}
 	}
 
@@ -332,7 +332,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		group = mybot.get_qq().get_Group_by_qq(jsonmessage.get<std::string>("channel"));
 		if (group)
 			mybot.get_io_service().post( boost::bind( &webqq::update_group_member, &mybot.get_qq() , group) );
-		sendmsg( "群成员列表重加载" );
+		sendmsg( "群成员列表重加载." );
 
 		return;
 	}

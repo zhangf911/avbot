@@ -74,7 +74,7 @@ namespace po = boost::program_options;
 #   endif
 #endif
 
-#if defined(_WIN32)
+#if 0// defined(_WIN32) // 暂时取消windows对话框处理.
 
 // 重启qqbot
 #define WM_RESTART_AV_BOT WM_USER + 5
@@ -151,8 +151,8 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, avbot & my
 	std::ofstream	img( imgpath.string().c_str(), std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
 	img.write( data, imgsize );
 	qqneedvc = true;
-	// send to xmpp and irc
- 	mybot.broadcast_message( "请查看qqlog目录下的vercode.jpeg 然后用\".qqbot vc XXX\"输入验证码:" );
+	// send to xmpp and irc.
+	mybot.broadcast_message( "..." );
 	std::cerr << console_out_str("请查看qqlog目录下的vercode.jpeg 然后输入验证码: ") <<  std::flush ;
 	std::cerr.flush();
 	do_vc_code = boost::bind(&avbot::feed_login_verify_code, &mybot, _1);
@@ -277,7 +277,7 @@ static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 
 static void avbot_rpc_server(boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket, avbot & mybot)
 {
-	detail::avbot_rpc_server(m_socket, mybot.on_message);
+	::detail::avbot_rpc_server(m_socket, mybot.on_message);
 }
 
 static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
@@ -403,10 +403,10 @@ int main( int argc, char *argv[] )
 #endif
 
 	if( qqnumber.empty() ) {
-		// 命令行没指定选项，读取配置文件
+		// 命令行没指定选项，读取配置文件.
 		try {
 			if (config.empty()) {
-				// 命令行没指定配置文件？使用默认的！
+				// 命令行没指定配置文件？使用默认的!
 				config = configfilepath();
 			}
 			std::cout << "loading config from: " << config.string() << std::endl;
@@ -441,9 +441,9 @@ int main( int argc, char *argv[] )
 # endif
 
 
-#ifdef WIN32
+#if 0// WIN32
 	::InitCommonControls();
-	// windows下面弹出选项设置框框
+	// windows下面弹出选项设置框框.
 	if( qqnumber.empty() || qqpwd.empty() || vm.count( "gui" )>0)
 	{
 		HMODULE hIns = GetModuleHandle(NULL);
@@ -453,7 +453,7 @@ int main( int argc, char *argv[] )
 
 		ShowWindow(hDlg, SW_SHOW);
 
-		// 启动windows消息循环
+		// 启动windows消息循环.
 		MSG msg;
 		while (true) {
 			if (GetMessage(&msg, NULL, 0, 0)) {
@@ -587,7 +587,7 @@ int main( int argc, char *argv[] )
 	}
 
 	if( qqnumber.empty() || qqpwd.empty() ) {
-		std::cerr << console_out_str("请设置qq号码和密码") << std::endl;
+		std::cerr << console_out_str("请设置qq号码和密码.") << std::endl;
 		exit( 1 );
 	}
 

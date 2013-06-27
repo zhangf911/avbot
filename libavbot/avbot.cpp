@@ -396,9 +396,9 @@ void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
 	message.add_child("who", ptree_who);
 	ptree textmsg;
 
-	message.add("preamble", "群系统消息");
+	message.add("preamble", "群系统消息: ");
 
-	message.add("message.text", boost::str(boost::format("新人 %s 入群") % buddy->nick ));
+	message.add("message.text", boost::str(boost::format("新人 %s 入群.") % buddy->nick ));
 
 	message.add("newbee", buddy->uin);
 
