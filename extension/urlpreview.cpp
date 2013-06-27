@@ -71,6 +71,7 @@ static std::string html_unescape_char(std::string escaped)
 		return boost::locale::conv::utf_to_utf<char>(unistr);
 
 	}else{
+#ifndef _MSC_VER	// 处理
 		if (escaped== "nbsp")
 			return " ";
 		if (escaped== "ndash")
@@ -274,6 +275,7 @@ static std::string html_unescape_char(std::string escaped)
 			return "ý";
 		if (escaped == "thorn")
 			return "þ";
+#endif
 	}
 
 }
@@ -438,7 +440,7 @@ struct urlpreview
 			if (m_redirect < 10 && boost::regex_search(content.c_str(), what, ex)){
 				urlpreview(io_service, m_sender, m_speaker, what[1], m_redirect + 1);
 			}else{
-				m_sender( boost::str( boost::format( "@%s ⇪ url 无标题" ) % m_speaker ) );
+				m_sender( boost::str( boost::format( "@%s ⇪ url 无标题 " ) % m_speaker ) );
 			}
 		}
 	}
