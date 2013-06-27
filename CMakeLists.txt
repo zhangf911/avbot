@@ -49,7 +49,7 @@ if(ENABLE_LTO)
 	set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -flto -Wl,-flto")
 endif()
 
-find_package(Boost 1.50 COMPONENTS date_time filesystem system program_options regex)
+find_package(Boost 1.50 COMPONENTS date_time filesystem system program_options regex locale)
 
 if(NOT Boost_FOUND)
 	set(Boost_USE_STATIC_LIBS        OFF)
@@ -89,7 +89,7 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-add_definitions(-DQQBOT_VERSION=\"6.0\")
+add_definitions(-DQQBOT_VERSION=\"6.1\")
 add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp avbot.rc)
 
 if(WIN32)
