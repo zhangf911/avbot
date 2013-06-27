@@ -1,0 +1,353 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{08A4221E-FFFA-4F8D-BCC3-F5AAFE02151D}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>avbot</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0501;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>.;.\libxmpp;.\libxmpp\gloox;.\avproxy\include;.\avhttp\include;.\libmailexchange;.\asiocoro;.\libirc;.\libavlog;.\libwebqq;.\extension;.\libavbot</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libeay32.lib;ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>./openssl</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0501;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>.;.\libxmpp;.\libxmpp\gloox;.\avproxy\include;.\avhttp\include;.\libmailexchange;.\asiocoro;.\libirc;.\libavlog;.\libwebqq;.\extension;.\libavbot</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>libeay32.lib;ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>./openssl</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="avbot_rpc_server.cpp" />
+    <ClCompile Include="botctl.cpp" />
+    <ClCompile Include="extension\bulletin.cpp" />
+    <ClCompile Include="extension\extension.cpp" />
+    <ClCompile Include="extension\joke.cpp" />
+    <ClCompile Include="extension\urlpreview.cpp" />
+    <ClCompile Include="libavbot\avbot.cpp" />
+    <ClCompile Include="libavlog\avlog.cpp" />
+    <ClCompile Include="libmailexchange\pop3.cpp" />
+    <ClCompile Include="libmailexchange\smtp.cpp" />
+    <ClCompile Include="libwebqq\md5.cpp" />
+    <ClCompile Include="libwebqq\url.cpp" />
+    <ClCompile Include="libwebqq\webqq.cpp" />
+    <ClCompile Include="libwebqq\webqq_face.cpp" />
+    <ClCompile Include="libwebqq\webqq_impl.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\adhoc.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\amp.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\annotations.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\attention.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\base64.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\capabilities.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\chatstate.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\chatstatefilter.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\client.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\clientbase.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\component.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\compressiondefault.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\compressionzlib.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\connectionbosh.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\dataform.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\dataformfield.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\dataformfieldcontainer.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\dataformitem.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\dataformreported.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\delayeddelivery.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\disco.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\error.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\eventdispatcher.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\featureneg.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\flexoff.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\gloox.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\gpgencrypted.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\gpgsigned.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\inbandbytestream.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\instantmucroom.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\iq.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\jid.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\lastactivity.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\logsink.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\md5.cpp">
+      <BrowseInformationFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)</BrowseInformationFile>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)gloox_md5.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)gloox_md5.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="libxmpp\gloox\gloox\message.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\messageevent.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\messageeventfilter.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\messagefilter.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\messagesession.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\mucmessagesession.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\mucroom.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\mutex.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\nickname.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\nonsaslauth.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\oob.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\parser.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\prep.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\presence.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\privacyitem.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\privacymanager.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\privatexml.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\pubsubevent.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\pubsubitem.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\pubsubmanager.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\receipt.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\registration.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\rosteritem.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\rostermanager.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\search.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\sha.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\shim.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\softwareversion.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\stanza.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\stanzaextensionfactory.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\subscription.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\tag.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\tlsdefault.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\tlsopensslbase.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\tlsopensslclient.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\tlsschannel.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\uniquemucroom.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\util.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\vcard.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\vcardmanager.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\vcardupdate.cpp" />
+    <ClCompile Include="libxmpp\gloox\gloox\xhtmlim.cpp" />
+    <ClCompile Include="libxmpp\xmpp.cpp" />
+    <ClCompile Include="libxmpp\xmpp_impl.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="avbot_rpc_server.hpp" />
+    <ClInclude Include="botctl.hpp" />
+    <ClInclude Include="counter.hpp" />
+    <ClInclude Include="extension\bulletin.hpp" />
+    <ClInclude Include="extension\extension.hpp" />
+    <ClInclude Include="extension\httpagent.hpp" />
+    <ClInclude Include="extension\joke.hpp" />
+    <ClInclude Include="extension\metalprice.hpp" />
+    <ClInclude Include="extension\stockprice.hpp" />
+    <ClInclude Include="extension\urlpreview.hpp" />
+    <ClInclude Include="libavbot\avbot.hpp" />
+    <ClInclude Include="libavlog\avlog.hpp" />
+    <ClInclude Include="libirc\irc.h" />
+    <ClInclude Include="libmailexchange\mx.hpp" />
+    <ClInclude Include="libmailexchange\pop3.hpp" />
+    <ClInclude Include="libmailexchange\smtp.hpp" />
+    <ClInclude Include="libwebqq\clean_cache.hpp" />
+    <ClInclude Include="libwebqq\constant.hpp" />
+    <ClInclude Include="libwebqq\httpagent.hpp" />
+    <ClInclude Include="libwebqq\lwqq_status.hpp" />
+    <ClInclude Include="libwebqq\md5.hpp" />
+    <ClInclude Include="libwebqq\process_group_msg.hpp" />
+    <ClInclude Include="libwebqq\url.hpp" />
+    <ClInclude Include="libwebqq\utf8.hpp" />
+    <ClInclude Include="libwebqq\webqq.h" />
+    <ClInclude Include="libwebqq\webqq_impl.h" />
+    <ClInclude Include="libwebqq\webqq_login.hpp" />
+    <ClInclude Include="libxmpp\gloox\gloox\adhoc.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\adhoccommandprovider.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\adhochandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\amp.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\annotations.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\annotationshandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\attention.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\base64.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\bookmarkhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\bytestream.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\bytestreamdatahandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\bytestreamhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\capabilities.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\chatstate.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\chatstatefilter.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\chatstatehandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\client.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\clientbase.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\component.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\compressionbase.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\compressiondatahandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\compressiondefault.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\compressionzlib.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\config.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\connectionbase.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\connectionbosh.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\connectiondatahandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\connectionhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\connectionlistener.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\dataform.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\dataformfield.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\dataformfieldcontainer.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\dataformitem.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\dataformreported.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\delayeddelivery.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\disco.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\discohandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\disconodehandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\error.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\event.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\eventdispatcher.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\eventhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\featureneg.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\flexoff.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\flexoffhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\gloox.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\glooxversion.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\gpgencrypted.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\gpgsigned.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\inbandbytestream.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\instantmucroom.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\iq.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\iqhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\jid.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\lastactivity.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\lastactivityhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\loghandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\logsink.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\macros.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\md5.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\message.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\messageevent.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\messageeventfilter.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\messageeventhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\messagefilter.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\messagehandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\messagesession.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\messagesessionhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\mucinvitationhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\mucmessagesession.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\mucroom.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\mucroomconfighandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\mucroomhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\mutex.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\mutexguard.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\nickname.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\nonsaslauth.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\oob.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\parser.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\prep.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\presence.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\presencehandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\privacyitem.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\privacylisthandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\privacymanager.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\privatexml.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\privatexmlhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\pubsub.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\pubsubevent.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\pubsubitem.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\pubsubmanager.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\pubsubresulthandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\receipt.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\registration.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\registrationhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\resource.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\rosteritem.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\rosteritemdata.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\rosterlistener.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\rostermanager.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\search.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\searchhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\sha.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\shim.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\sihandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\simanager.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\softwareversion.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\stanza.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\stanzaextension.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\stanzaextensionfactory.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\statisticshandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\subscription.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\subscriptionhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\tag.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\taghandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\tlsbase.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\tlsdefault.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\tlshandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\tlsopensslbase.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\tlsopensslclient.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\tlsschannel.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\uniquemucroom.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\util.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\vcard.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\vcardhandler.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\vcardmanager.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\vcardupdate.h" />
+    <ClInclude Include="libxmpp\gloox\gloox\xhtmlim.h" />
+    <ClInclude Include="libxmpp\xmpp.h" />
+    <ClInclude Include="libxmpp\xmpp_impl.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fsconfig.ipp" />
+    <None Include="input.ipp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
