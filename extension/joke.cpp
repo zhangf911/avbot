@@ -86,7 +86,7 @@ static std::string get_joke_content(std::istream &response_stream )
 			while( message.find( "<br>" ) != std::string::npos )
 				message.replace( message.find( "<br>" ), 4, "\r\n" );
 
-			jokestring.append( html_unescape_char(message) );
+			jokestring.append( html_unescape(message) );
 		}
 	}
 	if (charset.empty())
