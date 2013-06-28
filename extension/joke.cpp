@@ -33,6 +33,8 @@
 #include <limits>
 
 #include "joke.hpp"
+#include "html.hpp"
+#include "html.hpp"
 
 static std::string get_joke_content(std::istream &response_stream )
 {
@@ -69,9 +71,6 @@ static std::string get_joke_content(std::istream &response_stream )
 			while( message.find( "\r" ) != std::string::npos )
 				message.erase( message.find( "\r" ), 1 );
 
-			while( message.find( "&nbsp;" ) != std::string::npos )
-				message.erase( message.find( "&nbsp;" ), 6 );
-
 			while( message.find( "\t" ) != std::string::npos )
 				message.erase( message.find( "\t" ), 1 );
 
@@ -87,7 +86,7 @@ static std::string get_joke_content(std::istream &response_stream )
 			while( message.find( "<br>" ) != std::string::npos )
 				message.replace( message.find( "<br>" ), 4, "\r\n" );
 
-			jokestring.append( message );
+			jokestring.append( html_unescape_char(message) );
 		}
 	}
 	if (charset.empty())
