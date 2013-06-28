@@ -60,20 +60,22 @@ inline void mail_address_split( std::vector<std::string>	& out_mails, std::strin
 inline std::string imf_base64inline_decode( std::string str )
 {
 	boost::cmatch what;
-	boost::regex ex( "=\\?(.*)?\\?=" );
+	boost::regex ex( "=\\?([^?])?\\?=" );
 
 	while( boost::regex_search( str.c_str(), what, ex ) ) {
 		std::string matched_encodedstring;
 		matched_encodedstring = what[0];
-		ex.set_expression( "(.*)\\?(.)\\?(.*)" );
+		ex.set_expression( "(.*)\\?([^?])\\?(.*)" );
+		boost::cmatch what2;
 
-		if( boost::regex_search( what[1].str().c_str(), what, ex ) ) {
+
+		if( boost::regex_search( what[1].str().c_str(), what2, ex ) ) {
 			std::string result, encode, charset;
-			charset = what[1];	// 	gb18030
-			encode = what[2]; //  B
+			charset = what2[1];	// 	gb18030
+			encode = what2[2]; //  B
 
 			if( encode == "B" ) {
-				result = ansi_utf8( boost::base64_decode( what[3].str() ), charset );
+				result = ansi_utf8( boost::base64_decode( what2[3].str() ), charset );
 				boost::replace_all( str, matched_encodedstring, result );
 			}
 		} else {
