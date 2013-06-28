@@ -152,7 +152,11 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, avbot & my
 	img.write( data, imgsize );
 	qqneedvc = true;
 	// send to xmpp and irc.
+#if !defined(_MSC_VER)
+	mybot.broadcast_message( "请查看qqlog目录下的vercode.jpeg 然后用\".qqbot vc XXX\"输入验证码:" );
+# else
 	mybot.broadcast_message( "..." );
+#endif
 	std::cerr << console_out_str("请查看qqlog目录下的vercode.jpeg 然后输入验证码: ") <<  std::flush ;
 	std::cerr.flush();
 	do_vc_code = boost::bind(&avbot::feed_login_verify_code, &mybot, _1);

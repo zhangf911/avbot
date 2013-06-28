@@ -83,7 +83,8 @@ static std::string html_unescape_char(std::string escaped)
 			return "<";
 		if (escaped == "gt")
 			return ">";
-#ifndef _MSC_VER	// 处理
+#if !defined(_MSC_VER)
+		// 处理
 		if (escaped== "ndash")
 			return "–";
 		if (escaped == "euro")
