@@ -1,5 +1,6 @@
 
 	* fix mail bug
+	* add back MSVC compiler support, only used to make jack happy. not intend to be production ready.
 
 6.1
 	* add stock price
