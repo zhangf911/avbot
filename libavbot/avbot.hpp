@@ -17,10 +17,10 @@ public:
 private:
 	boost::asio::io_service & m_io_service;
 
-	boost::scoped_ptr<webqq> m_qq_account;
-	boost::scoped_ptr<irc::client> m_irc_account;
-	boost::scoped_ptr<xmpp> m_xmpp_account;
-	boost::scoped_ptr<mx::mx> m_mail_account;
+	boost::shared_ptr<webqq> m_qq_account;
+	boost::shared_ptr<irc::client> m_irc_account;
+	boost::shared_ptr<xmpp> m_xmpp_account;
+	boost::shared_ptr<mx::mx> m_mail_account;
 	// channel have a name :)
 	std::map<std::string, av_chanel_map> m_channels;
 
@@ -45,10 +45,10 @@ public:
 	bool fetch_img;
 
 public:
-	webqq &get_qq(){return * m_qq_account;}
-	xmpp &get_xmpp(){return * m_xmpp_account;}
-	mx::mx &get_mx(){return * m_mail_account;}
-	irc::client &get_irc(){return * m_irc_account;}
+	boost::shared_ptr<webqq> get_qq(){return m_qq_account;}
+	boost::shared_ptr<xmpp> get_xmpp(){return m_xmpp_account;}
+	boost::shared_ptr<mx::mx> get_mx(){return m_mail_account;}
+	boost::shared_ptr<irc::client> get_irc(){return m_irc_account;}
 public:
 	// 调用这个添加 QQ 帐号. need_verify_image 会在需要登录验证码的时候调用，buffer 里包含了验证码图片.
 	void set_qq_account(std::string qqnumber, std::string password, need_verify_image cb);
