@@ -2,7 +2,7 @@
 #pragma once
 
 template<typename string>
-string html_unescape_char(string escaped)
+std::string html_unescape_char(string escaped)
 {
 	//	boost::replace_all( htmlcharseq, "&nbsp;", " " );
 	if (escaped[0] == '#'){
@@ -225,7 +225,7 @@ string html_unescape_char(string escaped)
 }
 
 template<typename string>
-string html_unescape(string htmlcharseq)
+std::string html_unescape(string htmlcharseq)
 {
 	string retstr;
 	std::string::iterator chariter = htmlcharseq.begin();
@@ -237,13 +237,16 @@ string html_unescape(string htmlcharseq)
 			// 找到 ;
 			std::string::iterator es_end =  std::find(chariter, htmlcharseq.end(), ';');
 			// 把 ; 之前的给组合一下.
+			if (es_end != htmlcharseq.end()){
+				std::string es_seq(chariter, es_end);
 
-			std::string es_seq(chariter, es_end);
+				retstr.append( html_unescape_char(es_seq) );
 
-			retstr.append( html_unescape_char(es_seq) );
 
-			chariter = es_end + 1;
-			unes = false;
+				chariter = es_end + 1;
+				unes = false;
+			}else return "解码错误";
+
 		}else{
 			if (*chariter == '&'){
 				unes = true;
