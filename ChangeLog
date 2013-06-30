@@ -1,4 +1,6 @@
 
+6.2
+	* fix joke segfault
 	* fix mail bug
 	* add back MSVC compiler support, only used to make jack happy. not intend to be production ready.
 
