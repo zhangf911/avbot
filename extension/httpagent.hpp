@@ -77,8 +77,9 @@ public:
 				}
 			}
 
-			if (ec == boost::asio::error::eof){
-				handler( boost::system::error_code(), stream, *sb );
+			if (ec == boost::asio::error::eof &&  !content_length.empty() && readed == boost::lexical_cast<std::size_t>( content_length ) )
+			{
+				handler(boost::system::error_code(), stream, *sb );
 			}else{
 				handler( ec, stream, *sb );
 			}
