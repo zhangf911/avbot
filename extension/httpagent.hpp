@@ -60,7 +60,8 @@ public:
 	}
 
 	void operator()( const boost::system::error_code& ec , std::size_t length = 0 ) {
-		reenter( this ) {
+		reenter( this )
+		{
 			if( !ec ) {
 				content_length = stream->response_options().find( avhttp::http_options::content_length );
 
@@ -70,13 +71,17 @@ public:
 					readed += length;
 
 					if( !content_length.empty() &&  readed == boost::lexical_cast<std::size_t>( content_length ) ) {
-						handler( boost::asio::error::make_error_code( boost::asio::error::eof ), stream, *sb );
+						handler(boost::system::error_code(), stream, *sb );
 						return ;
 					}
 				}
 			}
 
-			handler( ec, stream, *sb );
+			if (ec == boost::asio::error::eof){
+				handler( boost::system::error_code(), stream, *sb );
+			}else{
+				handler( ec, stream, *sb );
+			}
 		}
 	}
 
