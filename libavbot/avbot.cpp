@@ -365,6 +365,7 @@ void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
 	// 新人入群咯.
 	if (get_channel_name(std::string("qq:")+group->qqnum)=="none")
 		return;
+
 	// 构造 json 消息,  格式同 QQ 消息, 就是多了个 newbee 字段
 
 	using boost::property_tree::ptree;
@@ -382,25 +383,36 @@ void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
 	message.add_child("room", ptreee_group);
 
 	ptree ptree_who;
-	ptree_who.add("code", buddy->uin);
+	if (buddy){
+		ptree_who.add("code", buddy->uin);
 
-	ptree_who.add("name", buddy->nick);
-	ptree_who.add("qqnumber", buddy->qqnum);
-	ptree_who.add("card", buddy->card);
-	ptree_who.add("nick", buddy->card.empty()? buddy->nick:buddy->card);
-	if( ( buddy->mflag & 21 ) == 21 || buddy->uin == group->owner )
-		message.add("op", "1");
-	else
-		message.add("op", "0");
+		ptree_who.add("name", buddy->nick);
+		ptree_who.add("qqnumber", buddy->qqnum);
+		ptree_who.add("card", buddy->card);
+		ptree_who.add("nick", buddy->card.empty()? buddy->nick:buddy->card);
+		if( ( buddy->mflag & 21 ) == 21 || buddy->uin == group->owner )
+			message.add("op", "1");
+		else
+			message.add("op", "0");
+		message.add("newbee", buddy->uin);
+	}else{
+		// 新人入群,  可是 webqq 暂时无法获取新人昵称.
+
+		ptree_who.add("nick", "获取名字失败");
+
+		return;
+	}
 
 	message.add_child("who", ptree_who);
 	ptree textmsg;
 
 	message.add("preamble", "群系统消息: ");
 
-	message.add("message.text", boost::str(boost::format("新人 %s 入群.") % buddy->nick ));
-
-	message.add("newbee", buddy->uin);
+	if (buddy){
+		message.add("message.text", boost::str(boost::format("新人 %s 入群.") % buddy->nick ));
+	}else{
+		message.add("message.text", "新人入群,  可是 webqq 暂时无法获取新人昵称.");
+	}
 
 	on_message(message);
 }
