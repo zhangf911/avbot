@@ -93,7 +93,7 @@ gloox/xhtmlim.cpp
 add_library(gloox STATIC ${GLOOX_SRC})
 
 if(NOT WIN32)
-target_link_libraries(gloox  ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(gloox  ${OPENSSL_LIBRARIES} -lcrypto ${ZLIB_LIBRARIES})
 endif()
 
 if(UNIX)
