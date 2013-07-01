@@ -65,7 +65,7 @@ public:
 			if( !ec ) {
 				content_length = stream->response_options().find( avhttp::http_options::content_length );
 
-				while( (!ec || ec == boost::asio::error::eof) && length >0  ) {
+				do{
 					yield stream->async_read_some( sb->prepare( 4096 ), *this );
 					sb->commit( length );
 					readed += length;
@@ -74,7 +74,7 @@ public:
 						handler(boost::system::error_code(), stream, *sb );
 						return ;
 					}
-				}
+				}while( (!ec || ec == boost::asio::error::eof) && length >0 ) ;
 			}
 
 			if (ec == boost::asio::error::eof &&  !content_length.empty() && readed == boost::lexical_cast<std::size_t>( content_length ) )
@@ -83,6 +83,7 @@ public:
 			}else{
 				handler( ec, stream, *sb );
 			}
+
 		}
 	}
 
@@ -99,7 +100,7 @@ private:
 template<class httpstreamhandler>
 void async_http_download(read_streamptr _stream, const avhttp::url & url, httpstreamhandler _handler)
 {
-	detail::async_http_download_op<boost::function<void ( const boost::system::error_code& ec, read_streamptr stream,  boost::asio::streambuf & ) > >(_stream, url, _handler);
+	::detail::async_http_download_op<boost::function<void ( const boost::system::error_code& ec, read_streamptr stream,  boost::asio::streambuf & ) > >(_stream, url, _handler);
 }
 
 #endif // __HTTP_AGENT_HPP__
