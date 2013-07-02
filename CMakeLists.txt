@@ -51,18 +51,18 @@ if(ENABLE_LTO)
 	set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -flto -Wl,-flto")
 endif()
 
-find_package(Boost 1.54 COMPONENTS log date_time filesystem system program_options regex locale)
+find_package(Boost 1.54 COMPONENTS log log_setup date_time filesystem system program_options regex locale)
 
 if(NOT Boost_FOUND)
 	set(Boost_USE_STATIC_LIBS        OFF)
 	set(Boost_USE_STATIC_RUNTIME    OFF)
-	find_package(Boost 1.54 REQUIRED COMPONENTS log date_time filesystem system program_options regex locale)
+	find_package(Boost 1.54 REQUIRED COMPONENTS log log_setup date_time filesystem system program_options regex locale)
 	if(NOT Boost_FOUND )
 		message(FATAL_ERROR "need boost >= 1.50")
 	endif()
 endif()
 
-add_definitions(-DBOOST_LOG_NO_THREADS)
+# add_definitions(-DBOOST_LOG_NO_THREADS)
 
 find_package(Threads)
 
