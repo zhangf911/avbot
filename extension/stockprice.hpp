@@ -308,16 +308,17 @@ struct stock_fetcher_op
 
 		// OK, 开始查询股票.
 		std::string url = "http://hq.sinajs.cn/?list=sh" + m_query;
-		async_http_download(m_stream, url, *this);
+		buf = boost::make_shared<boost::asio::streambuf>();
+		async_http_download(m_stream, url, *buf, *this);
 	}
 
-	void operator()(boost::system::error_code ec, read_streamptr stream, boost::asio::streambuf &response)
+	void operator()(boost::system::error_code ec, std::size_t bytes_transfered)
 	{
 		if (!ec || ec == boost::asio::error::eof) {
 
 			std::string jscript;
-			jscript.resize(response.size());
-			response.sgetn(&jscript[0], response.size());
+			jscript.resize(bytes_transfered);
+			buf->sgetn(&jscript[0], bytes_transfered);
 
 			if (m_query == "000001") {
 				stock_public sh;
@@ -341,7 +342,9 @@ struct stock_fetcher_op
 						m_status++;
 						// 上市没有查询到, 从深市查询.
 						std::string url = "http://hq.sinajs.cn/?list=sz" + m_query;
-						async_http_download(m_stream, url, *this);
+
+						buf = boost::make_shared<boost::asio::streambuf>();
+						async_http_download(m_stream, url, *buf, *this);
 						return;
 					}
 					double change_rate = ((sd.current_price - sd.before_close_price) / sd.before_close_price) * 100.0f;
@@ -356,6 +359,7 @@ struct stock_fetcher_op
 		}
 	}
 
+	boost::shared_ptr<boost::asio::streambuf> buf;
 	boost::asio::io_service & m_io_service;
 	MsgSender m_sender;
 	boost::shared_ptr<avhttp::http_stream> m_stream;

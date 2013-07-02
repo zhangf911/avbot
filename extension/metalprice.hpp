@@ -20,6 +20,7 @@
 #ifndef __GOLDPRICE_HPP_
 #define __GOLDPRICE_HPP_
 
+#include <boost/make_shared.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -36,7 +37,7 @@ template<class MsgSender>
 struct metalprice_fetcher_op{
 
 	metalprice_fetcher_op(boost::asio::io_service & _io_service, MsgSender _sender, std::string _metal)
-	  : io_service(_io_service), sender(_sender), stream(new avhttp::http_stream(_io_service)), metal(_metal)
+	  : io_service(_io_service), sender(_sender), stream(new avhttp::http_stream(_io_service)), metal(_metal), buf(boost::make_shared<boost::asio::streambuf>())
 	{
 		std::string list;
 		if (metal == "黄金")
@@ -47,18 +48,18 @@ struct metalprice_fetcher_op{
 			sender( std::string( metal + " 无报价或avbot暂不支持"));
 		}else{
 			std::string url = boost::str(boost::format("http://hq.sinajs.cn/?_=%d&list=%s") % std::time(0) % list);
-			async_http_download(stream, url, *this);
+			async_http_download(stream, url, * buf, *this);
 		}
 	}
 
-	void operator()(boost::system::error_code ec, read_streamptr stream,  boost::asio::streambuf & buf)
+	void operator()(boost::system::error_code ec, std::size_t bytes_transfered)
 	{
 
 		if (!ec || ec == boost::asio::error::eof){
 			// 读取 buf 内容, 执行 regex 匹配, 获取金价.
 			std::string jscript;
-			jscript.resize(buf.size());
-			buf.sgetn(&jscript[0], buf.size());
+			jscript.resize(bytes_transfered);
+			buf->sgetn(&jscript[0], bytes_transfered);
 
 			boost::cmatch what;
 			boost::regex ex("var ([^=]*)=\"([0-9\\.\\-]*),([0-9\\.\\-]*),(.*)");
@@ -73,6 +74,7 @@ struct metalprice_fetcher_op{
 		}
 	}
 
+	boost::shared_ptr<boost::asio::streambuf>  buf;
 	boost::asio::io_service & io_service;
 	MsgSender sender;
 	boost::shared_ptr<avhttp::http_stream> stream;
