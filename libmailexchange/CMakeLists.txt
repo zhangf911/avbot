@@ -1,8 +1,5 @@
 project(libpop3)
-find_package(Boost 1.48 COMPONENTS regex system locale)
-if(WIN32)
-set (OPENSSL_ROOT "C:\\openssl")
-endif()
+find_package(Boost 1.54 COMPONENTS regex system locale)
 
 find_package(OpenSSL REQUIRED)
 
