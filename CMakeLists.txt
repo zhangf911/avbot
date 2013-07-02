@@ -112,5 +112,10 @@ if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
 endif()
 
+check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME)
+if(HAVE_CLOCK_GETTIME)
+        target_link_libraries(avbot -lrt)
+endif(HAVE_CLOCK_GETTIME)
+
 
 
