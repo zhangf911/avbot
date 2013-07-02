@@ -62,9 +62,7 @@ if(NOT Boost_FOUND)
 	endif()
 endif()
 
-if( Boost_VERSION LESS 105400)
-	include_directories(asiocoro)
-endif()
+add_definitions(-DBOOST_LOG_NO_THREADS)
 
 find_package(Threads)
 
@@ -116,6 +114,3 @@ check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME)
 if(HAVE_CLOCK_GETTIME)
         target_link_libraries(avbot -lrt)
 endif(HAVE_CLOCK_GETTIME)
-
-
-
