@@ -24,7 +24,20 @@ BOOST_FIND_LIB([locale], [$1],
 					boost::locale::conv::between( "", "UTF-8", "" )
                 ])
 
-])# BOOST_LOCALE
+])# BOOST_LOG
+# --------------------------------
+# Look for Boost.Log.  For the documentation of PREFERRED-RT-OPT, see the
+# documentation of BOOST_FIND_LIB above.  This library was introduced in Boost
+# 1.35.0.
+BOOST_DEFUN([Log],
+[
+BOOST_FIND_LIB([log], [$1],
+                [boost/log/trivial.hpp],
+                [
+					BOOST_LOG_TRIVIAL(info) << "hello";
+                ])
+
+])# BOOST_LOG
 
 # BOOST_THREAD([PREFERRED-RT-OPT])
 # ---------------------------------
@@ -176,6 +189,7 @@ BOOST_DATE_TIME([s])
 BOOST_PROGRAM_OPTIONS([s])
 BOOST_REGEX([s])
 BOOST_SIGNALS([s])
+BOOST_LOG([s])
 
 BOOST_FORMAT
 BOOST_BIND
