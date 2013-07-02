@@ -1,7 +1,9 @@
-	* 重写了 http 处理代码
+
 	* 此版本开始要求 boost >= 1.54
 
 6.2
+	* 最后一个支持 boost <= 1.53 的版本. 下一个版本开始将要求 boost 1.54
+	* 重写了 http 处理代码
 	* fix joke segfault
 	* fix mail bug
 	* add back MSVC compiler support, only used to make jack happy. not intend to be production ready.
