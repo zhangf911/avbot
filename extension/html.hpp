@@ -221,7 +221,7 @@ std::string html_unescape_char(string escaped)
 			return "þ";
 #endif
 	}
-
+	return "";
 }
 
 template<typename string>
