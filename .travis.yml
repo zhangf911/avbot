@@ -12,7 +12,7 @@ before_install:
   - ( cd boost_1_54_0  && ./bootstrap.sh --prefix=/usr --with-libraries=date_time,filesystem,exception,log,locale,random,regex,program_options,system,thread && sudo ./b2 -j2 link=static install ) > /dev/null
 
 before_script:
-  cmake -DENABLE_LUA=on  .
+  LDFLAGS="-lrt"  cmake -DENABLE_LUA=on  .
 
 script:
   make
