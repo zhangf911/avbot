@@ -309,7 +309,7 @@ struct stock_fetcher_op
 		// OK, 开始查询股票.
 		std::string url = "http://hq.sinajs.cn/?list=sh" + m_query;
 		buf = boost::make_shared<boost::asio::streambuf>();
-		async_http_download(m_stream, url, *buf, *this);
+		avhttp::misc::async_read_body(*m_stream, url, *buf, *this);
 	}
 
 	void operator()(boost::system::error_code ec, std::size_t bytes_transfered)
@@ -344,7 +344,7 @@ struct stock_fetcher_op
 						std::string url = "http://hq.sinajs.cn/?list=sz" + m_query;
 
 						buf = boost::make_shared<boost::asio::streambuf>();
-						async_http_download(m_stream, url, *buf, *this);
+						avhttp::misc::async_read_body(*m_stream, url, *buf, *this);
 						return;
 					}
 					double change_rate = ((sd.current_price - sd.before_close_price) / sd.before_close_price) * 100.0f;
