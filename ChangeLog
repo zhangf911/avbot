@@ -1,3 +1,5 @@
+	* 重写了 http 处理代码
+	* 此版本开始要求 boost >= 1.54
 
 6.2
 	* fix joke segfault
