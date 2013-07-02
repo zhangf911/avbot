@@ -89,7 +89,7 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-add_definitions(-DQQBOT_VERSION=\"6.2\")
+add_definitions(-DQQBOT_VERSION=\"6.3\")
 add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp avbot.rc)
 
 if(WIN32)
