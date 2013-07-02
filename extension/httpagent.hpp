@@ -27,11 +27,8 @@
 #include <boost/asio.hpp>
 #include <avhttp.hpp>
 
-#include <boost/asio/yield.hpp>
-
 namespace avhttp{
 namespace misc{
-
 
 namespace detail{
 
@@ -61,12 +58,12 @@ public:
 	}
 
 	void operator()( const boost::system::error_code& ec , std::size_t length = 0 ) {
-		reenter( this )
+		BOOST_ASIO_CORO_REENTER( this )
 		{
 			if( !ec ) {
 				content_length = m_stream.response_options().find( avhttp::http_options::content_length );
 
-				yield boost::asio::async_read(m_stream, m_buffers, boost::bind(async_http_download_condition, _1 , _2, content_length), *this );
+				BOOST_ASIO_CORO_YIELD boost::asio::async_read(m_stream, m_buffers, boost::bind(async_http_download_condition, _1 , _2, content_length), *this );
 			}
 
 			if (ec == boost::asio::error::eof &&  !content_length.empty() && length == boost::lexical_cast<std::size_t>( content_length ) )
