@@ -88,20 +88,16 @@ public:
 				content_length = m_stream.response_options().find(avhttp::http_options::content_length);
 
 				BOOST_ASIO_CORO_YIELD boost::asio::async_read(m_stream, m_buffers,
-															  avhttp_async_read_body_condition(content_length),
-															  *this);
-			}else{
-				m_handler(ec, length);
-			}
+														avhttp_async_read_body_condition(content_length),
+														*this);
 
-			if(ec == boost::asio::error::eof && content_length.empty())
-			{
-				m_handler(boost::system::error_code(), length);
+				if(ec == boost::asio::error::eof && content_length.empty())
+				{
+					m_handler(boost::system::error_code(), length);
+					return;
+				}
 			}
-			else
-			{
-				m_handler(ec, length);
-			}
+			m_handler(ec, length);
 		}
 	}
 
