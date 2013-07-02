@@ -33,18 +33,26 @@ namespace misc{
 namespace detail{
 
 // match condition!
-static inline std::size_t async_http_download_condition(boost::system::error_code ec, std::size_t bytes_transferred, std::string content_length)
+struct avhttp_async_read_body_condition
 {
-	if (ec)
-		return 0;
-
-	if ( content_length.empty() ){
-		return 4096;
-	}else{
-		// 读取到 content_length 是吧.
-		return boost::lexical_cast<std::size_t>( content_length ) - bytes_transferred;
+	avhttp_async_read_body_condition(std::string _content_length):content_length(_content_length)
+	{
 	}
-}
+
+	std::size_t operator()(boost::system::error_code ec, std::size_t bytes_transferred)
+	{
+		if (ec)
+			return 0;
+
+		if ( content_length.empty() ){
+			return 4096;
+		}else{
+			// 读取到 content_length 是吧.
+			return boost::lexical_cast<std::size_t>( content_length ) - bytes_transferred;
+		}
+	}
+	std::string content_length;
+};
 
 template<class avHttpStream, class MutableBufferSequence, class Handler>
 class async_read_body_op : boost::asio::coroutine {
@@ -63,7 +71,7 @@ public:
 			if( !ec ) {
 				content_length = m_stream.response_options().find( avhttp::http_options::content_length );
 
-				BOOST_ASIO_CORO_YIELD boost::asio::async_read(m_stream, m_buffers, boost::bind(async_http_download_condition, _1 , _2, content_length), *this );
+				BOOST_ASIO_CORO_YIELD boost::asio::async_read(m_stream, m_buffers, avhttp_async_read_body_condition(content_length), *this );
 			}
 
 			if (ec == boost::asio::error::eof &&  !content_length.empty() && length == boost::lexical_cast<std::size_t>( content_length ) )
