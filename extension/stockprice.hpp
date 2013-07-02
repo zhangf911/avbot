@@ -28,9 +28,9 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <avhttp.hpp>
+#include <avhttp/async_read_body.hpp>
 
 #include "extension.hpp"
-#include "httpagent.hpp"
 
 // 数据类型转换.
 #define TYPE_CONVERT(val, type) do { \

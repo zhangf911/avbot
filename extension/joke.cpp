@@ -30,11 +30,11 @@
 #include <boost/regex.hpp>
 #include <fstream>
 #include <avhttp.hpp>
+#include <avhttp/async_read_body.hpp>
 #include <limits>
 
 #include "joke.hpp"
 #include "html.hpp"
-#include "httpagent.hpp"
 
 static std::string get_joke_content(std::istream &response_stream )
 {

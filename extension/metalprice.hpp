@@ -26,9 +26,9 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <avhttp.hpp>
+#include <avhttp/async_read_body.hpp>
 
 #include "extension.hpp"
-#include "httpagent.hpp"
 
 namespace metal{
 
