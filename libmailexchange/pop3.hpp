@@ -1,7 +1,7 @@
 
 #pragma once
 
-
+#include <boost/log/trivial.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/foreach.hpp>
@@ -163,7 +163,7 @@ public:
 					// 解析是不是　OK.
 					if( status != "+OK" ) {
 						// 失败，但是并不是啥大问题.
-						std::cout << "deleting mail failed" << std::endl;
+						BOOST_LOG_TRIVIAL(error) << "deleting mail failed" << std::endl;
 
 						// but 如果是连接出问题那还是要重启的.
 						if( ec ) goto restart;

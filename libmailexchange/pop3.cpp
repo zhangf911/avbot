@@ -1,4 +1,5 @@
 
+#include <boost/log/trivial.hpp>
 #include <boost/locale.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
@@ -118,7 +119,7 @@ void pop3::process_mail( std::istream &mail, Handler handler )
 	thismail.subject = imf.header["subject"];
 
 	select_content( thismail.content_type, thismail.content, imf );
-	std::cout <<  thismail.content <<  std::endl;
+	BOOST_LOG_TRIVIAL(debug) <<  thismail.content;
 
 	io_service.post( boost::bind( broadcast_signal, m_sig_gotmail, thismail, call_to_continue_function( handler ) ) );
 }

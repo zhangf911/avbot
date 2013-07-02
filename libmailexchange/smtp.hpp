@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <boost/log/trivial.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/bind.hpp>
@@ -37,7 +38,7 @@ public:
 			boost::trim_right( line );
 			boost::cmatch what;
 
-			std::cout <<  line <<  std::endl;
+			BOOST_LOG_TRIVIAL(debug) <<  line <<  std::endl;
 			std::string ex1 = boost::str( boost::format( "%d (.*)?" ) % response_code );
 			std::string ex2 = boost::str( boost::format( "%d-(.*)?" ) % response_code );
 
