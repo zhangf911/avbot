@@ -22,8 +22,6 @@
 #ifndef __AVHTTP_MISC_HTTP_READBODY_HPP__
 #define __AVHTTP_MISC_HTTP_READBODY_HPP__
 
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <avhttp.hpp>
 
