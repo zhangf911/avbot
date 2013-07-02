@@ -34,7 +34,7 @@
 
 #include "joke.hpp"
 #include "html.hpp"
-#include "html.hpp"
+#include "httpagent.hpp"
 
 static std::string get_joke_content(std::istream &response_stream )
 {
@@ -120,22 +120,9 @@ public:
 		std::string url = boost::str(boost::format("http://xiaohua.zol.com.cn/detail%d/%d.html") % numcl % num);
 
 		m_http_stream.reset(new avhttp::http_stream(io_service));
+		m_read_buf.reset(new boost::asio::streambuf);
 
-		m_http_stream->async_open(url,  boost::bind(*this, _1, handler));
-	}
-
-	template<class Handler>
-	void operator()(const boost::system::error_code &ec, Handler handler)
-	{
-		using namespace boost::system;
-		using namespace boost::asio::detail;
-
-		if (ec){
-			io_service.post( bind_handler(handler, ec, std::string("获取笑话出错")) );
-		}else{
-			m_read_buf.reset(new boost::asio::streambuf);
-			boost::asio::async_read(*m_http_stream, *m_read_buf, boost::asio::transfer_all(), boost::bind(*this, _1, _2, handler));
-		}
+		avhttp::misc::async_read_body(*m_http_stream, url, *m_read_buf, boost::bind(*this, _1, _2, handler));
 	}
 
 	template<class Handler>
@@ -143,6 +130,12 @@ public:
 	{
 		using namespace boost::system;
 		using namespace boost::asio::detail;
+
+		if (ec){
+			io_service.post( bind_handler(handler, ec, std::string("获取笑话出错")) );
+			return;
+		}
+
 		std::istream htmlstream(m_read_buf.get());
 
 		try{
