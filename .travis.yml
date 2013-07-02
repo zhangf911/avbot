@@ -4,7 +4,7 @@ compiler:
   - clang
 
 before_install:
-  - sudo apt-get install wget liblua5.1-dev
+  - sudo apt-get install wget liblua5.1-dev libluajit-5.1-dev
   - git submodule init
   - git submodule update
   - wget http://jaist.dl.sourceforge.net/boost/boost_1_54_0.tar.bz2
