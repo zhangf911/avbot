@@ -22,6 +22,8 @@
 #include <signal.h>
 #include <fstream>
 
+#include <boost/log/trivial.hpp>
+
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
@@ -157,6 +159,7 @@ static void on_verify_code( const boost::asio::const_buffer & imgbuf, avbot & my
 # else
 	mybot.broadcast_message( "..." );
 #endif
+
 	std::cerr << console_out_str("请查看qqlog目录下的vercode.jpeg 然后输入验证码: ") <<  std::flush ;
 	std::cerr.flush();
 	do_vc_code = boost::bind(&avbot::feed_login_verify_code, &mybot, _1);
@@ -322,7 +325,7 @@ int daemon( int nochdir, int noclose )
 static void tj_sended(const boost::system::error_code &ec, avhttp::http_stream &s)
 {
 	if (!ec){
-		std::cerr << console_out_str("avbot 使用统计(匿名)发送成功!") << std::endl;
+		BOOST_LOG_TRIVIAL(info) << console_out_str("avbot 使用统计(匿名)发送成功!");
 	}
 	s.close();
 }
@@ -413,12 +416,13 @@ int main( int argc, char *argv[] )
 				// 命令行没指定配置文件？使用默认的!
 				config = configfilepath();
 			}
-			std::cout << "loading config from: " << config.string() << std::endl;
+			BOOST_LOG_TRIVIAL(info) << "loading config from: " << config.string();
 			po::store( po::parse_config_file<char>( config.string().c_str(), desc ), vm );
 			po::notify( vm );
 		} catch( char const* e ) {
-			std::cout <<  "no command line arg and config file not found neither." <<  std::endl;
-			std::cout <<  "try to add command line arg or put config file in /etc/qqbotrc or ~/.qqbotrc" <<  std::endl;
+			BOOST_LOG_TRIVIAL(fatal) <<  "no command line arg and config file not found neither.";
+			BOOST_LOG_TRIVIAL(fatal) <<  "try to add command line arg or put config file in /etc/qqbotrc or ~/.qqbotrc";
+			exit(1);
 		}
 	}
 
@@ -544,7 +548,7 @@ int main( int argc, char *argv[] )
 						}
 					}
 					catch (...) {
-						std::cerr << "error while handle config file" << std::endl;
+						BOOST_LOG_TRIVIAL(fatal) << "error while handle config file";
 					}
 
 					TCHAR file_path[MAX_PATH];
@@ -591,7 +595,7 @@ int main( int argc, char *argv[] )
 	}
 
 	if( qqnumber.empty() || qqpwd.empty() ) {
-		std::cerr << console_out_str("请设置qq号码和密码.") << std::endl;
+		BOOST_LOG_TRIVIAL(fatal) << console_out_str("请设置qq号码和密码.");
 		exit( 1 );
 	}
 
@@ -663,9 +667,9 @@ int main( int argc, char *argv[] )
 									  );
 			}catch(...)
 			{
-				std::cerr <<  "bind to port " <<  rpcport <<  " failed!" << std::endl;
-				std::cerr <<  "Did you happened to already run an avbot? " << std::endl;
-				std::cerr <<  "Now avbot will run without RPC support. " << std::endl;			
+				BOOST_LOG_TRIVIAL(warning) <<  "bind to port " <<  rpcport <<  " failed!";
+				BOOST_LOG_TRIVIAL(warning) <<  "Did you happened to already run an avbot? ";
+				BOOST_LOG_TRIVIAL(warning) <<  "Now avbot will run without RPC support. ";
 			}
 		}
 	}
