@@ -30,10 +30,12 @@ endif()
 
 if(ENABLE_STATIC)
 set(Boost_USE_STATIC_LIBS        ON)
+set(Boost_USE_STATIC_RUNTIME    ON)
 endif()
 
 if(ENABLE_LIBSTDCXX_STATIC)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ ")
+set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_STATIC_RUNTIME    ON)
 endif()
 
