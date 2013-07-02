@@ -98,6 +98,15 @@ async_read_body_op<avHttpStream, MutableBufferSequence, Handler> make_async_read
 
 } // namespace detail
 
+
+/**
+ * 用法, 先设置好 http_stream 的 options ,  然后调用
+ *   avhttp::misc::async_read_body(stream, url, buffer, handler);
+ * 注意,  stream 和 buffer 的生命周期要保持到调用handler.
+ *
+ * handler 的签名同 boost::asio::async_read
+ *
+ */
 template<class avHttpStream, class MutableBufferSequence, class Handler>
 void async_read_body(avHttpStream & stream, const avhttp::url & url, MutableBufferSequence &buffers, Handler _handler)
 {
