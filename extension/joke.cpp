@@ -122,7 +122,7 @@ public:
 		m_http_stream.reset(new avhttp::http_stream(io_service));
 		m_read_buf.reset(new boost::asio::streambuf);
 
-		avhttp::misc::async_read_body(*m_http_stream, url, *m_read_buf, boost::bind(*this, _1, _2, handler));
+		avhttp::async_read_body(*m_http_stream, url, *m_read_buf, boost::bind(*this, _1, _2, handler));
 	}
 
 	template<class Handler>

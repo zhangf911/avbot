@@ -48,7 +48,7 @@ struct metalprice_fetcher_op{
 			sender( std::string( metal + " 无报价或avbot暂不支持"));
 		}else{
 			std::string url = boost::str(boost::format("http://hq.sinajs.cn/?_=%d&list=%s") % std::time(0) % list);
-			avhttp::misc::async_read_body(*stream, url, * buf, *this);
+			avhttp::async_read_body(*stream, url, * buf, *this);
 		}
 	}
 
