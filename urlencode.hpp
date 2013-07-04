@@ -44,7 +44,7 @@ private:
 	template<class CharTtpe>
 	static bool need_encode(const CharTtpe c)
 	{
-		return ! (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~');
+		return !(isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~');
 	}
 
 	bool need_encode() const
@@ -57,6 +57,7 @@ private:
 	{
 		cur_char_pos = 0;
 		std::fill_n(cur_char_buf, sizeof cur_char_buf, 0);
+
 		//判断是否需要编码.
 		if(need_encode())
 		{
@@ -136,29 +137,29 @@ public:
 		return m_baseposition != rhs.m_baseposition || cur_char_pos != rhs.cur_char_pos;
 	}
 private:
-	struct need_encode_func{
-
-	template<class CharType>
-	bool operator()(const CharType c)
+	struct need_encode_func
 	{
-		return need_encode(c);
-	}
-
+		template<class CharType>
+		bool operator()(const CharType c)
+		{
+			return need_encode(c);
+		}
 	};
 public:
 	difference_type operator - (const url_encode_iterator & rhs) const
 	{
 		// 遍历到底, 然后计算有多少 need_encode , need_encode 的数量 * 2 + 字符串长度即可.
-		return (m_baseposition - rhs.m_baseposition) + 2*  std::count_if(rhs.m_baseposition, m_baseposition , need_encode_func() );
+		return (m_baseposition - rhs.m_baseposition) + 2 *  std::count_if(rhs.m_baseposition, m_baseposition , need_encode_func());
 	}
 };
 
-}
+} // namespace iterators
 
 std::string url_encode(const std::string str)
 {
 	return std::string(iterators::url_encode_iterator<std::string::const_iterator>(str.begin()),
-		iterators::url_encode_iterator<std::string::const_iterator>(str.end()) );
+					   iterators::url_encode_iterator<std::string::const_iterator>(str.end()));
 }
 
-}
+} // namespace boost
+// kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;
