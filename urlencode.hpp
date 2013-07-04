@@ -158,8 +158,8 @@ public:
 template<class String>
 String url_encode(const String & str)
 {
-	return String(iterators::url_encode_iterator<std::string::const_iterator>(str.begin()),
-					   iterators::url_encode_iterator<std::string::const_iterator>(str.end()));
+	return String(iterators::url_encode_iterator<typename String::const_iterator>(str.begin()),
+					   iterators::url_encode_iterator<typename String::const_iterator>(str.end()));
 }
 
 } // namespace boost
