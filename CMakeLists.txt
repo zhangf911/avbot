@@ -58,7 +58,7 @@ if(NOT Boost_FOUND)
 	set(Boost_USE_STATIC_RUNTIME    OFF)
 	find_package(Boost 1.54 REQUIRED COMPONENTS log log_setup date_time filesystem system program_options regex locale)
 	if(NOT Boost_FOUND )
-		message(FATAL_ERROR "need boost >= 1.50")
+		message(FATAL_ERROR "need boost >= 1.54")
 	endif()
 endif()
 
