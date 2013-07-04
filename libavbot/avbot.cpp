@@ -8,7 +8,7 @@ namespace fs = boost::filesystem;
 #include <fstream>
 
 #include "avbot.hpp"
-#include "libwebqq/url.hpp"
+#include "libwebqq/urlencode.hpp"
 
 static std::string	preamble_formater(std::string preamble_qq_fmt, qqBuddy *buddy, std::string falbacknick, qqGroup * grpup = NULL )
 {

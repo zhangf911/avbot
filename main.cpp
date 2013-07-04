@@ -55,8 +55,6 @@ namespace po = boost::program_options;
 #include "boost/acceptor_server.hpp"
 #include "boost/avloop.hpp"
 
-#include "libwebqq/url.hpp"
-
 #include "libavbot/avbot.hpp"
 #include "libavlog/avlog.hpp"
 
