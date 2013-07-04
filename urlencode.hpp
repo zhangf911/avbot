@@ -21,7 +21,7 @@
 #pragma once
 
 namespace boost{
-namespace iterator{
+namespace iterators{
 
 template<class BaseIterator>
 struct url_encode_iterator
@@ -157,8 +157,8 @@ public:
 
 std::string url_encode(const std::string str)
 {
-	return std::string(iterator::url_encode_iterator<std::string::const_iterator>(str.begin()),
-		iterator::url_encode_iterator<std::string::const_iterator>(str.end()) );
+	return std::string(iterators::url_encode_iterator<std::string::const_iterator>(str.begin()),
+		iterators::url_encode_iterator<std::string::const_iterator>(str.end()) );
 }
 
 }
