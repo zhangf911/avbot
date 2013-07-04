@@ -155,9 +155,10 @@ public:
 
 } // namespace iterators
 
-std::string url_encode(const std::string str)
+template<class String>
+String url_encode(const String & str)
 {
-	return std::string(iterators::url_encode_iterator<std::string::const_iterator>(str.begin()),
+	return String(iterators::url_encode_iterator<std::string::const_iterator>(str.begin()),
 					   iterators::url_encode_iterator<std::string::const_iterator>(str.end()));
 }
 
