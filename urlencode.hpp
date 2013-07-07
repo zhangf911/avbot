@@ -149,7 +149,8 @@ public:
 	difference_type operator - (const url_encode_iterator & rhs) const
 	{
 		// 遍历到底, 然后计算有多少 need_encode , need_encode 的数量 * 2 + 字符串长度即可.
-		return (m_baseposition - rhs.m_baseposition) + 2 *  std::count_if(rhs.m_baseposition, m_baseposition , need_encode_func());
+		return (m_baseposition - rhs.m_baseposition)
+				+ 2 * std::count_if(rhs.m_baseposition, m_baseposition , need_encode_func());
 	}
 };
 
