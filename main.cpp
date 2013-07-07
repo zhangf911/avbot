@@ -65,6 +65,7 @@ namespace po = boost::program_options;
 #include "avbot_rpc_server.hpp"
 
 #include "extension/extension.hpp"
+#include "deCAPTCHA/decaptcha.hpp"
 
 #ifndef QQBOT_VERSION
 #ifdef PACKAGE_VERSION
@@ -143,7 +144,7 @@ static std::string progname;
 
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
-static void on_verify_code( const boost::asio::const_buffer & imgbuf, avbot & mybot)
+static void on_verify_code( const boost::asio::const_buffer & imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)
 {
 	const char * data = boost::asio::buffer_cast<const char*>( imgbuf );
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
@@ -597,13 +598,15 @@ int main( int argc, char *argv[] )
 		exit( 1 );
 	}
 
+	decaptcha::deCAPTCHA decaptcha(io_service);
+
 	mybot.preamble_irc_fmt = preamble_irc_fmt;
 	mybot.preamble_qq_fmt = preamble_qq_fmt;
 	mybot.preamble_xmpp_fmt = preamble_xmpp_fmt;
 
 	mybot.signal_new_channel.connect(boost::bind(new_channel_set_extension, boost::ref(io_service), boost::ref(mybot), _1));
 
-	mybot.set_qq_account( qqnumber, qqpwd, boost::bind( on_verify_code, _1, boost::ref( mybot ) ) );
+	mybot.set_qq_account( qqnumber, qqpwd, boost::bind( on_verify_code, _1, boost::ref( mybot ), boost::ref(decaptcha) ) );
 
 	if( !ircnick.empty() )
 		mybot.set_irc_account( ircnick, ircpwd );
