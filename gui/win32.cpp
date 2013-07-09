@@ -1,4 +1,6 @@
 
+#include <string>
+#include <cstdlib>
 #include <windows.h>
 
 // 重启qqbot
@@ -182,7 +184,7 @@ void show_dialog(std::string & qqnumer, std::string & qqpwd, std::string & ircni
 				CloseHandle(pi.hProcess);
 				CloseHandle(pi.hThread);
 				// now,parent process exit.
-				exit(1);
+				std::exit(1);
 			}
 
 			TranslateMessage(&msg);
