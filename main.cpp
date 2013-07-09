@@ -95,7 +95,7 @@ static void on_verify_code(const boost::asio::const_buffer & imgbuf, avbot & myb
 	need_vc = true;
 	// 保存文件.
 	std::ofstream	img("vercode.jpeg", std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
-	img.write(buffer.data(), buffer.length());
+	img.write(data, imgsize);
 	img.close();
 
 	decaptcha.async_decaptcha(
