@@ -1,16 +1,4 @@
 
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0600
-#endif
-#if defined(_WIN32)
-#include <direct.h>
-
-#include <windows.h>
-#include <tchar.h>
-#include <commctrl.h>
-#include "resource.h"
-#endif
-
 /**
  * @file   main.cpp
  * @author microcai <microcaicai@gmail.com>
@@ -395,9 +383,9 @@ int main( int argc, char *argv[] )
 	{
 		void show_dialog(std::string & qqnumer, std::string & qqpwd, std::string & ircnick,
 					std::string & ircroom, std::string & ircpwd,
-					std::string &xmppuser, std::string & xmppserver,std::string & xmpppwd, std::string & xmpproom);
+					std::string &xmppuser, std::string & xmppserver,std::string & xmpppwd, std::string & xmpproom, std::string &xmppnick);
 
-		show_dialog(qqnumber, qqpwd, ircnick, ircroom, ircpwd, xmppuser, xmppserver, xmpppwd, xmpproom);
+		show_dialog(qqnumber, qqpwd, ircnick, ircroom, ircpwd, xmppuser, xmppserver, xmpppwd, xmpproom,xmppnick);
 	}
 #endif
 

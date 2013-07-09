@@ -1,9 +1,28 @@
 
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0600
+#endif
+#if defined(_WIN32)
+#include <direct.h>
+
+#include <windows.h>
+#include <tchar.h>
+#include <commctrl.h>
+#include "resource.h"
+#endif
+
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <boost/log/trivial.hpp>
+
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+
 #include <windows.h>
+
+#include "fsconfig.ipp"
 
 // 重启qqbot
 #define WM_RESTART_AV_BOT WM_USER + 5
@@ -63,9 +82,9 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 
 
-void show_dialog(std::string & qqnumer, std::string & qqpwd, std::string & ircnick,
+void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircnick,
 					std::string & ircroom, std::string & ircpwd,
-					std::string &xmppuser, std::string & xmppserver,std::string & xmpppwd, std::string & xmpproom)
+					std::string &xmppuser, std::string & xmppserver,std::string & xmpppwd, std::string & xmpproom, std::string &xmppnick)
 {
 	::InitCommonControls();
 	// windows下面弹出选项设置框框.
@@ -140,7 +159,7 @@ void show_dialog(std::string & qqnumer, std::string & qqpwd, std::string & ircni
 						config_file += "\\qqbotrc";
 					}
 
-					fs::ofstream file(config_file);
+					std::ofstream file(config_file.string().c_str());
 
 					file << "# qq config" << std::endl;
 					file << "qqnum=" << qqnumber << std::endl;
