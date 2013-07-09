@@ -95,7 +95,7 @@ if(WIN32)
 add_subdirectory(gui)
 endif()
 
-add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp avbot.rc)
+add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp avbot.rc)
 
 if(WIN32)
 target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 -lmswsock)

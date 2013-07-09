@@ -1,6 +1,6 @@
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-lua
-EXTRA_DIST = README.md m4 avproxy avhttp boost libirc CMakeLists.txt fsconfig.ipp  input.ipp avbot.rc avbot.manifest
+EXTRA_DIST = README.md m4 avproxy avhttp boost libirc CMakeLists.txt fsconfig.ipp  avbot.rc avbot.manifest
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AUTOMAKE_OPTIONS = color-tests parallel-tests
@@ -12,7 +12,7 @@ AM_CPPFLAGS = -DAVHTTP_ENABLE_OPENSSL -I ${srcdir}/avproxy/include -I ${srcdir}/
 bin_PROGRAMS = avbot
 
 avbot_SOURCES = main.cpp botctl.cpp avbot_rpc_server.cpp avbot_rpc_server.hpp \
-		auto_welcome.hpp  botctl.hpp  counter.hpp resource.h
+		auto_welcome.hpp  botctl.hpp  counter.hpp resource.h input.cpp input.hpp
 if OS_WINNT
 avbot_SOURCES += avbot.rc
 endif

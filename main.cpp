@@ -61,7 +61,8 @@ namespace po = boost::program_options;
 #include "counter.hpp"
 
 #include "botctl.hpp"
-
+#include "input.hpp"
+#include "avbot_vc_feed_input.hpp"
 #include "avbot_rpc_server.hpp"
 
 #include "extension/extension.hpp"
@@ -85,24 +86,21 @@ static std::string progname;
 
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
-static void on_verify_code( const boost::asio::const_buffer & imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)
+static void vc_code_decoded(boost::system::error_code ec, std::size_t id, std::string vccode, avbot & mybot)
+{
+	mybot.feed_login_verify_code(vccode);
+}
+
+static void on_verify_code(const boost::asio::const_buffer & imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)
 {
 	const char * data = boost::asio::buffer_cast<const char*>( imgbuf );
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
-	fs::path imgpath = fs::path( logfile.log_path() ) / "vercode.jpeg";
-	std::ofstream	img( imgpath.string().c_str(), std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
-	img.write( data, imgsize );
-	qqneedvc = true;
-	// send to xmpp and irc.
-#if !defined(_MSC_VER)
-	mybot.broadcast_message( "请查看qqlog目录下的vercode.jpeg 然后用\".qqbot vc XXX\"输入验证码:" );
-# else
-	mybot.broadcast_message( "..." );
-#endif
+	std::string buffer(data, imgsize);
 
-	std::cerr << console_out_str("请查看qqlog目录下的vercode.jpeg 然后输入验证码: ") <<  std::flush ;
-	std::cerr.flush();
-	do_vc_code = boost::bind(&avbot::feed_login_verify_code, &mybot, _1);
+	decaptcha.async_decaptcha(
+		buffer,
+		boost::bind(&vc_code_decoded, _1, _2, _3, boost::ref(mybot))
+	);
 }
 
 struct build_group_has_qq{
@@ -259,16 +257,7 @@ int daemon( int nochdir, int noclose )
 }
 #endif // WIN32
 
-#include "input.ipp"
 #include "fsconfig.ipp"
-
-static void tj_sended(const boost::system::error_code &ec, avhttp::http_stream &s)
-{
-	if (!ec){
-		BOOST_LOG_TRIVIAL(info) << console_out_str("avbot 使用统计(匿名)发送成功!");
-	}
-	s.close();
-}
 
 int main( int argc, char *argv[] )
 {
@@ -421,9 +410,16 @@ int main( int argc, char *argv[] )
 	}
 
 	decaptcha::deCAPTCHA decaptcha(io_service);
+
+	avbot_vc_feed_input vcinput;
+
+	// 连接到 std input
+	connect_stdinput(boost::bind(&avbot_vc_feed_input::call_this_to_feed_line, &vcinput, _1));
+
 	decaptcha.add_decoder(
 		decaptcha::decoder::channel_friend_decoder(
-			io_service, boost::bind(&avbot::broadcast_message, &mybot, _1)
+			io_service, boost::bind(&avbot::broadcast_message, &mybot, _1),
+			boost::bind(&avbot_vc_feed_input::async_input_read, &vcinput, _1)
 		)
 	);
 
@@ -467,14 +463,9 @@ int main( int argc, char *argv[] )
 	boost::asio::io_service::work work( io_service );
 
 	if( !vm.count( "daemon" ) ) {
-#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
-		boost::shared_ptr<boost::asio::posix::stream_descriptor> stdin( new boost::asio::posix::stream_descriptor( io_service, 0 ) );
-		boost::shared_ptr<boost::asio::streambuf> inputbuffer( new boost::asio::streambuf );
-		boost::asio::async_read_until( *stdin, *inputbuffer, '\n', boost::bind( inputread , _1, _2, stdin, inputbuffer, boost::ref( mybot ) ) );
-#else
-		boost::thread( boost::bind( input_thread, boost::ref( io_service ), boost::ref( mybot ) ) );
-#endif
+		start_stdinput(io_service);
 	}
+
 	if (rpcport > 0)
 	{
 		try
@@ -503,7 +494,7 @@ int main( int argc, char *argv[] )
 	}
 
 	avhttp::http_stream s(io_service);
-	s.async_open("https://avlog.avplayer.org/cache/tj.php", boost::bind(&tj_sended, _1, boost::ref(s)) );
+	s.async_open("https://avlog.avplayer.org/cache/tj.php", boost::bind(&avhttp::http_stream::close, &s) );
 
 	avloop_run( io_service);
 	return 0;
