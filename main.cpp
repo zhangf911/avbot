@@ -66,6 +66,7 @@ namespace po = boost::program_options;
 
 #include "extension/extension.hpp"
 #include "deCAPTCHA/decaptcha.hpp"
+#include "deCAPTCHA/channel_friend_decoder.hpp"
 
 #ifndef QQBOT_VERSION
 #ifdef PACKAGE_VERSION
@@ -599,6 +600,11 @@ int main( int argc, char *argv[] )
 	}
 
 	decaptcha::deCAPTCHA decaptcha(io_service);
+	decaptcha.add_decoder(
+		decaptcha::decoder::channel_friend_decoder(
+			io_service, boost::bind(&avbot::broadcast_message, &mybot, _1)
+		)
+	);
 
 	mybot.preamble_irc_fmt = preamble_irc_fmt;
 	mybot.preamble_qq_fmt = preamble_qq_fmt;
