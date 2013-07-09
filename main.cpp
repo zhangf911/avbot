@@ -71,12 +71,15 @@ avlog logfile;			// 用于记录日志文件.
 
 static counter cnt;				// 用于统计发言信息.
 static std::string progname;
-
+static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
 static void vc_code_decoded(boost::system::error_code ec, std::size_t id, std::string vccode, avbot & mybot)
 {
+	mybot.broadcast_message("验证码已输入");
+
 	mybot.feed_login_verify_code(vccode);
+	need_vc = false;
 }
 
 static void on_verify_code(const boost::asio::const_buffer & imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)
@@ -85,11 +88,32 @@ static void on_verify_code(const boost::asio::const_buffer & imgbuf, avbot & myb
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
 	std::string buffer(data, imgsize);
 
+	need_vc = true;
+
 	decaptcha.async_decaptcha(
 		buffer,
 		boost::bind(&vc_code_decoded, _1, _2, _3, boost::ref(mybot))
 	);
 }
+
+static void stdin_feed_broadcast(avbot & mybot, std::string line_input)
+{
+	if (need_vc){
+		return;
+	}
+
+	boost::trim_right(line_input);
+
+	if(line_input.size() > 1)
+	{
+		mybot.broadcast_message(
+			boost::str(
+				boost::format("来自 avbot 命令行的消息: %s") % line_input
+			)
+		);
+	}
+}
+
 
 struct build_group_has_qq{
 	bool operator()(const std::string & str)
@@ -246,20 +270,6 @@ int daemon( int nochdir, int noclose )
 #endif // WIN32
 
 #include "fsconfig.ipp"
-
-static void stdin_feed_broadcast(avbot & mybot, std::string line_input)
-{
-	boost::trim_right(line_input);
-
-	if(line_input.size() > 1)
-	{
-		mybot.broadcast_message(
-			boost::str(
-				boost::format("来自 avbot 命令行的消息: %s") % line_input
-			)
-		);
-	}
-}
 
 int main( int argc, char *argv[] )
 {
