@@ -11,7 +11,7 @@ AM_CPPFLAGS = -DAVHTTP_ENABLE_OPENSSL -I ${srcdir}/avproxy/include -I ${srcdir}/
 
 bin_PROGRAMS = avbot
 
-avbot_SOURCES = main.cpp botctl.cpp avbot_rpc_server.cpp avbot_rpc_server.hpp \
+avbot_SOURCES = avbot_vc_feed_input.hpp main.cpp botctl.cpp avbot_rpc_server.cpp avbot_rpc_server.hpp \
 		auto_welcome.hpp  botctl.hpp  counter.hpp resource.h input.cpp input.hpp
 if OS_WINNT
 avbot_SOURCES += avbot.rc
