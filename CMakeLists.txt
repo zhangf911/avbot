@@ -91,15 +91,15 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-if(WIN32)
-add_subdirectory(gui)
-endif()
-
 add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp avbot.rc)
 
 if(WIN32)
+add_subdirectory(gui)
+target_link_libraries(avbot avbotgui)
+
 target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 -lmswsock)
 endif()
+
 
 if(APPLE)
 target_link_libraries(avbot -liconv)
