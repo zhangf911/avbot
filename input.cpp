@@ -26,26 +26,6 @@ static void input_thread(boost::asio::io_service & io_service)
 }
 #endif
 
-// static void input_got_one_line(std::string line_input)
-// {
-// 	//验证码check
-// 	if(qqneedvc){
-// 		boost::trim(line_input);
-// 		mybot.feed_login_verify_code(line_input);
-// 		qqneedvc = false;
-// 		return;
-// 	}else{
-// 		boost::trim_right(line_input);
-// 		if(line_input.size() > 1){
-// 			mybot.broadcast_message(
-// 				boost::str(
-// 					boost::format("来自 avbot 命令行的消息: %s") % line_input
-// 				)
-// 			);
-// 		}
-// 	}
-// }
-
 #ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
 
 static void inputread(const boost::system::error_code & ec, std::size_t length,

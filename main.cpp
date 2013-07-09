@@ -81,7 +81,6 @@ char * execpath;
 avlog logfile;			// 用于记录日志文件.
 
 static counter cnt;				// 用于统计发言信息.
-static bool qqneedvc = false;	// 用于在irc中验证qq登陆.
 static std::string progname;
 
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
@@ -258,6 +257,20 @@ int daemon( int nochdir, int noclose )
 #endif // WIN32
 
 #include "fsconfig.ipp"
+
+static void stdin_feed_broadcast(avbot & mybot, std::string line_input)
+{
+	boost::trim_right(line_input);
+
+	if(line_input.size() > 1)
+	{
+		mybot.broadcast_message(
+			boost::str(
+				boost::format("来自 avbot 命令行的消息: %s") % line_input
+			)
+		);
+	}
+}
 
 int main( int argc, char *argv[] )
 {
@@ -465,6 +478,7 @@ int main( int argc, char *argv[] )
 
 	if( !vm.count( "daemon" ) ) {
 		start_stdinput(io_service);
+		connect_stdinput( boost::bind( stdin_feed_broadcast , boost::ref(mybot), _1));
 	}
 
 	if (rpcport > 0)
