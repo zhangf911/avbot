@@ -415,6 +415,7 @@ int main( int argc, char *argv[] )
 
 	// 连接到 std input
 	connect_stdinput(boost::bind(&avbot_vc_feed_input::call_this_to_feed_line, &vcinput, _1));
+	mybot.on_message.connect(boost::bind(&avbot_vc_feed_input::call_this_to_feed_message, &vcinput, _1));
 
 	decaptcha.add_decoder(
 		decaptcha::decoder::channel_friend_decoder(

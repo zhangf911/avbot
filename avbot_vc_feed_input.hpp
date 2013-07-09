@@ -26,6 +26,14 @@ public:
 	void call_this_to_feed_message(boost::property_tree::ptree message)
 	{
 		// format 后调用 call_this_to_feed_line
+		try{
+			std::string textmessage;
+
+			textmessage = message.get<std::string>("message.text");
+
+			call_this_to_feed_line(textmessage);
+
+		}catch (...){}
 	}
 
 private:
