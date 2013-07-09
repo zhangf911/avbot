@@ -72,6 +72,7 @@ add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
 add_definitions(-DBOOST_ALL_STATIC_LINK)
 endif()
 
+add_definitions(-DQQBOT_VERSION=\"6.3\")
 add_definitions(-DAVHTTP_ENABLE_OPENSSL)
 
 include_directories(${Boost_INCLUDE_DIRS})
@@ -90,7 +91,10 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-add_definitions(-DQQBOT_VERSION=\"6.3\")
+if(WIN32)
+add_subdirectory(gui)
+endif()
+
 add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp avbot.rc)
 
 if(WIN32)
