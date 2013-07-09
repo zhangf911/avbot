@@ -4,6 +4,7 @@
  * @author microcai <microcaicai@gmail.com>
  *
  */
+#include <unistd.h>
 #include <string>
 #include <algorithm>
 #include <vector>
