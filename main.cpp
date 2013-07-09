@@ -56,6 +56,7 @@ namespace po = boost::program_options;
 
 #include "extension/extension.hpp"
 #include "deCAPTCHA/decaptcha.hpp"
+#include "deCAPTCHA/deathbycaptcha_decoder.hpp"
 #include "deCAPTCHA/channel_friend_decoder.hpp"
 
 #ifndef QQBOT_VERSION
@@ -89,6 +90,10 @@ static void on_verify_code(const boost::asio::const_buffer & imgbuf, avbot & myb
 	std::string buffer(data, imgsize);
 
 	need_vc = true;
+	// 保存文件.
+	std::ofstream	img("vercode.jpeg", std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
+	img.write(buffer.data(), buffer.length());
+	img.close();
 
 	decaptcha.async_decaptcha(
 		buffer,
@@ -280,6 +285,8 @@ int main( int argc, char *argv[] )
 	std::string logdir;
 	std::string chanelmap;
 	std::string mailaddr, mailpasswd, pop3server, smtpserver;
+	std::string deathbycaptcha_username, deathbycaptcha_password;
+
 	fs::path config; // 配置文件的路径
 
 	unsigned rpcport;
@@ -301,7 +308,7 @@ int main( int argc, char *argv[] )
 	( "gui,g",	 	"pop up settings dialog" )
 #endif
 
-	( "config,c",	po::value<fs::path>( &config ),		"use an alternative configuration file." )
+	( "config,c",	po::value<fs::path>( &config ),			"use an alternative configuration file." )
 	( "qqnum,u",	po::value<std::string>( &qqnumber ), 	"QQ number" )
 	( "qqpwd,p",	po::value<std::string>( &qqpwd ), 		"QQ password" )
 	( "logdir",		po::value<std::string>( &logdir ), 		"dir for logfile" )
@@ -318,6 +325,9 @@ int main( int argc, char *argv[] )
 	( "mailpasswd",	po::value<std::string>( &mailpasswd ), 	"password of mail" )
 	( "pop3server",	po::value<std::string>( &pop3server ), 	"pop server of mail,  default to pop.[domain]" )
 	( "smtpserver",	po::value<std::string>( &smtpserver ), 	"smtp server of mail,  default to smtp.[domain]" )
+
+	( "deathbycaptcha_username", po::value<std::string>( &deathbycaptcha_username ),	console_out_str("阿三解码服务账户").c_str() )
+	( "deathbycaptcha_password", po::value<std::string>( &deathbycaptcha_password ),	console_out_str("阿三解码服务密码").c_str() )
 
 	( "localimage", po::value<bool>( &(mybot.fetch_img) )->default_value(true),	"fetch qq image to local disk and store it there")
 	( "rpcport",	po::value<unsigned>(&rpcport)->default_value(6176),				"run rpc server on port 6176")
@@ -428,6 +438,15 @@ int main( int argc, char *argv[] )
 	// 连接到 std input
 	connect_stdinput(boost::bind(&avbot_vc_feed_input::call_this_to_feed_line, &vcinput, _1));
 	mybot.on_message.connect(boost::bind(&avbot_vc_feed_input::call_this_to_feed_message, &vcinput, _1));
+
+	if (!deathbycaptcha_username.empty() && !deathbycaptcha_password.empty())
+	{
+		decaptcha.add_decoder(
+			decaptcha::decoder::deathbycaptcha_decoder(
+				io_service, deathbycaptcha_username, deathbycaptcha_password
+			)
+		);
+	}
 
 	decaptcha.add_decoder(
 		decaptcha::decoder::channel_friend_decoder(
