@@ -77,7 +77,10 @@ static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
 static void vc_code_decoded(boost::system::error_code ec, std::size_t id, std::string vccode, avbot & mybot)
 {
-	mybot.broadcast_message("验证码已输入");
+	if (id){
+		BOOST_LOG_TRIVIAL(info) <<  console_out_str("使用印度阿三的服务成功解码验证码!");
+	}else
+		mybot.broadcast_message("验证码已输入");
 
 	mybot.feed_login_verify_code(vccode);
 	need_vc = false;
