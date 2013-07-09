@@ -1,4 +1,7 @@
 
+7.0
+	* 添加了印度阿三的分布式人肉验证码识别API支持
+
 6.3
 	* httpagent.hpp merged to avhttp, use #include <avhttp/async_read_body.hpp>
 	* 日志部分使用 boost.log 重写
