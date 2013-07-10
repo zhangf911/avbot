@@ -59,6 +59,7 @@ namespace po = boost::program_options;
 #include "deCAPTCHA/deathbycaptcha_decoder.hpp"
 #include "deCAPTCHA/channel_friend_decoder.hpp"
 #include "deCAPTCHA/antigate_decoder.hpp"
+#include "deCAPTCHA/avplayer_free_decoder.hpp"
 
 #ifndef QQBOT_VERSION
 #ifdef PACKAGE_VERSION
@@ -293,6 +294,7 @@ int main( int argc, char *argv[] )
 	//http://api.dbcapi.me/in.php
 	//http://antigate.com/in.php
 	std::string antigate_key, antigate_host;
+	bool use_avplayer_free_vercode_decoder(false);
 
 	fs::path config; // 配置文件的路径
 
@@ -338,6 +340,8 @@ int main( int argc, char *argv[] )
 
 	( "antigate_key", po::value<std::string>( &antigate_key ),	console_out_str("antigate解码服务key").c_str() )
 	( "antigate_host", po::value<std::string>( &antigate_host )->default_value("http://antigate.com/"),	console_out_str("antigate解码服务器地址").c_str() )
+
+	( "use_avplayer_free_vercode_decoder", po::value<bool>( &use_avplayer_free_vercode_decoder ), "don't use" )
 
 	( "localimage", po::value<bool>( &(mybot.fetch_img) )->default_value(true),	"fetch qq image to local disk and store it there")
 	( "rpcport",	po::value<unsigned>(&rpcport)->default_value(6176),				"run rpc server on port 6176")
@@ -458,9 +462,19 @@ int main( int argc, char *argv[] )
 		);
 	}
 
-	decaptcha.add_decoder(
-		decaptcha::decoder::antigate_decoder(io_service, antigate_key, antigate_host)
-	);
+	if(!antigate_key.empty())
+	{
+		decaptcha.add_decoder(
+			decaptcha::decoder::antigate_decoder(io_service, antigate_key, antigate_host)
+		);
+	}
+
+	if(use_avplayer_free_vercode_decoder)
+	{
+		decaptcha.add_decoder(
+			decaptcha::decoder::avplayer_free_decoder(io_service)
+		);
+	}
 
 	decaptcha.add_decoder(
 		decaptcha::decoder::channel_friend_decoder(
