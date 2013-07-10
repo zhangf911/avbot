@@ -7,7 +7,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
-#include <boost/asio/yield.hpp>
 
 namespace boost{
 namespace detail{
@@ -41,11 +40,11 @@ public:
 
 	void operator()(const boost::system::error_code & ec)
 	{
-		reenter(this)
+		BOOST_ASIO_CORO_REENTER(this)
 		{
 			do{
 				m_client_socket.reset(new boost::asio::basic_stream_socket<Protocol>(io_service));
-				yield m_acceptor_socket->async_accept(*m_client_socket, *this);
+				BOOST_ASIO_CORO_YIELD m_acceptor_socket->async_accept(*m_client_socket, *this);
 				if (!ec)
 					BOOST_ASIO_CORO_FORK acceptor_server_op<Protocol, ProtocolProcesser>(*this)(ec);
 			}while (is_parent());
