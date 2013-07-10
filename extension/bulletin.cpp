@@ -48,7 +48,7 @@ void bulletin::schedule_next() const
 	// 避免 cpu 无限下去.
 	boost::posix_time::ptime now =  boost::posix_time::second_clock::local_time();
 
-	boost::posix_time::ptime end = now  + boost::posix_time::hours(25);
+	boost::posix_time::ptime end = now  + boost::posix_time::hours(2);
 
 	// 比对 年月日.
 	boost::posix_time::ptime::date_type date = now.date();
