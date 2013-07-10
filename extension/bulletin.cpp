@@ -125,7 +125,7 @@ void bulletin::operator()( boost::system::error_code ec, std::string msgfile )
 	send_msg_file(msgfile);
 }
 
-void bulletin::operator()( boost::system::error_code) const
+void bulletin::operator()( boost::system::error_code)
 {
 	load_settings();
 	schedule_next();
