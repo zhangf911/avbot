@@ -14,9 +14,10 @@ void bulletin::load_settings()
 {
 	boost::filesystem::path settingsfile = boost::filesystem::current_path() / m_channel_name / "bulletin_setting" ;
 
+	m_settings->clear();
+
 	if( boost::filesystem::exists( settingsfile ) )
 	{
-		m_settings->clear();
 		std::ifstream bulletin_setting( settingsfile.string().c_str() );
 
 		std::string line;
@@ -101,7 +102,7 @@ void bulletin::schedule_next() const
 	// 设定下次的 expires
 
 	// 设定 expires
-	m_timer->expires_from_now(boost::posix_time::hours(24));
+	m_timer->expires_from_now(boost::posix_time::hours(1));
 	m_timer->async_wait(*this);
 	return;
 }
@@ -116,6 +117,7 @@ void bulletin::operator()( boost::system::error_code ec, std::string msgfile ) c
 {
 	if (ec)
 		return;
+	load_settings();
 	schedule_next();
 
 	// 打开 bulletin 文件然后发送文件内容.
