@@ -113,7 +113,7 @@ void bulletin::operator()( boost::property_tree::ptree message ) const
 
 }
 
-void bulletin::operator()( boost::system::error_code ec, std::string msgfile ) const
+void bulletin::operator()( boost::system::error_code ec, std::string msgfile )
 {
 	if (ec)
 		return;
@@ -127,6 +127,7 @@ void bulletin::operator()( boost::system::error_code ec, std::string msgfile ) c
 
 void bulletin::operator()( boost::system::error_code) const
 {
+	load_settings();
 	schedule_next();
 }
 

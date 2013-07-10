@@ -49,5 +49,5 @@ public:
 	// 超时的回调 - 重算调度.
 	void operator()( boost::system::error_code) const;
 	// 超时的回调 - 回显.
-	void operator()( boost::system::error_code, std::string ) const;
+	void operator()( boost::system::error_code, std::string );
 };
