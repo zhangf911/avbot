@@ -200,6 +200,8 @@ my_srcdir=$(cd ${srcdir} && pwd )
 AC_FUNC_FORK
 AC_CHECK_FUNCS([dup2 gettimeofday memset putenv setlocale socket strchr strcspn strstr strtol])
 
+CPPFLAGS+=" -DAVHTTP_ENABLE_OPENSSL"
+
 AC_CONFIG_FILES([
 		avbot.spec
                  Makefile
