@@ -167,7 +167,7 @@ AC_DEFINE_UNQUOTED(WINVER,0x0501)
 OS_WINNT=no
 
 
-BOOST_REQUIRE(1.48)
+BOOST_REQUIRE(1.54)
 BOOST_LOCALE([s])
 BOOST_THREAD([s])
 BOOST_SYSTEM([s])
@@ -194,8 +194,6 @@ esac
 AM_CONDITIONAL(OS_WINNT,[test "x$OS_WINNT" != "xno"])
 
 my_srcdir=$(cd ${srcdir} && pwd )
-
-CXXFLAGS+=" -I ${my_srcdir}/asiocoro"
 
 # Checks for typedefs, structures, and compiler characteristics.
 
