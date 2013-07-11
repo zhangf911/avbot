@@ -35,7 +35,7 @@
 #include "libavlog/avlog.hpp"
 #include "libavbot/avbot.hpp"
 
-#include "libwebqq/webqq.h"
+#include "libwebqq/webqq.hpp"
 
 #include "counter.hpp"
 
