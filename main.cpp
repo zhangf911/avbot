@@ -94,6 +94,8 @@ static void on_verify_code(const boost::asio::const_buffer & imgbuf, avbot & myb
 	size_t	imgsize = boost::asio::buffer_size( imgbuf );
 	std::string buffer(data, imgsize);
 
+	BOOST_LOG_TRIVIAL(info) << "got vercode from TX, now try to auto resovle it ... ...";
+
 	need_vc = true;
 	// 保存文件.
 	std::ofstream	img("vercode.jpeg", std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
