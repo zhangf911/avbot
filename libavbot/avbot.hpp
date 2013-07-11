@@ -6,7 +6,7 @@
 #include <boost/signals2.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "libwebqq/webqq.h"
+#include "libwebqq/webqq.hpp"
 #include "libirc/irc.h"
 #include "libxmpp/xmpp.h"
 #include "libmailexchange/mx.hpp"
