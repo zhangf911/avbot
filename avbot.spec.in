@@ -21,7 +21,7 @@ The qq/irc/xmpp protocol bridge bot by avplayer.org
 
 %build
 
-cmake .
+cmake -DCMAKE_INSTALL_PREFIX=/usr .
 
 make %{?_smp_mflags}
 
