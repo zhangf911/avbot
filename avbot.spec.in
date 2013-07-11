@@ -20,7 +20,8 @@ The qq/irc/xmpp protocol bridge bot by avplayer.org
 %setup -q
 
 %build
-%configure
+
+cmake .
 
 make %{?_smp_mflags}
 
