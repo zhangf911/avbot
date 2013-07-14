@@ -22,11 +22,11 @@ public:
 		m_input_wait_handlers.push_back(handler);
 	}
 
-	void async_input_read_timeout(boost::function<void (boost::system::error_code, std::string)> handler)
+	void async_input_read_timeout(int timed_out ,  boost::function<void (boost::system::error_code, std::string)> handler)
 	{
 		// 将 handler 进入 列队.
 		m_input_wait_handlers.push_back(handler);
-		boost::delayedcallsec(m_io_service, 50, boost::bind(&avbot_vc_feed_input::call_this_to_feed_timeout, this));
+		boost::delayedcallsec(m_io_service, timed_out, boost::bind(&avbot_vc_feed_input::call_this_to_feed_timeout, this));
 	}
 
 	void call_this_to_feed_line(std::string line)
