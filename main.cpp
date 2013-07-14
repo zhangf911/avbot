@@ -449,7 +449,7 @@ int main( int argc, char *argv[] )
 
 	decaptcha::deCAPTCHA decaptcha(io_service);
 
-	avbot_vc_feed_input vcinput;
+	avbot_vc_feed_input vcinput(io_service);
 
 	// 连接到 std input
 	connect_stdinput(boost::bind(&avbot_vc_feed_input::call_this_to_feed_line, &vcinput, _1));
