@@ -481,7 +481,7 @@ int main( int argc, char *argv[] )
 	decaptcha.add_decoder(
 		decaptcha::decoder::channel_friend_decoder(
 			io_service, boost::bind(&avbot::broadcast_message, &mybot, _1),
-			boost::bind(&avbot_vc_feed_input::async_input_read_timeout, &vcinput, 4, _1)
+			boost::bind(&avbot_vc_feed_input::async_input_read_timeout, &vcinput, 45, _1)
 		)
 	);
 

@@ -52,6 +52,9 @@ public:
 public:
 	// 调用这个添加 QQ 帐号. need_verify_image 会在需要登录验证码的时候调用，buffer 里包含了验证码图片.
 	void set_qq_account(std::string qqnumber, std::string password, need_verify_image cb);
+	// 调用这个重新登陆 QQ
+	void relogin_qq_account();
+
 	// 如风发生了 需要验证码 这样的事情，就麻烦调用这个把识别后的验证码喂进去.
 	void feed_login_verify_code(std::string vcode);
 
