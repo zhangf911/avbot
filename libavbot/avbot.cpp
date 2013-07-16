@@ -11,9 +11,9 @@ namespace fs = boost::filesystem;
 #include "avbot.hpp"
 
 
-static std::string	preamble_formater(std::string preamble_qq_fmt, qqBuddy *buddy, std::string falbacknick, qqGroup * grpup = NULL )
+static std::string	preamble_formater(std::string preamble_qq_fmt, webqq::qqBuddy *buddy, std::string falbacknick, webqq::qqGroup * grpup = NULL )
 {
-	static qqBuddy _buddy;
+	static webqq::qqBuddy _buddy;
 	std::string preamble;
 	// 格式化神器, 哦耶.
 	// 获取格式化描述字符串.
@@ -210,7 +210,7 @@ void avbot::callback_on_irc_message( irc::irc_msg pMsg )
 	on_message(message);
 }
 
-void avbot::callback_on_qq_group_message( std::string group_code, std::string who, const std::vector< qqMsg >& msg )
+void avbot::callback_on_qq_group_message( std::string group_code, std::string who, const std::vector<webqq::qqMsg >& msg )
 {
 	using boost::property_tree::ptree;
 	ptree message;
@@ -218,7 +218,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 	ptree ptreee_group;
 	ptreee_group.add("code", group_code);
 
-	qqGroup_ptr group = m_qq_account->get_Group_by_gid( group_code );
+	webqq::qqGroup_ptr group = m_qq_account->get_Group_by_gid( group_code );
 	std::string groupname = group_code;
 
 	if( group ){
@@ -233,7 +233,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 	ptree ptree_who;
 	ptree_who.add("code", who);
 
-	qqBuddy *buddy = NULL;
+	webqq::qqBuddy *buddy = NULL;
 
 	buddy = group ? group->get_Buddy_by_uin( who ) : NULL;
 	if (buddy){
@@ -257,17 +257,17 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 	message.add("preamble", message_preamble);
 
 	// 解析 qqMsg
-	BOOST_FOREACH( qqMsg qqmsg, msg )
+	BOOST_FOREACH( webqq::qqMsg qqmsg, msg )
 	{
 		std::string buf;
 
 		switch( qqmsg.type ) {
-			case qqMsg::LWQQ_MSG_TEXT:
+			case webqq::qqMsg::LWQQ_MSG_TEXT:
 			{
 				textmsg.add("text", qqmsg.text);
 			}
 			break;
-			case qqMsg::LWQQ_MSG_CFACE:
+			case webqq::qqMsg::LWQQ_MSG_CFACE:
 			{
 				if (fetch_img){
 					// save to disk
@@ -291,8 +291,8 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 							boost::system::error_code ec;
 							boost::asio::streambuf buf;
 
-							webqq::async_fetch_cface_std_saver(ec, buf, qqmsg.cface.name, imgfile.parent_path());
-							webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface.name, imgfile.parent_path()));
+							webqq::webqq::async_fetch_cface_std_saver(ec, buf, qqmsg.cface.name, imgfile.parent_path());
+							webqq::webqq::async_fetch_cface(m_io_service, qqmsg.cface, boost::bind(&webqq::webqq::async_fetch_cface_std_saver, _1, _2, qqmsg.cface.name, imgfile.parent_path()));
 						}
 					}
 				}
@@ -308,7 +308,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 				textmsg.add("cface.gchatpicurl", qqmsg.cface.gchatpicurl);
 			}
 			break;
-			case qqMsg::LWQQ_MSG_FACE:
+			case webqq::qqMsg::LWQQ_MSG_FACE:
 			{
  				std::string url = boost::str( boost::format("http://0.web.qstatic.com/webqqpic/style/face/%d.gif" ) % qqmsg.face );
  				textmsg.add("img", url);
@@ -337,7 +337,7 @@ void avbot::callback_on_xmpp_group_message( std::string xmpproom, std::string wh
 	on_message(message);
 }
 
-void avbot::callback_on_mail( mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune )
+void avbot::callback_on_mail(mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune )
 {
 	m_io_service.post(boost::asio::detail::bind_handler(call_to_contiune, m_qq_account->is_online()));
 
@@ -354,14 +354,14 @@ void avbot::callback_on_mail( mailcontent mail, mx::pop3::call_to_continue_funct
 	message.add_child("message", textmessage);
 }
 
-void avbot::callback_on_qq_group_found( qqGroup_ptr group)
+void avbot::callback_on_qq_group_found(webqq::qqGroup_ptr group)
 {
 	// 先检查 QQ 群有没有被加入过，没有再新加入个吧.
 	if (get_channel_name(std::string("qq:")+group->qqnum)=="none")
 		add_to_channel(group->qqnum, std::string("qq:") + group->qqnum);
 }
 
-void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
+void avbot::callback_on_qq_group_newbee(webqq::qqGroup_ptr group, webqq::qqBuddy* buddy)
 {
 	// 新人入群咯.
 	if (get_channel_name(std::string("qq:")+group->qqnum)=="none")
@@ -420,7 +420,7 @@ void avbot::callback_on_qq_group_newbee( qqGroup_ptr group, qqBuddy* buddy)
 
 void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::need_verify_image cb )
 {
-	m_qq_account.reset(new webqq(m_io_service, qqnumber, password));
+	m_qq_account.reset(new webqq::webqq(m_io_service, qqnumber, password));
 	m_qq_account->on_verify_code(cb);
 	m_qq_account->login();
 	m_qq_account->on_group_msg(boost::bind(&avbot::callback_on_qq_group_message, this, _1, _2, _3));

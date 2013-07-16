@@ -17,7 +17,7 @@ public:
 private:
 	boost::asio::io_service & m_io_service;
 
-	boost::shared_ptr<webqq> m_qq_account;
+	boost::shared_ptr<webqq::webqq> m_qq_account;
 	boost::shared_ptr<irc::client> m_irc_account;
 	boost::shared_ptr<xmpp> m_xmpp_account;
 	boost::shared_ptr<mx::mx> m_mail_account;
@@ -45,7 +45,7 @@ public:
 	bool fetch_img;
 
 public:
-	boost::shared_ptr<webqq> get_qq(){return m_qq_account;}
+	boost::shared_ptr<webqq::webqq> get_qq(){return m_qq_account;}
 	boost::shared_ptr<xmpp> get_xmpp(){return m_xmpp_account;}
 	boost::shared_ptr<mx::mx> get_mx(){return m_mail_account;}
 	boost::shared_ptr<irc::client> get_irc(){return m_irc_account;}
@@ -88,13 +88,13 @@ public:
 	void broadcast_message(std::string channel_name, std::string exclude_room, std::string msg);
 private:
 	void callback_on_irc_message(irc::irc_msg pMsg);
-	void callback_on_qq_group_message(std::string group_code, std::string who, const std::vector<qqMsg> & msg);
+	void callback_on_qq_group_message(std::string group_code, std::string who, const std::vector<webqq::qqMsg> & msg);
 	void callback_on_xmpp_group_message(std::string xmpproom, std::string who, std::string message);
 	void callback_on_mail(mailcontent mail, mx::pop3::call_to_continue_function call_to_contiune);
 
 private:
-	void callback_on_qq_group_found(qqGroup_ptr);
-	void callback_on_qq_group_newbee(qqGroup_ptr, qqBuddy*);
+	void callback_on_qq_group_found(webqq::qqGroup_ptr);
+	void callback_on_qq_group_newbee(webqq::qqGroup_ptr, webqq::qqBuddy*);
 
 private:
 	void forward_message(const av_message_tree &message);

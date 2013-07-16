@@ -67,7 +67,7 @@ static void write_vcode(const std::string & vc_img_data)
 
 static boost::function<void (std::string)> do_vc_code;
 
-static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string & vc_img_data, boost::shared_ptr<webqq>  qqclient, boost::function<void( std::string )> msg_sender)
+static void handle_join_group(webqq::qqGroup_ptr group, bool needvc, const std::string & vc_img_data, boost::shared_ptr<webqq::webqq>  qqclient, boost::function<void( std::string )> msg_sender)
 {
 	if (needvc && group){
 		// 写入验证码.
@@ -78,9 +78,9 @@ static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string 
 		std::cout << console_out_str(msg) <<  std::endl;
 		msg_sender(msg);
 
-		webqq::join_group_handler  join_group_handler = boost::bind(handle_join_group, _1, _2, _3, qqclient, msg_sender);
+		webqq::webqq::join_group_handler  join_group_handler = boost::bind(handle_join_group, _1, _2, _3, qqclient, msg_sender);
 		do_vc_code = boost::bind(
-							&webqq::join_group, qqclient,
+							&webqq::webqq::join_group, qqclient,
 								group,
 								_1,
 								join_group_handler
@@ -92,9 +92,9 @@ static void handle_join_group(qqGroup_ptr group, bool needvc, const std::string 
 	}
 }
 
-static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool needvc, const std::string & vc_img_data, boost::shared_ptr<webqq> qqclient, boost::function<void( std::string )> msg_sender)
+static void handle_search_group(std::string groupqqnum, webqq::qqGroup_ptr group, bool needvc, const std::string & vc_img_data, boost::shared_ptr<webqq::webqq> qqclient, boost::function<void( std::string )> msg_sender)
 {
-	static qqGroup_ptr _group;
+	static webqq::qqGroup_ptr _group;
 
 	if (needvc){
 		// 写入验证码.
@@ -106,9 +106,9 @@ static void handle_search_group(std::string groupqqnum, qqGroup_ptr group, bool 
 		std::cout <<  console_out_str(msg) <<  std::endl;
 		msg_sender(msg);
 
-		webqq::search_group_handler  search_group_handler = boost::bind(handle_search_group, groupqqnum, _1, _2, _3, qqclient, msg_sender);
+		webqq::webqq::search_group_handler  search_group_handler = boost::bind(handle_search_group, groupqqnum, _1, _2, _3, qqclient, msg_sender);
 		do_vc_code = boost::bind(
-							&webqq::search_group, qqclient,
+							&webqq::webqq::search_group, qqclient,
 								groupqqnum,
 								_1,
 								search_group_handler
@@ -184,7 +184,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 
 	boost::regex ex;
 	boost::cmatch what;
-	qqGroup_ptr  group;
+	webqq::qqGroup_ptr  group;
 	boost::function<void( std::string )> msg_sender =
 		boost::bind( &avbot::broadcast_message, &mybot, jsonmessage.get<std::string>("channel"), _1);
 
@@ -317,7 +317,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 	if(message == ".qqbot reload" ) {
 		group = mybot.get_qq()->get_Group_by_qq(jsonmessage.get<std::string>("channel"));
 		if (group)
-			mybot.get_io_service().post( boost::bind( &webqq::update_group_member, mybot.get_qq() , group) );
+			mybot.get_io_service().post( boost::bind( &webqq::webqq::update_group_member, mybot.get_qq() , group) );
 		sendmsg( "群成员列表重加载." );
 
 		return;
