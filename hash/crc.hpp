@@ -38,7 +38,7 @@ class basic_crc {
     typedef typename crc_computer::value_type word_type;
 
     static unsigned const value_bits = CHAR_BIT;
-    typedef uint_t<value_bits>::least value_type;
+    typedef typename uint_t<value_bits>::least value_type;
 
     BOOST_STATIC_ASSERT(Bits >= value_bits);
 

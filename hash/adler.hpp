@@ -25,7 +25,7 @@ template <unsigned Bits>
 class basic_adler {
   public:
     static unsigned const value_bits = 8;
-    typedef uint_t<value_bits>::least value_type;
+    typedef typename uint_t<value_bits>::least value_type;
 
     BOOST_STATIC_ASSERT(Bits % 2 == 0);
     BOOST_STATIC_ASSERT(Bits >= value_bits);
