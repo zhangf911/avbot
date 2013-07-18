@@ -56,7 +56,7 @@ public:
 	void relogin_qq_account();
 
 	// 如风发生了 需要验证码 这样的事情，就麻烦调用这个把识别后的验证码喂进去.
-	void feed_login_verify_code(std::string vcode);
+	void feed_login_verify_code(std::string vcode, boost::function<void()> badvcreporter = boost::function<void()>());
 
 	// 调用这个添加 IRC 帐号.
 	void set_irc_account(std::string nick = autonick(), std::string password = "" , std::string server = "irc.freenode.net:6667", bool use_ssl = false);

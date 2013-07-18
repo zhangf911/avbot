@@ -77,14 +77,14 @@ static std::string progname;
 static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
-static void vc_code_decoded(boost::system::error_code ec, std::size_t id, std::string vccode, avbot & mybot)
+static void vc_code_decoded(boost::system::error_code ec, std::size_t id, std::string vccode, boost::function<void()> reportbadvc, avbot & mybot)
 {
 	if (id){
 		BOOST_LOG_TRIVIAL(info) <<  console_out_str("使用印度阿三的服务成功解码验证码!");
 	}else
 		mybot.broadcast_message("验证码已输入");
 
-	mybot.feed_login_verify_code(vccode);
+	mybot.feed_login_verify_code(vccode, reportbadvc);
 	need_vc = false;
 }
 
@@ -104,7 +104,7 @@ static void on_verify_code(const boost::asio::const_buffer & imgbuf, avbot & myb
 
 	decaptcha.async_decaptcha(
 		buffer,
-		boost::bind(&vc_code_decoded, _1, _2, _3, boost::ref(mybot))
+		boost::bind(&vc_code_decoded, _1, _2, _3, _4, boost::ref(mybot))
 	);
 }
 

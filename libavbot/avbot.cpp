@@ -428,8 +428,10 @@ void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::n
 	m_qq_account->on_group_newbee(boost::bind(&avbot::callback_on_qq_group_newbee, this, _1, _2));
 }
 
-void avbot::feed_login_verify_code( std::string vcode )
+void avbot::feed_login_verify_code( std::string vcode, boost::function<void()> badvcreporter)
 {
+	m_qq_account->on_bad_vc(badvcreporter);
+
 	if (!m_qq_account->is_online())
 		m_qq_account->login_withvc(vcode);
 }
