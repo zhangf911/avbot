@@ -78,11 +78,11 @@ static std::string progname;
 static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
-static void vc_code_decoded(boost::system::error_code ec, std::size_t id, std::string vccode, boost::function<void()> reportbadvc, avbot & mybot)
+static void vc_code_decoded(boost::system::error_code ec, std::string provider, std::string vccode, boost::function<void()> reportbadvc, avbot & mybot)
 {
-	if (id){
-		BOOST_LOG_TRIVIAL(info) <<  console_out_str("使用印度阿三的服务成功解码验证码!");
-	}else
+	BOOST_LOG_TRIVIAL(info) << console_out_str("使用 ") <<  console_out_str(provider) << console_out_str(" 成功解码验证码!");
+
+	if (provider == "IRC/XMPP 好友辅助验证码解码器")
 		mybot.broadcast_message("验证码已输入");
 
 	mybot.feed_login_verify_code(vccode, reportbadvc);
