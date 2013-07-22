@@ -220,8 +220,8 @@ void urlpreview::operator()( boost::property_tree::ptree message )
 	{
 		std::string url = what[0];
 		do_urlpreview(speaker, boost::trim_copy(url), boost::posix_time::from_time_t(std::time(NULL)));
-		
-		txt.erase(0,txt.find_first_not_of(what[0]));
+		std::size_t pos = txt.find_first_of(url);
+		txt.erase(0, pos + url.length());
 	}
 }
 
