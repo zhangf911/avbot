@@ -80,6 +80,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 include_directories(avboost/include)
 include_directories(avproxy/include)
 include_directories(avhttp/include)
+include_directories(deCAPTCHA/include)
 
 add_subdirectory(libwebqq)
 if(ENABLE_TEST)
