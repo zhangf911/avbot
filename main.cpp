@@ -11,7 +11,13 @@
 #include <signal.h>
 #include <fstream>
 
+#define BOOST_LOG_USE_NATIVE_SYSLOG
+
 #include <boost/log/trivial.hpp>
+#include <boost/log/sinks.hpp>
+#include <boost/log/sinks/sink.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/core.hpp>
 
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
@@ -274,6 +280,32 @@ static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
 	}catch (...){}
 
 }
+#ifndef _WIN32
+static void init_native_syslog()
+{
+	namespace logging = boost::log;
+	namespace sinks = boost::log::sinks;
+	namespace keywords = boost::log::keywords;
+	typedef sinks::synchronous_sink< sinks::syslog_backend > sink_t;
+
+    boost::shared_ptr< logging::core > core = logging::core::get();
+
+    // Create a backend
+    boost::shared_ptr< sinks::syslog_backend > backend(new sinks::syslog_backend(
+        keywords::facility = sinks::syslog::user,
+        keywords::use_impl = sinks::syslog::native
+    ));
+
+    // Set the straightforward level translator for the "Severity" attribute of type int
+    backend->set_severity_mapper(sinks::syslog::direct_severity_mapping< int >("Severity"));
+
+    // Wrap it into the frontend and register in the core.
+    // The backend requires synchronization in the frontend.
+    core->add_sink(boost::make_shared< sink_t >(backend));
+}
+#else
+static void init_native_syslog(){}
+#endif
 
 #ifdef WIN32
 int daemon( int nochdir, int noclose )
@@ -403,8 +435,9 @@ int main( int argc, char *argv[] )
 	}
 
 
-	if( vm.count( "daemon" ) ) {
+	if( vm.count( "daemon" ) ){
 		daemon( 0, 0 );
+		init_native_syslog();
 	}
 
 	if( vm.count( "version" ) ) {
