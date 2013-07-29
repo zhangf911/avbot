@@ -1,6 +1,10 @@
 
 #pragma once
 
+#ifdef __llvm__
+#pragma GCC diagnostic ignored "-Wdangling-else"
+#endif
+
 #include <boost/log/trivial.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
