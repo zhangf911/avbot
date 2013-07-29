@@ -100,7 +100,7 @@ add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp avbot.rc
 if(WIN32)
 add_subdirectory(gui)
 target_link_libraries(avbot avbotgui)
-
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static ")
 target_link_libraries(avbot -liconv -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 -lmswsock)
 endif()
 
