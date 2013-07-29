@@ -18,8 +18,8 @@ namespace boost { namespace property_tree { namespace json_parser
             // This assumes an ASCII superset. But so does everything in PTree.
             // We escape everything outside ASCII, because this code can't
             // handle high unicode characters.
-            if (*b == 0x20 || *b == 0x21 || (*b >= 0x23 && *b <= 0x2E) ||
-                (*b >= 0x30 && *b <= 0x5B) || (*b >= 0x5D && *b <= 0xFF)  //it fails here because char are signed
+            if (static_cast<unsigned char>(*b) == 0x20 || static_cast<unsigned char>(*b) == 0x21 || (static_cast<unsigned char>(*b) >= 0x23 && static_cast<unsigned char>(*b) <= 0x2E) ||
+                (static_cast<unsigned char>(*b) >= 0x30 && static_cast<unsigned char>(*b) <= 0x5B) || (static_cast<unsigned char>(*b) >= 0x5D && static_cast<unsigned char>(*b) <= 0xFF)  //it fails here because char are signed
                 || (*b >= -0x80 && *b < 0 ) ) // this will pass UTF-8 signed chars
                 result += *b;
             else if (*b == char('\b')) result += char('\\'), result += char('b');

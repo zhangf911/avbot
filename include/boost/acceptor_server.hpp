@@ -1,6 +1,10 @@
 
 #pragma once
 
+#ifdef __llvm__
+#pragma GCC diagnostic ignored "-Wdangling-else"
+#endif
+
 #ifndef AV_ACCEPTOR_SERVER_H
 #define AV_ACCEPTOR_SERVER_H
 
