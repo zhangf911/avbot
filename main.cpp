@@ -87,6 +87,11 @@ static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
 static void vc_code_decoded(boost::system::error_code ec, std::string provider, std::string vccode, boost::function<void()> reportbadvc, avbot & mybot)
 {
+	if (ec){
+		mybot.relogin_qq_account();
+		return;
+	}
+
 	BOOST_LOG_TRIVIAL(info) << console_out_str("使用 ") <<  console_out_str(provider) << console_out_str(" 成功解码验证码!");
 
 	if (provider == "IRC/XMPP 好友辅助验证码解码器")
