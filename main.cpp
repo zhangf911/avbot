@@ -435,6 +435,9 @@ int main( int argc, char *argv[] )
 		} catch( char const* e ) {
 			BOOST_LOG_TRIVIAL(fatal) <<  "no command line arg and config file not found neither.";
 			BOOST_LOG_TRIVIAL(fatal) <<  "try to add command line arg or put config file in /etc/qqbotrc or ~/.qqbotrc";
+#if WIN32
+			goto rungui;
+#endif
 			exit(1);
 		}
 	}
@@ -463,6 +466,7 @@ int main( int argc, char *argv[] )
 # endif
 
 #ifdef _WIN32
+rungui:
 	if( qqnumber.empty() || qqpwd.empty() || vm.count( "gui" )>0)
 	{
 		void show_dialog(std::string & qqnumer, std::string & qqpwd, std::string & ircnick,
