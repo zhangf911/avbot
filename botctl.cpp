@@ -183,7 +183,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 {
 
 	boost::regex ex;
-	boost::cmatch what;
+	boost::smatch what;
 	webqq::qqGroup_ptr  group;
 	boost::function<void( std::string )> msg_sender =
 		boost::bind( &avbot::broadcast_message, &mybot, jsonmessage.get<std::string>("channel"), _1);
@@ -210,7 +210,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 						 "\t.qqbot welcome newbie 欢迎新人\n"
 						 "== 以下命令需要管理员才能使用==\n"
 						 "\t.qqbot relogin 强制重新登录qq\n\t.qqbot reload 重新加载群成员列表\n"
-						 "\t.qqbot begin class XXX\t\n\t.qqbot end class\n"
+						 "\t.qqbot begin class XXX\t开课\n\t.qqbot end class 下课\n"
 						 "以上!" );
 	}
 
@@ -226,7 +226,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 
 	ex.set_expression( ".qqbot mail to \"?(.*)\"?" );
 
-	if( boost::regex_match( message.c_str(), what, ex ) && mybot.get_mx() ) {
+	if( boost::regex_match( message, what, ex ) && mybot.get_mx() ) {
 		//if (mybot.get_mx())
  			// 进入邮件记录模式.
  			mail_recoder mrecoder;
@@ -243,13 +243,13 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 	}
 
 	ex.set_expression( ".vc (.*)" );
-	if (boost::regex_match( message.c_str(), what, ex ) )
+	if (boost::regex_match( message, what, ex ) )
 	{
 		mybot.feed_login_verify_code(what[1]);
 	}
 
 	ex.set_expression( ".qqbot vc (.*)" );
-	if (boost::regex_match( message.c_str(), what, ex ) )
+	if (boost::regex_match( message, what, ex ) )
 	{
 		if ( do_vc_code)
 			do_vc_code(what[1]);
@@ -260,11 +260,11 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 
 	// 向新人问候.
 
-	if( boost::regex_match( message.c_str(), what, boost::regex( ".qqbot newbee (.*)") ) ||
-		boost::regex_match( message.c_str(), what, boost::regex( ".qqbot newbie (.*)") ) ||
-		boost::regex_match( message.c_str(), what, boost::regex( ".qqbot welcome (.*)") )
-	) {
-		std::string nick = what[1];
+	ex.set_expression(".qqbot (newbee|newbie|welcome) (.*)");
+
+	if( boost::regex_match( message, what, ex) )
+	{
+		std::string nick = what[2];
 
 		if( nick.empty() )
 			return;
@@ -277,13 +277,43 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		question.on_handle_message( msg_sender );
 	}
 
+	ex.set_expression("^\\.qqbot qqnickmap +([\\d]+) +([^ ]+)");
+
+	if (boost::regex_search(message, what, ex))
+	{
+		// map what[1] to what[2];
+
+		std::string uin =  what[1];
+		std::string nick = what[2];
+
+		std::string channelname =  jsonmessage.get<std::string>( "channel" );
+		webqq::qqGroup_ptr groupptr =  mybot.get_qq()->get_Group_by_qq(channelname);
+
+		if (groupptr){
+			webqq::qqBuddy * budyptr = groupptr->get_Buddy_by_uin(uin);
+			if (!budyptr)
+			{
+ 				webqq::qqBuddy budy;
+ 				budy.uin = uin;
+ 				budy.nick = nick;
+				groupptr->memberlist.insert(std::make_pair(uin, budy));
+			}else{
+ 				if (budyptr->nick.empty())
+				{
+					budyptr->nick = nick;
+				}
+			}
+		}
+
+	}
+
 	if( jsonmessage.get<int>("op") != 1 )
 		return;
 
 	// 开始讲座记录.
 	ex.set_expression( ".qqbot begin class ?\"(.*)?\"" );
 
-	if( boost::regex_match( message.c_str(), what, ex ) ) {
+	if( boost::regex_match( message, what, ex ) ) {
 		std::string title = what[1];
 
 		if( title.empty() ) return ;
@@ -308,7 +338,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 	}
 
 	ex.set_expression( ".qqbot join group ([0-9]+)" );
-	if (boost::regex_match( message.c_str(), what, ex ) )
+	if (boost::regex_match( message, what, ex ) )
 	{
 		mybot.get_qq()->search_group(what[1], "", boost::bind(handle_search_group, std::string(what[1]), _1, _2, _3, mybot.get_qq(), msg_sender));
 	}
