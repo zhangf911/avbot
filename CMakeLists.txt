@@ -74,7 +74,7 @@ endif()
 
 find_package(OpenSSL)
 
-add_definitions(-DQQBOT_VERSION=\"7.0\")
+add_definitions(-DQQBOT_VERSION=\"7.1\")
 add_definitions(-DAVHTTP_ENABLE_OPENSSL)
 
 include_directories(${Boost_INCLUDE_DIRS})

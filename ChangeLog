@@ -1,4 +1,4 @@
-
+7.1
 	* run as -D , log to syslog
 	* 新增慧眼答题打码平台的支持
 	* urlpreview 功能可以定义黑名单, 不对指定的url进行响应.
