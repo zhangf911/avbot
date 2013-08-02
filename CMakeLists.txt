@@ -77,6 +77,11 @@ find_package(OpenSSL)
 add_definitions(-DQQBOT_VERSION=\"7.1\")
 add_definitions(-DAVHTTP_ENABLE_OPENSSL)
 
+set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite")
+set(SQLITE3_LIBRARIES sqlite3)
+set(SQLITE3_DIR "${PROJECT_SOURCE_DIR}/sqlite")
+add_library(sqlite3 STATIC ${PROJECT_SOURCE_DIR}/sqlite/sqlite3.c)
+
 set(WITH_EMPTY OFF)
 set(SOCI_EMPTY OFF)
 set(WITH_SQLITE ON)
@@ -89,13 +94,6 @@ set(WITH_POSTGRESQL OFF)
 set(SOCI_STATIC ON)
 set(SOCI_TESTS OFF)
 set(WITH_DB2 OFF)
-include_directories(sqlite)
-add_library(sqlite3 STATIC ${PROJECT_SOURCE_DIR}/sqlite/sqlite3.c)
-
-set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite")
-set(SQLITE3_LIBRARIES sqlite3)
-set(SQLITE3_DIR "${PROJECT_SOURCE_DIR}/sqlite")
-
 add_subdirectory(soci/src)
 
 include_directories(${Boost_INCLUDE_DIRS})
