@@ -90,7 +90,7 @@ set(SOCI_STATIC ON)
 set(SOCI_TESTS OFF)
 set(WITH_DB2 OFF)
 include_directories(sqlite)
-add_library(sqlite3 STATIC ../sqlite/sqlite3.c)
+add_library(sqlite3 STATIC ${PROJECT_SOURCE_DIR}/sqlite/sqlite3.c)
 
 set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite")
 set(SQLITE3_LIBRARIES sqlite3)
