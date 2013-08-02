@@ -78,6 +78,7 @@ add_definitions(-DQQBOT_VERSION=\"7.1\")
 add_definitions(-DAVHTTP_ENABLE_OPENSSL)
 
 set(WITH_EMPTY OFF)
+set(SOCI_EMPTY OFF)
 set(WITH_SQLITE ON)
 set(WITH_BOOST ON)
 set(WITH_FIREBIRD OFF)
