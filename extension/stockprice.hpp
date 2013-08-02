@@ -327,8 +327,8 @@ struct stock_fetcher_op
 					double change = sh.current_price - sh.before_close_price;
 					double volume_of_trade = (double)sh.turnover / 100000000.0f;
 					std::string amount = to_price(sh.business);
-					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f亿手 成交额: %s")
-						% sh.stock_name % sh.current_price % sh.current_open_price % change_rate % change % volume_of_trade % amount);
+					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 最高价：%0.2f 最低价：%0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f亿手 成交额: %s")
+						% sh.stock_name % sh.current_price % sh.current_open_price %sh.best_high_price %sh.best_low_price % change_rate % change % volume_of_trade % amount);
 					m_sender(msg);
 				}
 			} else {
@@ -351,8 +351,8 @@ struct stock_fetcher_op
 					double change = sd.current_price - sd.before_close_price;
 					double volume_of_trade = (double)sd.volume / 1000000.0f;
 					std::string amount = to_price(sd.amount);
-					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f万手 成交额: %s")
-						% sd.stock_name % sd.current_price % sd.current_open_price % change_rate % change % volume_of_trade % amount);
+					std::string msg = boost::str(boost::format("%s: %0.2f 开盘价: %0.2f 最高价：%0.2f 最低价：%0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f万手 成交额: %s")
+						% sd.stock_name % sd.current_price % sd.current_open_price %sd.best_high_price %sd.best_low_price % change_rate % change % volume_of_trade % amount);
 					m_sender(msg);
 				}
 			}
