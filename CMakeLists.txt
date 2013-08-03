@@ -77,9 +77,6 @@ find_package(OpenSSL)
 add_definitions(-DQQBOT_VERSION=\"7.1\")
 add_definitions(-DAVHTTP_ENABLE_OPENSSL)
 
-add_library(sqlite3 STATIC ${PROJECT_SOURCE_DIR}/sqlite/sqlite3.c)
-set(SQLITE3_DIR "${PROJECT_SOURCE_DIR}/sqlite")
-
 option(WITH_EMPTY "soci build empty backend" OFF)
 option(SOCI_EMPTY "soci build empty backend" OFF)
 option(WITH_SQLITE3 "soci build sqlite3 backend" ON)
@@ -96,6 +93,14 @@ option(WITH_DB2 "soci build db2 backend" OFF)
 
 set(ODBC_DIR "")
 set(POSTGRESQL_ROOT "")
+
+
+add_subdirectory(sqlite)
+
+set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/")
+set(SQLITE3_LIBRARIES SQLITE3_LIBRARY-NOTFOUND)
+set(SQLITE3_DIR "${PROJECT_SOURCE_DIR}/sqlite")
+set(SQLITE3_FOUND TRUE)
 
 add_subdirectory(soci/src EXCLUDE_FROM_ALL)
 
