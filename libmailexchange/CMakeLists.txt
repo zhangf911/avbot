@@ -4,15 +4,8 @@ find_package(Boost 1.54 COMPONENTS regex system locale)
 add_library(mailexchange STATIC pop3.cpp smtp.cpp)
 target_link_libraries(mailexchange ${Boost_LIBRARIES})
 
-# cmake 在 windows 上总找不到 mingw 的 ssl , windows 用户自求多福吧
-if(NOT WIN32)
-find_package(OpenSSL REQUIRED)
 include_directories(${OpenSSL_INCLUDE_DIRS})
 target_link_libraries(mailexchange ${OPENSSL_LIBRARIES})
-else()
-# 直接链接 -lssl -lcrypto
-target_link_libraries(mailexchange ssl crypto)
-endif()
 
 if(ENABLE_STATIC)
 
@@ -28,7 +21,7 @@ if(ENABLE_STATIC)
 endif()
 
 if(WIN32)
-	target_link_libraries(mailexchange -liconv -lssl -lcrypto -lcrypt32 -lws2_32 )
+	target_link_libraries(mailexchange -liconv -lcrypt32 -lws2_32 )
 endif()
 
 if( ENABLE_TEST )
