@@ -99,6 +99,7 @@ target_include_directories(soci_core PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_include_directories(soci_sqlite3 PRIVATE soci/src/core)
 target_include_directories(soci_sqlite3 PRIVATE soci/src/backends/sqlite3)
+target_include_directories(soci_sqlite3 PRIVATE ${SQLITE3_INCLUDE_DIR})
 
 target_link_libraries(soci_sqlite3 soci_core ${SQLITE3_LIBRARIES})
 
