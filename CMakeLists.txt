@@ -98,9 +98,15 @@ set(POSTGRESQL_ROOT "")
 add_subdirectory(sqlite)
 
 set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/")
-set(SQLITE3_LIBRARIES SQLITE3_LIBRARY-NOTFOUND)
-set(SQLITE3_DIR "${PROJECT_SOURCE_DIR}/sqlite")
-set(SQLITE3_FOUND TRUE)
+set(SQLITE3_LIBRARIES "/sqlite3.so" )
+set(SQLITE3_LIBRARY "/sqlite3.so" )
+set(SQLITE_ROOT_DIR "${PROJECT_SOURCE_DIR}/sqlite" )
+set(SQLITE3_FOUND TRUE )
+set(SQLite3_FOUND TRUE )
+
+#set(sqlite3_DIR ${PROJECT_SOURCE_DIR}/sqlite CACHE PATH)
+
+#find_package(sqlite3)
 
 add_subdirectory(soci/src EXCLUDE_FROM_ALL)
 
