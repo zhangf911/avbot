@@ -16,6 +16,7 @@ endif()
 
 if(WIN32)
 add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
 endif()
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0")
