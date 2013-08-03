@@ -77,40 +77,30 @@ find_package(OpenSSL)
 add_definitions(-DQQBOT_VERSION=\"7.1\")
 add_definitions(-DAVHTTP_ENABLE_OPENSSL)
 
-option(WITH_EMPTY "soci build empty backend" OFF)
-option(SOCI_EMPTY "soci build empty backend" OFF)
-option(WITH_SQLITE3 "soci build sqlite3 backend" ON)
-option(WITH_BOOST "soci build boost support" ON)
-
-option(WITH_FIREBIRD "soci build firebird backend" OFF)
-option(WITH_MYSQL "soci build mysql backend" OFF)
-option(WITH_ODBC "soci build odbc backend" OFF)
-option(WITH_ORACLE "soci build oracle backend" OFF)
-option(WITH_POSTGRESQL "soci build postgesql backend" OFF)
-option(SOCI_STATIC "soci build static lib" ON)
-option(SOCI_TESTS "soci build tests" OFF)
-option(WITH_DB2 "soci build db2 backend" OFF)
-
-set(ODBC_DIR "")
-set(POSTGRESQL_ROOT "")
-
-
 add_subdirectory(sqlite)
 
 set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/")
-set(SQLITE3_LIBRARIES "/sqlite3.so" )
-set(SQLITE3_LIBRARY "/sqlite3.so" )
-set(SQLITE_ROOT_DIR "${PROJECT_SOURCE_DIR}/sqlite" )
-set(SQLITE3_FOUND TRUE )
-set(SQLite3_FOUND TRUE )
-
-#set(sqlite3_DIR ${PROJECT_SOURCE_DIR}/sqlite CACHE PATH)
-
-#find_package(sqlite3)
-
-add_subdirectory(soci/src EXCLUDE_FROM_ALL)
-
 set(SQLITE3_LIBRARIES sqlite3)
+
+file(GLOB SOCI_CORE_SOURCES RELATIVE ${PROJECT_SOURCE_DIR} soci/src/core/*.cpp)
+
+add_library(soci_core STATIC ${SOCI_CORE_SOURCES})
+
+file(GLOB SOCI_SQLITE3_SOURCES RELATIVE ${PROJECT_SOURCE_DIR} soci/src/backends/sqlite3/*.cpp)
+add_library(soci_sqlite3 STATIC ${SOCI_SQLITE3_SOURCES})
+
+target_include_directories(soci_core PRIVATE soci/src/core)
+target_include_directories(soci_core PRIVATE soci/src/backends)
+target_compile_definitions(soci_core PRIVATE -DSOCI_LIB_PREFIX="" -DSOCI_LIB_SUFFIX="")
+
+configure_file(soci/src/core/soci_backends_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/soci_backends_config.h)
+
+target_include_directories(soci_core PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+target_include_directories(soci_sqlite3 PRIVATE soci/src/core)
+target_include_directories(soci_sqlite3 PRIVATE soci/src/backends/sqlite3)
+
+target_link_libraries(soci_sqlite3 soci_core ${SQLITE3_LIBRARIES})
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
