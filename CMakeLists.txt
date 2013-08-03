@@ -72,14 +72,6 @@ add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
 add_definitions(-DBOOST_ALL_STATIC_LINK)
 endif()
 
-if(WIN32)
-	set(OPENSSL_ROOT_DIR ${PROJECT_SOURCE_DIR}/openssl)
-	set(OPENSSL_ROOT ${PROJECT_SOURCE_DIR}/openssl)
-	find_package(OpenSSL)
-	set(OPENSSL_LIBRARIES ${PROJECT_SOURCE_DIR}/openssl/lib/libssl.a ${PROJECT_SOURCE_DIR}/openssl/libcrypt.a)
-	include_directories(${PROJECT_SOURCE_DIR}/openssl/include)
-endif()
-
 find_package(OpenSSL)
 
 add_definitions(-DQQBOT_VERSION=\"7.1\")
