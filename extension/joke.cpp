@@ -89,6 +89,11 @@ static std::string get_joke_content(std::istream &response_stream )
 			jokestring.append( html_unescape(message) );
 		}
 	}
+	
+	// 去除多余的空行
+	while( jokestring.find( "\r\n\r\n" ) != std::string::npos )
+		jokestring.replace( message.find( "\r\n\r\n" ), 4, "\r\n" );
+
 	if (charset.empty())
 		charset = "7bit";
 	if (charset == "gb2132"){
