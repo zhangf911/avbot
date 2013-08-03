@@ -97,7 +97,7 @@ option(WITH_DB2 "soci build db2 backend" OFF)
 set(ODBC_DIR "")
 set(POSTGRESQL_ROOT "")
 
-add_subdirectory(soci/src)
+add_subdirectory(soci/src EXCLUDE_FROM_ALL)
 
 set(SQLITE3_LIBRARIES sqlite3)
 
