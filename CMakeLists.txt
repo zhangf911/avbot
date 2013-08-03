@@ -99,6 +99,8 @@ set(POSTGRESQL_ROOT "")
 
 add_subdirectory(soci/src)
 
+set(SQLITE3_LIBRARIES sqlite3)
+
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(avboost/include)
