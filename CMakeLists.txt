@@ -89,17 +89,14 @@ add_library(soci_core STATIC ${SOCI_CORE_SOURCES})
 file(GLOB SOCI_SQLITE3_SOURCES RELATIVE ${PROJECT_SOURCE_DIR} soci/src/backends/sqlite3/*.cpp)
 add_library(soci_sqlite3 STATIC ${SOCI_SQLITE3_SOURCES})
 
-target_include_directories(soci_core PRIVATE soci/src/core)
-target_include_directories(soci_core PRIVATE soci/src/backends)
-target_compile_definitions(soci_core PRIVATE -DSOCI_LIB_PREFIX="" -DSOCI_LIB_SUFFIX="")
-
 configure_file(soci/src/core/soci_backends_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/soci_backends_config.h)
 
-target_include_directories(soci_core PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_compile_definitions(soci_core PRIVATE -DSOCI_LIB_PREFIX="" -DSOCI_LIB_SUFFIX="")
 
-target_include_directories(soci_sqlite3 PRIVATE soci/src/core)
-target_include_directories(soci_sqlite3 PRIVATE soci/src/backends/sqlite3)
-target_include_directories(soci_sqlite3 PRIVATE ${SQLITE3_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(soci/src/core)
+include_directories(soci/src/backends/sqlite3)
+include_directories(${SQLITE3_INCLUDE_DIR})
 
 target_link_libraries(soci_sqlite3 soci_core ${SQLITE3_LIBRARIES})
 
