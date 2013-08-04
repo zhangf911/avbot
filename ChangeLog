@@ -1,3 +1,8 @@
+7.2
+	* fix c++11 mode build that doesn't even work
+	* drop autotools build support
+	* a complete re-write of cookie handling make avbot more like a browser
+
 7.1
 	* run as -D , log to syslog
 	* 新增慧眼答题打码平台的支持

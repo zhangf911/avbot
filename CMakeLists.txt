@@ -15,9 +15,9 @@ SET(CPACK_PACKAGE_INSTALL_DIRECTORY /)
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
-  SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/avbot.ico")
+  SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/avbot.ico")
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "avbot.exe")
-  SET(CPACK_NSIS_DISPLAY_NAME "avbot Q群云秘书 安装程序")
+  SET(CPACK_NSIS_DISPLAY_NAME "avbot(qqbot) by avplayer.org")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\qqbot.avplayer.org")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\qqbot.avplayer.org")
   SET(CPACK_NSIS_CONTACT "microcaicai@gmail.com")
