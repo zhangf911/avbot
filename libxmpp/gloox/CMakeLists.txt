@@ -98,5 +98,5 @@ endif()
 
 if(WIN32)
 	# SCHANNEL
-	target_link_libraries(gloox -lcrypt32 -lsecur32 -lcrypto32 -lws2_32)
+	target_link_libraries(gloox -lcrypt32 -lsecur32 -lcrypt32 -lws2_32)
 endif()
