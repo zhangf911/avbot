@@ -435,7 +435,7 @@ int main( int argc, char *argv[] )
 		} catch( char const* e ) {
 			BOOST_LOG_TRIVIAL(fatal) <<  "no command line arg and config file not found neither.";
 			BOOST_LOG_TRIVIAL(fatal) <<  "try to add command line arg or put config file in /etc/qqbotrc or ~/.qqbotrc";
-#if WIN32
+#ifdef WIN32
 			goto rungui;
 #endif
 			exit(1);
