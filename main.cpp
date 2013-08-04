@@ -461,8 +461,6 @@ int main( int argc, char *argv[] )
 	// 设置到中国的时区，否则 qq 消息时间不对啊.
 #ifndef _WIN32
 	setenv("TZ", "Asia/Shanghai", 1);
-# else
-	putenv( ( char* )"TZ=Asia/Shanghai" );
 # endif
 
 #ifdef _WIN32
