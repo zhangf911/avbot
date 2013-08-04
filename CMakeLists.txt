@@ -11,11 +11,16 @@ SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 SET(CPACK_PACKAGE_VERSION_MAJOR "7")
 SET(CPACK_PACKAGE_VERSION_MINOR "2")
 SET(CPACK_PACKAGE_VERSION_PATCH "0")
-SET(CPACK_PACKAGE_INSTALL_DIRECTORY /)
+if(WIN32)
+	SET(CPACK_PACKAGE_INSTALL_DIRECTORY "avbot")
+else()
+	SET(CPACK_PACKAGE_INSTALL_DIRECTORY "/")
+endif()
+
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
-  SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/avbot.ico")
+  SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\avbot.ico")
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "avbot.exe")
   SET(CPACK_NSIS_DISPLAY_NAME "avbot(qqbot) by avplayer.org")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\qqbot.avplayer.org")
