@@ -71,7 +71,7 @@ endif()
 
 find_package(Threads)
 
-if(WIN32 AND Boost_USE_STATIC_LIBS)
+if(WIN32)
 add_definitions(-DBOOST_THREAD_USE_LIB)
 add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
 add_definitions(-DBOOST_ALL_STATIC_LINK)
