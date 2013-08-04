@@ -4,9 +4,6 @@ find_package(Boost 1.54 COMPONENTS regex system locale)
 add_library(mailexchange STATIC pop3.cpp smtp.cpp)
 target_link_libraries(mailexchange ${Boost_LIBRARIES})
 
-include_directories(${OpenSSL_INCLUDE_DIRS})
-target_link_libraries(mailexchange ${OPENSSL_LIBRARIES})
-
 if(ENABLE_STATIC)
 
 	set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})

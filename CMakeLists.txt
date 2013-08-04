@@ -141,9 +141,10 @@ if(WIN32)
 add_subdirectory(gui)
 target_link_libraries(avbot avbotgui)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static ")
-target_link_libraries(avbot -liconv ${OPENSSL_LIBRARIES} -lcrypt32 -lws2_32 -lcomctl32 -lmswsock)
+target_link_libraries(avbot -liconv -ssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 -lmswsock)
+else()
+target_link_libraries(avbot ${OPENSSL_LIBRARIES} )
 endif()
-
 
 if(APPLE)
 target_link_libraries(avbot -liconv)
