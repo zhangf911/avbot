@@ -154,7 +154,7 @@ else()
 target_link_libraries(avbot ${OPENSSL_LIBRARIES} )
 endif()
 
-if(APPLE)
+if(APPLE AND WITH_ICONV)
 target_link_libraries(avbot -liconv)
 endif()
 
