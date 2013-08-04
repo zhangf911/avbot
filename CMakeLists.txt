@@ -1,5 +1,39 @@
 cmake_minimum_required(VERSION 2.6)
 project(avbot)
+
+# ============== cpack ===============
+set(CPACK_GENERATOR "TBZ2;DEB;RPM")
+set(CPACK_SOURCE_GENERATOR "TBZ2")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "avbot Q群云秘书")
+SET(CPACK_PACKAGE_VENDOR "avplayer.org")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
+SET(CPACK_PACKAGE_VERSION_MAJOR "7")
+SET(CPACK_PACKAGE_VERSION_MINOR "1")
+SET(CPACK_PACKAGE_VERSION_PATCH "9")
+SET(CPACK_PACKAGE_INSTALL_DIRECTORY /)
+IF(WIN32 AND NOT UNIX)
+  # There is a bug in NSI that does not handle full unix paths properly. Make
+  # sure there is at least one set of four (4) backlasshes.
+  SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/avbot.ico")
+  SET(CPACK_NSIS_INSTALLED_ICON_NAME "avbot.exe")
+  SET(CPACK_NSIS_DISPLAY_NAME "avbot Q群云秘书 安装程序")
+  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\qqbot.avplayer.org")
+  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\qqbot.avplayer.org")
+  SET(CPACK_NSIS_CONTACT "microcaicai@gmail.com")
+  SET(CPACK_NSIS_MODIFY_PATH ON)
+ELSE(WIN32 AND NOT UNIX)
+  SET(CPACK_STRIP_FILES "avbot")
+  SET(CPACK_SOURCE_STRIP_FILES "")
+ENDIF(WIN32 AND NOT UNIX)
+SET(CPACK_PACKAGE_EXECUTABLES "avbot" "avbot")
+
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "mosir") #required
+
+SET(CPACK_SOURCE_IGNORE_FILES "${CPACK_SOURCE_IGNORE_FILES};${CMAKE_CURRENT_BINARY_DIR};\\\\.git;\\\\.kdev.*;\\\\.travis\\\\.yml")
+INCLUDE(CPack)
+
+# =================================================
 #SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 option(ENABLE_STATIC "link to boost staticaly" ON)
 option(ENABLE_TEST "build xmpp/pop3 test" OFF)
@@ -79,8 +113,11 @@ endif()
 
 find_package(OpenSSL)
 
-add_definitions(-DQQBOT_VERSION=\"7.1\")
 add_definitions(-DAVHTTP_ENABLE_OPENSSL)
+
+add_definitions(-DQQBOT_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}\")
+
+configure_file(avbot.rc.in ${PROJECT_BINARY_DIR}/avbot.rc)
 
 add_subdirectory(sqlite)
 
@@ -135,9 +172,7 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-
-
-add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp avbot.rc)
+add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp ${PROJECT_BINARY_DIR}/avbot.rc)
 
 if(WIN32)
 add_subdirectory(gui)
@@ -173,34 +208,3 @@ if(HAVE_CLOCK_GETTIME)
         target_link_libraries(avbot -lrt)
 endif(HAVE_CLOCK_GETTIME)
 
-# ============== cpack ===============
-set(CPACK_GENERATOR "TBZ2;DEB;RPM")
-set(CPACK_SOURCE_GENERATOR "TBZ2")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "avbot Q群云秘书")
-SET(CPACK_PACKAGE_VENDOR "avplayer.org")
-SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
-SET(CPACK_PACKAGE_VERSION_MAJOR "7")
-SET(CPACK_PACKAGE_VERSION_MINOR "1")
-SET(CPACK_PACKAGE_VERSION_PATCH "9")
-SET(CPACK_PACKAGE_INSTALL_DIRECTORY /)
-IF(WIN32 AND NOT UNIX)
-  # There is a bug in NSI that does not handle full unix paths properly. Make
-  # sure there is at least one set of four (4) backlasshes.
-  SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/avbot.ico")
-  SET(CPACK_NSIS_INSTALLED_ICON_NAME "avbot.exe")
-  SET(CPACK_NSIS_DISPLAY_NAME "avbot Q群云秘书 安装程序")
-  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\qqbot.avplayer.org")
-  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\qqbot.avplayer.org")
-  SET(CPACK_NSIS_CONTACT "microcaicai@gmail.com")
-  SET(CPACK_NSIS_MODIFY_PATH ON)
-ELSE(WIN32 AND NOT UNIX)
-  SET(CPACK_STRIP_FILES "avbot")
-  SET(CPACK_SOURCE_STRIP_FILES "")
-ENDIF(WIN32 AND NOT UNIX)
-SET(CPACK_PACKAGE_EXECUTABLES "avbot" "avbot")
-
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "mosir") #required
-
-SET(CPACK_SOURCE_IGNORE_FILES "${CPACK_SOURCE_IGNORE_FILES};${CMAKE_CURRENT_BINARY_DIR};\\\\.git;\\\\.kdev.*;\\\\.travis\\\\.yml")
-INCLUDE(CPack)
