@@ -96,10 +96,7 @@ if(NOT WIN32)
 target_link_libraries(gloox  ${OPENSSL_LIBRARIES} -lcrypto ${ZLIB_LIBRARIES})
 endif()
 
-if(UNIX)
-	target_link_libraries(gloox -pthread)
-endif()
 if(WIN32)
 	# SCHANNEL
-	target_link_libraries(gloox -lsecur32 -lws2_32)
+	target_link_libraries(gloox -lcrypt32 -lsecur32 -lcrypto32 -lws2_32)
 endif()
