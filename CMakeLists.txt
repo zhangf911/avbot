@@ -102,8 +102,9 @@ if(NOT Boost_FOUND)
 endif()
 
 # add_definitions(-DBOOST_LOG_NO_THREADS)
-
+if(NOT WIN32)
 find_package(Threads)
+endif()
 
 if(WIN32)
 add_definitions(-DBOOST_THREAD_USE_LIB)
