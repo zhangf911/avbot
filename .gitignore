@@ -34,3 +34,4 @@ Debug
 ipch
 
 *.sdf
+CPackConfig.cmake
