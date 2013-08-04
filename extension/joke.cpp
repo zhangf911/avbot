@@ -59,7 +59,7 @@ static std::string get_joke_content(std::istream &response_stream )
 			continue;
 		}else if( message.find( joketitlestart ) != std::string::npos )
 		{
-			jokestring.append( message.substr( message.find( ">" ), ( message.rfind( "<" ) - message.find( ">" ) - 1 ) ) );
+			jokestring.append( html_unescape(message.substr( message.find( ">" ), ( message.rfind( "<" ) - message.find( ">" ) - 1 ) ) ) );
 			jokestring.append( "\r\n" );
 			continue;
 		}
