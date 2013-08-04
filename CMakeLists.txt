@@ -172,3 +172,5 @@ check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME)
 if(HAVE_CLOCK_GETTIME)
         target_link_libraries(avbot -lrt)
 endif(HAVE_CLOCK_GETTIME)
+
+INCLUDE(CPack)
