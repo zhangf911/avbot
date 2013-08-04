@@ -91,8 +91,10 @@ static std::string get_joke_content(std::istream &response_stream )
 	}
 	
 	// 去除多余的空行
+	while( jokestring.find( "\x20\r\n" ) != std::string::npos )
+		jokestring.replace( jokestring.find( "\x20\r\n" ), 3, "\r\n" );
 	while( jokestring.find( "\r\n\r\n" ) != std::string::npos )
-		jokestring.replace( message.find( "\r\n\r\n" ), 4, "\r\n" );
+		jokestring.replace( jokestring.find( "\r\n\r\n" ), 4, "\r\n" );
 
 	if (charset.empty())
 		charset = "7bit";
