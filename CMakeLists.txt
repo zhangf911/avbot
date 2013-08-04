@@ -104,6 +104,8 @@ endif()
 # add_definitions(-DBOOST_LOG_NO_THREADS)
 if(NOT WIN32)
 find_package(Threads)
+else()
+set(CMAKE_THREAD_LIBS_INIT "-lkernel32")
 endif()
 
 if(WIN32)
