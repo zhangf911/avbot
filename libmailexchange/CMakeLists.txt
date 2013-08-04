@@ -17,7 +17,7 @@ if(ENABLE_STATIC)
 	endif()
 endif()
 
-if(WIN32)
+if(WIN32 AND WITH_ICONV)
 	target_link_libraries(mailexchange -liconv -lcrypt32 -lws2_32 )
 endif()
 
