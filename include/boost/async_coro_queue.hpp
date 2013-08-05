@@ -73,10 +73,13 @@ public:
 	template<class Handler>
 	void async_pop(Handler handler)
 	{
-		if (m_list.empty()){
+		if (m_list.empty())
+		{
 			// 进入睡眠过程.
 			m_handlers.push(handler_type(handler));
-		}else{
+		}
+		else
+		{
 			m_io_service.post(
 				boost::asio::detail::bind_handler(handler, m_list.front())
 			);
@@ -94,7 +97,7 @@ public:
 		if (!m_handlers.empty())
 		{
 			// 如果 m_list 不是空， 肯定是有严重的 bug
-			BOOST_ASSERT(  m_list.empty() );
+			BOOST_ASSERT(m_list.empty());
 
 			m_io_service.post(
 				boost::asio::detail::bind_handler(m_handlers.front(), v)
