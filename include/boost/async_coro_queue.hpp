@@ -76,7 +76,7 @@ public:
 		if (m_list.empty())
 		{
 			// 进入睡眠过程.
-			m_handlers.push(handler_type(handler));
+			m_handlers.push(async_pop_handler_type(handler));
 		}
 		else
 		{
