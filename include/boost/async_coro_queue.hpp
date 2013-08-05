@@ -25,7 +25,7 @@ public: // typetraits
 	typedef typename ListType::const_reference const_reference;
 private:
 	// async_pop 的回调原型
-	typedef	boost::function<void(value_type)> handler_type;
+	typedef	boost::function<void(value_type)> async_pop_handler_type;
 
 public:
 	// 构造函数
@@ -113,7 +113,8 @@ private:
 
 	boost::asio::io_service & m_io_service;
 	ListType m_list;
-	std::queue<handler_type> m_handlers;
+	// 保存 async_pop 回调函数
+	std::queue<async_pop_handler_type> m_handlers;
 };
 
 }
