@@ -66,27 +66,33 @@ static std::string get_joke_content(std::istream &response_stream )
 
 		if( message.find( jokemessagestart ) != std::string::npos )
 		{
-			std::getline( response_stream, message );
+			do{
+				std::getline( response_stream, message );
+				if ( message.find( "</div>" ) != std::string::npos )
+					break;
 
-			while( message.find( "\r" ) != std::string::npos )
-				message.erase( message.find( "\r" ), 1 );
+				while( message.find( "\r" ) != std::string::npos )
+					message.erase( message.find( "\r" ), 1 );
 
-			while( message.find( "\t" ) != std::string::npos )
-				message.erase( message.find( "\t" ), 1 );
+				while( message.find( "\t" ) != std::string::npos )
+					message.erase( message.find( "\t" ), 1 );
 
-			while( message.find( " " ) != std::string::npos )
-				message.erase( message.find( " " ), 1 );
+				while( message.find( " " ) != std::string::npos )
+					message.erase( message.find( " " ), 1 );
 
-			while( message.find( "\n" ) != std::string::npos )
-				message.erase( message.find( "\n" ), 1 );
+				while( message.find( "\n" ) != std::string::npos )
+					message.erase( message.find( "\n" ), 1 );
 
-			while( message.find( "<br><br>" ) != std::string::npos )
-				message.replace( message.find( "<br><br>" ), 8, "\r\n" );
+				while( message.find( "<br><br>" ) != std::string::npos )
+					message.replace( message.find( "<br><br>" ), 8, "\r\n" );
 
-			while( message.find( "<br>" ) != std::string::npos )
-				message.replace( message.find( "<br>" ), 4, "\r\n" );
+				while( message.find( "<br>" ) != std::string::npos )
+					message.replace( message.find( "<br>" ), 4, "\r\n" );
 
-			jokestring.append( html_unescape(message) );
+				jokestring.append( html_unescape(message) );
+			} while ( message.find( "</div>" ) == std::string::npos );
+			// 笑话内容已完
+			break;
 		}
 	}
 	
