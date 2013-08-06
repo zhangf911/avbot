@@ -1,0 +1,4 @@
+[Project]
+Name=avhttpd
+Manager=KDevCMakeManager
+VersionControl=kdevgit
