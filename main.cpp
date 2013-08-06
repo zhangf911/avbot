@@ -101,22 +101,18 @@ static void vc_code_decoded(boost::system::error_code ec, std::string provider, 
 	need_vc = false;
 }
 
-static void on_verify_code(const boost::asio::const_buffer & imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)
+static void on_verify_code(std::string imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)
 {
-	const char * data = boost::asio::buffer_cast<const char*>( imgbuf );
-	size_t	imgsize = boost::asio::buffer_size( imgbuf );
-	std::string buffer(data, imgsize);
-
 	BOOST_LOG_TRIVIAL(info) << "got vercode from TX, now try to auto resovle it ... ...";
 
 	need_vc = true;
 	// 保存文件.
 	std::ofstream	img("vercode.jpeg", std::ofstream::openmode(std::ofstream::binary | std::ofstream::out) );
-	img.write(data, imgsize);
+	img.write(&imgbuf[0], imgbuf.length());
 	img.close();
 
 	decaptcha.async_decaptcha(
-		buffer,
+		imgbuf,
 		boost::bind(&vc_code_decoded, _1, _2, _3, _4, boost::ref(mybot))
 	);
 }

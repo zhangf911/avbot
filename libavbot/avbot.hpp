@@ -30,7 +30,7 @@ public:
 
 public:
 	// 这里是一些公开的成员变量.
-	typedef boost::function<void (const boost::asio::const_buffer &) > need_verify_image;
+	typedef boost::function<void (std::string) > need_verify_image;
 	typedef boost::property_tree::ptree av_message_tree;
 
 	// 每当有消息的时候激发.

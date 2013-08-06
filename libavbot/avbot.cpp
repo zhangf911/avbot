@@ -422,7 +422,6 @@ void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::n
 {
 	m_qq_account.reset(new webqq::webqq(m_io_service, qqnumber, password));
 	m_qq_account->on_verify_code(cb);
-	m_qq_account->login();
 	m_qq_account->on_group_msg(boost::bind(&avbot::callback_on_qq_group_message, this, _1, _2, _3));
 	m_qq_account->on_group_found(boost::bind(&avbot::callback_on_qq_group_found, this, _1));
 	m_qq_account->on_group_newbee(boost::bind(&avbot::callback_on_qq_group_newbee, this, _1, _2));
@@ -430,7 +429,7 @@ void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::n
 
 void avbot::relogin_qq_account()
 {
-	m_qq_account->login();
+// 	m_qq_account->login();
 }
 
 void avbot::feed_login_verify_code( std::string vcode, boost::function<void()> badvcreporter)
