@@ -169,6 +169,43 @@ private:
 	boost::shared_ptr<boost::asio::streambuf> m_headers;
 };
 
+template<class Stream, class Allocator, class Handler>
+class async_write_response_with_streambuf_op
+{
+public:
+	async_write_response_with_streambuf_op(Stream & stream, int status,
+					const request_opts & opts,
+					const boost::asio::basic_streambuf<Allocator> & streambuf,
+					Handler handler)
+		: m_stream(stream)
+		, m_streambuf(streambuf)
+		, m_handler(handler)
+	{
+		m_headers = boost::make_shared<boost::asio::streambuf>();
+		std::ostream out(m_headers.get());
+
+		out << "HTTP " <<  status <<  " " << strstatus(status)  << "\r\n";
+		if (opts.size())
+			out  <<  opts.header_string();
+		out <<  "\r\n";
+
+		boost::asio::async_write(m_stream, *m_headers, *this);
+	};
+
+	void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
+	{
+		boost::asio::async_write(m_stream, m_streambuf, m_handler);
+	}
+private:
+	// 传入的变量.
+	Stream & m_stream;
+	Handler m_handler;
+
+	const boost::asio::basic_streambuf<Allocator> & m_streambuf;
+	// 这里是协程用到的变量.
+	boost::shared_ptr<boost::asio::streambuf> m_headers;
+};
+
 template<class Stream, class Handler>
 async_write_response_op<Stream, Handler>
 make_async_write_response_op(Stream & s, int status, const request_opts & opts,Handler handler)
@@ -184,6 +221,16 @@ make_async_write_response_op(Stream & s, int status, const request_opts & opts,
 	return async_write_response_with_body_op<Stream, ConstBufferSequence, Handler>
 				(s, status, opts, buffers, handler);
 }
+
+template<class Stream, class Allocator, class Handler>
+async_write_response_with_streambuf_op<Stream, Allocator, Handler>
+make_async_write_response_op(Stream & s, int status, const response_opts & opts,
+						const boost::asio::basic_streambuf<Allocator> & streambuf, Handler handler)
+{
+	return async_write_response_with_streambuf_op<Stream, Allocator, Handler>
+				(s, status, opts, streambuf, handler);
+}
+
 
 }
 
@@ -361,5 +408,14 @@ void async_write_response(Stream & s, int status, const response_opts & opts,
 {
 	detail::make_async_write_response_op(s, status, opts, buffers, handler);
 }
+
+
+template<class Stream, class Allocator, class Handler>
+void async_write_response(Stream & s, int status, const response_opts & opts,
+						const boost::asio::basic_streambuf<Allocator> & streambuf, Handler handler)
+{
+	detail::make_async_write_response_op(s, status, opts, streambuf, handler);
+}
+
 
 }
