@@ -6,5 +6,6 @@
 
 #include "avhttpd/error_code.hpp"
 #include "avhttpd/read_request.hpp"
+#include "avhttpd/write_reponse.hpp"
 
 #endif // __AVHTTPD_HPP___

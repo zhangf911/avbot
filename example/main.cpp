@@ -12,20 +12,41 @@ public:
 		, m_clientsocket(clientsocket)
 		, m_request_opts(boost::make_shared<avhttpd::request_opts>())
 		, m_streambuf(boost::make_shared<boost::asio::streambuf>())
+		, coro(0)
 	{
 		avhttpd::async_read_request(*m_clientsocket, *m_streambuf, *m_request_opts, *this);
 	}
 
 	void operator()(boost::system::error_code ec)
 	{
-		// print out request_opts
-		std::cout <<  m_request_opts->header_string() << std::endl;
+		if (coro++ == 0 )
+		{
+			// print out request_opts
+			std::cout <<  m_request_opts->header_string() << std::endl;
+
+			if (m_request_opts->find(avhttpd::http_options::request_uri) == "/123")
+			{
+				avhttpd::response_opts opts;
+				avhttpd::async_write_response(*m_clientsocket, 200, opts, boost::asio::buffer("123"), *this);
+			}else
+				avhttpd::async_write_response(*m_clientsocket, 200, *this);
+		}
+		else
+		{
+
+		}
+	}
+
+	void operator()(boost::system::error_code ec, std::size_t bytes_transfered)
+	{
 	}
 private:
 	boost::asio::io_service & m_io_service;
 	boost::shared_ptr<boost::asio::ip::tcp::socket> m_clientsocket;
 	boost::shared_ptr<avhttpd::request_opts> m_request_opts;
 	boost::shared_ptr<boost::asio::streambuf> m_streambuf;
+
+	int coro;
 };
 
 class async_accept_op{
