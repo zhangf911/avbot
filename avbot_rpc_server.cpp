@@ -43,12 +43,12 @@ namespace detail{
 		}
 	}
  */
-void avbot_rpc_server::process_post( std::size_t bytestransfered )
+int avbot_rpc_server::process_post( std::size_t bytes_transfered )
 {
 	pt::ptree msg;
 	std::string messagebody;
-	messagebody.resize( bytestransfered );
-	m_streambuf->sgetn( &messagebody[0], bytestransfered );
+	messagebody.resize( bytes_transfered );
+	m_streambuf->sgetn( &messagebody[0], bytes_transfered );
 	std::stringstream jsonpostdata( messagebody );
 
 	try
@@ -75,8 +75,10 @@ void avbot_rpc_server::process_post( std::size_t bytestransfered )
 	catch( const pt::ptree_error &err )
 	{
 		// 忽略.
+		return avhttpd::errc::internal_server_error;
 	}
 
+	return 200;
 }
 
 // 发送数据在这里
@@ -136,12 +138,15 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 				*m_socket, *m_streambuf,
 				boost::asio::transfer_exactly(
 					boost::lexical_cast<std::size_t>(m_request.find(avhttpd::http_options::content_length))
+						- m_streambuf->size()
 				),
 
 				boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, _2 )
 			);
 			// body 必须是合法有效的 JSON 格式
-			process_post(bytestransfered);
+			yield avhttpd::async_write_response(*m_socket, process_post(m_streambuf->size()),
+					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+			);
 		}
 
 		// 继续

@@ -95,6 +95,6 @@ private:
 		>
 	> m_responses;
 
-	void process_post( std::size_t bytestransfered );
+	int process_post( std::size_t bytestransfered );
 };
 }
