@@ -30,7 +30,7 @@
 #include "boost/timedcall.hpp"
 #include "avproxy/avproxy.hpp"
 
-#include "xmpp_impl.h"
+#include "xmpp_impl.hpp"
 
 using namespace gloox;
 

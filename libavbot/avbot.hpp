@@ -8,7 +8,7 @@
 
 #include "libwebqq/webqq.hpp"
 #include "libirc/irc.h"
-#include "libxmpp/xmpp.h"
+#include "libxmpp/xmpp.hpp"
 #include "libmailexchange/mx.hpp"
 
 class avbot : boost::noncopyable{

@@ -16,8 +16,8 @@
  *
  */
 
-#include "xmpp.h"
-#include "xmpp_impl.h"
+#include "xmpp.hpp"
+#include "xmpp_impl.hpp"
 
 xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick )
 {
