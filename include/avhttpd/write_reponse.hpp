@@ -194,7 +194,7 @@ public:
 
 	void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
 	{
-		boost::asio::async_write(m_stream, m_streambuf, m_handler);
+		boost::asio::async_write(m_stream, m_streambuf.data(), m_handler);
 	}
 private:
 	// 传入的变量.
