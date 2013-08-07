@@ -8,21 +8,22 @@
 #include "settings.hpp"
 #include "read_until.hpp"
 
-namespace avhttpd{
-namespace detail{
+namespace avhttpd {
+namespace detail {
 
 template<class Stream, class ConstBufferSequence, class Handler>
-class async_read_request_op{
+class async_read_request_op
+{
 public:
 	async_read_request_op(Stream & stream, request_opts & opts,
-						const ConstBufferSequence & buffer, Handler handler)
-	: m_stream(stream)
-	, m_handler(handler)
-	, m_opts(opts)
-	, m_strembuf(boost::make_shared<boost::asio::streambuf>())
+						  const ConstBufferSequence & buffer, Handler handler)
+		: m_stream(stream)
+		, m_handler(handler)
+		, m_opts(opts)
+		, m_strembuf(boost::make_shared<boost::asio::streambuf>())
 	{
 		boost::asio::detail::consuming_buffers<boost::asio::const_buffer, ConstBufferSequence>
-			buffers_(buffer);
+		buffers_(buffer);
 
 		std::size_t size = buffers_.begin() - buffers_.end();
 		// 首先处理 m_buffer 里面的东西
@@ -36,23 +37,26 @@ public:
 	{
 		// 完成 header 的读取，用 boost::split 以行为分割.
 
+		// TODO
 	}
 
 private:
+	// 传入的变量.
 	Stream &m_stream;
 	Handler m_handler;
 	request_opts & m_opts;
 
+	// 这里是协程用到的变量.
 	boost::shared_ptr<boost::asio::streambuf> m_strembuf;
 };
 
 template<class Stream, class ConstBufferSequence, class Handler>
-async_read_request_op<Stream, ConstBufferSequence,Handler>
+async_read_request_op<Stream, ConstBufferSequence, Handler>
 make_async_read_request_op(Stream & stream, request_opts & opts,
-						const ConstBufferSequence & buffer, Handler handler)
+						   const ConstBufferSequence & buffer, Handler handler)
 {
 	return async_read_request_op<Stream, ConstBufferSequence, Handler>(
-				stream, opts, buffer, handler);
+			   stream, opts, buffer, handler);
 }
 
 }
