@@ -39,6 +39,13 @@ public:
 	{
 		// 完成 header 的读取，用 boost::split 以行为分割.
 
+		std::string request_header;
+		request_header.resize(bytes_transferred);
+		m_strembuf->sgetn(&request_header[0], bytes_transferred);
+
+		std::vector<std::string> headlines;
+		boost::split(headlines, request_header, boost::is_any_of("\r\n"));
+
 		// TODO
 	}
 
@@ -76,10 +83,10 @@ make_async_read_request_op(Stream & stream, request_opts & opts,
 /**
  * This function is used to asynchronously read a http header from a stream.
  * The function call always returns immediately. The asynchronous operation
- * will continue all http request header have been read or an error occurred.
+ * will continue all http request header have been read or
  *
- * @li The supplied buffers are full. That is, the bytes transferred is equal to
- * the sum of the buffer sizes.
+ * @li The header is too big to fit in the internal buffer.(likely not even
+ *     an http request)
  *
  * @li An error occurred.
  *
@@ -87,28 +94,31 @@ make_async_read_request_op(Stream & stream, request_opts & opts,
  * async_read_some function, and is known as a <em>composed operation</em>. The
  * program must ensure that the stream performs no other read operations (such
  * as async_read, the stream's async_read_some function, or any other composed
- * operations that perform reads) until this operation completes.
+ * operations that perform reads) until this operation completes. If streambuf
+ * already has all http headers, then async_read_request will just consume the
+ * parsed http header. If not,  async_read_request will perform more calls to
+ * the stream's async_read_some function, and store the results into streambuf
+ * Again, async_read_request will consume the HTTP header and only that header.
+ *
+ * If error occurres, then the data in which streambuf contain is undefined.
+ * The stream is not speaking HTTP protocol, and there for the data can not be
+ * trusted.
  *
  * @param s The stream from which the data is to be read. The type must support
  * the AsyncReadStream concept.
  *
- * @param buffers One or more buffers into which the data will be read. The sum
- * of the buffer sizes indicates the maximum number of bytes to read from the
- * stream. Although the buffers object may be copied as necessary, ownership of
- * the underlying memory blocks is retained by the caller, which must guarantee
- * that they remain valid until the handler is called.
+ * @param opts The avhttpd::request_opts object whitch the header data is be be
+ * filled into.
+ *
+ * @param streambuf The buffer stream that async_read_request will operat on.
+ * async_read_request will delete an data coresponed to HTTP header. And leveaves
+ * the remaining HTTP body in. The buffer stream can already hold some data.
  *
  * @param handler The handler to be called when the read operation completes.
  * Copies will be made of the handler as required. The function signature of the
  * handler must be:
  * @code void handler(
  *   const boost::system::error_code& error, // Result of operation.
- *
- *   std::size_t bytes_transferred           // Number of bytes copied into the
- *                                           // buffers. If an error occurred,
- *                                           // this will be the  number of
- *                                           // bytes successfully transferred
- *                                           // prior to the error.
  * ); @endcode
  * Regardless of whether the asynchronous operation completes immediately or
  * not, the handler will not be invoked from within this function. Invocation of
@@ -132,15 +142,15 @@ make_async_read_request_op(Stream & stream, request_opts & opts,
  */
 
 template<class Stream, class Handler>
-void async_read_request(Stream & stream, request_opts & opts, Handler handler)
+void async_read_request(Stream & s, request_opts & opts, Handler handler)
 {
-	detail::make_async_read_request_op(stream, opts, boost::asio::null_buffers(), handler);
+	detail::make_async_read_request_op(s, opts, boost::asio::null_buffers(), handler);
 }
 
 template<class Stream, class ConstBufferSequence, class BufferedHandler>
-void async_read_request(Stream & stream, request_opts & opts, const ConstBufferSequence & buffer, BufferedHandler handler)
+void async_read_request(Stream & s, request_opts & opts, const ConstBufferSequence & buffer, BufferedHandler handler)
 {
-	detail::make_async_read_request_op(stream, opts, buffer, handler);
+	detail::make_async_read_request_op(s, opts, buffer, handler);
 }
 
 }
