@@ -1,5 +1,5 @@
 
-find_package(Boost 1.54 REQUIRED system)
+find_package(Boost 1.54 REQUIRED system regex)
 
 add_executable(avhttpd main.cpp)
 

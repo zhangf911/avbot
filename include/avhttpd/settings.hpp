@@ -29,6 +29,7 @@ namespace http_options {
 
 	// 下面为avhttp内定的一些选项.
 	static const std::string request_method("_request_method"); // 请求方式(GET/POST)
+	static const std::string request_uri("_request_uri"); // 请求地址
 	static const std::string http_version("_http_version");		// HTTP/1.0|HTTP/1.1
 	static const std::string request_body("_request_body");		// 一般用于POST一些数据如表单之类时使用.
 	static const std::string status_code("_status_code");	// HTTP状态码.

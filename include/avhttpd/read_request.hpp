@@ -6,6 +6,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/regex.hpp>
 
+#include "error_code.hpp"
 #include "settings.hpp"
 
 namespace avhttpd {
@@ -23,12 +24,13 @@ public:
 		, m_opts(opts)
 		, m_handler(handler)
 	{
-		boost::asio::async_read_until(m_stream, m_strembuf, "\r\n", *this);
+		boost::asio::async_read_until(m_stream, m_strembuf, std::string("\r\n"), *this);
 	};
 
 	void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
 	{
 		std::string request_line;
+		std::string one_header_line;
 		boost::smatch what;
 
 		BOOST_ASIO_CORO_REENTER(this)
@@ -40,12 +42,75 @@ public:
 
 			// 完成 REQUEST LINE 的读取，用 boost::regex 处理
 			request_line.resize(bytes_transferred);
-			m_strembuf->sgetn(&request_line[0], bytes_transferred);
+			m_strembuf.sgetn(&request_line[0], bytes_transferred);
+			request_line.resize(bytes_transferred-2);
 
-			boost::regex_match(request_line, what, boost::regex(""));
+			if (!boost::regex_match(request_line, what,
+					boost::regex("([a-zA-Z]+)[ ]+([^ ]+)([ ]+(.*))?")))
+			{
+				return invoke_handler(
+					errc::make_error_code(errc::malformed_request_line));
+			};
+
+			m_opts(avhttpd::http_options::request_method,
+				boost::to_upper_copy(std::string(what[1])));
+
+			m_opts(avhttpd::http_options::request_uri, what[2]);
+
+			if (what[3].matched)
+			{
+				std::string http_version =
+					boost::to_upper_copy(boost::trim_left_copy(std::string(what[3])));
+				m_opts(http_options::http_version, http_version);
+				if ( (http_version != "HTTP/1.1") && (http_version != "HTTP/1.0") )
+				{	return invoke_handler(errc::make_error_code(
+									errc::version_not_supported));
+				}
+			}else{
+				m_opts(http_options::http_version, "HTTP/1.0");
+			}
+
+			// 读取 余下的.
+			BOOST_ASIO_CORO_YIELD boost::asio::async_read_until(
+						m_stream, m_strembuf, std::string("\r\n"), *this);
 
 
+			while((bytes_transferred > 2) && !ec)
+			{
+				one_header_line.resize(bytes_transferred);
+				m_strembuf.sgetn(&one_header_line[0], bytes_transferred);
+				one_header_line.resize(bytes_transferred-2);
 
+				if(!boost::regex_match(one_header_line, what,
+									   boost::regex("^([^:]*): *(.*)$")))
+				{
+					return invoke_handler(errc::make_error_code(
+								errc::malformed_request_headers));
+				}
+				m_opts(what[1], what[2]);
+				BOOST_ASIO_CORO_YIELD boost::asio::async_read_until(
+							m_stream, m_strembuf, std::string("\r\n"), *this);
+			}
+
+			if (bytes_transferred == 2){
+				one_header_line.resize(bytes_transferred);
+				m_strembuf.sgetn(&one_header_line[0], bytes_transferred);
+				BOOST_ASSERT( one_header_line == "\r\n");
+			}
+
+			if (m_opts.find(http_options::http_version) == "HTTP/1.1"
+				&& m_opts.find(http_options::host).empty())
+			{
+				return invoke_handler(errc::make_error_code(errc::header_missing_host));
+			}
+
+			if (m_opts.find(http_options::request_method) == "POST"
+				&& m_opts.find(http_options::content_length).empty())
+			{
+				return invoke_handler(errc::make_error_code(errc::post_without_content));
+			}
+
+			invoke_handler(ec);
 		}
 	}
 private:

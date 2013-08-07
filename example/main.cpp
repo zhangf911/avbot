@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	boost::asio::io_service io_service;
 
 	boost::asio::ip::tcp::acceptor acceptor(io_service,
-		boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 9999)
+		boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 4000)
 	);
 
 	{async_accept_op op(io_service, acceptor);}

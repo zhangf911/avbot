@@ -69,6 +69,8 @@ enum errc_t
 	/// HTTP/1.1 demand that client send Host: header
 	header_missing_host,
 
+	post_without_content,
+
 	/// The request's headers were malformed.
 	malformed_request_headers,
 
@@ -133,6 +135,8 @@ class error_category_impl
 			return "header missing host";
 		case errc::malformed_request_headers:
 			return "Malformed request headers";
+		case errc::post_without_content:
+			return "HTTP POST without content length";
 		case errc::header_too_large:
 			return "header too large";
 		case errc::invalid_chunked_encoding:
