@@ -145,9 +145,13 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			);
 			// body 必须是合法有效的 JSON 格式
 			yield avhttpd::async_write_response(*m_socket, process_post(m_streambuf->size()),
-					avhttpd::response_opts()(avhttpd::http_options::content_length, "0"),
+					avhttpd::response_opts()
+						(avhttpd::http_options::content_length, "0")
+						(avhttpd::http_options::content_type, "text/plain"),
 					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 			);
+			if ( m_request.find(avhttpd::http_options::connection) != "keep-alive" )
+				return;
 		}
 
 		// 继续
