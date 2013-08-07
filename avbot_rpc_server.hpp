@@ -43,74 +43,55 @@ namespace detail
 
 // avbot_rpc_server 由 acceptor_server 这个辅助类调用
 // 为其构造函数传入一个 m_socket, 是 shared_ptr 的.
-class avbot_rpc_server : boost::asio::coroutine
+class avbot_rpc_server
+	: boost::asio::coroutine
+	, public boost::enable_shared_from_this<avbot_rpc_server>
 {
 public:
 	typedef boost::signals2::signal <
 	void( boost::property_tree::ptree )
 	> on_message_signal_type;
-	on_message_signal_type & on_message;
+
+	on_message_signal_type &broadcast_message;
 
 	typedef boost::asio::ip::tcp Protocol;
 	typedef boost::asio::basic_stream_socket<Protocol> socket_type;
 
-	avbot_rpc_server( boost::shared_ptr<socket_type> _socket, on_message_signal_type & _on_message )
+	avbot_rpc_server( boost::shared_ptr<socket_type> _socket, on_message_signal_type & on_message )
 		: m_socket( _socket )
 		, m_streambuf( new boost::asio::streambuf )
-		, m_request( new avhttpd::request_opts )
-		, on_message( _on_message )
+		, m_responses(boost::ref(_socket->get_io_service()), 20)
+		, broadcast_message(on_message)
 	{
-		m_responses = boost::make_shared<
-				boost::async_coro_queue<
-					boost::circular_buffer_space_optimized<
-						boost::shared_ptr<boost::asio::streambuf>
-					>
-				>
-			>(boost::ref(_socket->get_io_service()), 20 );
+		m_connect = on_message.connect(boost::bind<void>(&avbot_rpc_server::callback_message, this, _1));
+	}
 
-		m_connect = boost::make_shared<boost::signals2::connection>(
-						on_message.connect(*this));
-
+	void start()
+	{
 		m_socket->get_io_service().post(
-			boost::asio::detail::bind_handler( *this, boost::system::error_code(), 0 )
+			boost::bind<void>(&avbot_rpc_server::client_loop, shared_from_this(),
+					boost::system::error_code(), 0 )
 		);
 	}
 
-	void operator()(boost::asio::coroutine coro, boost::system::error_code ec, boost::shared_ptr<boost::asio::streambuf> v);
+	void on_pop(boost::shared_ptr<boost::asio::streambuf> v);
 
-	// 数据操作跑这里，嘻嘻.
-	void operator()(boost::system::error_code ec, std::size_t bytestransfered);
+	// 循环处理客户端连接.
+	void client_loop(boost::system::error_code ec, std::size_t bytestransfered);
 
-	// signal 的回调到了这里, 这里我们要区分对方是不是用了 keep-alive 呢.
-	void operator()(const boost::property_tree::ptree & jsonmessage )
-	{
-		boost::shared_ptr<boost::asio::streambuf> buf( new boost::asio::streambuf );
-		std::ostream	stream( buf.get() );
-		std::stringstream	teststream;
-
-		js::write_json( teststream,  jsonmessage );
-
-		// 直接写入 json 格式的消息吧!
-		stream << "HTTP/1.1 200 OK\r\n" <<  "Content-type: application/json\r\n";
-		stream << "connection: keep-alive\r\n" <<  "Content-length: ";
-		stream << teststream.str().length() <<  "\r\n\r\n";
-
-		js::write_json( stream, jsonmessage );
-
-		m_responses->push(buf);
-	}
+	// signal 的回调到这里
+	void callback_message(const boost::property_tree::ptree & jsonmessage );
 private:
 	boost::shared_ptr<socket_type> m_socket;
-	boost::shared_ptr<boost::signals2::connection> m_connect;
 
-	boost::shared_ptr<boost::asio::streambuf>	m_streambuf;
-	boost::shared_ptr<avhttpd::request_opts>	m_request;
+	boost::signals2::scoped_connection m_connect;
 
-	boost::shared_ptr<
-		boost::async_coro_queue<
-			boost::circular_buffer_space_optimized<
-				boost::shared_ptr<boost::asio::streambuf>
-			>
+	boost::shared_ptr<boost::asio::streambuf> m_streambuf;
+	avhttpd::request_opts m_request;
+
+	boost::async_coro_queue<
+		boost::circular_buffer_space_optimized<
+			boost::shared_ptr<boost::asio::streambuf>
 		>
 	> m_responses;
 

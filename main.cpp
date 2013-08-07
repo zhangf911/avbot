@@ -257,7 +257,7 @@ static void avbot_log( avbot::av_message_tree message, avbot & mybot )
 
 static void avbot_rpc_server(boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket, avbot & mybot)
 {
-	::detail::avbot_rpc_server(m_socket, mybot.on_message);
+	boost::make_shared<::detail::avbot_rpc_server>(m_socket, mybot.on_message)->start();
 }
 
 static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)

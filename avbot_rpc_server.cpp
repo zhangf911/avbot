@@ -38,7 +38,9 @@ namespace detail{
  * 	{
 		"protocol":"rpc",
 		"channel":"",  // 留空表示所有频道广播
-		"message":"text message"
+		"message":{
+			"text" : "text message"
+		}
 	}
  */
 void avbot_rpc_server::process_post( std::size_t bytestransfered )
@@ -59,7 +61,7 @@ void avbot_rpc_server::process_post( std::size_t bytestransfered )
 		// 数据不是 json 格式，视作 纯 TEXT 格式.
 		msg.put( "protocol", "rpc" );
 		msg.put( "channel", "" );
-		msg.put( "message", messagebody );
+		msg.put( "message.text", messagebody );
 	}
 	catch( const pt::ptree_error &err )
 	{
@@ -68,7 +70,7 @@ void avbot_rpc_server::process_post( std::size_t bytestransfered )
 
 	try
 	{
-		on_message( msg );
+		broadcast_message( msg );
 	}
 	catch( const pt::ptree_error &err )
 	{
@@ -78,61 +80,93 @@ void avbot_rpc_server::process_post( std::size_t bytestransfered )
 }
 
 // 发送数据在这里
-void avbot_rpc_server::operator()(boost::asio::coroutine coro, boost::system::error_code ec, boost::shared_ptr< boost::asio::streambuf > v)
+void avbot_rpc_server::on_pop(boost::shared_ptr< boost::asio::streambuf > v)
 {
-	reenter(coro){
-		yield boost::asio::async_write(*m_socket, *v, boost::bind<void>(*this, coro, _1, v));
-		(*this)(ec, 0);
-	}
+	boost::asio::async_write(*m_socket, *v,
+		boost::bind<void>(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+	);
 }
 
 // 数据操作跑这里，嘻嘻.
-void avbot_rpc_server::operator()(boost::system::error_code ec, std::size_t bytestransfered )
+void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t bytestransfered)
 {
-	boost::shared_ptr<boost::asio::streambuf> sendbuf;
-
-	if( ec )
-	{
-		m_socket->close( ec );
-
-		// 看来不是 HTTP 客户端，诶，滚蛋啊！
-		// 沉默，直接关闭链接. 取消信号注册.
-		if( m_connect && m_connect->connected() )
-			m_connect->disconnect();
-
-		return;
-	}
-
 	//for (;;)
-	reenter (this)
+	reenter(this)
 	{for (;;){
-		// 发起 HTTP 处理操作.
-		yield avhttpd::async_read_request(*m_socket, *m_streambuf, *m_request, boost::bind<void>(*this, _1, 0));
+
+		m_request.clear();
+		m_streambuf = boost::shared_ptr<boost::asio::streambuf>();
+
+		// 读取用户请求.
+		yield avhttpd::async_read_request(
+				*m_socket, *m_streambuf, m_request,
+				boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+		);
+
+		if(ec)
+		{
+			if (ec == avhttpd::errc::post_without_content)
+			{
+				yield avhttpd::async_write_response(*m_socket, avhttpd::errc::no_content,
+					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+				);
+				return;
+			}
+			else if (ec == avhttpd::errc::header_missing_host)
+			{
+				yield avhttpd::async_write_response(*m_socket, avhttpd::errc::bad_request,
+					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+				);
+				return;
+			}
+			return;
+		}
 
 		// 解析 HTTP
-		if(m_request->find(avhttpd::http_options::request_method) == "GET" )
+		if(m_request.find(avhttpd::http_options::request_method) == "GET" )
 		{
 			// 等待消息, 并发送.
-			yield m_responses->async_pop(boost::bind<void>(*this, boost::asio::coroutine(), ec, _1));
+			yield m_responses.async_pop(boost::bind(&avbot_rpc_server::on_pop, shared_from_this(), _1));
 		}
-		else if( m_request->find(avhttpd::http_options::request_method) == "POST")
+		else if( m_request.find(avhttpd::http_options::request_method) == "POST")
 		{
 			// 这里进入 POST 处理.
 			// 读取 body
 			yield boost::asio::async_read(
 				*m_socket, *m_streambuf,
 				boost::asio::transfer_exactly(
-					boost::lexical_cast<std::size_t>(m_request->find(avhttpd::http_options::content_length))
+					boost::lexical_cast<std::size_t>(m_request.find(avhttpd::http_options::content_length))
 				),
-				*this
+
+				boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, _2 )
 			);
 			// body 必须是合法有效的 JSON 格式
 			process_post(bytestransfered);
 		}
 
 		// 继续
-		yield avloop_idle_post(m_socket->get_io_service(), boost::bind<void>( *this, ec, 0 ));
+		yield avloop_idle_post(m_socket->get_io_service(),
+			boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), ec, 0)
+		);
 	}}
+}
+
+void avbot_rpc_server::callback_message(const boost::property_tree::ptree& jsonmessage)
+{
+	boost::shared_ptr<boost::asio::streambuf> buf(new boost::asio::streambuf);
+	std::ostream	stream(buf.get());
+	std::stringstream	teststream;
+
+	js::write_json(teststream,  jsonmessage);
+
+	// 直接写入 json 格式的消息吧!
+	stream << "HTTP/1.1 200 OK\r\n" <<  "Content-type: application/json\r\n";
+	stream << "connection: keep-alive\r\n" <<  "Content-length: ";
+	stream << teststream.str().length() <<  "\r\n\r\n";
+
+	js::write_json(stream, jsonmessage);
+
+	m_responses.push(buf);
 }
 
 }
