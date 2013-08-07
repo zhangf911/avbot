@@ -199,20 +199,6 @@ make_async_read_request_op(Stream & s,
  * the handler will be performed in a manner equivalent to using
  * boost::asio::io_service::post().
  *
- * @par Example
- * To read into a single data buffer use the @ref buffer function as follows:
- * @code
- * boost::asio::async_read(s, boost::asio::buffer(data, size), handler);
- * @endcode
- * See the @ref buffer documentation for information on reading into multiple
- * buffers in one go, and how to use it with arrays, boost::array or
- * std::vector.
- *
- * @note This overload is equivalent to calling:
- * @code boost::asio::async_read(
- *     s, buffers,
- *     boost::asio::transfer_all(),
- *     handler); @endcode
  */
 
 template<class Stream, class Allocator,  class Handler>
