@@ -63,15 +63,15 @@ public:
 		, m_responses(boost::ref(_socket->get_io_service()), 20)
 		, broadcast_message(on_message)
 	{
-		m_connect = on_message.connect(boost::bind<void>(&avbot_rpc_server::callback_message, this, _1));
 	}
 
 	void start()
 	{
-		m_socket->get_io_service().post(
+		avloop_idle_post(m_socket->get_io_service(),
 			boost::bind<void>(&avbot_rpc_server::client_loop, shared_from_this(),
 					boost::system::error_code(), 0 )
 		);
+		m_connect = broadcast_message.connect(boost::bind<void>(&avbot_rpc_server::callback_message, this, _1));
 	}
 
 	void on_pop(boost::shared_ptr<boost::asio::streambuf> v);

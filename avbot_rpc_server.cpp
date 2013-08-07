@@ -95,7 +95,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 	{for (;;){
 
 		m_request.clear();
-		m_streambuf = boost::shared_ptr<boost::asio::streambuf>();
+		m_streambuf = boost::make_shared<boost::asio::streambuf>();
 
 		// 读取用户请求.
 		yield avhttpd::async_read_request(
