@@ -323,7 +323,7 @@ int daemon( int nochdir, int noclose )
 int main( int argc, char *argv[] )
 {
 	std::string qqnumber, qqpwd;
-	std::string ircnick, ircroom, ircpwd;
+	std::string ircnick, ircroom, ircpwd, ircserver;
 	std::string xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick;
 	std::string cfgfile;
 	std::string logdir;
@@ -365,6 +365,9 @@ int main( int argc, char *argv[] )
 	( "ircnick",	po::value<std::string>( &ircnick ), 	"irc nick" )
 	( "ircpwd",		po::value<std::string>( &ircpwd ), 		"irc password" )
 	( "ircrooms",	po::value<std::string>( &ircroom ), 	"irc room" )
+	( "ircserver",	po::value<std::string>
+		( &ircserver)->default_value("irc.freenode.net:6667"), "irc server, default to freenode" )
+
 	( "xmppuser",	po::value<std::string>( &xmppuser ), 	"id for XMPP,  eg: (microcaicai@gmail.com)" )
 	( "xmppserver",	po::value<std::string>( &xmppserver ), 	 "server to connect for XMPP,  eg: (xmpp.l.google.com)" )
 	( "xmpppwd",	po::value<std::string>( &xmpppwd ), 	"password for XMPP" )
@@ -562,7 +565,7 @@ rungui:
 	mybot.set_qq_account( qqnumber, qqpwd, boost::bind( on_verify_code, _1, boost::ref( mybot ), boost::ref(decaptcha) ) );
 
 	if( !ircnick.empty() )
-		mybot.set_irc_account( ircnick, ircpwd );
+		mybot.set_irc_account( ircnick, ircpwd, ircserver);
 
 	if( !xmppuser.empty() )
 		mybot.set_xmpp_account( xmppuser, xmpppwd, xmppserver, xmppnick );
