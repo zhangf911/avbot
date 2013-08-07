@@ -199,9 +199,12 @@ async_read_until(AsyncReadStream& s,
     boost::asio::basic_streambuf<Allocator>& b, const std::string& delim,
     BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
 {
-	// If you get an error on the following line it means that your handler does
-	// not meet the documented type requirements for a ReadHandler.
-
+	{
+		using namespace boost::asio;
+		// If you get an error on the following line it means that your handler does
+		// not meet the documented type requirements for a ReadHandler.
+		BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+	}
 	boost::asio::detail::async_result_init <
 	ReadHandler, void (boost::system::error_code, std::size_t) > init(
 		BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));
