@@ -11,8 +11,9 @@ public:
 		: m_io_service(io_service)
 		, m_clientsocket(clientsocket)
 		, m_request_opts(boost::make_shared<avhttpd::request_opts>())
+		, m_streambuf(boost::make_shared<boost::asio::streambuf>())
 	{
-		avhttpd::async_read_request(*m_clientsocket, *m_request_opts, *this);
+		avhttpd::async_read_request(*m_clientsocket, *m_streambuf, *m_request_opts, *this);
 	}
 
 	void operator()(boost::system::error_code ec)
@@ -24,6 +25,7 @@ private:
 	boost::asio::io_service & m_io_service;
 	boost::shared_ptr<boost::asio::ip::tcp::socket> m_clientsocket;
 	boost::shared_ptr<avhttpd::request_opts> m_request_opts;
+	boost::shared_ptr<boost::asio::streambuf> m_streambuf;
 };
 
 class async_accept_op{

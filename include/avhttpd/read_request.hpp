@@ -4,68 +4,77 @@
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/regex.hpp>
 
 #include "settings.hpp"
-#include "read_until.hpp"
 
 namespace avhttpd {
 namespace detail {
 
-template<class Stream, class ConstBufferSequence, class Handler>
-class async_read_request_op
+template<class Stream, class Allocator, class Handler>
+class async_read_request_op : boost::asio::coroutine
 {
 public:
-	async_read_request_op(Stream & stream, request_opts & opts,
-						  const ConstBufferSequence & buffer, Handler handler)
+	async_read_request_op(Stream & stream,
+					boost::asio::basic_streambuf<Allocator> & streambuf,
+					request_opts & opts, Handler handler)
 		: m_stream(stream)
-		, m_handler(handler)
+		, m_strembuf(streambuf)
 		, m_opts(opts)
-		, m_strembuf(boost::make_shared<boost::asio::streambuf>())
+		, m_handler(handler)
 	{
-		boost::asio::detail::consuming_buffers<
-			boost::asio::const_buffer,
-			ConstBufferSequence
-		> buffers_(buffer);
-
-		std::size_t size = buffers_.begin() - buffers_.end();
-		// 首先处理 m_buffer 里面的东西
-		boost::asio::buffer_copy(m_strembuf->prepare(size), buffers_);
-		// buffers 里的东西就跑到咱的 m_strembuf 了
-
-		avhttpd::async_read_until(m_stream, *m_strembuf, "\r\n\r\n", *this);
+		boost::asio::async_read_until(m_stream, m_strembuf, "\r\n", *this);
 	};
 
 	void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
 	{
-		// 完成 header 的读取，用 boost::split 以行为分割.
+		std::string request_line;
+		boost::smatch what;
 
-		std::string request_header;
-		request_header.resize(bytes_transferred);
-		m_strembuf->sgetn(&request_header[0], bytes_transferred);
+		BOOST_ASIO_CORO_REENTER(this)
+		{
+			if (ec)
+			{
+				return invoke_handler(ec);
+			}
 
-		std::vector<std::string> headlines;
-		boost::split(headlines, request_header, boost::is_any_of("\r\n"));
+			// 完成 REQUEST LINE 的读取，用 boost::regex 处理
+			request_line.resize(bytes_transferred);
+			m_strembuf->sgetn(&request_line[0], bytes_transferred);
 
-		// TODO
+			boost::regex_match(request_line, what, boost::regex(""));
+
+
+
+		}
 	}
-
+private:
+	template<class EC>
+	inline void invoke_handler(const EC &ec)
+	{
+		m_stream.get_io_service().post(
+			boost::asio::detail::bind_handler(m_handler, ec)
+		);
+	}
 private:
 	// 传入的变量.
-	Stream &m_stream;
-	Handler m_handler;
+	Stream & m_stream;
+	boost::asio::basic_streambuf<Allocator>& m_strembuf;
 	request_opts & m_opts;
+	Handler m_handler;
 
 	// 这里是协程用到的变量.
-	boost::shared_ptr<boost::asio::streambuf> m_strembuf;
+
 };
 
-template<class Stream, class ConstBufferSequence, class Handler>
-async_read_request_op<Stream, ConstBufferSequence, Handler>
-make_async_read_request_op(Stream & stream, request_opts & opts,
-						   const ConstBufferSequence & buffer, Handler handler)
+template<class Stream, class Allocator, class Handler>
+async_read_request_op<Stream, Allocator, Handler>
+make_async_read_request_op(Stream & s,
+						boost::asio::basic_streambuf<Allocator> & streambuf,
+						request_opts & opts, Handler handler)
 {
-	return async_read_request_op<Stream, ConstBufferSequence, Handler>(
-			   stream, opts, buffer, handler);
+	return async_read_request_op<Stream, Allocator, Handler>(
+				s, streambuf, opts, handler);
 }
 
 }
@@ -141,16 +150,12 @@ make_async_read_request_op(Stream & stream, request_opts & opts,
  *     handler); @endcode
  */
 
-template<class Stream, class Handler>
-void async_read_request(Stream & s, request_opts & opts, Handler handler)
+template<class Stream, class Allocator,  class Handler>
+void async_read_request(Stream & s,
+					boost::asio::basic_streambuf<Allocator> &streambuf,
+					request_opts & opts, Handler handler)
 {
-	detail::make_async_read_request_op(s, opts, boost::asio::null_buffers(), handler);
-}
-
-template<class Stream, class ConstBufferSequence, class BufferedHandler>
-void async_read_request(Stream & s, request_opts & opts, const ConstBufferSequence & buffer, BufferedHandler handler)
-{
-	detail::make_async_read_request_op(s, opts, buffer, handler);
+	detail::make_async_read_request_op(s, streambuf, opts, handler);
 }
 
 }
