@@ -10,7 +10,6 @@
 #include <vector>
 #include <signal.h>
 #include <fstream>
-#include <execinfo.h>
 
 #define BOOST_LOG_USE_NATIVE_SYSLOG
 
