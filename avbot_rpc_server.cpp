@@ -145,6 +145,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			);
 			// body 必须是合法有效的 JSON 格式
 			yield avhttpd::async_write_response(*m_socket, process_post(m_streambuf->size()),
+					avhttpd::response_opts()(avhttpd::http_options::content_length, "0"),
 					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 			);
 		}
