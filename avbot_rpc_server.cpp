@@ -81,11 +81,26 @@ int avbot_rpc_server::process_post( std::size_t bytes_transfered )
 	return 200;
 }
 
+void avbot_rpc_server::get_response_sended(boost::shared_ptr< boost::asio::streambuf > v,
+	boost::system::error_code ec, std::size_t bytes_transfered)
+{
+	m_socket->get_io_service().post(
+		boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), ec, bytes_transfered)
+	);
+}
+
 // 发送数据在这里
 void avbot_rpc_server::on_pop(boost::shared_ptr< boost::asio::streambuf > v)
 {
-	boost::asio::async_write(*m_socket, *v,
-		boost::bind<void>(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+	avhttpd::response_opts opts;
+	opts.insert(avhttpd::http_options::content_type, "application/json; charset=utf8");
+	opts.insert(avhttpd::http_options::content_length, boost::lexical_cast<std::string>(v->size()));
+	opts.insert("Cache-Control", "no-cache");
+	opts.insert(avhttpd::http_options::connection, "keep-alive");
+
+	avhttpd::async_write_response(
+		*m_socket, 200, opts, *v,
+		boost::bind<void>(&avbot_rpc_server::get_response_sended, shared_from_this(), v,  _1, _2)
 	);
 }
 
@@ -146,9 +161,10 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			// body 必须是合法有效的 JSON 格式
 			yield avhttpd::async_write_response(*m_socket, process_post(m_streambuf->size()),
 					avhttpd::response_opts()
-						(avhttpd::http_options::content_length, "0")
+						(avhttpd::http_options::content_length, "4")
 						(avhttpd::http_options::content_type, "text/plain")
 						("Cache-Control", "no-cache"),
+					boost::asio::buffer("done"),
 					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 			);
 			if ( m_request.find(avhttpd::http_options::connection) != "keep-alive" )
@@ -167,16 +183,6 @@ void avbot_rpc_server::callback_message(const boost::property_tree::ptree& jsonm
 	boost::shared_ptr<boost::asio::streambuf> buf(new boost::asio::streambuf);
 	std::ostream	stream(buf.get());
 	std::stringstream	teststream;
-
-	js::write_json(teststream,  jsonmessage);
-
-	// 直接写入 json 格式的消息吧!
-	stream << "HTTP/1.1 200 OK\r\n" <<  "Content-type: application/json\r\n";
-	stream << "connection: keep-alive\r\n";
-	stream << "Content-length: " << teststream.str().length() <<  "\r\n";
-	stream << "content-type: application/json; charset=utf8\r\n";
-	stream << "Cache-Control: no-cache\r\n";
-	stream << "\r\n";
 
 	js::write_json(stream, jsonmessage);
 

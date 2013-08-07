@@ -74,6 +74,7 @@ public:
 		m_connect = broadcast_message.connect(boost::bind<void>(&avbot_rpc_server::callback_message, this, _1));
 	}
 
+	void get_response_sended(boost::shared_ptr< boost::asio::streambuf > v, boost::system::error_code ec, std::size_t);
 	void on_pop(boost::shared_ptr<boost::asio::streambuf> v);
 
 	// 循环处理客户端连接.
