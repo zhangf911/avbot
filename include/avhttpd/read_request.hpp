@@ -16,10 +16,10 @@ class async_read_request_op{
 public:
 	async_read_request_op(Stream & stream, request_opts & opts,
 						const ConstBufferSequence & buffer, Handler handler)
-	  : m_stream(stream),
-		m_handler(handler),
-		m_opts(opts),
-		m_strembuf(boost::make_shared<boost::asio::streambuf>())
+	: m_stream(stream)
+	, m_handler(handler)
+	, m_opts(opts)
+	, m_strembuf(boost::make_shared<boost::asio::streambuf>())
 	{
 	    boost::asio::detail::consuming_buffers<boost::asio::const_buffer, ConstBufferSequence>
 			buffers_(buffer);
@@ -35,7 +35,7 @@ public:
 	void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
 	{
 		// 完成 header 的读取，用 boost::split 以行为分割.
-		
+
 	}
 
 private:
