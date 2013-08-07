@@ -90,7 +90,7 @@ enum errc_t
  */
 inline boost::system::error_code make_error_code(errc_t e)
 {
-	return boost::system::error_code(static_cast<int>(e), avhttp::error_category());
+	return boost::system::error_code(static_cast<int>(e), avhttpd::error_category());
 }
 
 } // namespace errc
