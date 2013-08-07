@@ -14,3 +14,6 @@
 	path = soci
 	url = git://github.com/SOCI/soci.git
 	branch = hotfix/3.2.2
+[submodule "avhttpd"]
+	path = avhttpd
+	url = git://github.com/avplayer/avhttpd.git

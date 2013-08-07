@@ -1,3 +1,7 @@
+
+	* print out backtrace when segfault.
+	* fix endless loop that will run out your dechaptcha
+
 7.2
 	* fix c++11 mode build that doesn't even work
 	* drop autotools build support
