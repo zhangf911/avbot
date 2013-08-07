@@ -22,8 +22,9 @@ public:
 		, m_opts(opts)
 		, m_strembuf(boost::make_shared<boost::asio::streambuf>())
 	{
-		boost::asio::detail::consuming_buffers<boost::asio::const_buffer, ConstBufferSequence>
-		buffers_(buffer);
+		boost::asio::detail::consuming_buffers<
+			boost::asio::const_buffer, ConstBufferSequence
+		> buffers_(buffer);
 
 		std::size_t size = buffers_.begin() - buffers_.end();
 		// 首先处理 m_buffer 里面的东西
