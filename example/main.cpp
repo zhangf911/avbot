@@ -27,7 +27,6 @@ private:
 };
 
 class async_accept_op{
-
 public:
 	async_accept_op(boost::asio::io_service & io_service, boost::asio::ip::tcp::acceptor & acceptor)
 	  : m_io_service(io_service)
