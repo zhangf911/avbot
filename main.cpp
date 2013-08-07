@@ -10,6 +10,7 @@
 #include <vector>
 #include <signal.h>
 #include <fstream>
+#include <execinfo.h>
 
 #define BOOST_LOG_USE_NATIVE_SYSLOG
 
@@ -76,6 +77,8 @@ namespace po = boost::program_options;
 #	define QQBOT_VERSION "unknow"
 #   endif
 #endif
+
+extern "C" void avbot_setup_seghandler();
 
 char * execpath;
 avlog logfile;			// 用于记录日志文件.
@@ -454,9 +457,12 @@ int main( int argc, char *argv[] )
 			fs::create_directory( logdir );
 	}
 
-	// 设置到中国的时区，否则 qq 消息时间不对啊.
 #ifndef _WIN32
+	// 设置到中国的时区，否则 qq 消息时间不对啊.
 	setenv("TZ", "Asia/Shanghai", 1);
+
+	// 设置 BackTrace
+	avbot_setup_seghandler();
 # endif
 
 #ifdef _WIN32

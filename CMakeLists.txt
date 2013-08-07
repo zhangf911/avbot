@@ -180,7 +180,12 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-add_executable(avbot avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp ${PROJECT_BINARY_DIR}/avbot.rc)
+set(AVBOT_SOURCES avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp ${PROJECT_BINARY_DIR}/avbot.rc)
+if(NOT WIN32)
+list(APPEND AVBOT_SOURCES backtrace.cpp)
+endif()
+
+add_executable(avbot ${AVBOT_SOURCES})
 
 if(WIN32)
 add_subdirectory(gui)
