@@ -8,9 +8,9 @@
 class session_op{
 public:
 	session_op(boost::asio::io_service & io_service, boost::shared_ptr<boost::asio::ip::tcp::socket> clientsocket)
-	  : m_io_service(io_service),
-		m_clientsocket(clientsocket),
-		m_request_opts(boost::make_shared<avhttpd::request_opts>())
+		: m_io_service(io_service)
+		, m_clientsocket(clientsocket)
+		, m_request_opts(boost::make_shared<avhttpd::request_opts>())
 	{
 		avhttpd::async_read_request(*m_clientsocket, *m_request_opts, *this);
 	}
@@ -30,7 +30,8 @@ class async_accept_op{
 
 public:
 	async_accept_op(boost::asio::io_service & io_service, boost::asio::ip::tcp::acceptor & acceptor)
-	  : m_io_service(io_service), m_acceptor(acceptor)
+	  : m_io_service(io_service)
+	  , m_acceptor(acceptor)
 	{
 		boost::shared_ptr<boost::asio::ip::tcp::socket> clientsocket
 			= boost::make_shared<boost::asio::ip::tcp::socket>(boost::ref(m_io_service));
