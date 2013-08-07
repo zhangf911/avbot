@@ -147,7 +147,8 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			yield avhttpd::async_write_response(*m_socket, process_post(m_streambuf->size()),
 					avhttpd::response_opts()
 						(avhttpd::http_options::content_length, "0")
-						(avhttpd::http_options::content_type, "text/plain"),
+						(avhttpd::http_options::content_type, "text/plain")
+						("Cache-Control", "no-cache"),
 					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 			);
 			if ( m_request.find(avhttpd::http_options::connection) != "keep-alive" )
@@ -171,8 +172,11 @@ void avbot_rpc_server::callback_message(const boost::property_tree::ptree& jsonm
 
 	// 直接写入 json 格式的消息吧!
 	stream << "HTTP/1.1 200 OK\r\n" <<  "Content-type: application/json\r\n";
-	stream << "connection: keep-alive\r\n" <<  "Content-length: ";
-	stream << teststream.str().length() <<  "\r\n\r\n";
+	stream << "connection: keep-alive\r\n";
+	stream << "Content-length: " << teststream.str().length() <<  "\r\n";
+	stream << "content-type: application/json; charset=utf8\r\n";
+	stream << "Cache-Control: no-cache\r\n";
+	stream << "\r\n";
 
 	js::write_json(stream, jsonmessage);
 
