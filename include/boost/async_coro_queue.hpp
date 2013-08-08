@@ -5,6 +5,7 @@
 #include <boost/config.hpp>
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
+
 namespace boost{
 
 /*
@@ -109,6 +110,15 @@ public:
 			m_list.push_back(v);
 		}
 	}
+
+	/**
+	 * cancele all async operations.
+     */
+	void cancele()
+	{
+		m_handlers.clear();
+	}
+
 private:
 
 	boost::asio::io_service & m_io_service;
