@@ -34,7 +34,7 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/asio/yield.hpp>
+#include <boost/async_coro_queue.hpp>
 
 #include "avproxy.hpp"
 #include "boost/timedcall.hpp"
