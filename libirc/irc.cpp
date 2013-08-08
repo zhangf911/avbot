@@ -1,10 +1,28 @@
 
+#include <boost/circular_buffer.hpp>
+
+#include <vector>
+#include <string>
+#include <iostream>
+
+#include <boost/make_shared.hpp>
+#include <boost/foreach.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+#include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/signals2.hpp>
+#include <boost/async_coro_queue.hpp>
+
+#include "avproxy.hpp"
+#include "boost/timedcall.hpp"
+
 #include "./irc.hpp"
 
 namespace irc {
-
-namespace  impl
-{
+namespace impl {
 
 class client;
 
@@ -14,16 +32,13 @@ public:
 	msg_sender_loop(boost::shared_ptr<client> _client)
 		: m_client(_client)
 	{
-
 	};
 
 	void operator()()
 	{
-
 	}
 
 private:
-
 	boost::shared_ptr<client> m_client;
 };
 
@@ -41,6 +56,7 @@ public:
 		, login_(false)
 		, insending(false)
 		, quitting_(false)
+		, messages_send_queue_(_io_service, 200) // 缓存最后  200 条指令.
 	{
 	}
 
@@ -406,6 +422,11 @@ private:
 
 	bool quitting_;
 
+	boost::async_coro_queue<
+		boost::circular_buffer_space_optimized<
+			std::string
+		>
+	> messages_send_queue_;
 };
 
 }

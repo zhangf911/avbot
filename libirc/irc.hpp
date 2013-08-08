@@ -23,26 +23,14 @@ http://www.irchelp.org/irchelp/rfc/rfc.html
 */
 
 #pragma once
-#include <vector>
+
 #include <string>
-#include <iostream>
-
-#include <boost/make_shared.hpp>
-#include <boost/foreach.hpp>
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/regex.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/signals2.hpp>
-#include <boost/async_coro_queue.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/shared_ptr.hpp>
 
-#include "avproxy.hpp"
-#include "boost/timedcall.hpp"
+namespace irc {
 
-namespace irc
-{
 struct irc_msg
 {
 	std::string whom;
