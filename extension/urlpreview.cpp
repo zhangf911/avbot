@@ -232,33 +232,39 @@ bool urlpreview::can_preview(std::string speaker, std::string urlstr)
 {
 	boost::regex ex;
 	// 内置数据库, 然后是 ${qqlog}/blockurls.txt
-	
-	avhttp::url url(urlstr);
-
-	if(url.host() == "web.qq.com" || url.host() =="web2.qq.com")
-	{
-		return false;
-	}
-	
-	// 遍历 blockurls.txt, 每个都是正则表达式!
 	try{
+	
+		avhttp::url url(urlstr);
 
-		std::ifstream blockurls("blockurls");
-		while(blockurls.is_open() && !blockurls.eof())
+
+		if(url.host() == "web.qq.com" || url.host() =="web2.qq.com")
 		{
-			std::string urlregex;
-			std::getline(blockurls, urlregex);
-			if(urlregex.empty())
-				break;
-			try{
-				ex.set_expression(urlregex);
-				if(boost::regex_match(urlstr.c_str(), ex))
-					return false;
-			}catch(const boost::regex_error&){}
+			return false;
 		}
 
-	}catch(const std::runtime_error&)
+		// 遍历 blockurls.txt, 每个都是正则表达式!
+		try{
+
+			std::ifstream blockurls("blockurls");
+			while(blockurls.is_open() && !blockurls.eof())
+			{
+				std::string urlregex;
+				std::getline(blockurls, urlregex);
+				if(urlregex.empty())
+					break;
+				try{
+					ex.set_expression(urlregex);
+					if(boost::regex_match(urlstr.c_str(), ex))
+						return false;
+				}catch(const boost::regex_error&){}
+			}
+
+		}catch(const std::runtime_error&)
+		{
+		}
+	}catch (...)
 	{
+		return false;
 	}
 	return true;
 }
