@@ -214,6 +214,9 @@ private:
 
 	void connect()
 	{
+		if (quitting_)
+			return;
+
 		using namespace boost::asio::ip;
 
 		std::string server, port;
@@ -252,7 +255,8 @@ private:
 
 	void relogin()
 	{
-
+		if (quitting_)
+			return;
 		login_ = false;
 		boost::system::error_code ec;
 		socket_.close(ec);
