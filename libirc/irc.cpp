@@ -276,6 +276,8 @@ private:
 
 	void relogin_delayed()
 	{
+		if (quitting_)
+			return;
 		msg_queue_.clear();
 		BOOST_FOREACH(std::string & str, join_queue_)
 		msg_queue_.push_back(str);
@@ -285,6 +287,9 @@ private:
 
 	void connected()
 	{
+	 	if (quitting_)
+			return;
+
 		if(!pwd_.empty())
 			send_request("PASS " + pwd_);
 
