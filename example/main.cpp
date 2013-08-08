@@ -27,7 +27,11 @@ public:
 			if (m_request_opts->find(avhttpd::http_options::request_uri) == "/123")
 			{
 				avhttpd::response_opts opts;
-				avhttpd::async_write_response(*m_clientsocket, 200, opts, boost::asio::buffer("123"), *this);
+				opts("content-length", "3");
+				opts("connection", "close");
+				opts("Content-Type", "text/plain");
+				opts(avhttpd::http_options::http_version, m_request_opts->find(avhttpd::http_options::http_version));
+				avhttpd::async_write_response(*m_clientsocket, 200, opts, boost::asio::buffer("123", 3), *this);
 			}else
 				avhttpd::async_write_response(*m_clientsocket, 200, *this);
 		}

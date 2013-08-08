@@ -100,14 +100,22 @@ template<class Stream, class Handler>
 class async_write_response_op
 {
 public:
-	async_write_response_op(Stream & stream, int status, const request_opts & opts,
+	async_write_response_op(Stream & stream, int status, const response_opts & _opts,
 							Handler handler)
 		: m_stream(stream), m_handler(handler)
 	{
+		response_opts opts = _opts;
 		m_headers = boost::make_shared<boost::asio::streambuf>();
 		std::ostream out(m_headers.get());
 
-		out << "HTTP " <<  status <<  " " << strstatus(status)  << "\r\n";
+		if (opts.find(avhttpd::http_options::http_version)=="HTTP/1.1")
+			out << "HTTP/1.1 ";
+		else out <<  "HTTP ";
+
+		opts.remove(avhttpd::http_options::http_version);
+
+		out <<  status <<  " " << strstatus(status)  << "\r\n";
+
 		if (opts.size())
 			out  <<  opts.header_string();
 		out <<  "\r\n";
@@ -130,31 +138,31 @@ private:
 	boost::shared_ptr<boost::asio::streambuf> m_headers;
 };
 
+template<class Stream, class Handler>
+async_write_response_op<Stream, Handler>
+make_async_write_response_op(Stream & s, int status, const response_opts & opts,Handler handler)
+{
+	return async_write_response_op<Stream, Handler>(s, status, opts, handler);
+}
+
+
 template<class Stream, class ConstBufferSequence, class Handler>
 class async_write_response_with_body_op
 {
 
 public:
 	async_write_response_with_body_op(Stream & stream, int status,
-					const request_opts & opts,
+					const response_opts & opts,
 					const ConstBufferSequence & buffers,
 					Handler handler)
 		: m_stream(stream)
 		, m_buffers(buffers)
 		, m_handler(handler)
 	{
-		m_headers = boost::make_shared<boost::asio::streambuf>();
-		std::ostream out(m_headers.get());
-
-		out << "HTTP " <<  status <<  " " << strstatus(status)  << "\r\n";
-		if (opts.size())
-			out  <<  opts.header_string();
-		out <<  "\r\n";
-
-		boost::asio::async_write(m_stream, *m_headers, *this);
+		make_async_write_response_op(m_stream, status, opts, *this);
 	};
 
-	void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
+	void operator()(boost::system::error_code ec)
 	{
 		boost::asio::async_write(m_stream, m_buffers, m_handler);
 	}
@@ -174,25 +182,17 @@ class async_write_response_with_streambuf_op
 {
 public:
 	async_write_response_with_streambuf_op(Stream & stream, int status,
-					const request_opts & opts,
+					const response_opts & opts,
 					const boost::asio::basic_streambuf<Allocator> & streambuf,
 					Handler handler)
 		: m_stream(stream)
 		, m_streambuf(streambuf)
 		, m_handler(handler)
 	{
-		m_headers = boost::make_shared<boost::asio::streambuf>();
-		std::ostream out(m_headers.get());
-
-		out << "HTTP " <<  status <<  " " << strstatus(status)  << "\r\n";
-		if (opts.size())
-			out  <<  opts.header_string();
-		out <<  "\r\n";
-
-		boost::asio::async_write(m_stream, *m_headers, *this);
+		make_async_write_response_op(m_stream, status, opts, *this);
 	};
 
-	void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
+	void operator()(boost::system::error_code ec)
 	{
 		boost::asio::async_write(m_stream, m_streambuf.data(), m_handler);
 	}
@@ -206,16 +206,9 @@ private:
 	boost::shared_ptr<boost::asio::streambuf> m_headers;
 };
 
-template<class Stream, class Handler>
-async_write_response_op<Stream, Handler>
-make_async_write_response_op(Stream & s, int status, const request_opts & opts,Handler handler)
-{
-	return async_write_response_op<Stream, Handler>(s, status, opts, handler);
-}
-
 template<class Stream, class ConstBufferSequence, class Handler>
 async_write_response_with_body_op<Stream, ConstBufferSequence, Handler>
-make_async_write_response_op(Stream & s, int status, const request_opts & opts,
+make_async_write_response_op(Stream & s, int status, const response_opts & opts,
 							const ConstBufferSequence& buffers, Handler handler)
 {
 	return async_write_response_with_body_op<Stream, ConstBufferSequence, Handler>
@@ -268,7 +261,7 @@ make_async_write_response_op(Stream & s, int status, const response_opts & opts,
  *
  * @param status the HTTP status code
  *
- * @param opts The avhttpd::request_opts object whitch the header data is be be
+ * @param opts The avhttpd::response_opts object whitch the header data is be be
  * filled into.
  *
  * @param handler The handler to be called when the read operation completes.
@@ -326,7 +319,7 @@ void async_write_response(Stream & s, int status, Handler handler)
  *
  * @param status the HTTP status code
  *
- * @param opts The avhttpd::request_opts object whitch the header data is be be
+ * @param opts The avhttpd::response_opts object whitch the header data is be be
  * filled into.
  *
  * @param handler The handler to be called when the read operation completes.
@@ -383,7 +376,7 @@ void async_write_response(Stream & s, int status, const response_opts & opts,
  *
  * @param status the HTTP status code
  *
- * @param opts The avhttpd::request_opts object that caray http header
+ * @param opts The avhttpd::response_opts object that caray http header
  *
  * @param buffers The buffers that contains the response body
  *
