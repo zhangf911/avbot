@@ -347,7 +347,7 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 				m_client->get_io_service(), 5, boost::bind<void>(*this, ec, bytes_transferred, value));
 		}
 
-		while (m_client->login_){
+		while (!m_client->quitting_ && m_client->login_){
 			*m_value = value;
 			// 发送
 			BOOST_ASIO_CORO_YIELD boost::asio::async_write(
