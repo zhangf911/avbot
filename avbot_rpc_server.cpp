@@ -97,6 +97,7 @@ void avbot_rpc_server::on_pop(boost::shared_ptr< boost::asio::streambuf > v)
 	opts.insert(avhttpd::http_options::content_length, boost::lexical_cast<std::string>(v->size()));
 	opts.insert("Cache-Control", "no-cache");
 	opts.insert(avhttpd::http_options::connection, "keep-alive");
+	opts.insert(avhttpd::http_options::http_version, m_request.find(avhttpd::http_options::http_version));
 
 	avhttpd::async_write_response(
 		*m_socket, 200, opts, *v,
@@ -163,7 +164,8 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 					avhttpd::response_opts()
 						(avhttpd::http_options::content_length, "4")
 						(avhttpd::http_options::content_type, "text/plain")
-						("Cache-Control", "no-cache"),
+						("Cache-Control", "no-cache")
+						(avhttpd::http_options::http_version, m_request.find(avhttpd::http_options::http_version)),
 					boost::asio::buffer("done"),
 					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 			);
