@@ -116,7 +116,7 @@ public:
      */
 	void cancele()
 	{
-		m_handlers.clear();
+		m_handlers = std::queue<async_pop_handler_type>();
 	}
 
 private:
