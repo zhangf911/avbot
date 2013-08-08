@@ -12,6 +12,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/make_shared.hpp>
 
 #include <avhttp.hpp>
 
