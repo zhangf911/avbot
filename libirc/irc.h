@@ -129,7 +129,7 @@ private:
 		std::istream  req( &request_ );
 		line.clear();
 
-		reenter( &coro )
+		BOOST_ASIO_CORO_REENTER( &coro )
 		{
 			if( !err )
 			{
@@ -142,7 +142,7 @@ private:
 
 						line.append( "\n" );
 
-						yield  boost::asio::async_write( socket_, boost::asio::buffer( line ),
+						BOOST_ASIO_CORO_YIELD  boost::asio::async_write( socket_, boost::asio::buffer( line ),
 														  boost::bind( &client::handle_write_request, this, _1, _2, coro )
 														);
 
@@ -151,7 +151,7 @@ private:
 					}
 					else
 					{
-						yield boost::delayedcallms( io_service, 5, boost::bind( &client::handle_write_request, this, boost::system::error_code(), 0, coro ) );
+						BOOST_ASIO_CORO_YIELD boost::delayedcallms( io_service, 5, boost::bind( &client::handle_write_request, this, boost::system::error_code(), 0, coro ) );
 					}
 
 				}
