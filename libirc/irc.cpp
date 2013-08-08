@@ -365,6 +365,9 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 				);
 			}
 
+			BOOST_ASIO_CORO_YIELD boost::delayedcallms(
+				m_client->get_io_service(), 468, boost::bind<void>(*this, ec, bytes_transferred, value));
+
 			BOOST_ASIO_CORO_YIELD m_client->messages_send_queue_.async_pop(
 				boost::bind<void>(*this, ec, 0, _1)
 			);
