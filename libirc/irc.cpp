@@ -29,17 +29,12 @@ class client;
 class msg_sender_loop : boost::asio::coroutine
 {
 public:
-	msg_sender_loop(boost::shared_ptr<client> _client)
-		: m_client(_client)
-	{
-	};
-
-	void operator()()
-	{
-	}
+	msg_sender_loop(boost::shared_ptr<client> _client);
+	void operator()(boost::system::error_code ec, std::size_t bytes_transferred, std::string value);
 
 private:
 	boost::shared_ptr<client> m_client;
+	boost::shared_ptr<std::string>	m_value;
 };
 
 class client : public boost::enable_shared_from_this<client>
@@ -54,19 +49,25 @@ public:
 		, retry_count_(max_retry_count)
 		, c_retry_cuont(max_retry_count)
 		, login_(false)
-		, insending(false)
 		, quitting_(false)
 		, messages_send_queue_(_io_service, 200) // 缓存最后  200 条指令.
 	{
 	}
 
+	boost::asio::io_service & get_io_service()
+	{
+		return io_service;
+	}
+
 	void start()
 	{
+		msg_sender_loop op(shared_from_this());
 		return io_service.post(boost::bind(&client::connect, shared_from_this()));
 	}
 
 	void stop()
 	{
+		messages_send_queue_.cancele();
 		quitting_ = false;
 	}
 
@@ -113,12 +114,11 @@ public:
 	}
 
 private:
-	void handle_read_request(const boost::system::error_code& err, std::size_t readed)
+	void handle_read_request(const boost::system::error_code& err, std::size_t bytes_transferred)
 	{
 		if(err)
 		{
 			response_.consume(response_.size());
-			request_.consume(request_.size());
 			relogin();
 #ifdef DEBUG
 			std::cout << "Error: " << err.message() << "\n";
@@ -130,55 +130,7 @@ private:
 										  boost::bind(&client::handle_read_request, shared_from_this(), _1, _2)
 										 );
 
-			process_request(response_);
-		}
-	}
-
-
-	void handle_write_request(const boost::system::error_code& err, std::size_t bytewrited, boost::asio::coroutine coro)
-	{
-		std::istream  req(&request_);
-		line.clear();
-
-		BOOST_ASIO_CORO_REENTER(&coro)
-		{
-			if(!err)
-			{
-				if(request_.size())
-				{
-					std::getline(req, line);
-
-					if(line.length() > 1)
-					{
-
-						line.append("\n");
-
-						BOOST_ASIO_CORO_YIELD  boost::asio::async_write(socket_, boost::asio::buffer(line),
-								boost::bind(&client::handle_write_request, shared_from_this(), _1, _2, coro)
-																	   );
-
-						boost::delayedcallms(io_service, 450, boost::bind(&client::handle_write_request, shared_from_this(), boost::system::error_code(), 0,  boost::asio::coroutine()));
-
-					}
-					else
-					{
-						BOOST_ASIO_CORO_YIELD boost::delayedcallms(io_service, 5, boost::bind(&client::handle_write_request, shared_from_this(), boost::system::error_code(), 0, coro));
-					}
-
-				}
-				else
-				{
-					insending = false;
-				}
-			}
-			else
-			{
-				insending = false;
-				relogin();
-#ifdef DEBUG
-				std::cout << "Error: " << err.message() << "\n";
-#endif
-			}
+			process_request(response_, bytes_transferred);
 		}
 	}
 
@@ -210,108 +162,54 @@ private:
 
 	void send_data(const char* data, const size_t len)
 	{
-		std::string msg;
-		msg.append(data, len);
-
-		std::ostream request_stream(&request_);
-		request_stream << msg;
-
-		if(!insending)
-		{
-			insending = true;
-
-			boost::asio::async_write(socket_, boost::asio::null_buffers(),
-									 boost::bind(&client::handle_write_request, shared_from_this(),
-												 boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred, boost::asio::coroutine()));
-		}
+		messages_send_queue_.push(std::string(data, len));
 	}
 
-	void process_request(boost::asio::streambuf& buf)
+	void process_request(boost::asio::streambuf& buf, std::size_t bytes_transferred)
 	{
+		boost::smatch what;
 		std::string req;
 
-		std::istream is(&buf);
-		is.unsetf(std::ios_base::skipws);
+		req.resize(bytes_transferred);
 
-		while(req.clear(), std::getline(is, req), (!is.eof() && ! req.empty()))
-		{
+		buf.sgetn(&req[0], bytes_transferred);
+
+		req.resize(bytes_transferred - 2);
+
 #ifdef DEBUG
-			std::cout << req << std::endl;
+		std::cout << req << std::endl;
 #endif
 
-			//add auto modify a nick
-			if(req.find("Nickname is already in use.") != std::string::npos)
-			{
-				user_ += "_";
-				send_request("NICK " + user_);
-				send_request("USER " + user_ + " 0 * " + user_);
+		//add auto modify a nick
+		if(req.find("Nickname is already in use.") != std::string::npos)
+		{
+			user_ += "_";
+			send_request("NICK " + user_);
+			send_request("USER " + user_ + " 0 * " + user_);
 
-				BOOST_FOREACH(std::string & str, join_queue_)
-				send_request(str);
+			BOOST_FOREACH(std::string & str, join_queue_)
+			send_request(str);
+			return;
+		}
 
-				continue;
-			}
+		if(req.substr(0, 4) == "PING")
+		{
+			send_request("PONG " + req.substr(6, req.length() - 8));
+			return;
+		}
 
-			if(req.substr(0, 4) == "PING")
-			{
-				send_request("PONG " + req.substr(6, req.length() - 8));
-				continue;
-			}
+		boost::regex regex_privatemsg(":([^!]+)!([^ ]+) PRIVMSG ([#a-zA-Z0-9]+) :(.*)[\\r\\n]*");
 
-			std::size_t pos = req.find(" PRIVMSG ") + 1;
-
-			if(!pos)
-				continue;
-
-			std::string msg = req;
+		if (boost::regex_match(req, what, regex_privatemsg))
+		{
 			irc_msg m;
-
-			pos = msg.find("!") + 1;
-
-			if(!pos)
-				continue;
-
-			m.whom = msg.substr(1, pos - 2);
-
-			msg = msg.substr(pos);
-
-			pos = msg.find(" PRIVMSG ") + 1;
-
-			if(!pos)
-				continue;
-
-			m.locate = msg.substr(0, pos - 1);
-
-			msg = msg.substr(pos);
-
-			pos = msg.find("PRIVMSG ") + 1;
-
-			if(!pos)
-				continue;
-
-			msg = msg.substr(strlen("PRIVMSG "));
-
-			pos = msg.find(" ") + 1;
-
-			if(!pos)
-				continue;
-
-			m.from = msg.substr(0, pos - 1);
-
-			msg = msg.substr(pos);
-
-			pos = msg.find(":") + 1;
-
-			if(!pos)
-				continue;
-
-			m.msg = msg.substr(pos, msg.length() - pos);
-
-			if(* m.msg.rbegin() == '\r')
-				m.msg.resize(m.msg.length() - 1);
+			m.whom = what[1];
+			m.locate = what[2];
+			m.from = what[3];
+			m.msg = what[4];
 
 			cb_(m);
-		}
+		};
 	}
 
 	void connect()
@@ -404,30 +302,75 @@ private:
 
 private:
 	boost::asio::io_service &       io_service;
-	boost::asio::ip::tcp::socket    socket_;
-	boost::asio::streambuf          request_;
+
 	boost::asio::streambuf          response_;
 	boost::signals2::signal<void(irc_msg)> cb_;
 	std::string                     user_;
 	std::string                     pwd_;
 	std::string                     server_;
-	bool                            login_;
 	std::vector<std::string>        msg_queue_;
 	std::vector<std::string>        join_queue_;
 	unsigned int                    retry_count_;
 	const unsigned int              c_retry_cuont;
-	bool insending;
 
 	std::string line;
 
+public:
+	boost::asio::ip::tcp::socket    socket_;
+	bool login_;
 	bool quitting_;
-
 	boost::async_coro_queue<
 		boost::circular_buffer_space_optimized<
 			std::string
 		>
 	> messages_send_queue_;
 };
+
+msg_sender_loop::msg_sender_loop(boost::shared_ptr<client> _client)
+	: m_client(_client), m_value(boost::make_shared<std::string>())
+{
+	m_client->messages_send_queue_.async_pop(
+		boost::bind<void>(*this, boost::system::error_code(), 0, _1)
+	);
+}
+
+void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes_transferred, std::string value)
+{
+	BOOST_ASIO_CORO_REENTER(this)
+	{for (;!m_client->quitting_;){
+
+		// 等待 login 状态
+
+		while (!m_client->login_)
+		{
+			BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
+				m_client->get_io_service(), 5, boost::bind<void>(*this, ec, bytes_transferred, value));
+		}
+
+		while (m_client->login_){
+			*m_value = value;
+			// 发送
+			BOOST_ASIO_CORO_YIELD boost::asio::async_write(
+				m_client->socket_,
+				boost::asio::buffer(*m_value),
+				boost::bind<void>(*this, _1, _2, value)
+			);
+
+			if (ec){
+				// 错误? 恩 ~~~ 糟糕咯
+				m_client->socket_.close(ec);
+
+				BOOST_ASIO_CORO_YIELD boost::delayedcallsec(m_client->get_io_service(), 25,
+					boost::bind<void>(*this, ec, bytes_transferred, value)
+				);
+			}
+
+			BOOST_ASIO_CORO_YIELD m_client->messages_send_queue_.async_pop(
+				boost::bind<void>(*this, ec, 0, _1)
+			);
+		}
+	}}
+}
 
 }
 
