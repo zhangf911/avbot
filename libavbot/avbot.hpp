@@ -7,7 +7,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "libwebqq/webqq.hpp"
-#include "libirc/irc.h"
+#include "libirc/irc.hpp"
 #include "libxmpp/xmpp.hpp"
 #include "libmailexchange/mx.hpp"
 

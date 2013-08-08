@@ -446,20 +446,8 @@ void avbot::set_irc_account( std::string nick, std::string password, std::string
 	if (use_ssl){
 		boost::throw_exception(std::invalid_argument("ssl is currently not supported"));
 	}
-
-	std::string server_host, server_port;
-	if (boost::regex_search(server.c_str(), what, boost::regex("(.*):([0-9]+)?")))
-	{
-		server_host = what[1];
-		server_port = what[2];
-	}
-	else
-	{
-		server_host = server;
-		server_port = "6667";
-	}
-	m_irc_account.reset(new irc::client(m_io_service, nick, password, server_host, server_port));
-	m_irc_account->login(boost::bind(&avbot::callback_on_irc_message, this, _1));
+	m_irc_account.reset(new irc::client(m_io_service, nick, password, server));
+	m_irc_account->on_privmsg_message(boost::bind(&avbot::callback_on_irc_message, this, _1));
 }
 
 void avbot::irc_join_room( std::string room_name )
