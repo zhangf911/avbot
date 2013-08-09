@@ -201,13 +201,7 @@ private:
 			return;
 		}
 
-		if(req.substr(0, 4) == "PING")
-		{
-			send_request("PONG " + req.substr(6, req.length() - 8));
-			return;
-		}
-
-		boost::regex regex_privatemsg(":([^!]+)!([^ ]+) PRIVMSG ([#a-zA-Z0-9]+) :(.*)[\\r\\n]*");
+		boost::regex regex_privatemsg(":([^!]+)!([^ ]+) PRIVMSG ([^ ]+) :(.*)[\\r\\n]*");
 
 		if (boost::regex_match(req, what, regex_privatemsg))
 		{
