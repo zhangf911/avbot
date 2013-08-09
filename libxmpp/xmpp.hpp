@@ -20,7 +20,7 @@
 #define XMPP_H
 
 #include <string>
-#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 
@@ -37,7 +37,7 @@ public:
 	void send_room_message( std::string xmpproom, std::string message );
 	boost::asio::io_service& get_ioservice();
 private:
-	boost::scoped_ptr<xmppimpl::xmpp>		impl;
+	boost::shared_ptr<xmppimpl::xmpp> impl;
 };
 
 #endif // XMPP_H

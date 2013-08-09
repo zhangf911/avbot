@@ -15,43 +15,47 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
+#include <boost/make_shared.hpp>
 #include "xmpp.hpp"
 #include "xmpp_impl.hpp"
 
-xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick )
+xmpp::xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick)
 {
-	if( xmppnick.empty() )
+	if (xmppnick.empty())
 		xmppnick = "avbot";
 
-	if( !xmppuser.empty() && !xmpppasswd.empty() )
-		impl.reset( new xmppimpl::xmpp( asio, xmppuser, xmpppasswd, xmppserver, xmppnick ) );
+	if (!xmppuser.empty() && !xmpppasswd.empty())
+	{
+		impl = boost::make_shared<xmppimpl::xmpp>(
+			boost::ref(asio), xmppuser, xmpppasswd, xmppserver, xmppnick
+		);
+		impl->start();
+	}
 }
 
-void xmpp::join( std::string roomjid )
+void xmpp::join(std::string roomjid)
 {
-	if( impl )
-		impl->join( roomjid );
+	if (impl)
+		impl->join(roomjid);
 }
 
 xmpp::~xmpp()
 {
 }
 
-void xmpp::on_room_message( boost::function<void ( std::string xmpproom, std::string who, std::string message )> cb )
+void xmpp::on_room_message(boost::function<void (std::string xmpproom, std::string who, std::string message)> cb)
 {
-	if( impl )
-		impl->on_room_message( cb );
+	if (impl)
+		impl->on_room_message(cb);
 }
 
-void xmpp::send_room_message( std::string xmpproom, std::string message )
+void xmpp::send_room_message(std::string xmpproom, std::string message)
 {
-	if( impl )
-		impl->send_room_message( xmpproom, message );
+	if (impl)
+		impl->send_room_message(xmpproom, message);
 }
 
-boost::asio::io_service& xmpp::get_ioservice()
+boost::asio::io_service & xmpp::get_ioservice()
 {
-	return this->impl->get_ioservice();
+	return impl->get_ioservice();
 }
-

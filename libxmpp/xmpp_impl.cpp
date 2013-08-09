@@ -52,8 +52,10 @@ void xmpp_asio_connector::cb_handle_connecting( const boost::system::error_code&
 gloox::ConnectionError xmpp_asio_connector::connect()
 {
 	m_state = gloox::StateConnecting;
-	avproxy::async_proxy_connect( avproxy::autoproxychain( m_socket, m_query ),
-								  boost::bind( &xmpp_asio_connector::cb_handle_connecting, this, _1 ) );
+	avproxy::async_proxy_connect(
+		avproxy::autoproxychain( m_socket, m_query ),
+		boost::bind( &xmpp_asio_connector::cb_handle_connecting, this, _1 )
+	);
 	return gloox::ConnNoError;
 }
 
@@ -83,14 +85,15 @@ void xmpp_asio_connector::cb_handle_asio_read( const boost::system::error_code& 
 				this->m_handler->handleDisconnect( this, gloox::ConnIoError );
 		}
 	} else {
-		std::string data( m_readbuf.begin(), bytes_transferred );
+		std::string data(m_readbuf.begin(), bytes_transferred);
 
 		this->m_handler->handleReceivedData( this, data );
 
 		// 发起异步读取
-		m_socket.async_read_some( boost::asio::buffer( m_readbuf ),
-								  boost::bind( &xmpp_asio_connector::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
-								);
+		m_socket.async_read_some(
+				boost::asio::buffer(m_readbuf),
+				boost::bind( &xmpp_asio_connector::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
+		);
 	}
 }
 
@@ -132,10 +135,14 @@ bool xmpp_asio_connector::send( const std::string& data )
 	return false;
 }
 
-xmpp_asio_connector::xmpp_asio_connector( boost::asio::io_service& _io, gloox::ConnectionDataHandler* cdh, boost::asio::ip::tcp::resolver::query _query )
-	: gloox::ConnectionBase( cdh ), io_service( _io ), m_socket( io_service ), m_query( _query )
+xmpp_asio_connector::xmpp_asio_connector(boost::shared_ptr<xmpp> _xmpp,
+	gloox::ConnectionDataHandler* cdh, boost::asio::ip::tcp::resolver::query _query)
+	: m_xmpp(_xmpp)
+	, gloox::ConnectionBase( cdh )
+	, io_service(_xmpp->get_ioservice())
+	, m_socket( io_service )
+	, m_query( _query )
 {
-
 }
 
 xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick )
@@ -153,8 +160,6 @@ xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmp
 		if( splited.size() == 2 )
 			m_client.setPort( boost::lexical_cast<int>( splited[1] ) );
 	}
-
-	io_service.post( boost::bind( &xmpp::start, this ) );
 }
 
 void xmpp::start()
@@ -167,8 +172,8 @@ void xmpp::start()
 		xmppclientport = boost::lexical_cast<std::string>( m_client.port() );
 
 	avproxy::proxy::tcp::query query( m_client.server(), xmppclientport );
-	m_client.setConnectionImpl( new xmpp_asio_connector( io_service, &m_client, query ) );
-	m_client.connect( 0 );
+	m_client.setConnectionImpl(new xmpp_asio_connector(shared_from_this(), &m_client, query));
+	m_client.connect(0);
 }
 
 void xmpp::join( std::string roomjid )

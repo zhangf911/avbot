@@ -24,7 +24,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <gloox/logsink.h>
+#include <boost/enable_shared_from_this.hpp>
+
+# include <gloox/logsink.h>
 #include <gloox/client.h>
 #include <gloox/messagehandler.h>
 #include <gloox/connectionlistener.h>
@@ -35,9 +37,12 @@
 
 namespace xmppimpl {
 
+class xmpp;
+
 class xmpp_asio_connector : public gloox::ConnectionBase {
 public:
-	xmpp_asio_connector( boost::asio::io_service & , gloox::ConnectionDataHandler* cdh, boost::asio::ip::tcp::resolver::query _query );
+	xmpp_asio_connector(boost::shared_ptr<xmpp> xmpp, gloox::ConnectionDataHandler* cdh,
+		boost::asio::ip::tcp::resolver::query _query);
 private: // for gloox::ConnectionTCPClient
 	virtual bool send( const std::string& data );
 	virtual gloox::ConnectionError connect();
@@ -46,7 +51,7 @@ private: // for gloox::ConnectionTCPClient
 	virtual gloox::ConnectionError receive();
 	virtual gloox::ConnectionError recv( int timeout = -1 );
 	virtual ConnectionBase* newInstance() const {
-		return new xmpp_asio_connector( io_service, m_handler, m_query );
+		return new xmpp_asio_connector(m_xmpp, m_handler, m_query );
 	}
 private: // for asio callbacks
 	void cb_handle_connecting( const boost::system::error_code & ec );
@@ -57,10 +62,16 @@ private:
 	boost::asio::io_service	&io_service;
 	boost::asio::ip::tcp::socket m_socket;
 	boost::asio::ip::tcp::resolver::query m_query;
-	boost::array<char, 8192>	m_readbuf;
+	boost::array<char, 8192> m_readbuf;
+	boost::shared_ptr<xmpp> m_xmpp;
 };
 
-class xmpp : private gloox::MessageHandler, gloox::ConnectionListener, gloox::MUCRoomHandler {
+class xmpp
+	: private gloox::MessageHandler
+	, gloox::ConnectionListener
+	, gloox::MUCRoomHandler
+	, public boost::enable_shared_from_this<xmpp>
+{
 public:
 	xmpp( boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick );
 	void join( std::string roomjid );
@@ -69,8 +80,7 @@ public:
 	boost::asio::io_service& get_ioservice() {
 		return io_service;
 	}
-
-private:
+public:
 	void start();
 
 private:  // for ConnectionListener
@@ -94,11 +104,13 @@ private:
 	boost::asio::io_service & io_service;
 	gloox::JID m_jid;
 	gloox::Client m_client;
-	std::string		m_xmppnick;
-	std::vector<boost::shared_ptr<gloox::MUCRoom> >	m_rooms;
-	boost::asio::streambuf							m_readbuf;
+	std::string m_xmppnick;
+	std::vector<boost::shared_ptr<gloox::MUCRoom> > m_rooms;
+	boost::asio::streambuf m_readbuf;
 
-	boost::signals2::signal<void ( std::string xmpproom, std::string who, std::string message )> m_sig_room_message;
+	boost::signals2::signal<
+		void (std::string xmpproom, std::string who, std::string message)
+	> m_sig_room_message;
 };
 
 }
