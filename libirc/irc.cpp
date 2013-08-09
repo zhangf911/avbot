@@ -192,6 +192,15 @@ private:
 			return;
 		}
 
+		//PING :5211858A
+		boost::regex regex_ping("PING ([^ ]+).*");
+
+		if (boost::regex_match(req, what, regex_ping))
+		{
+			send_request("PONG " + what[1]);
+			return;
+		}
+
 		if(req.substr(0, 4) == "PING")
 		{
 			send_request("PONG " + req.substr(6, req.length() - 8));
@@ -299,6 +308,13 @@ private:
 		login_ = true;
 		retry_count_ = c_retry_cuont;
 
+		boost::delayedcallsec(io_service, 4,
+			boost::bind(&client::send_join, shared_from_this())
+		);
+	}
+
+	void send_join()
+	{
 		BOOST_FOREACH(std::string & str, msg_queue_)
 		{
 			join_queue_.push_back(str);
@@ -306,7 +322,6 @@ private:
 		}
 
 		msg_queue_.clear();
-
 	}
 
 private:
