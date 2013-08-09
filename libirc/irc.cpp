@@ -222,7 +222,7 @@ private:
 		std::string server, port;
 		boost::smatch what;
 
-		if(boost::regex_match(server_, what, boost::regex("([a-zA-Z0-9\\.]+)(:[\\d]+)?")))
+		if(boost::regex_match(server_, what, boost::regex("([a-zA-Z0-9\\.]+)(:([\\d]+))?")))
 		{
 			server = what[1];
 
