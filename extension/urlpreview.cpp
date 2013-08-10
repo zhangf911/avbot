@@ -216,7 +216,7 @@ void urlpreview::operator()( boost::property_tree::ptree message )
 	// 统一为
 	// http[s]?://[^ ].*
 	// 使用 boost_regex_search
-	boost::regex ex( "https?://([0-9\\.a-zA-Z]+)(:[\\d]+)?(/[a-zA-Z\\d\\$\\-_\\.\\+!\\*',%&,\\?\\.=]*)?" );
+	boost::regex ex( "https?://[\\w\\d\\.\\?\\$\\-\\+\\|&@#/%=~_!:,]*[\\w\\d\\+&@#/%=~_\\|\\$]" );
 	boost::cmatch what;
 	
 	while(boost::regex_search( txt.c_str(), what, ex ))
