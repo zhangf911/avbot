@@ -44,6 +44,12 @@ namespace po = boost::program_options;
 #include <time.h>
 #include <wchar.h>
 
+#include <soci-sqlite3.h>
+#include <boost-optional.h>
+#include <boost-tuple.h>
+#include <boost-gregorian-date.h>
+#include <soci.h>
+
 #include <avhttp.hpp>
 
 #include "boost/consolestr.hpp"
@@ -189,19 +195,26 @@ static void build_group(std::string chanelmapstring, avbot & mybot)
 	}
 }
 
-static void avbot_log(avbot::av_message_tree message, avbot & mybot)
+static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::session & db)
 {
 	std::string linemessage;
 
+	std::string curtime, protocol, nick;
+
+	curtime = avlog::current_time();
+
+	protocol = message.get<std::string>("protocol");
 	// 首先是根据 nick 格式化
-	if (message.get<std::string>("protocol") != "mail")
+	if ( protocol != "mail")
 	{
+		std::string textonly;
 		linemessage += message.get<std::string>("preamble", "");
 
 		BOOST_FOREACH(const avbot::av_message_tree::value_type & v, message.get_child("message"))
 		{
 			if (v.first == "text")
 			{
+				textonly += v.second.data();
 				linemessage += avlog::html_escape(v.second.data());
 			}
 			else if (v.first == "url")
@@ -242,6 +255,8 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot)
 			}
 		}
 		std::string channel_name = message.get<std::string>("channel", "");
+		if(protocol != "rpc")
+			nick = message.get<std::string>("who.nick", "");
 
 		if (channel_name.empty())
 		{
@@ -267,6 +282,15 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot)
 					}
 				}
 			}
+
+			// log to database
+			db << "insert into logs values (date, protocol, channel, nick, message)"
+				" values (:date, :protocol, :channel, :nick, :message)"
+				, soci::use(curtime)
+				, soci::use(protocol)
+				, soci::use(channel_name)
+				, soci::use(nick)
+				, soci::use(textonly);
 		}
 	}
 	else
@@ -282,6 +306,20 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot)
 // 			% message.get_child("message").data()
 // 		);
 	}
+}
+
+static void init_database(soci::session & db)
+{
+	db.open(soci::sqlite3, "avlog.db");
+
+	db <<
+	"create table if not exists avlog ("
+		"`data` TEXT not null, "
+		"`protocol` TEXT not null default \"/\", "
+		"`channel` TEXT not null, "
+		"`nick` TEXT not null default \"\", "
+		"`message` TEXT not null default \" \""
+	");";
 }
 
 static void avbot_rpc_server(
@@ -593,6 +631,10 @@ rungui:
 		exit(1);
 	}
 
+	soci::session avlogdb;
+
+	init_database(avlogdb);
+
 	decaptcha::deCAPTCHA decaptcha(io_service);
 
 	avbot_vc_feed_input vcinput(io_service);
@@ -682,9 +724,13 @@ rungui:
 
 	build_group(chanelmap, mybot);
 	// 记录到日志.
-	mybot.on_message.connect(boost::bind(avbot_log, _1, boost::ref(mybot)));
+	mybot.on_message.connect(
+		boost::bind(avbot_log, _1, boost::ref(mybot), boost::ref(avlogdb))
+	);
 	// 开启 bot 控制.
-	mybot.on_message.connect(boost::bind(my_on_bot_command, _1, boost::ref(mybot)));
+	mybot.on_message.connect(
+		boost::bind(my_on_bot_command, _1, boost::ref(mybot))
+	);
 
 	std::vector<std::string> ircrooms;
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
