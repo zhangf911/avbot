@@ -11,8 +11,8 @@ static void avbot_seg_handler(int sig_num, siginfo_t * info, void * ucontext)
 {
 	ucontext_t * uc = (ucontext_t *)ucontext;
 
-	void * array[500];
-	int size = backtrace(array, 500);
+	void * array[50];
+	int size = backtrace(array, 50);
 
 	void * caller_address = (void *)(array[2]);
 
