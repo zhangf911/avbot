@@ -95,4 +95,5 @@ extern "C" void avbot_setup_seghandler()
 	handler.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_NODEFER;
 	handler.sa_sigaction =  avbot_seg_handler ;
 	sigaction(SIGSEGV, &handler, NULL);   // install our handler
+	sigaction(SIGABRT, &handler, NULL);   // install our handler
 }
