@@ -326,7 +326,7 @@ static void avbot_rpc_server(
 	boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket,
 	avbot & mybot)
 {
-	boost::make_shared< detail::avbot_rpc_server>(
+	boost::make_shared<detail::avbot_rpc_server>(
 		m_socket, boost::ref(mybot.on_message)
 	)->start();
 }
@@ -364,6 +364,7 @@ static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
 	catch (...)
 	{}
 }
+
 #ifndef _WIN32
 static void init_native_syslog()
 {
@@ -567,7 +568,9 @@ int main(int argc, char * argv[])
 
 	if (vm.count("daemon"))
 	{
+		io_service.notify_fork(boost::asio::io_service::fork_prepare);
 		daemon(0, 0);
+		io_service.notify_fork(boost::asio::io_service::fork_child);
 		init_native_syslog();
 	}
 
