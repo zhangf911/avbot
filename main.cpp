@@ -284,7 +284,7 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::sessi
 			}
 
 			// log to database
-			db << "insert into logs values (date, protocol, channel, nick, message)"
+			db << "insert into avlog (date, protocol, channel, nick, message)"
 				" values (:date, :protocol, :channel, :nick, :message)"
 				, soci::use(curtime)
 				, soci::use(protocol)
