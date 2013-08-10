@@ -314,7 +314,7 @@ static void init_database(soci::session & db)
 
 	db <<
 	"create table if not exists avlog ("
-		"`data` TEXT not null, "
+		"`date` TEXT not null, "
 		"`protocol` TEXT not null default \"/\", "
 		"`channel` TEXT not null, "
 		"`nick` TEXT not null default \"\", "
