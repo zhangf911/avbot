@@ -1,4 +1,5 @@
 
+	* 使用 ircserver 配置 irc 服务器, 不再强制要求 freenode.net
 	* re-write RPC server, RPC now works
 	* print out backtrace when segfault(only on linux).
 	* fix endless loop that will run out your dechaptcha

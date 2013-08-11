@@ -17,6 +17,12 @@ else()
 	SET(CPACK_PACKAGE_INSTALL_DIRECTORY "/")
 endif()
 
+if (WIN32)
+if ( ${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+set(WIN64 ON)
+endif()
+endif()
+
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
@@ -98,12 +104,7 @@ endif()
 find_package(Boost 1.54 COMPONENTS log log_setup date_time filesystem system program_options regex locale)
 
 if(NOT Boost_FOUND)
-	set(Boost_USE_STATIC_LIBS        OFF)
-	set(Boost_USE_STATIC_RUNTIME    OFF)
-	find_package(Boost 1.54 REQUIRED COMPONENTS log log_setup date_time filesystem system program_options regex locale)
-	if(NOT Boost_FOUND )
-		message(FATAL_ERROR "need boost >= 1.54")
-	endif()
+	message(FATAL_ERROR "need boost >= 1.54")
 endif()
 
 # add_definitions(-DBOOST_LOG_NO_THREADS)
@@ -120,6 +121,13 @@ add_definitions(-DBOOST_ALL_STATIC_LINK)
 endif()
 
 find_package(OpenSSL)
+if (WIN32)
+	if (WIN64)
+		link_libraries(openssl/lib64)
+	else()
+		link_libraries(openssl/lib)
+	endif()
+endif()
 
 add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD)
 
@@ -141,7 +149,7 @@ add_library(soci_sqlite3 STATIC ${SOCI_SQLITE3_SOURCES})
 
 configure_file(soci/src/core/soci_backends_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/soci_backends_config.h)
 
-if(NOT MSVC AND NOT WIN32)
+if(NOT WIN32)
   set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/soci/src/cmake ${CMAKE_MODULE_PATH})
   set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/soci/src/cmake/modules ${CMAKE_MODULE_PATH})
   set(DL_FIND_QUIETLY TRUE)
@@ -151,7 +159,6 @@ if(NOT MSVC AND NOT WIN32)
     target_link_libraries(soci_core ${DL_LIBRARY})
   endif()
 endif()
-
 
 add_definitions(-DSOCI_LIB_PREFIX="" -DSOCI_LIB_SUFFIX="")
 
