@@ -17,12 +17,6 @@ else()
 	SET(CPACK_PACKAGE_INSTALL_DIRECTORY "/")
 endif()
 
-if (WIN32)
-if ( ${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-set(WIN64 ON)
-endif()
-endif()
-
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
