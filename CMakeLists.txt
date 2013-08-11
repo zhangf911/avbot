@@ -61,6 +61,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
 link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
 link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
 include_directories( ${PROJECT_SOURCE_DIR}/openssl/include)
+link_directories(${PROJECT_SOURCE_DIR}/libsformingw32/mingw32)
+link_directories(${PROJECT_SOURCE_DIR}/libsformingw32/mingw64)
 endif()
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0")
