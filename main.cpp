@@ -356,7 +356,7 @@ void avlog_do_search(boost::asio::io_service & io_service,
 		onemsg.put("channel", r_channel[i]);
 		onemsg.put("message", r_message[i]);
 
-		outjson.add_child("", onemsg);
+		outjson.push_back(std::make_pair("", onemsg));
 	}
 
 	io_service.post(
