@@ -118,6 +118,7 @@ if(WIN32)
 add_definitions(-DBOOST_THREAD_USE_LIB)
 add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
 add_definitions(-DBOOST_ALL_STATIC_LINK)
+add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
 find_package(OpenSSL)
