@@ -89,14 +89,38 @@ void avbot_rpc_server::get_response_sended(boost::shared_ptr< boost::asio::strea
 }
 
 // 发送数据在这里
-void avbot_rpc_server::on_pop(boost::shared_ptr< boost::asio::streambuf > v)
+void avbot_rpc_server::on_pop(boost::shared_ptr<boost::asio::streambuf> v)
 {
 	avhttpd::response_opts opts;
 	opts.insert(avhttpd::http_options::content_type, "application/json; charset=utf8");
 	opts.insert(avhttpd::http_options::content_length, boost::lexical_cast<std::string>(v->size()));
 	opts.insert("Cache-Control", "no-cache");
 	opts.insert(avhttpd::http_options::connection, "keep-alive");
-	opts.insert(avhttpd::http_options::http_version, m_request.find(avhttpd::http_options::http_version));
+	opts.insert(avhttpd::http_options::http_version,
+		m_request.find(avhttpd::http_options::http_version)
+	);
+
+	avhttpd::async_write_response(
+		*m_socket, 200, opts, *v,
+		boost::bind<void>(&avbot_rpc_server::get_response_sended, shared_from_this(), v,  _1, _2)
+	);
+}
+
+void avbot_rpc_server::done_search(boost::system::error_code ec, boost::property_tree::ptree jsonout)
+{
+	boost::shared_ptr<boost::asio::streambuf> v = boost::make_shared<boost::asio::streambuf>();
+	std::ostream outstream(v.get());
+	boost::property_tree::json_parser::write_json(outstream, jsonout);
+
+	avhttpd::response_opts opts;
+	opts.insert(avhttpd::http_options::content_type, "application/json; charset=utf8");
+	opts.insert(avhttpd::http_options::content_length, boost::lexical_cast<std::string>(v->size()));
+	opts.insert("Cache-Control", "no-cache");
+	opts.insert(avhttpd::http_options::connection, "keep-alive");
+	opts.insert(avhttpd::http_options::http_version,
+		m_request.find(avhttpd::http_options::http_version)
+	);
+
 
 	avhttpd::async_write_response(
 		*m_socket, 200, opts, *v,
@@ -159,7 +183,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			{
 				// 取出这几个参数, 到数据库里查找, 返回结果吧.
 				yield do_search(what[1],what[2],what[3],
-					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+					boost::bind(&avbot_rpc_server::done_search, shared_from_this(), _1, _2)
 				);
 				return;
 			}else if(

@@ -85,6 +85,7 @@ private:
 
 	// signal 的回调到这里
 	void callback_message(const boost::property_tree::ptree & jsonmessage );
+	void done_search(boost::system::error_code ec, boost::property_tree::ptree);
 private:
 	boost::shared_ptr<socket_type> m_socket;
 
@@ -103,7 +104,7 @@ private:
 		std::string c,
 		std::string q,
 		std::string date,
-		boost::function<void (boost::system::error_code)> cb
+		boost::function<void (boost::system::error_code, pt::ptree)> cb
 	)> do_search;
 
 	int process_post( std::size_t bytestransfered );
