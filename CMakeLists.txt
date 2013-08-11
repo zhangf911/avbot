@@ -125,13 +125,6 @@ add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
 find_package(OpenSSL)
-if (WIN32)
-	if (WIN64)
-		link_libraries(openssl/lib64)
-	else()
-		link_libraries(openssl/lib)
-	endif()
-endif()
 
 add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD)
 
