@@ -17,12 +17,6 @@ else()
 	SET(CPACK_PACKAGE_INSTALL_DIRECTORY "/")
 endif()
 
-if (WIN32)
-if ( ${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-set(WIN64 ON)
-endif()
-endif()
-
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
@@ -64,11 +58,8 @@ endif()
 if(WIN32)
 add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
-if (WIN64)
-	link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
-else()
-	link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
-endif()
+link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
+link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
 include_directories( ${PROJECT_SOURCE_DIR}/openssl/include)
 endif()
 
