@@ -486,7 +486,12 @@ int main(int argc, char * argv[])
 
 	progname = fs::basename(argv[0]);
 
+#ifdef _WIN32
+	setlocale(LC_ALL, "zh");
+#else
 	setlocale(LC_ALL, "");
+#endif
+
 	po::variables_map vm;
 	po::options_description desc("qqbot options");
 	desc.add_options()
