@@ -47,6 +47,7 @@ void avlog_do_search(boost::asio::io_service & io_service,
 		, soci::into(r_message)
 		, soci::use(c);
 
+	pt::ptree results;
 	// print out the result
 	for (int i = 0; i < r_date.size() ; i ++)
 	{
@@ -57,10 +58,13 @@ void avlog_do_search(boost::asio::io_service & io_service,
 		onemsg.put("channel", r_channel[i]);
 		onemsg.put("message", r_message[i]);
 
-		outjson.push_back(std::make_pair("", onemsg));
+		results.push_back(std::make_pair("", onemsg));
 	}
 
-	outjson.put("time_used", boost::timer::format(cputimer.elapsed(), 6, "%w"));
+	outjson.put("params.time_used", boost::timer::format(cputimer.elapsed(), 6, "%w"));
+	outjson.put("params.num_results", r_date.size());
+
+	outjson.put_child("data", results);
 
 	io_service.post(
 		boost::asio::detail::bind_handler(handler,
