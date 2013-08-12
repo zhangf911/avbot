@@ -339,7 +339,8 @@ void avlog_do_search(boost::asio::io_service & io_service,
 
 	avhttp::detail::unescape_path(q, q_escaped);
 
-	db << "select date,channel,nick,message from avlog where channel=:c and message like \"%" << q_escaped << "%\""
+	db << "select date,channel,nick,message from avlog where channel=:c "
+		"and message like \"%" << q_escaped << "%\" order  by strftime(`date`) DESC"
 		, soci::into(r_date)
 		, soci::into(r_channel)
 		, soci::into(r_nick)
