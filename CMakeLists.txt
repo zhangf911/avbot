@@ -98,7 +98,7 @@ if(ENABLE_LTO)
 	set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -flto -Wl,-flto")
 endif()
 
-find_package(Boost 1.54 COMPONENTS log log_setup date_time filesystem system program_options regex locale)
+find_package(Boost 1.54 COMPONENTS timer chrono log log_setup date_time filesystem system program_options regex locale)
 
 if(NOT Boost_FOUND)
 	message(FATAL_ERROR "need boost >= 1.54")
@@ -177,7 +177,7 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-set(AVBOT_SOURCES avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp ${PROJECT_BINARY_DIR}/avbot.rc)
+set(AVBOT_SOURCES avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp avbot_log_search.cpp ${PROJECT_BINARY_DIR}/avbot.rc)
 if(NOT WIN32)
 list(APPEND AVBOT_SOURCES backtrace.cpp)
 endif()
