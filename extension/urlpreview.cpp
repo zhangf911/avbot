@@ -27,7 +27,7 @@ static inline std::string get_char_set( std::string type,  const std::string & h
 	boost::cmatch what;
 	// 首先是 text/html; charset=XXX
 	boost::regex ex( "charset=([a-zA-Z0-9\\-]+)" );
-	boost::regex ex2( "<meta charset=([a-zA-Z0-9]+)\"?>" );
+	boost::regex ex2( "<meta charset=[\"\']?([a-zA-Z0-9\\-]+)[\"\']?" );
 
 	if( boost::regex_search( type.c_str(), what, ex ) )
 	{
@@ -37,6 +37,14 @@ static inline std::string get_char_set( std::string type,  const std::string & h
 	{
 		return what[1];
 	}
+	else if( boost::regex_search( header.c_str(), what, ex ) )
+	{
+		return what[1];
+	}
+	else if( boost::regex_search( header.c_str(), what, ex2 ) )
+	{
+		return what[1];
+	}	
 
 	return "utf8";
 }
