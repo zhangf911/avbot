@@ -173,7 +173,8 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 				yield m_responses.async_pop(
 					boost::bind(&avbot_rpc_server::on_pop, shared_from_this(), _1)
 				);
-			}else if(
+			}
+			else if(
 				boost::regex_match(
 					m_request.find(avhttpd::http_options::request_uri),
 					what,
@@ -186,7 +187,8 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 					boost::bind(&avbot_rpc_server::done_search, shared_from_this(), _1, _2)
 				);
 				return;
-			}else if(
+			}
+			else if(
 				boost::regex_match(
 					m_request.find(avhttpd::http_options::request_uri),
 					what,
@@ -195,15 +197,27 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			)
 			{
 				// missing parameter
-				yield avhttpd::async_write_response(*m_socket, avhttpd::errc::internal_server_error,
-					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+				yield avhttpd::async_write_response(
+					*m_socket,
+					avhttpd::errc::internal_server_error,
+					boost::bind(
+						&avbot_rpc_server::client_loop,
+						shared_from_this(),
+						_1, 0
+					)
 				);
 				return;
 			}
 			else
 			{
-				yield avhttpd::async_write_response(*m_socket, avhttpd::errc::not_found,
-					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
+				yield avhttpd::async_write_response(
+					*m_socket,
+					avhttpd::errc::not_found,
+					boost::bind(
+						&avbot_rpc_server::client_loop,
+						shared_from_this(),
+						_1, 0
+					)
 				);
 				return;
 			}
@@ -213,21 +227,25 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			// 这里进入 POST 处理.
 			// 读取 body
 			yield boost::asio::async_read(
-				*m_socket, *m_streambuf,
+				*m_socket,
+				*m_streambuf,
 				boost::asio::transfer_exactly(
-					boost::lexical_cast<std::size_t>(m_request.find(avhttpd::http_options::content_length))
-						- m_streambuf->size()
+					boost::lexical_cast<std::size_t>(
+						m_request.find(avhttpd::http_options::content_length)
+					) - m_streambuf->size()
 				),
-
 				boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, _2 )
 			);
 			// body 必须是合法有效的 JSON 格式
-			yield avhttpd::async_write_response(*m_socket, process_post(m_streambuf->size()),
+			yield avhttpd::async_write_response(
+					*m_socket,
+					*process_post(m_streambuf->size()),
 					avhttpd::response_opts()
 						(avhttpd::http_options::content_length, "4")
 						(avhttpd::http_options::content_type, "text/plain")
 						("Cache-Control", "no-cache")
-						(avhttpd::http_options::http_version, m_request.find(avhttpd::http_options::http_version)),
+						(avhttpd::http_options::http_version,
+							m_request.find(avhttpd::http_options::http_version)),
 					boost::asio::buffer("done"),
 					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 			);
