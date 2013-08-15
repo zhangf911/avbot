@@ -318,7 +318,11 @@ void msg_reader_loop::operator()(boost::system::error_code ec, std::size_t bytes
 		}
 		m_client->connected_ = false;
 
-		{ msg_reader_loop op(m_client);}
+		_coro_value = 0;
+
+		m_client->io_service.post(
+			boost::bind<void>(*this, boost::system::error_code(), 0)
+		);
 	}
 
 }
