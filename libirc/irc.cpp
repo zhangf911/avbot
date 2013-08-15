@@ -270,7 +270,7 @@ void msg_reader_loop::operator()(boost::system::error_code ec, std::size_t bytes
 				return;
 			}
 
-	  		BOOST_LOG_TRIVIAL(error) <<  "irc: connecting to server: " << m_client->server_ ;
+	  		BOOST_LOG_TRIVIAL(info) <<  "irc: connecting to server: " << m_client->server_  << " ...";
 
 			BOOST_ASIO_CORO_YIELD async_connect_irc(
 				boost::bind<void>(*this, _1, bytes_transferred)
@@ -293,6 +293,8 @@ void msg_reader_loop::operator()(boost::system::error_code ec, std::size_t bytes
 			}
 
 		} while (ec);
+
+  		BOOST_LOG_TRIVIAL(info) <<  "irc: conneted to server" << m_client->server_  << " .";
 
 		// 完成登录! 接着该发送登录数据了!
 		m_client->connected_ = true;
