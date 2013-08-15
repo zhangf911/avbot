@@ -406,7 +406,8 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 				m_value->clear();
 			}
 
-			BOOST_ASIO_CORO_YIELD m_client->messages_send_queue_.async_pop(
+			_coro_value = 0;
+			m_client->messages_send_queue_.async_pop(
 				boost::bind<void>(*this, ec, 0, _1)
 			);
 		}
