@@ -31,7 +31,8 @@ class irc_main_loop : boost::asio::coroutine
 {
 public:
 	irc_main_loop(boost::shared_ptr<client_impl> _client);
-	void operator()(boost::system::error_code ec, std::size_t bytes_transferred, std::string message);
+	void operator()(boost::system::error_code ec,
+		std::size_t bytes_transferred, std::string message);
 
 private:
 	template<class Handler>
@@ -49,7 +50,9 @@ irc_main_loop make_main_loop(boost::shared_ptr<client_impl> _client)
 class client_impl : public boost::enable_shared_from_this<client_impl>
 {
 public:
-	client_impl(boost::asio::io_service &_io_service, const std::string& user, const std::string& user_pwd = "", const std::string& server = "irc.freenode.net", const unsigned int max_retry_count = 1000)
+	client_impl(boost::asio::io_service &_io_service, const std::string& user,
+		const std::string& user_pwd = "", const std::string& server = "irc.freenode.net",
+		const unsigned int max_retry_count = 1000)
 		: io_service(_io_service)
 		, socket_(io_service)
 		, user_(user)
@@ -146,17 +149,14 @@ public:
 		}
 
 		//PING :5211858A
-		boost::regex regex_ping("PING ([^ ]+).*");
-
-		if (boost::regex_match(req, what, regex_ping))
+		if (boost::regex_match(req, what, boost::regex("PING ([^ ]+).*")))
 		{
 			send_command("PONG " + what[1]);
 			return;
 		}
 
-		boost::regex regex_privatemsg(":([^!]+)!([^ ]+) PRIVMSG ([^ ]+) :(.*)[\\r\\n]*");
-
-		if (boost::regex_match(req, what, regex_privatemsg))
+		if (boost::regex_match(req, what,
+			boost::regex(":([^!]+)!([^ ]+) PRIVMSG ([^ ]+) :(.*)[\\r\\n]*")))
 		{
 			irc_msg m;
 			m.whom = what[1];
@@ -220,7 +220,8 @@ void irc_main_loop::async_connect_irc(Handler handler)
 	std::string server, port;
 	boost::smatch what;
 
-	if(boost::regex_match(m_client->server_, what, boost::regex("([a-zA-Z0-9\\.]+)(:([\\d]+))?")))
+	if(boost::regex_match(m_client->server_, what,
+		boost::regex("([a-zA-Z0-9\\.]+)(:([\\d]+))?")))
 	{
 		server = what[1];
 
@@ -262,7 +263,8 @@ public:
 		);
 	}
 
-	void operator()(boost::system::error_code ec, std::size_t bytes_transferred, std::string value)
+	void operator()(boost::system::error_code ec,
+		std::size_t bytes_transferred, std::string value)
 	{
 		int i;
 
@@ -289,7 +291,9 @@ public:
 			}
 
 			BOOST_ASIO_CORO_YIELD boost::delayedcallms(
-				m_client->get_io_service(), 468, boost::bind<void>(*this, ec, bytes_transferred, value));
+				m_client->get_io_service(), 468,
+				boost::bind<void>(*this, ec, bytes_transferred, value)
+			);
 
 			BOOST_ASIO_CORO_YIELD m_client->irc_command_send_queue_.async_pop(
 				boost::bind<void>(*this, _1, 0, _2)
@@ -353,7 +357,8 @@ msg_reader_loop make_msg_reader_loop(boost::shared_ptr<client_impl> _client)
 	return msg_reader_loop(_client);
 }
 
-void irc_main_loop::operator()(boost::system::error_code ec, std::size_t bytes_transferred, std::string message)
+void irc_main_loop::operator()(boost::system::error_code ec,
+	std::size_t bytes_transferred, std::string message)
 {
 	int i;
 
@@ -371,7 +376,8 @@ void irc_main_loop::operator()(boost::system::error_code ec, std::size_t bytes_t
 				return;
 			}
 
-	  		BOOST_LOG_TRIVIAL(info) <<  "irc: connecting to server: " << m_client->server_  << " ...";
+	  		BOOST_LOG_TRIVIAL(info) <<  "irc: connecting to server: "
+			  << m_client->server_  << " ...";
 
 			BOOST_ASIO_CORO_YIELD async_connect_irc(
 				boost::bind<void>(*this, _1, bytes_transferred, message)
@@ -380,7 +386,8 @@ void irc_main_loop::operator()(boost::system::error_code ec, std::size_t bytes_t
 			if (ec)
 			{
 
-				BOOST_LOG_TRIVIAL(error) <<  "irc: error connecting to server : " << ec.message();
+				BOOST_LOG_TRIVIAL(error) << "irc: error connecting to server : "
+					<< ec.message();
 
 				BOOST_LOG_TRIVIAL(info) <<  "retry in 15s ...";
 
@@ -395,7 +402,8 @@ void irc_main_loop::operator()(boost::system::error_code ec, std::size_t bytes_t
 
 		} while (ec);
 
-		BOOST_LOG_TRIVIAL(info) <<  "irc: conneted to server" << m_client->server_  << " .";
+		BOOST_LOG_TRIVIAL(info) <<  "irc: conneted to server "
+			<< m_client->server_  << " .";
 
 		m_client->response_.consume(m_client->response_.size());
 		m_client->irc_command_send_queue_.clear();
@@ -419,7 +427,9 @@ void irc_main_loop::operator()(boost::system::error_code ec, std::size_t bytes_t
 
 		m_client->send_command("NICK " + m_client->user_);
 
-		m_client->send_command("USER " + m_client->user_ + " 0 * " + m_client->user_);
+		m_client->send_command(
+			"USER " + m_client->user_ + " 0 * " + m_client->user_
+		);
 
 		BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
 			m_client->get_io_service(), 2,
@@ -502,11 +512,13 @@ void msg_sender_loop::async_send_line(std::string line, Handler handler)
 
 } // namespace impl
 
-client::client(boost::asio::io_service& _io_service, const std::string& user, const std::string& user_pwd, const std::string& server, const unsigned int max_retry_count)
+client::client(boost::asio::io_service& _io_service, const std::string& user,
+	const std::string& user_pwd, const std::string& server,
+	const unsigned int max_retry_count)
 {
 	impl = boost::make_shared<impl::client_impl>(
-			   boost::ref(_io_service), user, user_pwd, server, max_retry_count
-		   );
+		boost::ref(_io_service), user, user_pwd, server, max_retry_count
+	);
 	impl->start();
 }
 client::~client()
