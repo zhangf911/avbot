@@ -152,6 +152,14 @@ public:
 		}
 	}
 
+	/*
+     * clear all items in queue
+     */
+	void clear()
+	{
+		m_list.clear();
+	}
+
 private:
 
 	boost::asio::io_service & m_io_service;
