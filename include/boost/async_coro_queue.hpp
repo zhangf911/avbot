@@ -26,7 +26,9 @@ public: // typetraits
 	typedef typename ListType::const_reference const_reference;
 private:
 	// async_pop 的回调原型
-	typedef	boost::function<void(value_type)> async_pop_handler_type;
+	typedef	boost::function<
+		void(boost::system::error_code ec, value_type)
+	> async_pop_handler_type;
 
 public:
 	// 构造函数
@@ -43,22 +45,37 @@ public:
 	}
 	// 利用 C++11 的 泛模板参数写第三个构造函数重载
 #ifndef  BOOST_NO_CXX11_VARIADIC_TEMPLATES
-	template<typename... T>
+	template<typename ...T>
+	async_coro_queue(boost::asio::io_service & io_service, T&&... t)
+	  : m_io_service(io_service), m_list(std::forward<T>(t)...)
+	{
+	}
+	template<typename ...T>
 	async_coro_queue(boost::asio::io_service & io_service, T... t)
-	  : m_io_service(io_service), m_list(t...)
+	  : m_io_service(io_service), m_list(std::forward<T>(t)...)
 	{
 	}
 #endif
+
+private:
+	boost::system::error_code make_abort()
+	{
+		using namespace boost::asio::error;
+		return make_error_code(operation_aborted);
+	}
+
 // 公开的接口。
 public:
 
 	/*
-	 *  回调的类型是 void pop_handler(value_type)
+	 *  回调的类型是 void pop_handler(boost::system::error_code ec, value_type)
 	 *
 	 *  value_type 由容器（作为模板参数）决定。
 	 *  例子是
 
-		void pop_handler(value_type value)
+		// ec 如果有错误,  只可能是 boost::asio::error::operation_aborted
+
+		void pop_handler(boost::system::error_code ec, value_type value)
 		{
 			// DO SOME THING WITH value
 
@@ -82,7 +99,9 @@ public:
 		else
 		{
 			m_io_service.post(
-				boost::asio::detail::bind_handler(handler, m_list.front())
+				boost::asio::detail::bind_handler(
+					handler, boost::system::error_code(), m_list.front()
+				)
 			);
  			m_list.pop_front();
 		}
@@ -92,7 +111,7 @@ public:
 	 * 向列队投递数据。
 	 * 如果列队为空，并且有协程正在休眠在 async_pop 上， 则立即唤醒此协程，并投递数据给此协程
      */
-	void push(value_type v)
+	void push(value_type value)
 	{
 		// 有handler 挂着！
 		if (!m_handlers.empty())
@@ -101,13 +120,17 @@ public:
 			BOOST_ASSERT(m_list.empty());
 
 			m_io_service.post(
-				boost::asio::detail::bind_handler(m_handlers.front(), v)
+				boost::asio::detail::bind_handler(
+					m_handlers.front(),
+					boost::system::error_code(),
+					value
+				)
 			);
 			m_handlers.pop();
 		}
 		else
 		{
-			m_list.push_back(v);
+			m_list.push_back(value);
 		}
 	}
 
@@ -116,7 +139,17 @@ public:
      */
 	void cancele()
 	{
-		m_handlers = std::queue<async_pop_handler_type>();
+		while (!m_handlers.empty())
+		{
+			m_io_service.post(
+				boost::asio::detail::bind_handler(
+					m_handlers.front(),
+					make_abort(),
+					value_type()
+				)
+			);
+			m_handlers.pop();
+		}
 	}
 
 private:
