@@ -225,9 +225,11 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 		groupname = group->name;
 		ptreee_group.add("groupnumber", group->qqnum);
 		ptreee_group.add("name", group->name);
+		message.put("channel", get_channel_name(std::string("qq:") + group->qqnum));
+	}else {
+		message.put("channel", group_code);
 	}
 
-	message.put("channel", get_channel_name(std::string("qq:") + group->qqnum));
 	message.add_child("room", ptreee_group);
 
 	ptree ptree_who;
