@@ -41,10 +41,10 @@ private:
 	boost::shared_ptr<std::string> m_last_line;
 };
 
-class msg_reader_loop : boost::asio::coroutine
+class irc_main_loop : boost::asio::coroutine
 {
 public:
-	msg_reader_loop(boost::shared_ptr<client_impl> _client);
+	irc_main_loop(boost::shared_ptr<client_impl> _client);
 	void operator()(boost::system::error_code ec, std::size_t bytes_transferred);
 
 private:
@@ -79,7 +79,7 @@ public:
 	void start()
 	{
 		msg_sender_loop op_send(shared_from_this());
-		msg_reader_loop op_read(shared_from_this());
+		irc_main_loop op_read(shared_from_this());
 	}
 
 	void stop()
@@ -185,11 +185,14 @@ public:
 	}
 
 public:
-	boost::asio::streambuf          response_;
+	boost::asio::io_service& io_service;
+
+	std::string user_;
+	std::string pwd_;
+	std::string server_;
+
+	boost::asio::streambuf response_;
 	boost::signals2::signal<void(irc_msg)> cb_;
-	std::string                     user_;
-	std::string                     pwd_;
-	std::string                     server_;
 
 	std::vector<std::string> join_queue_;
 	std::vector<std::string> joined_rooms;
@@ -197,7 +200,6 @@ public:
 	const unsigned int retry_count_;
 	unsigned int c_retry_cuont;
 
-	boost::asio::io_service& io_service;
 	boost::asio::ip::tcp::socket socket_;
 
 	bool connected_;
@@ -210,7 +212,7 @@ public:
 	> messages_send_queue_;
 };
 
-msg_reader_loop::msg_reader_loop(boost::shared_ptr< client_impl > _client)
+irc_main_loop::irc_main_loop(boost::shared_ptr< client_impl > _client)
 	: m_client(_client)
 {
 	// start routine now!
@@ -220,7 +222,7 @@ msg_reader_loop::msg_reader_loop(boost::shared_ptr< client_impl > _client)
 }
 
 template<class Handler>
-void msg_reader_loop::async_connect_irc(Handler handler)
+void irc_main_loop::async_connect_irc(Handler handler)
 {
 	using namespace boost::asio::ip;
 
@@ -255,7 +257,7 @@ void msg_reader_loop::async_connect_irc(Handler handler)
 	);
 }
 
-void msg_reader_loop::operator()(boost::system::error_code ec, std::size_t bytes_transferred)
+void irc_main_loop::operator()(boost::system::error_code ec, std::size_t bytes_transferred)
 {
 	if (m_client->quitting_)
 		return;
@@ -297,7 +299,19 @@ void msg_reader_loop::operator()(boost::system::error_code ec, std::size_t bytes
 
 		} while (ec);
 
-  		BOOST_LOG_TRIVIAL(info) <<  "irc: conneted to server" << m_client->server_  << " .";
+		BOOST_LOG_TRIVIAL(info) <<  "irc: conneted to server" << m_client->server_  << " .";
+
+		// 立即开启 读协程.
+
+		// 读协程进入后台完成
+
+		// 开始登录.
+
+		// 登录完成, 进入消息循环.
+
+		// 消息循环, 每次阻塞在 async_pop 上.
+
+		// 如果 pop 失败, 通常是读消息的协程遇到了错误, 并将 socket 关闭.
 
 		// 完成登录! 接着该发送登录数据了!
 		m_client->connected_ = true;
@@ -339,7 +353,7 @@ msg_sender_loop::msg_sender_loop(boost::shared_ptr<client_impl> _client)
 {
 	boost::system::error_code ec;
 	m_client->messages_send_queue_.async_pop(
-		boost::bind<void>(*this, ec, 0, _1)
+		boost::bind<void>(*this, _1, 0, _2)
 	);
 }
 
@@ -426,7 +440,7 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 			}
 			_coro_value = 0;
 			m_client->messages_send_queue_.async_pop(
-				boost::bind<void>(*this, ec, 0, _1)
+				boost::bind<void>(*this, _1, 0, _2)
 			);
 
 		}
@@ -454,7 +468,7 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 
 			_coro_value = 0;
 			m_client->messages_send_queue_.async_pop(
-				boost::bind<void>(*this, ec, 0, _1)
+				boost::bind<void>(*this, _1, 0, _2)
 			);
 		}else {
 			// 重新进入登录循环

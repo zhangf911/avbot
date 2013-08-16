@@ -171,7 +171,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			{
 				// 等待消息, 并发送.
 				yield m_responses.async_pop(
-					boost::bind(&avbot_rpc_server::on_pop, shared_from_this(), _1)
+					boost::bind(&avbot_rpc_server::on_pop, shared_from_this(), _2)
 				);
 			}
 			else if(
