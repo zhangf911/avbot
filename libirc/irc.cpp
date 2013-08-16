@@ -25,18 +25,18 @@
 namespace irc {
 namespace impl {
 
-class client;
+class client_impl;
 
 class msg_sender_loop : boost::asio::coroutine
 {
 public:
-	msg_sender_loop(boost::shared_ptr<client> _client);
+	msg_sender_loop(boost::shared_ptr<client_impl> _client);
 	void operator()(boost::system::error_code ec, std::size_t bytes_transferred, std::string value);
 private:
 	template<class Handler>
 	void async_send_line(std::string line, Handler handler);
 private:
-	boost::shared_ptr<client> m_client;
+	boost::shared_ptr<client_impl> m_client;
 	boost::shared_ptr<std::string> m_value;
 	boost::shared_ptr<std::string> m_last_line;
 };
@@ -44,20 +44,20 @@ private:
 class msg_reader_loop : boost::asio::coroutine
 {
 public:
-	msg_reader_loop(boost::shared_ptr<client> _client);
+	msg_reader_loop(boost::shared_ptr<client_impl> _client);
 	void operator()(boost::system::error_code ec, std::size_t bytes_transferred);
 
 private:
 	template<class Handler>
 	void async_connect_irc(Handler handler);
 private:
-	boost::shared_ptr<client> m_client;
+	boost::shared_ptr<client_impl> m_client;
 };
 
-class client : public boost::enable_shared_from_this<client>
+class client_impl : public boost::enable_shared_from_this<client_impl>
 {
 public:
-	client(boost::asio::io_service &_io_service, const std::string& user, const std::string& user_pwd = "", const std::string& server = "irc.freenode.net", const unsigned int max_retry_count = 1000)
+	client_impl(boost::asio::io_service &_io_service, const std::string& user, const std::string& user_pwd = "", const std::string& server = "irc.freenode.net", const unsigned int max_retry_count = 1000)
 		: io_service(_io_service)
 		, socket_(io_service)
 		, user_(user)
@@ -190,7 +190,10 @@ public:
 	std::string                     user_;
 	std::string                     pwd_;
 	std::string                     server_;
-	std::vector<std::string>        join_queue_;
+
+	std::vector<std::string> join_queue_;
+	std::vector<std::string> joined_rooms;
+
 	const unsigned int retry_count_;
 	unsigned int c_retry_cuont;
 
@@ -207,7 +210,7 @@ public:
 	> messages_send_queue_;
 };
 
-msg_reader_loop::msg_reader_loop(boost::shared_ptr< client > _client)
+msg_reader_loop::msg_reader_loop(boost::shared_ptr< client_impl > _client)
 	: m_client(_client)
 {
 	// start routine now!
@@ -329,7 +332,7 @@ void msg_reader_loop::operator()(boost::system::error_code ec, std::size_t bytes
 
 }
 
-msg_sender_loop::msg_sender_loop(boost::shared_ptr<client> _client)
+msg_sender_loop::msg_sender_loop(boost::shared_ptr<client_impl> _client)
 	: m_client(_client)
 	, m_value(boost::make_shared<std::string>())
 	, m_last_line(boost::make_shared<std::string>())
@@ -371,16 +374,22 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 					boost::bind<void>(*this, _1, _2, value)
 				);
 			}
+			BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
+				m_client->get_io_service(), 2, boost::bind<void>(*this, ec, bytes_transferred, value));
 
 			BOOST_ASIO_CORO_YIELD async_send_line(
 				"NICK " + m_client->user_,
 				boost::bind<void>(*this, _1, _2, value)
 			);
+			BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
+				m_client->get_io_service(), 2, boost::bind<void>(*this, ec, bytes_transferred, value));
 
 			BOOST_ASIO_CORO_YIELD async_send_line(
 				"USER " + m_client->user_ + " 0 * " + m_client->user_,
 				boost::bind<void>(*this, _1, _2, value)
 			);
+			BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
+				m_client->get_io_service(), 2, boost::bind<void>(*this, ec, bytes_transferred, value));
 
 			BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
 				m_client->io_service,
@@ -396,6 +405,8 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 					m_client->join_queue_[i],
 					boost::bind<void>(*this, _1, _2, value)
 				);
+				BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
+					m_client->get_io_service(), 2, boost::bind<void>(*this, ec, bytes_transferred, value));
 			}
 
 			if (! m_value->empty())
@@ -406,12 +417,18 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 					boost::bind<void>(*this, _1, _2, value)
 				);
 				m_value->clear();
+				BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
+					m_client->get_io_service(), 2, boost::bind<void>(*this, ec, bytes_transferred, value));
 			}
 
+			if (ec) {
+				m_client->socket_.close(ec);
+			}
 			_coro_value = 0;
 			m_client->messages_send_queue_.async_pop(
 				boost::bind<void>(*this, ec, 0, _1)
 			);
+
 		}
 		else if (m_client->connected_)
 		{
@@ -463,7 +480,7 @@ void msg_sender_loop::operator()(boost::system::error_code ec, std::size_t bytes
 
 client::client(boost::asio::io_service& _io_service, const std::string& user, const std::string& user_pwd, const std::string& server, const unsigned int max_retry_count)
 {
-	impl = boost::make_shared<impl::client>(
+	impl = boost::make_shared<impl::client_impl>(
 			   boost::ref(_io_service), user, user_pwd, server, max_retry_count
 		   );
 	impl->start();
