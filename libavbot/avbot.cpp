@@ -13,7 +13,7 @@ namespace fs = boost::filesystem;
 
 static std::string	preamble_formater(std::string preamble_qq_fmt, webqq::qqBuddy *buddy, std::string falbacknick, webqq::qqGroup * grpup = NULL )
 {
-	static webqq::qqBuddy _buddy;
+	static webqq::qqBuddy _buddy("", "", "", 0, "");
 	std::string preamble;
 	// 格式化神器, 哦耶.
 	// 获取格式化描述字符串.

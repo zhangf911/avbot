@@ -347,13 +347,6 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 			{
 				groupptr->add_new_buddy(uin, "", nick);
 			}
-			else
-			{
-				if (budyptr->nick.empty())
-				{
-					budyptr->nick = nick;
-				}
-			}
 		}
 
 	}
