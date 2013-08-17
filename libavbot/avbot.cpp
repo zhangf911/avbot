@@ -235,9 +235,11 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 	ptree ptree_who;
 	ptree_who.add("code", who);
 
-	webqq::qqBuddy *buddy = NULL;
+	webqq::qqBuddy_ptr buddy;
 
-	buddy = group ? group->get_Buddy_by_uin( who ) : NULL;
+	if (group)
+		buddy = group->get_Buddy_by_uin( who );
+
 	if (buddy){
 		ptree_who.add("nick", buddy->nick.empty()? buddy->uin : buddy->nick) ;
 		ptree_who.add("name", buddy->nick);
@@ -255,7 +257,7 @@ void avbot::callback_on_qq_group_message( std::string group_code, std::string wh
 	message.add_child("who", ptree_who);
 	ptree textmsg;
 
-	std::string message_preamble = preamble_formater(preamble_qq_fmt, buddy, who, group.get() );
+	std::string message_preamble = preamble_formater(preamble_qq_fmt, buddy.get(), who, group.get() );
 	message.add("preamble", message_preamble);
 
 	// 解析 qqMsg
@@ -363,7 +365,7 @@ void avbot::callback_on_qq_group_found(webqq::qqGroup_ptr group)
 		add_to_channel(group->qqnum, std::string("qq:") + group->qqnum);
 }
 
-void avbot::callback_on_qq_group_newbee(webqq::qqGroup_ptr group, webqq::qqBuddy* buddy)
+void avbot::callback_on_qq_group_newbee(webqq::qqGroup_ptr group, webqq::qqBuddy_ptr buddy)
 {
 	// 新人入群咯.
 	if (get_channel_name(std::string("qq:")+group->qqnum)=="none")

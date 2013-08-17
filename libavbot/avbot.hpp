@@ -94,7 +94,7 @@ private:
 
 private:
 	void callback_on_qq_group_found(webqq::qqGroup_ptr);
-	void callback_on_qq_group_newbee(webqq::qqGroup_ptr, webqq::qqBuddy*);
+	void callback_on_qq_group_newbee(webqq::qqGroup_ptr, webqq::qqBuddy_ptr);
 
 private:
 	void forward_message(const av_message_tree &message);
