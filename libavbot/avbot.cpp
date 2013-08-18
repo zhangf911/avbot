@@ -438,10 +438,8 @@ void avbot::relogin_qq_account()
 
 void avbot::feed_login_verify_code( std::string vcode, boost::function<void()> badvcreporter)
 {
-	m_qq_account->on_bad_vc(badvcreporter);
-
 	if (!m_qq_account->is_online())
-		m_qq_account->login_withvc(vcode);
+		m_qq_account->feed_vc(vcode, badvcreporter);
 }
 
 void avbot::set_irc_account( std::string nick, std::string password, std::string server, bool use_ssl)
