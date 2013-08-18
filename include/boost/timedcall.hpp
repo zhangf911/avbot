@@ -9,30 +9,61 @@
 #include <boost/bind.hpp>
 
 namespace boost {
+namespace detail {
 
-template<class timeunit>
-class base_delayedcall{
+template<class timeunit, class Handler>
+class base_delayedcall_op{
 public:
 	typedef void result_type;
-	template<typename handler>
 	
-	base_delayedcall(boost::asio::io_service &_io_service, int timeunitcount, handler _cb)
-		:io_service(_io_service),timer( new boost::asio::deadline_timer(io_service))
+	base_delayedcall_op(boost::asio::io_service &_io_service, int timeunitcount, Handler handler)
+		: io_service(_io_service)
+		, timer( new boost::asio::deadline_timer(io_service))
+		, m_handler(handler)
 	{
 		timer->expires_from_now(timeunit(timeunitcount));
- 		timer->async_wait(boost::bind(*this, boost::function<void()>(_cb), _1));
+ 		timer->async_wait(*this);
 	}
-	template<class handler>
-	void operator()(handler _cb, const boost::system::error_code& error)
+
+	void operator()(const boost::system::error_code& error)
 	{
-		io_service.post(_cb);
+		io_service.post(m_handler);
 	}
+
 private:
 	boost::asio::io_service &io_service;
 	boost::shared_ptr<boost::asio::deadline_timer> timer;
+
+	Handler m_handler;
 };
 
-typedef base_delayedcall<boost::posix_time::seconds> delayedcallsec;
-typedef base_delayedcall<boost::posix_time::milliseconds> delayedcallms;
 
+template<class Handler>
+base_delayedcall_op<boost::posix_time::seconds, Handler>
+make_delayedcallsec_op(boost::asio::io_service &_io_service, int timeunitcount, Handler handler)
+{
+	return base_delayedcall_op<boost::posix_time::seconds, Handler>(_io_service, timeunitcount, handler);
 }
+
+template<class Handler>
+base_delayedcall_op<boost::posix_time::milliseconds, Handler>
+make_delayedcallms_op(boost::asio::io_service &_io_service, int timeunitcount, Handler handler)
+{
+	return base_delayedcall_op<boost::posix_time::milliseconds, Handler>(_io_service, timeunitcount, handler);
+}
+
+} // namespace detail
+
+template<class Handler>
+void delayedcallsec(boost::asio::io_service &_io_service, int timeunitcount, Handler handler)
+{
+	detail::make_delayedcallsec_op(_io_service, timeunitcount, handler);
+}
+
+template<class Handler>
+void delayedcallms(boost::asio::io_service &_io_service, int timeunitcount, Handler handler)
+{
+	detail::make_delayedcallms_op(_io_service, timeunitcount, handler);
+}
+
+} // namespace boost
