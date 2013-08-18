@@ -734,7 +734,8 @@ rungui:
 
 	mybot.set_qq_account(
 		qqnumber, qqpwd,
-		boost::bind(on_verify_code, _1, boost::ref(mybot), boost::ref(decaptcha), no_persistent_db)
+		boost::bind(on_verify_code, _1, boost::ref(mybot), boost::ref(decaptcha)),
+		no_persistent_db
 	);
 
 	if (!ircnick.empty())
