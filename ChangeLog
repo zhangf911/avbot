@@ -1,4 +1,4 @@
-
+8.0
 	* 重启 avbot 不重新登录, 直到 cookie 失效才重登录
 	* irc 逻辑重写.
 	* 日志支持使用 http::/host:6276/search?channel=群号&q=搜索词&date= 进行搜索
