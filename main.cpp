@@ -435,6 +435,7 @@ int main(int argc, char * argv[])
 	//http://antigate.com/in.php
 	std::string antigate_key, antigate_host;
 	bool use_avplayer_free_vercode_decoder(false);
+	bool no_persistent_db(false);
 
 	fs::path config; // 配置文件的路径
 
@@ -464,6 +465,8 @@ int main(int argc, char * argv[])
 
 	("config,c", po::value<fs::path>(&config),
 		"use an alternative configuration file.")
+	("nopersistent,s", po::value<bool>(&no_persistent_db),
+		"do not use persistent database file to increase security.")
 	("qqnum,u", po::value<std::string>(&qqnumber),
 		"QQ number")
 	("qqpwd,p", po::value<std::string>(&qqpwd),
@@ -731,7 +734,7 @@ rungui:
 
 	mybot.set_qq_account(
 		qqnumber, qqpwd,
-		boost::bind(on_verify_code, _1, boost::ref(mybot), boost::ref(decaptcha))
+		boost::bind(on_verify_code, _1, boost::ref(mybot), boost::ref(decaptcha), no_persistent_db)
 	);
 
 	if (!ircnick.empty())

@@ -51,7 +51,7 @@ public:
 	boost::shared_ptr<irc::client> get_irc(){return m_irc_account;}
 public:
 	// 调用这个添加 QQ 帐号. need_verify_image 会在需要登录验证码的时候调用，buffer 里包含了验证码图片.
-	void set_qq_account(std::string qqnumber, std::string password, need_verify_image cb);
+	void set_qq_account(std::string qqnumber, std::string password, need_verify_image cb, bool no_persistent_db = false);
 	// 调用这个重新登陆 QQ
 	void relogin_qq_account();
 
