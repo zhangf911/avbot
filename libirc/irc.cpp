@@ -268,18 +268,14 @@ public:
 	{
 		int i;
 
-		if (ec == boost::asio::error::operation_aborted)
-		{
-			return;
-		}
-
 		BOOST_ASIO_CORO_REENTER(this)
-		{for (;!m_client->quitting_;) {
+		{for (;!m_client->quitting_ && ec != boost::asio::error::operation_aborted;) {
 			*m_value = value;
 			// 发送
 			BOOST_ASIO_CORO_YIELD boost::asio::async_write(
 				m_client->socket_,
 				boost::asio::buffer(*m_value),
+				boost::asio::transfer_all(),
 				boost::bind<void>(*this, _1, _2, value)
 			);
 
@@ -292,7 +288,7 @@ public:
 
 			BOOST_ASIO_CORO_YIELD boost::delayedcallms(
 				m_client->get_io_service(), 468,
-				boost::bind<void>(*this, ec, bytes_transferred, value)
+				boost::bind<void>(*this, ec, 0, value)
 			);
 
 			BOOST_ASIO_CORO_YIELD m_client->irc_command_send_queue_.async_pop(
