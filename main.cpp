@@ -75,15 +75,9 @@ namespace po = boost::program_options;
 #include "deCAPTCHA/jsdati_decoder.hpp"
 #include "deCAPTCHA/hydati_decoder.hpp"
 
-#ifndef QQBOT_VERSION
-#ifdef PACKAGE_VERSION
-#   define QQBOT_VERSION PACKAGE_VERSION
-#   else
-#	define QQBOT_VERSION "unknow"
-#   endif
-#endif
-
 extern "C" void avbot_setup_seghandler();
+extern "C" const char * avbot_version();
+extern "C" const char * avbot_version_build_time();
 
 char * execpath;
 avlog logfile;			// 用于记录日志文件.
@@ -554,7 +548,7 @@ int main(int argc, char * argv[])
 
 	if (vm.count("version"))
 	{
-		printf("qqbot version %s (%s %s) \n", QQBOT_VERSION, __DATE__, __TIME__);
+		printf("qqbot version %s (%s %s) \n", avbot_version() , __DATE__, __TIME__);
 		exit(EXIT_SUCCESS);
 	}
 

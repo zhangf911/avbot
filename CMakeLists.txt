@@ -118,8 +118,6 @@ find_package(OpenSSL)
 
 add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD)
 
-add_definitions(-DQQBOT_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}\")
-
 configure_file(avbot.rc.in ${PROJECT_BINARY_DIR}/avbot.rc)
 
 add_subdirectory(sqlite)
@@ -173,7 +171,18 @@ add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
 
-set(AVBOT_SOURCES avbot_rpc_server.cpp main.cpp botctl.cpp input.cpp avbot_log_search.cpp ${PROJECT_BINARY_DIR}/avbot.rc)
+configure_file(version.c.in version.c @ONLY)
+
+set(AVBOT_SOURCES
+	avbot_rpc_server.cpp
+	main.cpp
+	botctl.cpp
+	input.cpp
+	avbot_log_search.cpp
+	${PROJECT_BINARY_DIR}/version.c
+	${PROJECT_BINARY_DIR}/avbot.rc
+)
+
 if(NOT WIN32)
 list(APPEND AVBOT_SOURCES backtrace.cpp)
 endif()
