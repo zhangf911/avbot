@@ -552,6 +552,12 @@ int main(int argc, char * argv[])
 		return 1;
 	}
 
+	if (vm.count("version"))
+	{
+		printf("qqbot version %s (%s %s) \n", QQBOT_VERSION, __DATE__, __TIME__);
+		exit(EXIT_SUCCESS);
+	}
+
 #ifdef WIN32
 	// 从 windows 控制台输入的能有啥好编码，转到utf8吧.
 	preamble_qq_fmt = ansi_utf8(preamble_qq_fmt);
@@ -593,12 +599,6 @@ int main(int argc, char * argv[])
 		daemon(0, 0);
 		io_service.notify_fork(boost::asio::io_service::fork_child);
 		init_native_syslog();
-	}
-
-	if (vm.count("version"))
-	{
-		printf("qqbot version %s (%s %s) \n", QQBOT_VERSION, __DATE__, __TIME__);
-		exit(EXIT_SUCCESS);
 	}
 
 	if (!logdir.empty())
