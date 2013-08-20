@@ -175,16 +175,6 @@ void joke::operator()( const boost::system::error_code& error, std::string joke 
 	start();
 }
 
-void joke::operator()(const boost::system::error_code& error )
-{
-	if (error){
-		// timer cancled, give up
-		return;
-	}
-
-	m_async_jokefecher( *this );
-}
-
 static bool can_joke(std::string msg)
 {
 	if (msg == ".qqbot joke")
@@ -224,7 +214,9 @@ void joke::operator()( boost::property_tree::ptree msg )
 			}
 			else if (can_joke(textmsg)){
 				m_timer->expires_from_now(boost::posix_time::seconds(2));
-				m_timer->async_wait(*this);
+				m_timer->async_wait(
+					boost::bind(&joke::timer_callback, this, _1)
+				);
 				return;
 			}
 			else
@@ -265,10 +257,24 @@ void joke::operator()( boost::property_tree::ptree msg )
 		start();
 }
 
+void joke::timer_callback(boost::system::error_code ec)
+{
+	if (ec)
+	{
+		// timer cancled, give up
+		return;
+	}
+
+	// 异步的开启一个 joke 抓取器 .
+	m_async_jokefecher(*this);
+}
+
 void joke::start()
 {
 	m_timer->expires_from_now(*m_interval);
-	m_timer->async_wait(*this);
+	m_timer->async_wait(
+		boost::bind(&joke::timer_callback, this, _1)
+	);
 }
 
 void joke::load_setting()
