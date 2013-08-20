@@ -40,6 +40,8 @@ private:
 
 private:
 	boost::shared_ptr<client_impl> m_client;
+
+	int i;
 };
 
 irc_main_loop make_main_loop(boost::shared_ptr<client_impl> _client)
@@ -181,7 +183,6 @@ public:
 	boost::signals2::signal<void(irc_msg)> cb_;
 
 	std::vector<std::string> join_queue_;
-	std::vector<std::string> joined_rooms;
 
 	const unsigned int retry_count_;
 	unsigned int c_retry_cuont;
@@ -356,8 +357,6 @@ msg_reader_loop make_msg_reader_loop(boost::shared_ptr<client_impl> _client)
 void irc_main_loop::operator()(boost::system::error_code ec,
 	std::size_t bytes_transferred, std::string message)
 {
-	int i;
-
 	if (m_client->quitting_)
 		return;
 
