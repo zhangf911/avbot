@@ -25,30 +25,6 @@
 namespace irc {
 namespace impl {
 
-class client_impl;
-
-class irc_main_loop : boost::asio::coroutine
-{
-public:
-	irc_main_loop(boost::shared_ptr<client_impl> _client);
-	void operator()(boost::system::error_code ec,
-		std::size_t bytes_transferred, std::string message);
-
-private:
-	template<class Handler>
-	void async_connect_irc(Handler handler);
-
-private:
-	boost::shared_ptr<client_impl> m_client;
-
-	int i;
-};
-
-irc_main_loop make_main_loop(boost::shared_ptr<client_impl> _client)
-{
-	return irc_main_loop(_client);
-}
-
 class client_impl : public boost::enable_shared_from_this<client_impl>
 {
 public:
@@ -73,10 +49,7 @@ public:
 		return io_service;
 	}
 
-	void start()
-	{
-		make_main_loop(shared_from_this());
-	}
+	void start();
 
 	void stop()
 	{
@@ -354,6 +327,30 @@ msg_reader_loop make_msg_reader_loop(boost::shared_ptr<client_impl> _client)
 	return msg_reader_loop(_client);
 }
 
+
+class irc_main_loop : boost::asio::coroutine
+{
+public:
+	irc_main_loop(boost::shared_ptr<client_impl> _client);
+	void operator()(boost::system::error_code ec,
+		std::size_t bytes_transferred, std::string message);
+
+private:
+	template<class Handler>
+	void async_connect_irc(Handler handler);
+
+private:
+	boost::shared_ptr<client_impl> m_client;
+
+	int i;
+};
+
+irc_main_loop make_main_loop(boost::shared_ptr<client_impl> _client)
+{
+	return irc_main_loop(_client);
+}
+
+
 void irc_main_loop::operator()(boost::system::error_code ec,
 	std::size_t bytes_transferred, std::string message)
 {
@@ -534,6 +531,11 @@ void client::join(const std::string& ch, const std::string& pwd)
 void client::chat(const std::string whom, const std::string msg)
 {
 	impl->chat(whom, msg);
+}
+
+void impl::client_impl::start()
+{
+	impl::make_main_loop(shared_from_this());
 }
 
 } // namespace irc
