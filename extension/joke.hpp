@@ -59,8 +59,7 @@ public:
 		start();
 	}
 
-	void timer_callback(boost::system::error_code ec);
-
+	void operator()(const boost::system::error_code& error);
 	void operator()(boost::property_tree::ptree);
 	void operator()(const boost::system::error_code& error, std::string joke);
 };
