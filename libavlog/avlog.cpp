@@ -50,7 +50,7 @@ bool avlog::add_log(const std::string& groupid, const std::string& msg, long int
 	if (id > 0)
 	{
 		data = boost::str(
-			boost::format("<p id=\"#%d\"> %s %s </p>")
+			boost::format("<p id=\"%d\"> %s %s </p>")
 			% id
 			% current_time()
 			% msg

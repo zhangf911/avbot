@@ -260,7 +260,7 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::sessi
 		else
 		{
 			long rowid = 0;
-
+			{
 			// log to database
 			db << "insert into avlog (date, protocol, channel, nick, message)"
 				" values (:date, :protocol, :channel, :nick, :message)"
@@ -269,8 +269,12 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::sessi
 				, soci::use(channel_name)
 				, soci::use(nick)
 				, soci::use(textonly);
+			}
 
-			db.get_last_insert_id("avlog", rowid);
+			if (db.get_backend_name() == "sqlite3")
+			rowid =  sqlite_api::sqlite3_last_insert_rowid(
+				dynamic_cast<soci::sqlite3_session_backend*>(db.get_backend())->conn_
+			);
 
 			// 如果最好的办法就是遍历组里的所有QQ群，都记录一次.
 			avbot::av_chanel_map channelmap = mybot.get_channel_map(channel_name);
