@@ -33,7 +33,7 @@ public:
 		m_path = path;
 	}
 	// 添加日志消息.
-	bool add_log( const std::string &groupid, const std::string &msg );
+	bool add_log(const std::string &groupid, const std::string &msg, long id);
 
 	// 开始讲座
 	bool begin_lecture( const std::string &groupid, const std::string &title )

@@ -259,23 +259,7 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::sessi
 		}
 		else
 		{
-			// 如果最好的办法就是遍历组里的所有QQ群，都记录一次.
-			avbot::av_chanel_map channelmap = mybot.get_channel_map(channel_name);
-
-			// 如果没有Q群，诶，只好，嘻嘻.
-			logfile.add_log(channel_name, linemessage);
-
-			BOOST_FOREACH(std::string roomname, channelmap)
-			{
-				if (roomname.substr(0, 3) == "qq:")
-				{
-					// 避免重复记录.
-					if (roomname.substr(3) != channel_name)
-					{
-						logfile.add_log(roomname.substr(3), linemessage);
-					}
-				}
-			}
+			long rowid = 0;
 
 			// log to database
 			db << "insert into avlog (date, protocol, channel, nick, message)"
@@ -285,6 +269,26 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::sessi
 				, soci::use(channel_name)
 				, soci::use(nick)
 				, soci::use(textonly);
+
+			db.get_last_insert_id("avlog", rowid);
+
+			// 如果最好的办法就是遍历组里的所有QQ群，都记录一次.
+			avbot::av_chanel_map channelmap = mybot.get_channel_map(channel_name);
+
+			// 如果没有Q群，诶，只好，嘻嘻.
+			logfile.add_log(channel_name, linemessage, rowid);
+
+			BOOST_FOREACH(std::string roomname, channelmap)
+			{
+				if (roomname.substr(0, 3) == "qq:")
+				{
+					// 避免重复记录.
+					if (roomname.substr(3) != channel_name)
+					{
+						logfile.add_log(roomname.substr(3), linemessage, rowid);
+					}
+				}
+			}
 		}
 	}
 	else

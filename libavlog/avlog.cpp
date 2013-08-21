@@ -1,4 +1,5 @@
 
+#include <boost/format.hpp>
 #include "avlog.hpp"
 
 std::string avlog::html_escape(std::string txt )
@@ -12,7 +13,7 @@ std::string avlog::html_escape(std::string txt )
 	return txt;
 }
 
-bool avlog::add_log( const std::string& groupid, const std::string& msg )
+bool avlog::add_log(const std::string& groupid, const std::string& msg, long int id)
 {
 	// 在qq群列表中查找已有的项目, 如果没找到则创建一个新的.
 	ofstream_ptr file_ptr;
@@ -44,7 +45,26 @@ bool avlog::add_log( const std::string& groupid, const std::string& msg )
 	file_ptr = finder->second;
 
 	// 构造消息, 添加消息时间头.
-	std::string data = "<p>" + current_time() + " " + msg + "</p>\n";
+	std::string data;
+
+	if (id > 0)
+	{
+		data = boost::str(
+			boost::format("<p id=\"#%d\"> %s %s </p>")
+			% id
+			% current_time()
+			% msg
+		);
+	}
+	else
+	{
+		data = boost::str(
+			boost::format("<p> %s %s </p>")
+			% current_time()
+			% msg
+		);
+	}
+
 	// 写入聊天消息.
 	file_ptr->write( data.c_str(), data.length() );
 	// 刷新写入缓冲, 实时写到文件.

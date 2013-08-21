@@ -52,7 +52,7 @@ static void iopost_msg(boost::asio::io_service & io_service,
 	std::string msg, std::string groupid)
 {
 	io_service.post(boost::bind(msg_sender, msg));
-	logfile.add_log(groupid, msg);
+	logfile.add_log(groupid, msg, 0);
 }
 
 static void write_vcode(const std::string & vc_img_data)
