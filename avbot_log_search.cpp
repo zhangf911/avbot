@@ -32,6 +32,7 @@ void avlog_do_search(boost::asio::io_service & io_service,
 	std::vector<std::string>	r_channel(1000);
 	std::vector<std::string>	r_nick(1000);
 	std::vector<std::string>	r_message(1000);
+	std::vector<std::string>	r_rowid(1000);
 
 	avhttp::detail::unescape_path(q, q_escaped);
 
@@ -39,12 +40,13 @@ void avlog_do_search(boost::asio::io_service & io_service,
 
 	cputimer.start();
 
-	db << "select date,channel,nick,message from avlog where channel=:c "
+	db << "select date,channel,nick,message,rowid from avlog where channel=:c "
 		"and message like \"%" << q_escaped << "%\" order  by strftime(`date`) DESC"
 		, soci::into(r_date)
 		, soci::into(r_channel)
 		, soci::into(r_nick)
 		, soci::into(r_message)
+		, soci::into(r_rowid)
 		, soci::use(c);
 
 	pt::ptree results;
@@ -57,14 +59,15 @@ void avlog_do_search(boost::asio::io_service & io_service,
 		onemsg.put("nick", r_nick[i]);
 		onemsg.put("channel", r_channel[i]);
 		onemsg.put("message", r_message[i]);
+		onemsg.put("id", r_rowid[i]);
 
 		results.push_back(std::make_pair("", onemsg));
 	}
 
-	outjson.put("params.time_used", boost::timer::format(cputimer.elapsed(), 6, "%w"));
 	outjson.put("params.num_results", r_date.size());
-
 	outjson.put_child("data", results);
+
+	outjson.put("params.time_used", boost::timer::format(cputimer.elapsed(), 6, "%w"));
 
 	io_service.post(
 		boost::asio::detail::bind_handler(handler,
