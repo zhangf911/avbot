@@ -54,26 +54,11 @@ int avbot_rpc_server::process_post( std::size_t bytes_transfered )
 	{
 		// 读取 json
 		js::read_json( jsonpostdata, msg );
-	}
-	catch( const js::json_parser_error & err )
-	{
-		// 数据不是 json 格式，视作 纯 TEXT 格式.
-		msg.put( "protocol", "rpc" );
-		msg.put( "channel", "" );
-		msg.put( "message.text", messagebody );
-	}
-	catch( const pt::ptree_error &err )
-	{
-		// 其他错误，忽略.
-	}
-
-	try
-	{
 		broadcast_message( msg );
 	}
 	catch( const pt::ptree_error &err )
 	{
-		// 忽略.
+		// 其他错误.
 		return avhttpd::errc::internal_server_error;
 	}
 
