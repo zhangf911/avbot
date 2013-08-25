@@ -152,13 +152,15 @@ static void handle_search_group(std::string groupqqnum, webqq::qqGroup_ptr group
 
 struct mail_recoder
 {
+	typedef void result_type;
+
 	std::string channel;
 	boost::shared_ptr<InternetMailFormat> pimf;
 	avbot * mybot;
 	boost::function<void(std::string)> sendmsg;
 
 	// 由 avbot 的 on_message 调用.
-	void operator()(avbot::av_message_tree jsonmessage)
+	void operator()(avbot::av_message_tree jsonmessage, const boost::signals2::connection & con)
 	{
 		static boost::regex ex(".qqbot mail subject \"?(.*)\"?");
 		boost::cmatch what;
@@ -184,6 +186,7 @@ struct mail_recoder
 			else
 			{
 				mybot->get_mx()->async_send_mail(*pimf, *this);
+				con.disconnect();
 			}
 		}
 		catch (...)
@@ -276,7 +279,10 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		mrecoder.channel = jsonmessage.get<std::string>("channel");
 		mrecoder.mybot = & mybot;
 		mrecoder.sendmsg = msg_sender;
-		mybot.on_message.connect(mrecoder);
+
+		decltype(mybot.on_message)::extended_slot_type mrecoder_slot(mrecoder, _2, _1);
+
+		mybot.on_message.connect_extended(mrecoder_slot);
 		return;
 	}
 
