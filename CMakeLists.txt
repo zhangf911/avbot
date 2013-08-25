@@ -92,7 +92,10 @@ endif()
 
 if(ENABLE_CXX11)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else()
+	set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
 endif()
+
 if(ENABLE_LTO)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 	set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -flto -Wl,-flto")
