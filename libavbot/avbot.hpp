@@ -32,9 +32,10 @@ public:
 	// 这里是一些公开的成员变量.
 	typedef boost::function<void (std::string) > need_verify_image;
 	typedef boost::property_tree::ptree av_message_tree;
+	typedef boost::signals2::signal<void (av_message_tree) > on_message_type;
 
 	// 每当有消息的时候激发.
-	boost::signals2::signal< void (av_message_tree) > on_message;
+	on_message_type on_message;
 	// 每当有新的频道被创建的时候激发
 	// 还记得吗？如果libweqq找到了一个QQ群，会自动创建和QQ群同名的频道的（如果不存在的话）
 	// 这样就保证没有被加入 map= 的群也能及时的被知道其存在.

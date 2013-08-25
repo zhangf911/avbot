@@ -280,7 +280,7 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		mrecoder.mybot = & mybot;
 		mrecoder.sendmsg = msg_sender;
 
-		decltype(mybot.on_message)::extended_slot_type mrecoder_slot(mrecoder, _2, _1);
+		avbot::on_message_type::extended_slot_type mrecoder_slot(mrecoder, _2, _1);
 
 		mybot.on_message.connect_extended(mrecoder_slot);
 		return;
