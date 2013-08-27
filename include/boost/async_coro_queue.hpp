@@ -119,10 +119,9 @@ public:
 #endif
 
 private:
-	boost::system::error_code make_abort()
+	boost::system::error_code make_canceled()
 	{
-		using namespace boost::asio::error;
-		return make_error_code(operation_aborted);
+		return system::errc::make_error_code(system::errc::operation_canceled);
 	}
 
 // 公开的接口。
@@ -176,7 +175,7 @@ public:
      * 用法同 async_pop, 但是增加了一个超时参数
      */
 	template<class Handler>
-	void async_pop_timed(Handler handler, boost::asio::deadline_timer::duration_type timeout)
+	void async_pop(Handler handler, boost::asio::deadline_timer::duration_type timeout)
 	{
 		if (m_list.empty())
 		{
@@ -249,7 +248,7 @@ public:
 				m_io_service.post(
 					boost::asio::detail::bind_handler(
 						m_handlers.front().second,
-						make_abort(),
+						make_canceled(),
 						value_type()
 					)
 				);
