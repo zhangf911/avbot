@@ -199,7 +199,7 @@ public:
 		int i;
 
 		BOOST_ASIO_CORO_REENTER(this)
-		{for (;!m_client->quitting_ && ec != boost::asio::error::operation_aborted;) {
+		{for (;!m_client->quitting_ && ec != boost::system::errc::operation_canceled;) {
 			*m_value = value;
 			// 发送
 			BOOST_ASIO_CORO_YIELD boost::asio::async_write(
@@ -419,7 +419,7 @@ public:
 					);
 				}
 
-			} while (ec != boost::asio::error::operation_aborted);
+			} while (ec != boost::system::errc::operation_canceled);
 
 			// 如果 pop 失败, 通常是读消息的协程遇到了错误, 并将 socket 关闭.
 			// 说明需要重新登录!
