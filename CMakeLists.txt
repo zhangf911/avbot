@@ -119,7 +119,7 @@ endif()
 
 find_package(OpenSSL)
 
-add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD -DBOOST_SP_DISABLE_THREADS)
+add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD)
 
 configure_file(avbot.rc.in ${PROJECT_BINARY_DIR}/avbot.rc)
 
