@@ -1,12 +1,77 @@
 
 #pragma once
 
+#include <map>
 #include <queue>
 #include <boost/config.hpp>
 #include <boost/asio.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/function.hpp>
 
-namespace boost{
+namespace boost {
+namespace detail {
+
+template<class RealHandler, typename T>
+class timed_out_handler_wrapper
+{
+public:
+	timed_out_handler_wrapper(asio::io_service& io_service,
+		const asio::deadline_timer::duration_type& timedout,
+		RealHandler handler,
+		const boost::shared_ptr<bool> &timed_outed)
+		: m_io_service(io_service)
+		, m_timer(make_shared<boost::asio::deadline_timer>(boost::ref(io_service)))
+		, m_realhandler(make_shared<RealHandler>(handler))
+		, m_timed_outed(timed_outed)
+	{
+		m_timer->expires_from_now(timedout);
+		m_timer->async_wait(*this);
+	}
+
+	void operator()(boost::system::error_code ec)
+	{
+
+		if (ec == asio::error::operation_aborted)
+		{
+			// 计时器被取消，啥也不错， 因为回调已经执行了.
+			return;
+		}
+
+		// 超时了
+
+		// 标记
+		*m_timed_outed = true;
+
+		// 执行回调
+		m_io_service.post(
+			asio::detail::bind_handler(
+				m_realhandler,
+				system::errc::make_error_code(system::errc::timed_out),
+				T()
+			)
+		);
+	}
+
+	void operator()(boost::system::error_code ec, const T &t)
+	{
+		// forward to real hander
+		m_realhandler(ec, t);
+
+		// 取消定时.
+		m_timer->cancel(ec);
+	}
+
+private:
+	asio::io_service& m_io_service;
+
+	boost::shared_ptr<RealHandler> m_realhandler;
+
+	boost::shared_ptr<boost::asio::deadline_timer> m_timer;
+
+	boost::shared_ptr<bool> m_timed_outed;
+};
+
+} // namespace detail
 
 /*
  * async_coro_queue 是一个用于协程的异步列队。
@@ -37,6 +102,7 @@ public:
 	{
 	}
 
+#ifdef  BOOST_NO_CXX11_VARIADIC_TEMPLATES
 	// 构造函数的一个重载，为列队传入额外的参数
 	template<typename T>
 	async_coro_queue(boost::asio::io_service & io_service, T t)
@@ -44,14 +110,9 @@ public:
 	{
 	}
 	// 利用 C++11 的 泛模板参数写第三个构造函数重载
-#ifndef  BOOST_NO_CXX11_VARIADIC_TEMPLATES
+#else
 	template<typename ...T>
 	async_coro_queue(boost::asio::io_service & io_service, T&&... t)
-	  : m_io_service(io_service), m_list(std::forward<T>(t)...)
-	{
-	}
-	template<typename ...T>
-	async_coro_queue(boost::asio::io_service & io_service, T... t)
 	  : m_io_service(io_service), m_list(std::forward<T>(t)...)
 	{
 	}
@@ -94,7 +155,11 @@ public:
 		if (m_list.empty())
 		{
 			// 进入睡眠过程.
-			m_handlers.push(async_pop_handler_type(handler));
+			m_handlers.push(
+				std::make_pair(
+					make_shared<bool>(false), async_pop_handler_type(handler)
+				)
+			);
 		}
 		else
 		{
@@ -108,10 +173,41 @@ public:
 	}
 
 	/**
+     * 用法同 async_pop, 但是增加了一个超时参数
+     */
+	template<class Handler>
+	void async_pop_timed(Handler handler, boost::asio::deadline_timer::duration_type timeout)
+	{
+		if (m_list.empty())
+		{
+			boost::shared_ptr<bool> timed_outed = make_shared<bool>(false);
+			// 进入睡眠过程.
+			m_handlers.push(
+				std::make_pair(
+					timed_outed,
+					detail::timed_out_handler_wrapper<Handler, value_type>(
+						m_io_service, timeout, handler, timed_outed
+					)
+				)
+			);
+		}
+		else
+		{
+			m_io_service.post(
+				boost::asio::detail::bind_handler(
+					handler, boost::system::error_code(), m_list.front()
+				)
+			);
+			m_list.pop_front();
+		}
+	}
+
+
+	/**
 	 * 向列队投递数据。
 	 * 如果列队为空，并且有协程正在休眠在 async_pop 上， 则立即唤醒此协程，并投递数据给此协程
      */
-	void push(value_type value)
+	void push(const value_type &value)
 	{
 		// 有handler 挂着！
 		if (!m_handlers.empty())
@@ -119,14 +215,21 @@ public:
 			// 如果 m_list 不是空， 肯定是有严重的 bug
 			BOOST_ASSERT(m_list.empty());
 
-			m_io_service.post(
-				boost::asio::detail::bind_handler(
-					m_handlers.front(),
-					boost::system::error_code(),
-					value
-				)
-			);
-			m_handlers.pop();
+			if (! *(m_handlers.front().first))
+			{
+				m_io_service.post(
+					boost::asio::detail::bind_handler(
+						m_handlers.front().second,
+						boost::system::error_code(),
+						value
+					)
+				);
+				m_handlers.pop();
+			}else
+			{
+				m_handlers.pop();
+				return push(value);
+			}
 		}
 		else
 		{
@@ -141,13 +244,16 @@ public:
 	{
 		while (!m_handlers.empty())
 		{
-			m_io_service.post(
-				boost::asio::detail::bind_handler(
-					m_handlers.front(),
-					make_abort(),
-					value_type()
-				)
-			);
+			if (! *(m_handlers.front().first))
+			{
+				m_io_service.post(
+					boost::asio::detail::bind_handler(
+						m_handlers.front().second,
+						make_abort(),
+						value_type()
+					)
+				);
+			}
 			m_handlers.pop();
 		}
 	}
@@ -157,6 +263,7 @@ public:
      */
 	void clear()
 	{
+		cancele();
 		m_list.clear();
 	}
 
@@ -165,7 +272,9 @@ private:
 	boost::asio::io_service & m_io_service;
 	ListType m_list;
 	// 保存 async_pop 回调函数
-	std::queue<async_pop_handler_type> m_handlers;
+	std::queue<
+		std::pair<boost::shared_ptr<bool>, async_pop_handler_type>
+	> m_handlers;
 };
 
-}
+} // namespace boost
