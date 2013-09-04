@@ -45,7 +45,7 @@ namespace  impl {
 class client_impl;
 }
 
-class client
+class BOOST_SYMBOL_VISIBLE client
 {
 public:
 	client(boost::asio::io_service &_io_service, const std::string& user,

@@ -28,7 +28,7 @@ namespace xmppimpl {
 class xmpp;
 }
 
-class xmpp {
+class BOOST_SYMBOL_VISIBLE xmpp {
 public:
 	xmpp( boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver = "", std::string xmppnick = "avbot" );
 	void join( std::string roomjid );

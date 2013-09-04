@@ -55,6 +55,8 @@ set(ENABLE_LIBSTDCXX_STATIC ON)
 set(ENABLE_STATIC ON)
 endif()
 
+
+
 if(WIN32)
 add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
@@ -64,6 +66,9 @@ include_directories( ${PROJECT_SOURCE_DIR}/openssl/include)
 link_directories(${PROJECT_SOURCE_DIR}/libsformingw32/mingw32)
 link_directories(${PROJECT_SOURCE_DIR}/libsformingw32/mingw64)
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g0")

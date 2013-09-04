@@ -11,7 +11,7 @@
 #include "libxmpp/xmpp.hpp"
 #include "libmailexchange/mx.hpp"
 
-class avbot : boost::noncopyable{
+class BOOST_SYMBOL_VISIBLE avbot : boost::noncopyable{
 public:
 	typedef std::vector<std::string> av_chanel_map;
 private:
