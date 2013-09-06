@@ -19,11 +19,8 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
-#include <soci.h>
+#include <boost/asio/io_service.hpp>
+#include <soci/session.h>
 
 #include "libavbot/avbot.hpp"
 

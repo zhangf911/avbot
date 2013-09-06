@@ -198,6 +198,8 @@ void avbot_rpc_server::done_search(boost::system::error_code ec, boost::property
 // 数据操作跑这里，嘻嘻.
 void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t bytestransfered)
 {
+	std::string uri;
+
 	boost::smatch what;
 	//for (;;)
 	reenter(this)
@@ -231,10 +233,12 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			return;
 		}
 
+		uri = m_request.find(avhttpd::http_options::request_uri);
+
 		// 解析 HTTP
 		if(m_request.find(avhttpd::http_options::request_method) == "GET" )
 		{
-			if(m_request.find(avhttpd::http_options::request_uri)=="/message")
+			if(uri=="/message")
 			{
 				// 等待消息, 并发送.
 				yield m_responses.async_pop(
@@ -242,9 +246,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 				);
 			}
 			else if(
-				boost::regex_match(
-					m_request.find(avhttpd::http_options::request_uri),
-					what,
+				boost::regex_match(uri, what,
 					boost::regex("/search\\?channel=([^&]*)&q=([^&]*)&date=([^&]*).*")
 				)
 			)
@@ -255,13 +257,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 				);
 				return;
 			}
-			else if(
-				boost::regex_match(
-					m_request.find(avhttpd::http_options::request_uri),
-					what,
-					boost::regex("/search(\\?)?")
-				)
-			)
+			else if(boost::regex_match(uri, what,boost::regex("/search(\\?)?")))
 			{
 				// missing parameter
 				yield avhttpd::async_write_response(
@@ -274,6 +270,12 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 					)
 				);
 				return;
+			}
+			else if (boost::regex_match(uri, what,boost::regex("/status(\\?)?")))
+			{
+				// 获取 avbot 的状态.
+
+				
 			}
 			else
 			{
