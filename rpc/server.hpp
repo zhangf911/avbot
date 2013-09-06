@@ -20,7 +20,7 @@
 #pragma once
 
 #include <boost/asio/io_service.hpp>
-#include <soci/session.h>
+#include <session.h>
 
 #include "libavbot/avbot.hpp"
 
