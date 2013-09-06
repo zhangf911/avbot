@@ -53,7 +53,6 @@ namespace po = boost::program_options;
 #include <avhttp.hpp>
 
 #include "boost/consolestr.hpp"
-#include "boost/acceptor_server.hpp"
 #include "boost/avloop.hpp"
 
 #include "libavbot/avbot.hpp"
@@ -64,7 +63,7 @@ namespace po = boost::program_options;
 #include "botctl.hpp"
 #include "input.hpp"
 #include "avbot_vc_feed_input.hpp"
-#include "avbot_rpc_server.hpp"
+#include "rpc/server.hpp"
 
 #include "extension/extension.hpp"
 #include "deCAPTCHA/decaptcha.hpp"
@@ -322,28 +321,6 @@ static void init_database(soci::session & db)
 		"`nick` TEXT not null default \"\", "
 		"`message` TEXT not null default \" \""
 	");";
-}
-
-static void avbot_rpc_server(
-	boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket,
-	avbot & mybot,
-	soci::session & db)
-{
-	void avlog_do_search(boost::asio::io_service & io_service,
-		std::string c, std::string q, std::string date,
-		boost::function<void (boost::system::error_code, pt::ptree)> handler,
-		soci::session & db);
-
-	boost::make_shared<detail::avbot_rpc_server>(
-		m_socket,
-		boost::ref(mybot.on_message),
-		boost::bind(
-			avlog_do_search,
-			boost::ref(m_socket->get_io_service()),
-			_1,_2,_3,_4,
-			boost::ref(db)
-		)
-	)->start();
 }
 
 static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
@@ -783,32 +760,12 @@ rungui:
 
 	if (rpcport > 0)
 	{
-		try
+		if (!avbot_start_rpc(io_service, rpcport, mybot, avlogdb))
 		{
-			// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
-			boost::acceptor_server(
-				io_service,
-				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), rpcport),
-				boost::bind(avbot_rpc_server, _1, boost::ref(mybot), boost::ref(avlogdb))
-			);
-		}
-		catch (...)
-		{
-			try
-			{
-				boost::acceptor_server(
-					io_service,
-					boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), rpcport),
-					boost::bind(avbot_rpc_server, _1, boost::ref(mybot), boost::ref(avlogdb))
-				);
-			}
-			catch (...)
-			{
-				BOOST_LOG_TRIVIAL(warning) <<  "bind to port " <<  rpcport <<  " failed!";
-				BOOST_LOG_TRIVIAL(warning) <<  "Did you happened to already run an avbot? ";
-				BOOST_LOG_TRIVIAL(warning) <<  "Now avbot will run without RPC support. ";
-			}
-		}
+			BOOST_LOG_TRIVIAL(warning) <<  "bind to port " <<  rpcport <<  " failed!";
+			BOOST_LOG_TRIVIAL(warning) <<  "Did you happened to already run an avbot? ";
+			BOOST_LOG_TRIVIAL(warning) <<  "Now avbot will run without RPC support. ";
+		};
 	}
 
 	avhttp::http_stream s(io_service);

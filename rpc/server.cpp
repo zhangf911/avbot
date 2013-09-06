@@ -21,15 +21,97 @@
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/signals2.hpp>
+#include <boost/property_tree/ptree.hpp>
+namespace pt = boost::property_tree;
+#include <boost/property_tree/json_parser.hpp>
+namespace js = boost::property_tree::json_parser;
+#include <boost/circular_buffer.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/async_coro_queue.hpp>
 
 #include <avhttp/detail/parsers.hpp>
 
 #include "boost/avloop.hpp"
-// #include <boost/asio/yield.hpp>
+#include "boost/acceptor_server.hpp"
 
-#include "avbot_rpc_server.hpp"
+#include <soci-sqlite3.h>
+#include <boost-optional.h>
+#include <boost-tuple.h>
+#include <boost-gregorian-date.h>
 
-namespace detail{
+#include "rpc/server.hpp"
+#include "avhttpd.hpp"
+
+// avbot_rpc_server 由 acceptor_server 这个辅助类调用
+// 为其构造函数传入一个 m_socket, 是 shared_ptr 的.
+class avbot_rpc_server
+	: boost::asio::coroutine
+	, public boost::enable_shared_from_this<avbot_rpc_server>
+{
+public:
+	typedef boost::signals2::signal <
+	void( boost::property_tree::ptree )
+	> on_message_signal_type;
+
+	on_message_signal_type &broadcast_message;
+
+	typedef boost::asio::ip::tcp Protocol;
+	typedef boost::asio::basic_stream_socket<Protocol> socket_type;
+
+	template<typename T>
+	avbot_rpc_server( boost::shared_ptr<socket_type> _socket,
+		on_message_signal_type & on_message, T do_search_func)
+		: m_socket( _socket )
+		, m_streambuf( new boost::asio::streambuf )
+		, m_responses(boost::ref(_socket->get_io_service()), 20)
+		, broadcast_message(on_message)
+		, do_search(do_search_func)
+	{
+	}
+
+	void start()
+	{
+		avloop_idle_post(m_socket->get_io_service(),
+			boost::bind<void>(&avbot_rpc_server::client_loop, shared_from_this(),
+					boost::system::error_code(), 0 )
+		);
+		m_connect = broadcast_message.connect(boost::bind<void>(&avbot_rpc_server::callback_message, this, _1));
+	}
+private:
+	void get_response_sended(boost::shared_ptr< boost::asio::streambuf > v, boost::system::error_code ec, std::size_t);
+	void on_pop(boost::shared_ptr<boost::asio::streambuf> v);
+
+	// 循环处理客户端连接.
+	void client_loop(boost::system::error_code ec, std::size_t bytestransfered);
+
+	// signal 的回调到这里
+	void callback_message(const boost::property_tree::ptree & jsonmessage );
+	void done_search(boost::system::error_code ec, boost::property_tree::ptree);
+private:
+	boost::shared_ptr<socket_type> m_socket;
+
+	boost::signals2::scoped_connection m_connect;
+
+	boost::shared_ptr<boost::asio::streambuf> m_streambuf;
+	avhttpd::request_opts m_request;
+
+	boost::async_coro_queue<
+		boost::circular_buffer_space_optimized<
+			boost::shared_ptr<boost::asio::streambuf>
+		>
+	> m_responses;
+
+	boost::function<void(
+		std::string c,
+		std::string q,
+		std::string date,
+		boost::function<void (boost::system::error_code, pt::ptree)> cb
+	)> do_search;
+
+	int process_post( std::size_t bytestransfered );
+};
+
 
 /**
  * avbot rpc 接受的 JSON 格式为
@@ -256,4 +338,55 @@ void avbot_rpc_server::callback_message(const boost::property_tree::ptree& jsonm
 	m_responses.push(buf);
 }
 
+
+
+static void accepte_handler(
+	boost::shared_ptr<boost::asio::ip::tcp::socket> m_socket,
+	avbot & mybot,
+	soci::session & db)
+{
+	void avlog_do_search(boost::asio::io_service & io_service,
+		std::string c, std::string q, std::string date,
+		boost::function<void (boost::system::error_code, pt::ptree)> handler,
+		soci::session & db);
+
+	boost::make_shared<avbot_rpc_server>(
+		m_socket,
+		boost::ref(mybot.on_message),
+		boost::bind(
+			avlog_do_search,
+			boost::ref(m_socket->get_io_service()),
+			_1,_2,_3,_4,
+			boost::ref(db)
+		)
+	)->start();
+}
+
+bool avbot_start_rpc(boost::asio::io_service & io_service, int port, avbot & mybot, soci::session & avlogdb)
+{
+	try
+	{
+		// 调用 acceptor_server 跑 avbot_rpc_server 。 在端口 6176 上跑哦!
+		boost::acceptor_server(
+			io_service,
+			boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port),
+			boost::bind(accepte_handler, _1, boost::ref(mybot), boost::ref(avlogdb))
+		);
+	}
+	catch (...)
+	{
+		try
+		{
+			boost::acceptor_server(
+				io_service,
+				boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port),
+				boost::bind(accepte_handler, _1, boost::ref(mybot), boost::ref(avlogdb))
+			);
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
+	return true;
 }
