@@ -6,7 +6,6 @@
 #include <boost/bind.hpp>
 #include <boost/regex.hpp>
 #include <boost/foreach.hpp>
-#include <boost/asio/yield.hpp>
 
 #include "boost/base64.hpp"
 

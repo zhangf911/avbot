@@ -10,10 +10,8 @@
 #include <boost/asio.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
-#include <boost/asio/yield.hpp>
-
 #include "boost/timedcall.hpp"
-#include "avproxy.hpp"
+#include "boost/avproxy.hpp"
 
 #include "internet_mail_format.hpp"
 
@@ -36,30 +34,30 @@ public:
 		std::ostream	outbuffer( m_writebuf.get() );
 		std::string		msg;
 
-		reenter( this ) {
+		BOOST_ASIO_CORO_REENTER( this ) {
 		restart:
 			m_socket.reset( new ip::tcp::socket( io_service ) );
 
 			do {
 #ifndef DEBUG
 				// 延时 60s
-				yield ::boost::delayedcallsec( io_service, 10, boost::bind( *this, ec, 0 ) );
+				BOOST_ASIO_CORO_YIELD ::boost::delayedcallsec( io_service, 10, boost::bind( *this, ec, 0 ) );
 #endif
 
 				// dns 解析并连接.
-				yield avproxy::async_proxy_connect(
+				BOOST_ASIO_CORO_YIELD avproxy::async_proxy_connect(
 					avproxy::autoproxychain( *m_socket, ip::tcp::resolver::query( m_mailserver, "110" ) ),
 					*this );
 
 				// 失败了延时 10s
 				if( ec )
-					yield ::boost::delayedcallsec( io_service, 10, boost::bind( *this, ec, 0 ) );
+					BOOST_ASIO_CORO_YIELD ::boost::delayedcallsec( io_service, 10, boost::bind( *this, ec, 0 ) );
 			} while( ec );  // 尝试到连接成功为止!
 
 			// 好了，连接上了.
 			m_readbuf.reset( new streambuf );
 			// "+OK QQMail POP3 Server v1.0 Service Ready(QQMail v2.0)"
-			yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
+			BOOST_ASIO_CORO_YIELD	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;
 
 			if( status != "+OK" ) {
@@ -68,13 +66,13 @@ public:
 			}
 
 			// 发送用户名.
-			yield async_write( std::string("user ") + m_mailaddr + "\n" , *this );
+			BOOST_ASIO_CORO_YIELD async_write( std::string("user ") + m_mailaddr + "\n" , *this );
 
 			if( ec ) goto restart;
 
 			// 接受返回状态.
 			m_readbuf.reset( new streambuf );
-			yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
+			BOOST_ASIO_CORO_YIELD	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;
 
 			// 解析是不是　OK.
@@ -85,10 +83,10 @@ public:
 
 			// 发送密码.
 			outbuffer << "pass " <<  m_passwd <<  "\r\n";
-			yield async_write(*this );
+			BOOST_ASIO_CORO_YIELD async_write(*this );
 			// 接受返回状态.
 			m_readbuf.reset( new streambuf );
-			yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
+			BOOST_ASIO_CORO_YIELD	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;
 
 			// 解析是不是　OK.
@@ -100,10 +98,10 @@ public:
 			// 完成登录. 开始接收邮件.
 
 			// 发送　list 命令.
-			yield async_write( "list\n", *this );
+			BOOST_ASIO_CORO_YIELD async_write( "list\n", *this );
 			// 接受返回的邮件.
 			m_readbuf.reset( new streambuf );
-			yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
+			BOOST_ASIO_CORO_YIELD	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 			inbuffer >> status;
 
 			// 解析是不是　OK.
@@ -114,7 +112,7 @@ public:
 
 			// 开始进入循环处理邮件.
 			maillist.clear();
-			yield	m_socket->async_read_some( m_readbuf->prepare( 8192 ), *this );
+			BOOST_ASIO_CORO_YIELD	m_socket->async_read_some( m_readbuf->prepare( 8192 ), *this );
 			m_readbuf->commit( length );
 
 			while( status != "." ) {
@@ -128,17 +126,17 @@ public:
 					maillist.push_back( status );
 
 				if( inbuffer.eof() && status != "." )
-					yield	m_socket->async_read_some( m_readbuf->prepare( 8192 ), *this );
+					BOOST_ASIO_CORO_YIELD	m_socket->async_read_some( m_readbuf->prepare( 8192 ), *this );
 			}
 
 			// 获取邮件.
 			while( !maillist.empty() ) {
 				// 发送　retr #number 命令.
 				outbuffer << "retr " << maillist[0] <<  "\r\n";
-				yield async_write(*this );
+				BOOST_ASIO_CORO_YIELD async_write(*this );
 				// 获得　+OK
 				m_readbuf.reset( new streambuf );
-				yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
+				BOOST_ASIO_CORO_YIELD	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 				inbuffer >> status;
 
 				// 解析是不是　OK.
@@ -148,20 +146,20 @@ public:
 				}
 
 				// 获取邮件内容，邮件一单行的 . 结束.
-				yield	async_read_until( *m_socket, *m_readbuf, "\r\n.\r\n", *this );
+				BOOST_ASIO_CORO_YIELD	async_read_until( *m_socket, *m_readbuf, "\r\n.\r\n", *this );
 				// 然后将邮件内容给处理.
-				yield process_mail( inbuffer ,  boost::bind( *this, ec, _1 ) );
+				BOOST_ASIO_CORO_YIELD process_mail( inbuffer ,  boost::bind( *this, ec, _1 ) );
 
 				// 如果返回的是 1,  也就是 length != 0 ,  就删除邮件.
 				if( length ) {
 #	ifndef DEBUG
 					// 删除邮件啦.
 					outbuffer << "dele " << maillist[0] <<  "\r\n";
-					yield async_write(*this);
+					BOOST_ASIO_CORO_YIELD async_write(*this);
 
 					// 获得　+OK
 					m_readbuf.reset( new streambuf );
-					yield	async_read_until( *m_socket, *m_readbuf, "\n", *this );
+					BOOST_ASIO_CORO_YIELD	async_read_until( *m_socket, *m_readbuf, "\n", *this );
 					inbuffer >> status;
 
 					// 解析是不是　OK.
@@ -181,8 +179,8 @@ public:
 			}
 
 			// 处理完毕.
-			yield async_write("quit\n" , *this );
-			yield ::boost::delayedcallsec( io_service, 1, boost::bind( *this, ec, 0 ) );
+			BOOST_ASIO_CORO_YIELD async_write("quit\n" , *this );
+			BOOST_ASIO_CORO_YIELD ::boost::delayedcallsec( io_service, 1, boost::bind( *this, ec, 0 ) );
 
 			if( m_socket->is_open() ) {
 				try {
@@ -193,7 +191,7 @@ public:
 				}
 			}
 
-			yield ::boost::delayedcallsec( io_service, 10, boost::bind( *this, ec, 0 ) );
+			BOOST_ASIO_CORO_YIELD ::boost::delayedcallsec( io_service, 10, boost::bind( *this, ec, 0 ) );
 			goto restart;
 		}
 	}

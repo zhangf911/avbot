@@ -202,14 +202,14 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 
 	boost::smatch what;
 	//for (;;)
-	reenter(this)
+	BOOST_ASIO_CORO_REENTER(this)
 	{for (;;){
 
 		m_request.clear();
 		m_streambuf = boost::make_shared<boost::asio::streambuf>();
 
 		// 读取用户请求.
-		yield avhttpd::async_read_request(
+		BOOST_ASIO_CORO_YIELD avhttpd::async_read_request(
 				*m_socket, *m_streambuf, m_request,
 				boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 		);
@@ -218,14 +218,14 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 		{
 			if (ec == avhttpd::errc::post_without_content)
 			{
-				yield avhttpd::async_write_response(*m_socket, avhttpd::errc::no_content,
+				BOOST_ASIO_CORO_YIELD avhttpd::async_write_response(*m_socket, avhttpd::errc::no_content,
 					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 				);
 				return;
 			}
 			else if (ec == avhttpd::errc::header_missing_host)
 			{
-				yield avhttpd::async_write_response(*m_socket, avhttpd::errc::bad_request,
+				BOOST_ASIO_CORO_YIELD avhttpd::async_write_response(*m_socket, avhttpd::errc::bad_request,
 					boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, 0)
 				);
 				return;
@@ -241,7 +241,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			if(uri=="/message")
 			{
 				// 等待消息, 并发送.
-				yield m_responses.async_pop(
+				BOOST_ASIO_CORO_YIELD m_responses.async_pop(
 					boost::bind(&avbot_rpc_server::on_pop, shared_from_this(), _2)
 				);
 			}
@@ -252,7 +252,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			)
 			{
 				// 取出这几个参数, 到数据库里查找, 返回结果吧.
-				yield do_search(what[1],what[2],what[3],
+				BOOST_ASIO_CORO_YIELD do_search(what[1],what[2],what[3],
 					boost::bind(&avbot_rpc_server::done_search, shared_from_this(), _1, _2)
 				);
 				return;
@@ -260,7 +260,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			else if(boost::regex_match(uri, what,boost::regex("/search(\\?)?")))
 			{
 				// missing parameter
-				yield avhttpd::async_write_response(
+				BOOST_ASIO_CORO_YIELD avhttpd::async_write_response(
 					*m_socket,
 					avhttpd::errc::internal_server_error,
 					boost::bind(
@@ -274,12 +274,11 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 			else if (boost::regex_match(uri, what,boost::regex("/status(\\?)?")))
 			{
 				// 获取 avbot 的状态.
-
-				
+				//boost::regex_match();
 			}
 			else
 			{
-				yield avhttpd::async_write_response(
+				BOOST_ASIO_CORO_YIELD avhttpd::async_write_response(
 					*m_socket,
 					avhttpd::errc::not_found,
 					boost::bind(
@@ -295,7 +294,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 		{
 			// 这里进入 POST 处理.
 			// 读取 body
-			yield boost::asio::async_read(
+			BOOST_ASIO_CORO_YIELD boost::asio::async_read(
 				*m_socket,
 				*m_streambuf,
 				boost::asio::transfer_exactly(
@@ -306,7 +305,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 				boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), _1, _2 )
 			);
 			// body 必须是合法有效的 JSON 格式
-			yield avhttpd::async_write_response(
+			BOOST_ASIO_CORO_YIELD avhttpd::async_write_response(
 					*m_socket,
 					process_post(m_streambuf->size()),
 					avhttpd::response_opts()
@@ -323,7 +322,7 @@ void avbot_rpc_server::client_loop(boost::system::error_code ec, std::size_t byt
 		}
 
 		// 继续
-		yield avloop_idle_post(m_socket->get_io_service(),
+		BOOST_ASIO_CORO_YIELD avloop_idle_post(m_socket->get_io_service(),
 			boost::bind(&avbot_rpc_server::client_loop, shared_from_this(), ec, 0)
 		);
 	}}

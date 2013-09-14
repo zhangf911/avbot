@@ -17,7 +17,7 @@
 #include <boost/signals2.hpp>
 #include <boost/async_coro_queue.hpp>
 
-#include "avproxy.hpp"
+#include "boost/avproxy.hpp"
 #include "boost/timedcall.hpp"
 
 #include "./irc.hpp"

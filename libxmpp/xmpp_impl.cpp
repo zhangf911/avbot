@@ -28,7 +28,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "boost/timedcall.hpp"
-#include "avproxy/avproxy.hpp"
+#include "boost/avproxy.hpp"
 
 #include "xmpp_impl.hpp"
 
