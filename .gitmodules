@@ -17,3 +17,6 @@
 [submodule "avhttpd"]
 	path = avhttpd
 	url = git://github.com/avplayer/avhttpd.git
+[submodule "libwebqq"]
+	path = libwebqq
+	url = git://github.com/microcai/libwebqq.git
