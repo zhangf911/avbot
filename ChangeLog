@@ -1,3 +1,4 @@
+	* libwebqq is now submoduled. that means, libwebqq is an seperated project now.
 	* .qqbot mail end 并不能终止邮件记录，再次发出该命令将导致目前为止的记录被再次发送. 因而多次执行 .qqbot mail to将导致意外的信息泄漏。修正次错误
 
 8.0
