@@ -192,7 +192,7 @@ if(NOT WIN32)
 list(APPEND AVBOT_SOURCES backtrace.cpp)
 endif()
 
-add_executable(avbot ${AVBOT_SOURCES})
+add_executable(avbot ${AVBOT_SOURCES} $<TARGET_OBJECTS:avbotrpc>)
 
 if(WIN32)
 add_subdirectory(gui)
@@ -213,7 +213,7 @@ if(APPLE AND WITH_ICONV)
 target_link_libraries(avbot -liconv)
 endif()
 
-target_link_libraries(avbot libavbot avlog extension avbotrpc)
+target_link_libraries(avbot libavbot avlog extension)
 
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
