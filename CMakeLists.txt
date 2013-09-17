@@ -163,6 +163,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(avboost/include)
 include_directories(avhttp/include)
+include_directories(libwebqq/include)
 include_directories(deCAPTCHA/include)
 include_directories(avhttpd/include)
 
@@ -174,7 +175,6 @@ add_subdirectory(deCAPTCHA)
 add_subdirectory(libavbot)
 add_subdirectory(libavlog)
 add_subdirectory(extension)
-add_subdirectory(rpc)
 
 configure_file(version.c.in version.c @ONLY)
 
@@ -188,11 +188,15 @@ set(AVBOT_SOURCES
 	${PROJECT_BINARY_DIR}/avbot.rc
 )
 
+set(AVBOTRPC_SOURCES
+	rpc/server.cpp
+)
+
 if(NOT WIN32)
 list(APPEND AVBOT_SOURCES backtrace.cpp)
 endif()
 
-add_executable(avbot ${AVBOT_SOURCES} $<TARGET_OBJECTS:avbotrpc>)
+add_executable(avbot ${AVBOT_SOURCES} ${AVBOTRPC_SOURCES})
 
 if(WIN32)
 add_subdirectory(gui)
