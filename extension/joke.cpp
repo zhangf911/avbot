@@ -64,6 +64,7 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 		startpos = what[0].second;
 	}
 
+	rannum.seed( std::time(0) );
 	int no = gen() % v.size() +1;
 	
 	return v.at( no-1 );
@@ -80,13 +81,13 @@ public:
 	jokefecher(boost::asio::io_service &_io_service)
 	  : io_service(_io_service)
 	{
-		rannum.seed( std::time(0) );
 	}
 
 	template<class Handler>
 	void operator()(Handler handler)
 	{
 		// 第一步，构造一个 URL, 然后调用 avhttp 去读取.
+		rannum.seed( std::time(0) );
 		int page = 1 + rannum() % 1000;
 
 		std::string url = boost::str(boost::format("http://www.qiushibaike.com/month/page/%s?slow") % page);
