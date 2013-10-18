@@ -36,101 +36,60 @@
 #include "joke.hpp"
 #include "html.hpp"
 
-static std::string get_joke_content(std::istream &response_stream )
+static std::string get_joke_content(std::istream &response_stream , boost::mt19937 &gen)
 {
-	std::string joketitlestart = "lastT lan14b";
-	std::string jokemessagestart = "class=\"lastC\"";
+	std::istreambuf_iterator<char> isi;
+	std::string message(std::istreambuf_iterator<char>(response_stream), isi);
 
-	std::string message;
-	std::string jokestring;
-	std::string charset;
+	while( message.find( "\r" ) != std::string::npos )
+		message.erase( message.find( "\r" ), 1 );
+	while( message.find( "\n" ) != std::string::npos )
+		message.erase( message.find( "\n" ), 1 );
+	while( message.find( "<br/><br/>" ) != std::string::npos )
+		message.replace( message.find( "<br/><br/>" ), 10, "\r\n" );
+	while( message.find( "<br/>" ) != std::string::npos )
+		message.replace( message.find( "<br/>" ), 5, "\r\n" );
 
-	while( std::getline( response_stream, message ) )
+	boost::regex ex( "<div class=\"content\" title=.*?>(.*?)</div><div (id|class)" );
+	boost::smatch what;
+	std::string::const_iterator startpos = message.begin();
+	std::string::const_iterator endpos = message.end();
+	std::vector<std::string> v;
+	while(boost::regex_search( startpos, endpos, what, ex ))
 	{
-		if (charset.empty() && message.find("charset=") != std::string::npos)
-		{
-			std::string tmp =  message.substr(message.find("charset="));
-
-			// 从 charset=gb2312" /> 中获取 gb2312
-			char _charset[256] = {0};
-
-			std::sscanf(tmp.c_str(), "charset=%[^\"]", _charset);
-			charset = _charset;
-			continue;
-		}else if( message.find( joketitlestart ) != std::string::npos )
-		{
-			jokestring.append( html_unescape(message.substr( message.find( ">" ), ( message.rfind( "<" ) - message.find( ">" ) - 1 ) ) ) );
-			jokestring.append( "\r\n" );
-			continue;
-		}
-
-		if( message.find( jokemessagestart ) != std::string::npos )
-		{
-			do{
-				std::getline( response_stream, message );
-				if ( message.find( "</div>" ) != std::string::npos )
-					break;
-
-				while( message.find( "\r" ) != std::string::npos )
-					message.erase( message.find( "\r" ), 1 );
-
-				while( message.find( "\t" ) != std::string::npos )
-					message.erase( message.find( "\t" ), 1 );
-
-				while( message.find( " " ) != std::string::npos )
-					message.erase( message.find( " " ), 1 );
-
-				while( message.find( "\n" ) != std::string::npos )
-					message.erase( message.find( "\n" ), 1 );
-
-				while( message.find( "<br><br>" ) != std::string::npos )
-					message.replace( message.find( "<br><br>" ), 8, "\r\n" );
-
-				while( message.find( "<br>" ) != std::string::npos )
-					message.replace( message.find( "<br>" ), 4, "\r\n" );
-
-				jokestring.append( html_unescape(message) );
-			} while ( message.find( "</div>" ) == std::string::npos );
-			// 笑话内容已完
-			break;
-		}
+		std::string content(what[1].first, what[1].second);
+		std::string idclass(what[2].first, what[2].second);
+		if ( idclass == "id" )	// 只选择不含图的条目
+			v.push_back(content);
+		startpos = what[0].second;
 	}
+
+	int no = gen() % v.size() +1;
 	
-	// 去除多余的空行
-	while( jokestring.find( "\x20\r\n" ) != std::string::npos )
-		jokestring.replace( jokestring.find( "\x20\r\n" ), 3, "\r\n" );
-	while( jokestring.find( "\r\n\r\n" ) != std::string::npos )
-		jokestring.replace( jokestring.find( "\r\n\r\n" ), 4, "\r\n" );
-
-	if (charset.empty())
-		charset = "7bit";
-	if (charset == "gb2132"){
-		charset = "gb18030";
-	}
-	return boost::locale::conv::between(jokestring, "UTF-8", charset);
+	return v.at( no-1 );
 }
 
 class jokefecher{
 	boost::asio::io_service & io_service;
 	boost::shared_ptr<avhttp::http_stream>	m_http_stream;
 	boost::shared_ptr<boost::asio::streambuf> m_read_buf;
+	boost::mt19937 rannum;
 public:
 	typedef void result_type;
 
 	jokefecher(boost::asio::io_service &_io_service)
 	  : io_service(_io_service)
 	{
+		rannum.seed( std::time(0) );
 	}
 
 	template<class Handler>
 	void operator()(Handler handler)
 	{
 		// 第一步，构造一个 URL, 然后调用 avhttp 去读取.
-		static boost::mt19937 rannum(std::time(0));
-		int num = 1 + rannum() % 20000;
-		int numcl = num / 1000 + 1;
+		int page = 1 + rannum() % 1000;
 
-		std::string url = boost::str(boost::format("http://xiaohua.zol.com.cn/detail%d/%d.html") % numcl % num);
+		std::string url = boost::str(boost::format("http://www.qiushibaike.com/month/page/%s?slow") % page);
 
 		m_http_stream.reset(new avhttp::http_stream(io_service));
 		m_read_buf.reset(new boost::asio::streambuf);
@@ -152,7 +111,7 @@ public:
 		std::istream htmlstream(m_read_buf.get());
 
 		try{
-			std::string jokestr = get_joke_content(htmlstream);
+			std::string jokestr = get_joke_content(htmlstream, rannum);
 			io_service.post( bind_handler(handler, error_code(), jokestr) );
 		}catch (const boost::locale::conv::invalid_charset_error &err){
 			// 应该重新开始, 而不是把这个错误的编码帖上去.
