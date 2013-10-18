@@ -64,7 +64,7 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 		startpos = what[0].second;
 	}
 
-	rannum.seed( std::time(0) );
+	gen.seed( std::time(0) );
 	int no = gen() % v.size() +1;
 	
 	return v.at( no-1 );
