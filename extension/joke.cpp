@@ -41,10 +41,8 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 	std::istreambuf_iterator<char> isi;
 	std::string message(std::istreambuf_iterator<char>(response_stream), isi);
 
-	while( message.find( "\r" ) != std::string::npos )
-		message.erase( message.find( "\r" ), 1 );
-	while( message.find( "\n" ) != std::string::npos )
-		message.erase( message.find( "\n" ), 1 );
+	boost::replace_all( message, "\r", "" );
+	boost::replace_all( message, "\n", "" );
 
 	boost::regex ex( "<div class=\"content\" title=.*?>(.*?)</div><div (id|class)" );
 	boost::smatch what;
@@ -57,10 +55,8 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 		std::string idclass(what[2].first, what[2].second);
 		if ( idclass == "id" )	// 只选择不含图的条目
 		{
-			while( content.find( "<br/><br/>" ) != std::string::npos )
-				content.replace( content.find( "<br/><br/>" ), 10, "\r\n" );
-			while( content.find( "<br/>" ) != std::string::npos )
-				content.replace( content.find( "<br/>" ), 5, "\r\n" );
+			boost::replace_all( content, "<br/><br/>", "\r\n");
+			boost::replace_all( content, "<br/>", "\r\n");
 			v.push_back(content);
 		}
 		startpos = what[0].second;
@@ -68,7 +64,7 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 
 	gen.seed( std::time(0) );
 
-	return v.at( gen() % v.size() );
+	return html_unescape( v.at( gen() % v.size() ) );
 }
 
 class jokefecher{
