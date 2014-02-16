@@ -18,6 +18,15 @@ struct splice_stream_op
 	  , bytes_spliced(0)
 	  , m_streambuf(boost::make_shared<boost::asio::streambuf>())
 	{
+		if (!s1.is_open())
+			io_service.post(
+				bind(
+					m_handler,
+					boost::system::errc::make_error_code(boost::system::errc::bad_file_descriptor),
+					0
+				)
+			);
+
 		m_read_stream.async_read_some(m_streambuf->prepare(4096), *this);
 	}
 
