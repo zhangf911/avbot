@@ -199,6 +199,10 @@ list(APPEND AVBOT_SOURCES backtrace.cpp)
 endif()
 
 add_executable(avbot ${AVBOT_SOURCES} ${AVBOTRPC_SOURCES})
+if(NOT WIN32)
+target_link_libraries(avbot -rdynamic)
+endif()
+
 
 if(WIN32)
 add_subdirectory(gui)
