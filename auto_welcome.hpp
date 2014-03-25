@@ -51,7 +51,7 @@ public:
 			std::cerr << "load questioin error." <<  ex.what() << std::endl;
 		}
 	}
-	
+
 	void add_to_list(value_qq_list list)
 	{
 		BOOST_FOREACH(std::string item, list)
@@ -87,7 +87,7 @@ protected:
 		{
 			try
 			{
-				std::string str_msg = boost::str( boost::format( "%s%s %s\n" ) % "@" % item % str_msg_body );
+				std::string str_msg = boost::str( boost::format( "%s%s %s\n %s%s" ) % item % "@" % str_msg_body % "@" % item);
 				msgsender( str_msg );
 			}
 			catch( std::exception err )
