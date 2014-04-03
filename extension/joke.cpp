@@ -64,6 +64,11 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 
 	gen.seed( std::time(0) );
 
+	if (v.empty())
+	{
+		return "获取笑话出错， v.size() == 0 ";
+	}
+
 	return html_unescape( v.at( gen() % v.size() ) );
 }
 
