@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
-#include <boost/property_tree/json_parser.hpp>
+#include <algorithm>
 #include <boost/property_tree/ptree_fwd.hpp>
+#include <boost/type_traits.hpp>
 
 //重载掉有bug的boost方法
 namespace boost { namespace property_tree {
@@ -12,7 +13,6 @@ namespace boost { namespace property_tree {
 #endif
 {
     // Create necessary escape sequences from illegal characters
-    template<>
     inline std::string create_escapes(const std::basic_string<char> &s)
     {
         std::basic_string<char> result;
