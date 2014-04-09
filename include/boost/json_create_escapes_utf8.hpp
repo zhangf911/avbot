@@ -4,11 +4,16 @@
 #include <boost/property_tree/ptree_fwd.hpp>
 
 //重载掉有bug的boost方法
-namespace boost { namespace property_tree { namespace json_parser
+namespace boost { namespace property_tree {
+#if BOOST_VERSION >= 105500
+	namespace json_parser
+#else
+	namespace info_parser
+#endif
 {
     // Create necessary escape sequences from illegal characters
     template<>
-    inline std::basic_string<char> create_escapes(const std::basic_string<char> &s)
+    inline std::string create_escapes(const std::basic_string<char> &s)
     {
         std::basic_string<char> result;
         std::basic_string<char>::const_iterator b = s.begin();
