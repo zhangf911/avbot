@@ -30,7 +30,7 @@
 #include <direct.h>
 #endif
 
-#include "boost/consolestr.hpp"
+#include "boost/stringencodings.hpp"
 
 #include "libavlog/avlog.hpp"
 #include "libavbot/avbot.hpp"
@@ -79,7 +79,7 @@ static void handle_join_group(webqq::qqGroup_ptr group, bool needvc,
 			% group->qqnum
 		);
 
-		std::cout << console_out_str(msg) <<  std::endl;
+		std::cout << utf8_to_local_encode(msg) <<  std::endl;
 		msg_sender(msg);
 
 		webqq::webqq::join_group_handler  join_group_handler;
@@ -119,7 +119,7 @@ static void handle_search_group(std::string groupqqnum, webqq::qqGroup_ptr group
 			% groupqqnum
 		);
 
-		std::cout <<  console_out_str(msg) <<  std::endl;
+		std::cout <<  utf8_to_local_encode(msg) <<  std::endl;
 		msg_sender(msg);
 
 		webqq::webqq::search_group_handler search_group_handler;

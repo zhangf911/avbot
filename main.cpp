@@ -52,7 +52,7 @@ namespace po = boost::program_options;
 
 #include <avhttp.hpp>
 
-#include "boost/consolestr.hpp"
+#include "boost/stringencodings.hpp"
 #include "boost/avloop.hpp"
 
 #include "libavbot/avbot.hpp"
@@ -95,8 +95,8 @@ static void vc_code_decoded(boost::system::error_code ec, std::string provider,
 		return;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << console_out_str("使用 ") 	<<  console_out_str(provider)
-		<< console_out_str(" 成功解码验证码!");
+	BOOST_LOG_TRIVIAL(info) << utf8_to_local_encode("使用 ") 	<<  utf8_to_local_encode(provider)
+		<< utf8_to_local_encode(" 成功解码验证码!");
 
 	if (provider == "IRC/XMPP 好友辅助验证码解码器")
 		mybot.broadcast_message("验证码已输入");
@@ -483,22 +483,22 @@ int main(int argc, char * argv[])
 		"smtp server of mail,  default to smtp.[domain]")
 
 	("jsdati_username", po::value<std::string>(&jsdati_username),
-		console_out_str("联众打码服务账户").c_str())
+		utf8_to_local_encode("联众打码服务账户").c_str())
 	("jsdati_password", po::value<std::string>(&jsdati_password),
-		console_out_str("联众打码服务密码").c_str())
+		utf8_to_local_encode("联众打码服务密码").c_str())
 
 	("hydati_key", po::value<std::string>(&hydati_key),
-		console_out_str("慧眼答题服务key").c_str())
+		utf8_to_local_encode("慧眼答题服务key").c_str())
 
 	("deathbycaptcha_username", po::value<std::string>(&deathbycaptcha_username),
-		console_out_str("阿三解码服务账户").c_str())
+		utf8_to_local_encode("阿三解码服务账户").c_str())
 	("deathbycaptcha_password", po::value<std::string>(&deathbycaptcha_password),
-		console_out_str("阿三解码服务密码").c_str())
+		utf8_to_local_encode("阿三解码服务密码").c_str())
 
 	("antigate_key", po::value<std::string>(&antigate_key),
-		console_out_str("antigate解码服务key").c_str())
+		utf8_to_local_encode("antigate解码服务key").c_str())
 	("antigate_host", po::value<std::string>(&antigate_host)->default_value("http://antigate.com/"),
-		console_out_str("antigate解码服务器地址").c_str())
+		utf8_to_local_encode("antigate解码服务器地址").c_str())
 
 	("use_avplayer_free_vercode_decoder", po::value<bool>(&use_avplayer_free_vercode_decoder),
 		"ask microcai for permission")
@@ -508,12 +508,12 @@ int main(int argc, char * argv[])
 	("rpcport",	po::value<unsigned>(&rpcport)->default_value(6176),
 		"run rpc server on port 6176")
 
-	("preambleqq", po::value<std::string>(&preamble_qq_fmt)->default_value(console_out_str("qq(%a): ")),
-		console_out_str("为QQ设置的发言前缀, 默认是 qq(%a): ").c_str())
-	("preambleirc", po::value<std::string>(&preamble_irc_fmt)->default_value(console_out_str("%a 说: ")),
-		console_out_str("为IRC设置的发言前缀, 默认是 %a 说: ").c_str())
-	("preamblexmpp", po::value<std::string>(&preamble_xmpp_fmt)->default_value(console_out_str("(%a): ")),
-		console_out_str(
+	("preambleqq", po::value<std::string>(&preamble_qq_fmt)->default_value(utf8_to_local_encode("qq(%a): ")),
+		utf8_to_local_encode("为QQ设置的发言前缀, 默认是 qq(%a): ").c_str())
+	("preambleirc", po::value<std::string>(&preamble_irc_fmt)->default_value(utf8_to_local_encode("%a 说: ")),
+		utf8_to_local_encode("为IRC设置的发言前缀, 默认是 %a 说: ").c_str())
+	("preamblexmpp", po::value<std::string>(&preamble_xmpp_fmt)->default_value(utf8_to_local_encode("(%a): ")),
+		utf8_to_local_encode(
 			"为XMPP设置的发言前缀, 默认是 (%a): \n\n "
 			"前缀里的含义 \n"
 			"\t %a 为自动选择\n\t %q 为QQ号码\n\t %n 为昵称\n\t %c 为群名片 \n"
@@ -630,7 +630,7 @@ rungui:
 
 	if (qqnumber.empty() || qqpwd.empty())
 	{
-		BOOST_LOG_TRIVIAL(fatal) << console_out_str("请设置qq号码和密码.");
+		BOOST_LOG_TRIVIAL(fatal) << utf8_to_local_encode("请设置qq号码和密码.");
 		exit(1);
 	}
 

@@ -4,7 +4,7 @@
 #ifndef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
 #include <boost/thread.hpp>
 #endif
-#include <boost/consolestr.hpp>
+#include <boost/stringencodings.hpp>
 #include "input.hpp"
 
 static boost::signals2::signal< void(std::string)> input_got_one_line;
