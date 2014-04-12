@@ -1,9 +1,6 @@
 [submodule "avhttp"]
 	path = avhttp
 	url = git://github.com/avplayer/avhttp.git
-[submodule "avboost"]
-	path = avboost
-	url = git://github.com/avplayer/avboost.git
 [submodule "deCAPTCHA"]
 	path = deCAPTCHA
 	url = git://github.com/avplayer/deCAPTCHA.git
