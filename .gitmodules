@@ -1,4 +1,0 @@
-[submodule "soci"]
-	path = soci
-	url = git://github.com/SOCI/soci.git
-	branch = hotfix/3.2.2
