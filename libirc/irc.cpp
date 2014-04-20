@@ -273,14 +273,14 @@ public:
 			return;
 		}
 
+		m_client->process_request(bytes_transferred);
+
 		boost::asio::async_read_until(
 			m_client->socket_,
 			m_client->response_,
 			"\r\n",
 			*this
 		);
-
-		m_client->process_request(bytes_transferred);
 	}
 
 private:
