@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cxxabi.h>
 #include <string.h>
+#define _XOPEN_SOURCE
 #include <ucontext.h>
 
 static void avbot_seg_handler(int sig_num, siginfo_t * info, void * ucontext)
