@@ -34,6 +34,9 @@ public:
 	typedef boost::property_tree::ptree av_message_tree;
 	typedef boost::signals2::signal<void (av_message_tree) > on_message_type;
 
+	// 用了传入一个 url 生成器，这样把 qq 的消息里的图片地址转换为 vps 上跑的 http 服务的地址。
+	boost::function<std::string(av_message_tree)> m_urlformater;
+
 	// 每当有消息的时候激发.
 	on_message_type on_message;
 	// 每当有新的频道被创建的时候激发
@@ -102,6 +105,6 @@ private:
 public:
 	// auto pick an nick name for IRC
 	static std::string autonick();
-	static std::string format_message( const avbot::av_message_tree& message );
+	std::string format_message( const avbot::av_message_tree& message );
 	static std::string image_subdir_name(std::string cface);
 };

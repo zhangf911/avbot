@@ -521,8 +521,12 @@ std::string avbot::format_message( const avbot::av_message_tree& message )
 				linermessage += v.second.data();
 				linermessage += " ";
 			}else if (v.first == "cface"){
-				// 执行 HTTP 访问获得 302 跳转后的 URL.
-				linermessage += v.second.get<std::string>("gchatpicurl");
+				// 老版本是显示 执行 HTTP 访问获得 302 跳转后的 URL.
+				// 但是新的webqq已经把无cookie的访问河了蟹了。于是需要显示的是avbot vps上下载后的地址。不过这个需要呵呵了。
+				if (m_urlformater)
+					linermessage += m_urlformater(v.second);
+				else
+					linermessage += v.second.get<std::string>("gchatpicurl");
 				linermessage += " ";
 			}
 		}

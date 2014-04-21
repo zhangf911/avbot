@@ -188,6 +188,18 @@ static void build_group(std::string chanelmapstring, avbot & mybot)
 	}
 }
 
+static std::string imgurlformater(avbot::av_message_tree qqmessage, std::string baseurl)
+{
+	std::string cface = qqmessage.get<std::string>("name");
+
+	return boost::str(
+		boost::format("%s/images/%s/%s")
+		% baseurl
+		% avbot::image_subdir_name(cface)
+		% cface
+   );
+}
+
 static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::session & db)
 {
 	std::string linemessage;
@@ -415,6 +427,7 @@ int main(int argc, char * argv[])
 	std::string antigate_key, antigate_host;
 	bool use_avplayer_free_vercode_decoder(false);
 	bool no_persistent_db(false);
+	std::string weblogbaseurl;
 
 	fs::path config; // 配置文件的路径
 
@@ -505,6 +518,8 @@ int main(int argc, char * argv[])
 
 	("localimage", po::value<bool>(&(mybot.fetch_img))->default_value(true),
 		"fetch qq image to local disk and store it there")
+	("weblogbaseurl", po::value<std::string>(&(weblogbaseurl)),
+		"base url for weblog serving")
 	("rpcport",	po::value<unsigned>(&rpcport)->default_value(6176),
 		"run rpc server on port 6176")
 
@@ -757,6 +772,8 @@ rungui:
 		start_stdinput(io_service);
 		connect_stdinput(boost::bind(stdin_feed_broadcast , boost::ref(mybot), _1));
 	}
+
+	mybot.m_urlformater = boost::bind(&imgurlformater, _1, weblogbaseurl);
 
 	if (rpcport > 0)
 	{

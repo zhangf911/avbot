@@ -180,7 +180,7 @@ struct mail_recoder
 				}
 				else
 				{
-					boost::get<std::string>(pimf->body) += avbot::format_message(jsonmessage);
+					boost::get<std::string>(pimf->body) += mybot->format_message(jsonmessage);
 				}
 			}
 			else
@@ -191,7 +191,7 @@ struct mail_recoder
 		}
 		catch (...)
 		{
-			boost::get<std::string>(pimf->body) += avbot::format_message(jsonmessage);
+			boost::get<std::string>(pimf->body) += mybot->format_message(jsonmessage);
 		}
 	}
 
