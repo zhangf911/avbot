@@ -773,7 +773,10 @@ rungui:
 		connect_stdinput(boost::bind(stdin_feed_broadcast , boost::ref(mybot), _1));
 	}
 
-	mybot.m_urlformater = boost::bind(&imgurlformater, _1, weblogbaseurl);
+	if (!weblogbaseurl.empty())
+	{
+		mybot.m_urlformater = boost::bind(&imgurlformater, _1, weblogbaseurl);
+	}
 
 	if (rpcport > 0)
 	{
