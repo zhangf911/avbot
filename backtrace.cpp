@@ -1,3 +1,9 @@
+
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE
+#endif
+#include <ucontext.h>
+
 #include <stdio.h>
 #include <execinfo.h>
 #include <signal.h>
@@ -5,8 +11,6 @@
 #include <iostream>
 #include <cxxabi.h>
 #include <string.h>
-#define _XOPEN_SOURCE
-#include <ucontext.h>
 
 static void avbot_seg_handler(int sig_num, siginfo_t * info, void * ucontext)
 {
