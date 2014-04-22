@@ -10,6 +10,7 @@
 #ifndef BOOST_PROPERTY_TREE_DETAIL_JSON_PARSER_WRITE_HPP_INCLUDED
 #define BOOST_PROPERTY_TREE_DETAIL_JSON_PARSER_WRITE_HPP_INCLUDED
 
+#include <boost/version.hpp>
 #include <boost/property_tree/detail/json_parser_error.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/next_prior.hpp>
@@ -17,7 +18,12 @@
 #include <string>
 #include <ostream>
 
-namespace boost { namespace property_tree { namespace json_parser
+namespace boost { namespace property_tree {
+#if BOOST_VERSION >= 105500
+	namespace json_parser
+#else
+	namespace info_parser
+#endif
 {
 
     // Create necessary escape sequences from illegal characters
