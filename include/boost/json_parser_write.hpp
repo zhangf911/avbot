@@ -22,7 +22,7 @@ namespace boost { namespace property_tree { namespace json_parser
 
     // Create necessary escape sequences from illegal characters
     template<class Ch>
-    std::basic_string<Ch> create_escapes(const std::basic_string<Ch> &s)
+    inline std::basic_string<Ch> create_escapes(const std::basic_string<Ch> &s)
     {
         std::basic_string<Ch> result;
         typename std::basic_string<Ch>::const_iterator b = s.begin();
@@ -64,7 +64,7 @@ namespace boost { namespace property_tree { namespace json_parser
     }
 
     template<class Ptree>
-    void write_json_helper(std::basic_ostream<typename Ptree::key_type::value_type> &stream, 
+    inline void write_json_helper(std::basic_ostream<typename Ptree::key_type::value_type> &stream,
                            const Ptree &pt,
                            int indent, bool pretty)
     {
@@ -126,7 +126,7 @@ namespace boost { namespace property_tree { namespace json_parser
 
     // Verify if ptree does not contain information that cannot be written to json
     template<class Ptree>
-    bool verify_json(const Ptree &pt, int depth)
+    inline bool verify_json(const Ptree &pt, int depth)
     {
 
         typedef typename Ptree::key_type::value_type Ch;
@@ -153,7 +153,7 @@ namespace boost { namespace property_tree { namespace json_parser
     
     // Write ptree to json stream
     template<class Ptree>
-    void write_json_internal(std::basic_ostream<typename Ptree::key_type::value_type> &stream, 
+    inline void write_json_internal(std::basic_ostream<typename Ptree::key_type::value_type> &stream,
                              const Ptree &pt,
                              const std::string &filename,
                              bool pretty)
