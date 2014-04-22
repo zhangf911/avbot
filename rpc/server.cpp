@@ -17,6 +17,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  */
+
+#include <boost/json_parser_write.hpp>
+
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
@@ -28,7 +31,6 @@ namespace js = boost::property_tree::json_parser;
 #include <boost/circular_buffer.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/async_coro_queue.hpp>
-#include <boost/json_create_escapes_utf8.hpp>
 
 #include <avhttp/detail/parsers.hpp>
 

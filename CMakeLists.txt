@@ -105,7 +105,7 @@ if(ENABLE_LTO)
 	set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -flto -Wl,-flto")
 endif()
 
-find_package(Boost 1.54 REQUIRED COMPONENTS timer chrono log log_setup date_time filesystem system program_options regex locale)
+find_package(Boost 1.55 REQUIRED COMPONENTS timer chrono log log_setup date_time filesystem system program_options regex locale)
 
 # add_definitions(-DBOOST_LOG_NO_THREADS)
 if(NOT WIN32)
