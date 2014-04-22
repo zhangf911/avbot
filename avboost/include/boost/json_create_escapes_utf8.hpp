@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <boost/property_tree/ptree_fwd.hpp>
 #include <boost/type_traits.hpp>
+#include <boost/version.hpp>
 
 //重载掉有bug的boost方法
 namespace boost { namespace property_tree {
