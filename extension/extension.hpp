@@ -6,6 +6,7 @@
 #include <boost/asio/io_service.hpp>
 
 #include "libavbot/avbot.hpp"
+#include "boost/stringencodings.hpp"
 
 class avbotextension
 {

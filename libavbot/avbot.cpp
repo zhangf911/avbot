@@ -8,6 +8,7 @@ namespace fs = boost::filesystem;
 #include <fstream>
 
 #include "boost/urlencode.hpp"
+#include "boost/stringencodings.hpp"
 #include "avbot.hpp"
 
 
@@ -98,9 +99,9 @@ static std::string room_name( const avbot::av_message_tree& message )
 avbot::avbot( boost::asio::io_service& io_service )
   : m_io_service(io_service), fetch_img(false)
 {
-	preamble_irc_fmt = "%a 说：";
-	preamble_qq_fmt = "qq(%a)说：";
-	preamble_xmpp_fmt = "(%a)说：";
+	preamble_irc_fmt = literal_to_utf8str("%a 说：");
+	preamble_qq_fmt = literal_to_utf8str("qq(%a)说：");
+	preamble_xmpp_fmt = literal_to_utf8str("(%a)说：");
 
 	on_message.connect(boost::bind(&avbot::forward_message, this, _1));
 }
@@ -403,7 +404,7 @@ void avbot::callback_on_qq_group_newbee(webqq::qqGroup_ptr group, webqq::qqBuddy
 	}else{
 		// 新人入群,  可是 webqq 暂时无法获取新人昵称.
 
-		ptree_who.add("nick", "获取名字失败");
+		ptree_who.add("nick",  literal_to_utf8str("获取名字失败"));
 
 		return;
 	}
@@ -411,12 +412,12 @@ void avbot::callback_on_qq_group_newbee(webqq::qqGroup_ptr group, webqq::qqBuddy
 	message.add_child("who", ptree_who);
 	ptree textmsg;
 
-	message.add("preamble", "群系统消息: ");
+	message.add("preamble", literal_to_utf8str("群系统消息: "));
 
 	if (buddy){
-		message.add("message.text", boost::str(boost::format("新人 %s 入群.") % buddy->nick ));
+		message.add("message.text", boost::str(boost::format(literal_to_utf8str("新人 %s 入群.")) % buddy->nick ));
 	}else{
-		message.add("message.text", "新人入群,  可是 webqq 暂时无法获取新人昵称.");
+		message.add("message.text", literal_to_utf8str("新人入群,  可是 webqq 暂时无法获取新人昵称."));
 	}
 
 	on_message(message);
@@ -533,7 +534,7 @@ std::string avbot::format_message( const avbot::av_message_tree& message )
 	}else{
 
 		linermessage  = boost::str(
-			boost::format( "[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s" )
+			boost::format( literal_to_utf8str("[QQ邮件]\n发件人:%s\n收件人:%s\n主题:%s\n\n%s") )
 			% message.get<std::string>("from") % message.get<std::string>("to") % message.get<std::string>("subject")
 			% message.get_child("message").data()
 		);
