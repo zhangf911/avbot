@@ -3,7 +3,7 @@ project(qqwry)
 
 include_directories(include)
 
-add_executable(getip test/test.cpp)
+add_executable(getip test/test.cpp include/qqwry/ipdb.hpp)
 
 find_package(ZLIB 1.2)
 
@@ -15,3 +15,6 @@ else()
 #target_link_libraries(getip miniz)
 endif()
 
+if(MSVC)
+target_link_libraries(getip ws2_32.lib wininet.lib)
+endif()

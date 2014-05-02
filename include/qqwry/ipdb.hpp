@@ -1,9 +1,13 @@
-// IPLocation.h: interface for the CIPLocation class.
+﻿// IPLocation.h: interface for the CIPLocation class.
 //
 //////////////////////////////////////////////////////////////////////
 
 #if !defined(AFX_IPLOCATION_H__80D0E230_4815_4D01_9CCF_4DAF4DE175E8__INCLUDED_)
 #define AFX_IPLOCATION_H__80D0E230_4815_4D01_9CCF_4DAF4DE175E8__INCLUDED_
+
+#ifdef _MSC_VER
+#pragma warning(disable:4996)
+#endif
 
 #include <map>
 #include <list>
@@ -121,48 +125,6 @@ typedef struct
 
 #pragma pack()
 
-class Xstring
-{
-protected:
-	char*	m_data;
-protected:
-	void inline Allocate()
-	{
-		m_data = (char*) std::malloc(length + 1);
-	}
-public:
-	Xstring()
-	{
-		length = 64;
-		Allocate();
-	}
-	Xstring(const  char* begin, const char* end)
-	{
-		length = end - begin;
-		Allocate();
-		memcpy(m_data, begin, length);
-		m_data[length] = 0;
-	}
-	~Xstring()
-	{
-		free(m_data);
-	}
-	inline operator const char* ()
-	{
-		return (const char*) m_data;
-	}
-	Xstring& operator = (const Xstring& str)
-	{
-		length = str.length;
-		Allocate();
-		memcpy(m_data, str.m_data, length);
-		m_data[length] = 0;
-		return * this;
-	}
-public:
-	size_t	length;
-};
-
 static inline bool searchMatch(unsigned int& i, unsigned int& it, const char* str, const char* cstr)
 {
 	size_t si, j;
@@ -213,7 +175,7 @@ static inline bool match_exp(char str[], char exp[])
 	else if (exp[j] == 0)
 		return false;
 
-	Xstring lastSubstr;
+	std::string lastSubstr;
 	for (jt = j; exp[jt] != 0 ; i = it, j = jt)
 	{
 		for (; exp[j] != 0 && exp[j] == '*';)
@@ -223,16 +185,16 @@ static inline bool match_exp(char str[], char exp[])
 		for (jt = j; exp[jt] != 0 && exp[jt] != '*';)
 			jt++;
 
-		Xstring tmp(&exp[j], &exp[jt]);
+		std::string tmp(&exp[j], &exp[jt]);
 
-		if (!searchMatch(i, it, tmp, str))
+		if (!searchMatch(i, it, tmp.c_str(), str))
 			return false;
 		lastSubstr = tmp;
 	}
 
 	if (exp[j - 1] == '*')
 		return true;
-	for (i = strlen(str) - lastSubstr.length, j = 0; j < lastSubstr.length; i++, j++)
+	for (i = strlen(str) - lastSubstr.length(), j = 0; j < lastSubstr.length(); i++, j++)
 		if (lastSubstr[j] != '?' && str[i] != lastSubstr[j])
 			return false;
 	return true;
