@@ -1,6 +1,6 @@
  纯真IP数据库 解析 库使用说明
 
-首先实例化 CIPLocation 类
+首先实例化 QQWry::ipdb 类
 构造函数就是 QQwry.Dat 文件名
 
 也可以自己读入QQwry.Dat 文件,然后将文件在内存中的起始位置和大小传递进来。
@@ -13,14 +13,12 @@
 要查询ip所对应的地址
 调用 GetIPLocation
 
-传递 IPLocation 结构的引用和 in_addr 结构
+传递 in_addr 结构
 作为参数，
 
-结果在 传入的 IPLocation 中返回(同时仍然会返回 IPLocation的引用呵呵)
+结果返回 IPLocation 。
 内部使用了折半查找法，所以查找很迅速 (最多20次比较)，不用担心性能问题
 
 
 要查询 地址所对应的ip范围
 调用GetIPs
-
-std::list<IP_regon> 是
