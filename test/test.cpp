@@ -67,7 +67,6 @@ namespace std{ using namespace std::tr1; }
 
 #define DEBUG
 
-#ifndef DEBUG
 #ifdef _WIN32
 static std::string internetDownloadFile(std::string url)
 {
@@ -109,32 +108,6 @@ static std::string internetDownloadFile(std::string url)
 	system("wget " + url);
 	// TODO
 //	return get_file_content();
-}
-#endif
-#else
-// common debug version that just load from file
-static std::string internetDownloadFile(std::string url)
-{
-	std::shared_ptr<FILE> f;
-
-	if (url == "http://update.cz88.net/ip/copywrite.rar")
-	{
-		f.reset(std::fopen("copywrite.rar", "rb"), std::fclose);
-	}
-	else if (url == "http://update.cz88.net/ip/qqwry.rar")
-	{
-		// 打开 qqwry.rar 吧
-		f.reset(std::fopen("qqwry.rar", "rb"), std::fclose);
-	}
-	else
-		return "";
-
-	std::string ret;
-	ret.resize(8192*1024);
-	ret.resize(std::fread(&ret[0], 1, ret.size(), f.get()));
-	//f.read(&ret[0], 8192);
-
-	return ret;
 }
 #endif
 
