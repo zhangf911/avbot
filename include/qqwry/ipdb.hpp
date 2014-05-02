@@ -632,8 +632,8 @@ private:
 	ipdb& operator = (const ipdb&);
 };
 
-static inline std::string decodeQQWryDat(std::string copywrite_rar, std::string qqwry_rar,
-	std::function<int (unsigned char *pDest, mz_ulong *pDest_len, const unsigned char *pSource, mz_ulong source_len)> uncompressfunc)
+template<class UncompressFunction>
+std::string decodeQQWryDat(std::string copywrite_rar, std::string qqwry_rar, UncompressFunction uncompressfunc)
 {
 	uint32_t key = QQWry::detail::to_hostending(reinterpret_cast<const detail::copywritetag*>(copywrite_rar.data())->key);
 	// 解密

@@ -47,11 +47,11 @@
 #define DEBUG
 
 #ifdef _WIN32
-static std::string internetDownloadFile(std::string url)
+static std::string internetDownloadFile(std::wstring url)
 {
-	std::shared_ptr<void> hinet(::InternetOpen(0, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, 0), InternetCloseHandle);
+	std::shared_ptr<void> hinet(::InternetOpenW(0, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, 0), InternetCloseHandle);
 	std::shared_ptr<void> hUrl(
-		::InternetOpenUrl((HINSTANCE)hinet.get(), url.c_str(), 0, 0, INTERNET_FLAG_TRANSFER_BINARY | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD, 0),
+		::InternetOpenUrlW((HINSTANCE)hinet.get(), url.c_str(), 0, 0, INTERNET_FLAG_TRANSFER_BINARY | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD, 0),
 		::InternetCloseHandle
 		);
 
@@ -160,9 +160,9 @@ std::string search_qqwrydat(const std::string exepath)
 	// 解压
 	std::string deflated = QQWry::decodeQQWryDat(
 		// 下载 copywrite.rar
-		internetDownloadFile("http://update.cz88.net/ip/copywrite.rar"),
+		internetDownloadFile(L"http://update.cz88.net/ip/copywrite.rar"),
 		// 下载 qqwry.rar
-		internetDownloadFile("http://update.cz88.net/ip/qqwry.rar"),
+		internetDownloadFile(L"http://update.cz88.net/ip/qqwry.rar"),
 		// 传入 解压函数
 		uncompress
 	);
