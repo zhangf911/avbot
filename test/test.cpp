@@ -13,27 +13,6 @@
 #include <algorithm>
 #include <stdio.h>
 
-#if __cplusplus >= 201103L
-#define _HAVE_CXX11
-#else
-
-#ifdef _MSC_VER
-
-#if _MSC_VER >= 1700
-#define _HAVE_CXX11
-#endif
-#endif
-#endif
-
-#ifdef _HAVE_CXX11
-#include <memory>
-#include <functional>
-#else
-#include <tr1/memory>
-#include <tr1/shared_ptr.h>
-#include <tr1/functional>
-namespace std{ using namespace std::tr1; }
-#endif
 
 #ifndef _WIN32
 #include <unistd.h>
