@@ -47,6 +47,7 @@ std::size_t sqlite3_blob_backend::read(
     return r;
 }
 
+#include <algorithm>
 
 std::size_t sqlite3_blob_backend::write(
     std::size_t offset, char const * buf,

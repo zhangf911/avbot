@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2013  mosir, avplayer 开源社区
  *
  * This program is free software: you can redistribute it and/or modify

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2013  微蔡 <microcai@fedoraproject.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,7 @@ namespace pt = boost::property_tree;
 namespace js = boost::property_tree::json_parser;
 
 #include <boost/timedcall.hpp>
+#include "boost/stringencodings.hpp"
 
 namespace decaptcha{
 namespace decoder{
@@ -102,7 +103,7 @@ public:
 		  m_stream(boost::make_shared<avhttp::http_stream>(boost::ref(m_io_service))),
 		  m_location(boost::make_shared<std::string>()),
 		  m_buffers(boost::make_shared<boost::asio::streambuf>()),
-		  m_tries(boost::make_shared<int>(0)), provider("deathbycaptcha 阿三解码服务")
+		  m_tries(boost::make_shared<int>(0)), provider(literal_to_utf8str("deathbycaptcha 阿三解码服务"))
 	{
 		std::string boundary = generate_boundary();
  		std::string content = build_multipart_formdata(buffer, boundary);

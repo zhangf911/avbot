@@ -1,4 +1,4 @@
-
+﻿
 #include <boost/circular_buffer.hpp>
 
 #include <vector>
