@@ -14,22 +14,24 @@
 #include <stdio.h>
 
 #if __cplusplus >= 201103L
-#define _HAVE_CXX11_MEMORY
+#define _HAVE_CXX11
 #else
 
 #ifdef _MSC_VER
 
 #if _MSC_VER >= 1700
-#define _HAVE_CXX11_MEMORY
+#define _HAVE_CXX11
 #endif
 #endif
 #endif
 
-#ifdef _HAVE_CXX11_MEMORY
+#ifdef _HAVE_CXX11
 #include <memory>
+#include <functional>
 #else
 #include <tr1/memory>
 #include <tr1/shared_ptr.h>
+#include <tr1/functional>
 namespace std{ using namespace std::tr1; }
 #endif
 
@@ -60,16 +62,6 @@ namespace std{ using namespace std::tr1; }
 
 #pragma pack(1)
 
-struct copywritetag{
-	uint32_t sign;// "CZIP"
-	uint32_t version;//一个和日期有关的值
-	uint32_t unknown1;// 0x01
-	uint32_t size;// qqwry.rar大小
-	uint32_t unknown2;
-	uint32_t key;// 解密qqwry.rar前0x200字节所需密钥
-	char text[128];//提供商
-	char link[128];//网址
-};
 
 #pragma pack()
 
@@ -216,9 +208,9 @@ std::string search_qqwrydat(const std::string exepath)
 	// 下载 copywrite.rar
 	std::string copywrite = internetDownloadFile("http://update.cz88.net/ip/copywrite.rar");
 	// 获取解压密钥 key
-	uint32_t key = QQWry::detail::to_hostending(reinterpret_cast<const copywritetag*>(copywrite.data())->key);
+	uint32_t key = QQWry::detail::to_hostending(reinterpret_cast<const QQWry::detail::copywritetag*>(copywrite.data())->key);
 //	uint32_t l = QQWry::detail::to_hostending(reinterpret_cast<const copywritetag*>(copywrite.data())->key);
-	std::string link = reinterpret_cast<const copywritetag*>(copywrite.data())->link;
+	std::string link = reinterpret_cast<const QQWry::detail::copywritetag*>(copywrite.data())->link;
 	// 下载 qqwry.rar
 	std::string qqwrydat = internetDownloadFile("http://update.cz88.net/ip/qqwry.rar");
 

@@ -106,6 +106,17 @@ static inline int utf8_gbk(char* outbuf, size_t outlen, char* inbuf, size_t inle
 
 #pragma pack(1)
 
+struct copywritetag{
+	uint32_t sign;// "CZIP"
+	uint32_t version;//一个和日期有关的值
+	uint32_t unknown1;// 0x01
+	uint32_t size;// qqwry.rar大小
+	uint32_t unknown2;
+	uint32_t key;// 解密qqwry.rar前0x200字节所需密钥
+	char text[128];//提供商
+	char link[128];//网址
+};
+
 class  _offset_
 {
 public:
@@ -502,7 +513,17 @@ public:
 		return retips;
 	}
 
+	// 下载并解压 qqwry.dat 文件，保留到内存里使用
+	bool downloadQQWry()
+	{
+	
+	}
 
+	// 写入 ofstream, 必须得是 ostream , bin 模式打开
+	void save_qqwry(std::ofstream& outstream)
+	{
+	
+	}
 
 public:
 	ipdb(char*	memptr, size_t len)
@@ -520,7 +541,7 @@ public:
 		m_backup_byfile = false;
 #endif
 	}
-	ipdb(const char*	ipDateFile)
+	ipdb(const char* ipDateFile)
 	{
 #ifndef _WIN32
 		int
@@ -592,7 +613,15 @@ public:
 
 protected:
 
+private:
+
+	// 拷贝构造
+	ipdb(const ipdb&);
+
+	// 赋值
+	ipdb& operator = (const ipdb&);
 };
+
 
 } // namespace QQWry
 
