@@ -157,8 +157,9 @@ struct exchangerate_fetcher_op{
 			boost::regex ex("var ([^=]*)=\"[0-9]*:[0-9]*:[0-9]*,([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),(.*)\"");
 			if (boost::regex_search(jscript.c_str(), what, ex))
 			{
-				std::string msg = boost::str(boost::format("%s 当前汇率 %s 昨收 %s 今开 %s 最高 %s 最低 %S 买入 %s 卖出 %s ")
-											% what[10] % what[9] % what[4] % what[6] % what[7] % what[8] % what[9] % what[3]);
+				std::string msg = boost::str(
+					boost::format(literal_to_utf8str("%s 当前汇率 %s 昨收 %s 今开 %s 最高 %s 最低 %S 买入 %s 卖出 %s "))
+					% what[10] % what[9] % what[4] % what[6] % what[7] % what[8] % what[9] % what[3]);
 
 				sender(msg);
 			}
@@ -207,7 +208,7 @@ public:
 			str += "|";
 		}
 		str += EOR_lists[ EOR_Number - 1 ].money;
-		str += ")(汇率)?";
+		str += literal_to_utf8str(")(汇率)?");
 		
 		boost::cmatch what;
 		if (boost::regex_search(textmsg.c_str(), what, boost::regex(str)))
