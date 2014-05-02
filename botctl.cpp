@@ -74,8 +74,8 @@ static void handle_join_group(webqq::qqGroup_ptr group, bool needvc,
 		write_vcode(vc_img_data);
 		std::string msg = boost::str(
 			boost::format(
-				"哎呀，加入群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。"
-				"文件为 qqlog 目录下的 vercode.jpeg")
+				literal_to_utf8str("哎呀，加入群%s的过程中要输入验证码，请使用 .qqbot vc XXXX 输入。文件为 qqlog 目录下的 vercode.jpeg")
+			)
 			% group->qqnum
 		);
 
