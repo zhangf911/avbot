@@ -18,11 +18,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#define CAODAN(x) x
 #else
 #include <windows.h>
 #include <atlbase.h>
 #include <atlstr.h>
 #include <wininet.h>
+#define CAODAN(x) L##x
 #endif
 
 #include <sys/stat.h>
@@ -83,10 +85,15 @@ static std::string internetDownloadFile(std::wstring url)
 // linux version
 static std::string internetDownloadFile(std::string url)
 {
+	std::string cmd = std::string("curl ") + "\"" + url + "\"";
 	// call wget
-	system("wget " + url);
-	// TODO
-//	return get_file_content();
+	std::shared_ptr<FILE> downloadpipe(popen(cmd.c_str(), "re"), pclose);
+
+	std::string buf;
+	buf.resize(20*1024*1024);
+
+	buf.resize(std::fread(&buf[0], 1, buf.size(), downloadpipe.get()));
+	return buf;
 }
 #endif
 
@@ -160,9 +167,9 @@ std::string search_qqwrydat(const std::string exepath)
 	// 解压
 	std::string deflated = QQWry::decodeQQWryDat(
 		// 下载 copywrite.rar
-		internetDownloadFile(L"http://update.cz88.net/ip/copywrite.rar"),
+		internetDownloadFile(CAODAN("http://update.cz88.net/ip/copywrite.rar")),
 		// 下载 qqwry.rar
-		internetDownloadFile(L"http://update.cz88.net/ip/qqwry.rar"),
+		internetDownloadFile(CAODAN("http://update.cz88.net/ip/qqwry.rar")),
 		// 传入 解压函数
 		uncompress
 	);
