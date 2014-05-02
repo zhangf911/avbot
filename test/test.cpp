@@ -178,37 +178,16 @@ std::string search_qqwrydat(const std::string exepath)
 
 	std::cout << "qqwry.dat 文件没找到，下载中......" << std::endl;
 
-	// 下载 copywrite.rar
-	std::string copywrite = internetDownloadFile("http://update.cz88.net/ip/copywrite.rar");
-	// 获取解压密钥 key
-	uint32_t key = QQWry::detail::to_hostending(reinterpret_cast<const QQWry::detail::copywritetag*>(copywrite.data())->key);
-//	uint32_t l = QQWry::detail::to_hostending(reinterpret_cast<const copywritetag*>(copywrite.data())->key);
-	std::string link = reinterpret_cast<const QQWry::detail::copywritetag*>(copywrite.data())->link;
-	// 下载 qqwry.rar
-	std::string qqwrydat = internetDownloadFile("http://update.cz88.net/ip/qqwry.rar");
-
-	std::vector<uint8_t> qqwrydata;
-
-	qqwrydata.resize(qqwrydat.size());
-	memcpy(&qqwrydata[0], qqwrydat.data(), qqwrydat.size());
-
-	// 解密
-	for (int i = 0; i<0x200; i++)
-	{
-		key *= 0x805;
-		key++;
-		key &=  0xFF;
-		uint32_t v = reinterpret_cast<const uint8_t*>(qqwrydat.data())[i] ^ key;
-
-		qqwrydat[i] = v;
-	}
-
 	// 解压
-	std::vector<uint8_t> deflated;
-	deflated.resize(20*1024*1024);
-	uLongf deflated_size = deflated.size();
-	uncompress(&deflated[0], &deflated_size, (const Bytef*) qqwrydat.data(), qqwrydat.size());
-	deflated.resize(deflated_size);
+	std::string deflated = QQWry::decodeQQWryDat(
+		// 下载 copywrite.rar
+		internetDownloadFile("http://update.cz88.net/ip/copywrite.rar"),
+		// 下载 qqwry.rar
+		internetDownloadFile("http://update.cz88.net/ip/qqwry.rar"),
+		// 传入 解压函数
+		uncompress
+	);
+
 	// 解压 qqwry.rar 为 qqwry.dat
 	std::ofstream ofile("QQWry.Dat", std::ios::binary);
 	ofile.write((const char*) deflated.data(), deflated.size());

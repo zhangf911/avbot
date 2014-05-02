@@ -513,18 +513,6 @@ public:
 		return retips;
 	}
 
-	// 下载并解压 qqwry.dat 文件，保留到内存里使用
-	bool downloadQQWry()
-	{
-	
-	}
-
-	// 写入 ofstream, 必须得是 ostream , bin 模式打开
-	void save_qqwry(std::ofstream& outstream)
-	{
-	
-	}
-
 public:
 	ipdb(char*	memptr, size_t len)
 		: m_file(memptr)
@@ -622,6 +610,34 @@ private:
 	ipdb& operator = (const ipdb&);
 };
 
+static inline std::string decodeQQWryDat(std::string copywrite_rar, std::string qqwry_rar,
+	std::function<int (unsigned char *pDest, mz_ulong *pDest_len, const unsigned char *pSource, mz_ulong source_len)> uncompressfunc)
+{
+	uint32_t key = QQWry::detail::to_hostending(reinterpret_cast<const detail::copywritetag*>(copywrite_rar.data())->key);
+	// 解密
+	for (int i = 0; i<0x200; i++)
+	{
+		key *= 0x805;
+		key++;
+		key &= 0xFF;
+		uint32_t v = reinterpret_cast<const uint8_t*>(qqwry_rar.data())[i] ^ key;
+
+		qqwry_rar[i] = v;
+	}
+
+	std::string deflated;
+	deflated.resize(20 * 1024 * 1024);
+	unsigned long deflated_size = deflated.size();
+	uncompress(
+		reinterpret_cast<unsigned char*>(&deflated[0]),
+		&deflated_size,
+		(const unsigned char*) qqwry_rar.data(),
+		qqwry_rar.size()
+	);
+
+	deflated.resize(deflated_size);
+	return deflated;
+}
 
 } // namespace QQWry
 
