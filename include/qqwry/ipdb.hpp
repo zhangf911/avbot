@@ -32,6 +32,8 @@ static inline uint32_t to_hostending(uint32_t v)
 	ret |= (v & 0x0000ff00) << 8 ;
 	ret |= (v & 0x00ff0000) >> 8;
 	ret |= (v & 0xff000000) >> 24;
+#else
+	ret = v;
 #endif
 	return ret;
 }
@@ -295,7 +297,6 @@ protected:
 
 	char* Get_String(char const* p)
 	{
-		char const* pp;
 		switch (p[0])
 		{
 		case REDIRECT_MODE_1:
