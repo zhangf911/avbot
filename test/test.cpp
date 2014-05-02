@@ -12,12 +12,25 @@
 #include <fstream>
 #include <algorithm>
 #include <stdio.h>
-#if __cplusplus < 201103L
-# include <tr1/memory>
-# include <tr1/shared_ptr.h>
-namespace std{ using namespace std::tr1;}
+
+#if __cplusplus >= 201103L
+#define _HAVE_CXX11_MEMORY
 #else
-# include<memory>
+
+#ifdef _MSC_VER
+
+#if _MSC_VER >= 1700
+#define _HAVE_CXX11_MEMORY
+#endif
+#endif
+#endif
+
+#ifdef _HAVE_CXX11_MEMORY
+#include <memory>
+#else
+#include <tr1/memory>
+#include <tr1/shared_ptr.h>
+namespace std{ using namespace std::tr1; }
 #endif
 
 #ifndef _WIN32
