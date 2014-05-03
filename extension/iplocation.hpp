@@ -42,37 +42,52 @@ public:
 
 		boost::cmatch what;
 
-		if (
-			boost::regex_search(
+		try{
+
+
+
+			if (
+				boost::regex_search(
 				textmsg.c_str(),
-				what, 
+				what,
 				boost::regex(
-					"((((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5]))\\.){3}((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5])))"
+				"((((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5]))\\.){3}((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5])))"
 				)
-			)
-		)
-		{
-			std::string matchedip = what[1];
-			ipaddr.s_addr = ::inet_addr(matchedip.c_str());
-			// ip 地址是这样查询的 .qqbot locate 8.8.8.8
-			// 或者直接聊天内容就是完整的一个 ip 地址
-			QQWry::IPLocation l = m_ipdb->GetIPLocation(ipaddr);
-			
-			// 找到后，发给聊天窗口.
+				)
+				)
+			{
+				std::string matchedip = what[1];
+				ipaddr.s_addr = ::inet_addr(matchedip.c_str());
+				// ip 地址是这样查询的 .qqbot locate 8.8.8.8
+				// 或者直接聊天内容就是完整的一个 ip 地址
+				QQWry::IPLocation l = m_ipdb->GetIPLocation(ipaddr);
 
-			m_sender(boost::str(
-				boost::format("你在聊天中提到的 %s 地址，经过 avbot 仔细的考察，发现它在 %s %s")
-				% matchedip
-				% local_encode_to_utf8(l.country)
-				% local_encode_to_utf8(l.area)
-			));
+				// 找到后，发给聊天窗口.
 
+				m_sender(boost::str(
+					boost::format("你在聊天中提到的 %s 地址，经过 avbot 仔细的考察，发现它在 %s %s")
+					% matchedip
+					% local_encode_to_utf8(l.country)
+					% local_encode_to_utf8(l.area)
+					));
+
+			}
 		}
-
+		catch (const std::runtime_error&)
+		{
+		}
 		// 或者通过其他方式激活
 
 	}
 
+	// download qqwy.dat file and decode it and return decoded data.
+	// so the user can decide to write to file or just pass it to the constructor
+	template<class uncompressfunc>
+	static void download_qqwry_dat(uncompressfunc uncompress)
+	{
+				
+
+	}
 };
 
 #endif // iplocation_h__

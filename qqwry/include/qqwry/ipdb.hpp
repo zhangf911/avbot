@@ -282,11 +282,11 @@ protected:
 		case REDIRECT_MODE_2:
 			areaptr = ptr + 4;
 		default:
-			strcpy(ret.country, Get_String(ptr));
+			strncpy(ret.country, Get_String(ptr), sizeof(ret.country));
 			if (!areaptr)
 				areaptr = ptr + strlen(strcpy(ret.country, Get_String(ptr))) + 1;
 		}
-		strcpy(ret.area, Get_String(areaptr));
+		strncpy(ret.area, Get_String(areaptr), sizeof(ret.area));
 		return ret;
 	}
 
@@ -466,7 +466,7 @@ public:
 		char const* ptr = FindRecord(ip);
 		if (!ptr)
 		{
-			throw ("IP Record Not Found");
+			throw std::runtime_error("IP Record Not Found");
 		}
 #ifndef _WIN32
 		IPLocation gbk = GetIPLocation(ptr + 4);
