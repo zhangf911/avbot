@@ -69,8 +69,12 @@ foreach(CompilerFlag ${CompilerFlags})
   string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
 endforeach()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /NODEFAULTLIB:library")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  /NODEFAULTLIB:msvcrt.lib /NODEFAULTLIB:LIBCMT.lib")
+foreach(CompilerFlag ${CompilerFlags})
+  string(REPLACE "/MDd" "/MTd" ${CompilerFlag} "${${CompilerFlag}}")
+endforeach()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
@@ -138,11 +142,11 @@ endif()
 find_package(Boost 1.55 REQUIRED COMPONENTS timer chrono log log_setup date_time filesystem system program_options regex locale)
 
 if(MSVC)
-add_definitions( -DBOOST_ALL_NO_LIB )
+# add_definitions( -DBOOST_ALL_NO_LIB )
 link_directories(${Boost_LIBRARY_DIR})
 endif()
 
-add_definitions(-DBOOST_LOG_NO_THREADS)
+#add_definitions(-DBOOST_LOG_NO_THREADS)
 find_package(Threads)
 
 if(WIN32)

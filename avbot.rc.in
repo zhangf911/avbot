@@ -144,7 +144,7 @@ BEGIN
             VALUE "FileDescription", "avbot 主程序"
             VALUE "FileVersion", "@CPACK_PACKAGE_VERSION_MAJOR@.@CPACK_PACKAGE_VERSION_MINOR@.0.1"
             VALUE "InternalName", "avbot.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2013 avplayer.org"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2014 avplayer.org"
             VALUE "OriginalFilename", "avbot.exe"
             VALUE "ProductName", "Q群云秘书"
             VALUE "ProductVersion", "@CPACK_PACKAGE_VERSION_MAJOR@.@CPACK_PACKAGE_VERSION_MINOR@.0.1"
