@@ -40,12 +40,12 @@ struct metalprice_fetcher_op{
 	  : io_service(_io_service), sender(_sender), stream(new avhttp::http_stream(_io_service)), metal(_metal), buf(boost::make_shared<boost::asio::streambuf>())
 	{
 		std::string list;
-		if (metal == u8"黄金")
+		if (metal == literal_to_utf8str("黄金"))
 			list = "hf_GC";
-		else if ( metal == u8"白银")
+		else if ( metal == literal_to_utf8str("白银"))
 			list = "hf_SI";
 		if (list.empty()){
-			sender( std::string( metal + u8" 无报价或avbot暂不支持"));
+			sender( std::string( metal + literal_to_utf8str(" 无报价或avbot暂不支持")));
 		}else{
 			std::string url = boost::str(boost::format("http://hq.sinajs.cn/?_=%d&list=%s") % std::time(0) % list);
 			avhttp::async_read_body(*stream, url, * buf, *this);
@@ -67,7 +67,7 @@ struct metalprice_fetcher_op{
 			{
 				std::string price = what[2];
 				std::string zhangfu = what[3];
-				std::string msg = boost::str(boost::format(u8"%s 当前价 %s 涨幅 %s%%") % metal % price % zhangfu);
+				std::string msg = boost::str(boost::format(literal_to_utf8str("%s 当前价 %s 涨幅 %s%%")) % metal % price % zhangfu);
 
 				sender(msg);
 			}
@@ -110,7 +110,7 @@ public:
 		std::string textmsg = boost::trim_copy( msg.get<std::string>( "message.text" ) );
 
 		boost::cmatch what;
-		if (boost::regex_search(textmsg.c_str(), what, boost::regex(u8".qqbot (.*)报价")))
+		if (boost::regex_search(textmsg.c_str(), what, boost::regex(literal_to_utf8str(".qqbot (.*)报价"))))
 		{
 			metal::metalprice_fetcher(io_service, m_sender, what[1]);
 		}

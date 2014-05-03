@@ -1,27 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 project(avbot)
 
-if (NOT MSVC)
-
-include(CheckCXXCompilerFlag)
-
-CHECK_CXX_COMPILER_FLAG(-std=c++11 LIBCXX_HAS_STDCXX11_FLAG)
-
-if(LIBCXX_HAS_STDCXX11_FLAG)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
-
-	CHECK_CXX_COMPILER_FLAG(-std=c++0x LIBCXX_HAS_STDCXX0X_FLAG)
-
-	if(LIBCXX_HAS_STDCXX0X_FLAG)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-	else()
-		message(FATAL "meed at least gcc 4.4 or clang 3.2")
-	endif()
-
-endif()
-endif()
-
 # ============== cpack ===============
 if(MSVC)
 set(CPACK_GENERATOR "TBZ2")

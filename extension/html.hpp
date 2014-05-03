@@ -245,7 +245,7 @@ std::string html_unescape(string htmlcharseq)
 
 				chariter = es_end + 1;
 				unes = false;
-			}else return u8"解码错误";
+			}else return literal_to_utf8str("解码错误");
 
 		}else{
 			if (*chariter == '&'){

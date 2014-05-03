@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2013  microcai <microcai@fedoraproject.org>
  * Copyright (C) 2013  ericsimith <ericsimith@hotmail.com>
  *
@@ -67,7 +67,7 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 
 	if (v.empty())
 	{
-		return u8"获取笑话出错， v.size() == 0 ";
+		return literal_to_utf8str("获取笑话出错， v.size() == 0 ");
 	}
 
 	return html_unescape( v.at( gen() % v.size() ) );
@@ -108,7 +108,7 @@ public:
 		using namespace boost::asio::detail;
 
 		if (ec){
-			io_service.post( bind_handler(handler, ec, std::string(u8"获取笑话出错")) );
+			io_service.post( bind_handler(handler, ec, literal_to_utf8str("获取笑话出错")) );
 			return;
 		}
 
@@ -153,9 +153,9 @@ static bool can_joke(std::string msg)
 	if (msg == ".qqbot joke")
 		return true;
 #ifndef _MSC_VER
-	if (msg == u8".qqbot 给大爷来一个笑话")
+	if (msg == literal_to_utf8str(".qqbot 给大爷来一个笑话"))
 		return true;
-	if ( (msg.find(u8"大爷") != std::string::npos) && (msg.find(u8"笑话")!= std::string::npos) )
+	if ( (msg.find(literal_to_utf8str("大爷")) != std::string::npos) && (msg.find(literal_to_utf8str("笑话"))!= std::string::npos) )
 		return true;
 #endif
 	return false;
@@ -174,7 +174,7 @@ void joke::operator()( boost::property_tree::ptree msg )
 			{
 				// 其实关闭不掉的, 就是延长到 24 个小时了, 嘻嘻.
 				* m_interval = boost::posix_time::seconds( 3600 * 24 );
-				m_sender(u8"笑话关闭.");
+				m_sender(literal_to_utf8str( "笑话关闭." ));
 				save_setting();
 			}
 			else if( textmsg == ".qqbot joke on" )
@@ -182,7 +182,7 @@ void joke::operator()( boost::property_tree::ptree msg )
 
 				* m_interval = boost::posix_time::seconds( 600 );
 
-				m_sender(u8"笑话开启.");
+				m_sender(literal_to_utf8str("笑话开启."));
 				save_setting();
 			}
 			else if (can_joke(textmsg)){
@@ -204,12 +204,12 @@ void joke::operator()( boost::property_tree::ptree msg )
 
 						if( sec < 10 )
 						{
-							m_sender( boost::str( boost::format(u8"混蛋, %d 秒太短了!") % sec ) );
+							m_sender( boost::str( boost::format( literal_to_utf8str("混蛋, %d 秒太短了!") ) % sec ) );
 						}
 						else
 						{
 							* m_interval = boost::posix_time::seconds( sec );
-							m_sender( boost::str( boost::format(u8"笑话间隔为 %d 秒.") % sec ) );
+							m_sender( boost::str( boost::format(literal_to_utf8str("笑话间隔为 %d 秒.")) % sec ) );
 							save_setting();
 						}
 					}

@@ -146,12 +146,12 @@ void bulletin::send_msg_file( std::string msgfile ) const
 	catch( std::runtime_error )
 	{
 		// 文件无法打开 ...
-		bulletinmsg = u8"无法打开 [logdir]/";
+		bulletinmsg = literal_to_utf8str("无法打开 [logdir]/");
 		bulletinmsg += "/";
 		bulletinmsg += m_channel_name;
 		bulletinmsg += "/";
 		bulletinmsg += msgfile;
-		bulletinmsg += u8" 请检查文件是否存在.";
+		bulletinmsg += literal_to_utf8str(" 请检查文件是否存在.");
 	}
 
 	m_sender(bulletinmsg);
