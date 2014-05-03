@@ -201,7 +201,7 @@ struct mail_recoder
 		if (ec)
 			sendmsg(literal_to_utf8str("邮件发送失败！以上!"));
 		else
-			sendmsg(("邮件发送成功！以上!"));
+			sendmsg(literal_to_utf8str("邮件发送成功！以上!"));
 	}
 };
 
