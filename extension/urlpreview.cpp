@@ -1,7 +1,9 @@
-#include <string>
+﻿#include <string>
 #include <algorithm>
 #include <boost/date_time/time_duration.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include "boost/stringencodings.hpp"
 
 #include "urlpreview.hpp"
 #include "html.hpp"
@@ -307,4 +309,3 @@ void urlpreview::do_urlpreview(std::string speaker, std::string url, boost::posi
 		detail::urlpreview( io_service, m_sender, speaker, url);
 	}
 }
-
