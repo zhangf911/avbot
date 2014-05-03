@@ -37,81 +37,81 @@ struct EOR{
   std::string money;
   std::string list;
 }  EOR_lists[EOR_Number] = {
-		{ literal_to_utf8str("美元指数"), "DINIW" },
-		{ literal_to_utf8str("美元人民币"), "USDCNY" },
-		{ literal_to_utf8str("澳元美元"), "AUDUSD" },
-		{ literal_to_utf8str("欧元美元"), "EURUSD" },
-		{ literal_to_utf8str("英镑美元"), "GBPUSD" },
-		{ literal_to_utf8str("新西兰元美元"), "NZDUSD" },
-		{ literal_to_utf8str("美元加元"), "USDCAD" },
-		{ literal_to_utf8str("美元瑞郎"), "USDCHF" },
-		{ literal_to_utf8str("美元港元"), "USDHKD" },
-		{ literal_to_utf8str("美元日元"), "USDJPY" },
-		{ literal_to_utf8str("美元马币"), "USDMYR" },
-		{ literal_to_utf8str("美元新加坡元"), "USDSGD" },
-		{ literal_to_utf8str("美元台币"), "USDTWD" },
-		{ literal_to_utf8str("澳元加元"), "AUDCAD" },
-		{ literal_to_utf8str("澳元瑞郎"), "AUDCHF" },
-		{ literal_to_utf8str("澳元人民币"), "AUDCNY" },
-		{ literal_to_utf8str("澳元欧元"), "AUDEUR" },
-		{ literal_to_utf8str("澳元英镑"), "AUDGBP" },
-		{ literal_to_utf8str("澳元港元"), "AUDHKD" },
-		{ literal_to_utf8str("澳元日元"), "AUDJPY" },
-		{ literal_to_utf8str("澳元新西兰元"), "AUDNZD" },
-		{ literal_to_utf8str("加元澳元"), "CADAUD" },
-		{ literal_to_utf8str("加元瑞郎"), "CADCHF" },
-		{ literal_to_utf8str("加元人民币"), "CADCNY" },
-		{ literal_to_utf8str("加元欧元"), "CADEUR" },
-		{ literal_to_utf8str("加元英镑"), "CADGBP" },
-		{ literal_to_utf8str("加元港元"), "CADHKD" },
-		{ literal_to_utf8str("加元日元"), "CADJPY" },
-		{ literal_to_utf8str("加元新西兰元"), "CADNZD" },
-		{ literal_to_utf8str("瑞郎澳元"), "CHFAUD" },
-		{ literal_to_utf8str("瑞郎加元"), "CHFCAD" },
-		{ literal_to_utf8str("瑞郎人民币"), "CHFCNY" },
-		{ literal_to_utf8str("瑞郎欧元"), "CHFEUR" },
-		{ literal_to_utf8str("瑞郎英镑"), "CHFGBP" },
-		{ literal_to_utf8str("瑞郎港元"), "CHFHKD" },
-		{ literal_to_utf8str("瑞郎日元"), "CHFJPY" },
-		{ literal_to_utf8str("人民币日元"), "CNYJPY" },
-		{ literal_to_utf8str("欧元澳元"), "EURAUD" },
-		{ literal_to_utf8str("欧元加元"), "EURCAD" },
-		{ literal_to_utf8str("欧元瑞郎"), "EURCHF" },
-		{ literal_to_utf8str("欧元人民币"), "EURCNY" },
-		{ literal_to_utf8str("欧元英镑"), "EURGBP" },
-		{ literal_to_utf8str("欧元港元"), "EURHKD" },
-		{ literal_to_utf8str("欧元日元"), "EURJPY" },
-		{ literal_to_utf8str("欧元新西兰元"), "EURNZD" },
-		{ literal_to_utf8str("英镑澳元"), "GBPAUD" },
-		{ literal_to_utf8str("英镑加元"), "GBPCAD" },
-		{ literal_to_utf8str("英镑瑞郎"), "GBPCHF" },
-		{ literal_to_utf8str("英镑人民币"), "GBPCNY" },
-		{ literal_to_utf8str("英镑欧元"), "GBPEUR" },
-		{ literal_to_utf8str("英镑港元"), "GBPHKD" },
-		{ literal_to_utf8str("英镑日元"), "GBPJPY" },
-		{ literal_to_utf8str("英镑新西兰元"), "GBPNZD" },
-		{ literal_to_utf8str("港元澳元"), "HKDAUD" },
-		{ literal_to_utf8str("港元加元"), "HKDCAD" },
-		{ literal_to_utf8str("港元瑞郎"), "HKDCHF" },
-		{ literal_to_utf8str("港元人民币"), "HKDCNY" },
-		{ literal_to_utf8str("港元欧元"), "HKDEUR" },
-		{ literal_to_utf8str("港元英镑"), "HKDGBP" },
-		{ literal_to_utf8str("港元日元"), "HKDJPY" },
-		{ literal_to_utf8str("新西兰元人民币"), "NZDCNY" },
-		{ literal_to_utf8str("新加坡元人民币"), "SGDCNY" },
-		{ literal_to_utf8str("台币人民币"), "TWDCNY" },
-		{ literal_to_utf8str("美元澳门元"), "USDMOP" },
-		{ literal_to_utf8str("美元"), "USDCNY" },	// !!!单一币种缺省查与人民币的汇率，必须放在最后，避免正则匹配干扰其他项
-		{ literal_to_utf8str("澳元"), "AUDCNY" },
-		{ literal_to_utf8str("加元"), "CADCNY" },
-		{ literal_to_utf8str("瑞郎"), "CHFCNY" },
-		{ literal_to_utf8str("欧元"), "EURCNY" },
-		{ literal_to_utf8str("英镑"), "GBPCNY" },
-		{ literal_to_utf8str("港元"), "HKDCNY" },
-		{ literal_to_utf8str("港币"), "HKDCNY" },
-		{ literal_to_utf8str("新西兰元"), "NZDCNY" },
-		{ literal_to_utf8str("新加坡元"), "SGDCNY" },
-		{ literal_to_utf8str("台币"), "TWDCNY" }
+		{ "美元指数", "DINIW" },
+		{ "美元人民币", "USDCNY" },
+		{ "澳元美元", "AUDUSD" },
+		{ "欧元美元", "EURUSD" },
+		{ "英镑美元", "GBPUSD" },
+		{ "新西兰元美元", "NZDUSD" },
+		{ "美元加元", "USDCAD" },
+		{ "美元瑞郎", "USDCHF" },
+		{ "美元港元", "USDHKD" },
+		{ "美元日元", "USDJPY" },
+		{ "美元马币", "USDMYR" },
+		{ "美元新加坡元", "USDSGD" },
+		{ "美元台币", "USDTWD" },
+		{ "澳元加元", "AUDCAD" },
+		{ "澳元瑞郎", "AUDCHF" },
+		{ "澳元人民币", "AUDCNY" },
+		{ "澳元欧元", "AUDEUR" },
+		{ "澳元英镑", "AUDGBP" },
+		{ "澳元港元", "AUDHKD" },
+		{ "澳元日元", "AUDJPY" },
+		{ "澳元新西兰元", "AUDNZD" },
+		{ "加元澳元", "CADAUD" },
+		{ "加元瑞郎", "CADCHF" },
+		{ "加元人民币", "CADCNY" },
+		{ "加元欧元", "CADEUR" },
+		{ "加元英镑", "CADGBP" },
+		{ "加元港元", "CADHKD" },
+		{ "加元日元", "CADJPY" },
+		{ "加元新西兰元", "CADNZD" },
+		{ "瑞郎澳元", "CHFAUD" },
+		{ "瑞郎加元", "CHFCAD" },
+		{ "瑞郎人民币", "CHFCNY" },
+		{ "瑞郎欧元", "CHFEUR" },
+		{ "瑞郎英镑", "CHFGBP" },
+		{ "瑞郎港元", "CHFHKD" },
+		{ "瑞郎日元", "CHFJPY" },
+		{ "人民币日元", "CNYJPY" },
+		{ "欧元澳元", "EURAUD" },
+		{ "欧元加元", "EURCAD" },
+		{ "欧元瑞郎", "EURCHF" },
+		{ "欧元人民币", "EURCNY" },
+		{ "欧元英镑", "EURGBP" },
+		{ "欧元港元", "EURHKD" },
+		{ "欧元日元", "EURJPY" },
+		{ "欧元新西兰元", "EURNZD" },
+		{ "英镑澳元", "GBPAUD" },
+		{ "英镑加元", "GBPCAD" },
+		{ "英镑瑞郎", "GBPCHF" },
+		{ "英镑人民币", "GBPCNY" },
+		{ "英镑欧元", "GBPEUR" },
+		{ "英镑港元", "GBPHKD" },
+		{ "英镑日元", "GBPJPY" },
+		{ "英镑新西兰元", "GBPNZD" },
+		{ "港元澳元", "HKDAUD" },
+		{ "港元加元", "HKDCAD" },
+		{ "港元瑞郎", "HKDCHF" },
+		{ "港元人民币", "HKDCNY" },
+		{ "港元欧元", "HKDEUR" },
+		{ "港元英镑", "HKDGBP" },
+		{ "港元日元", "HKDJPY" },
+		{ "新西兰元人民币", "NZDCNY" },
+		{ "新加坡元人民币", "SGDCNY" },
+		{ "台币人民币", "TWDCNY" },
+		{ "美元澳门元", "USDMOP" },
+		{ "美元", "USDCNY" },	// !!!单一币种缺省查与人民币的汇率，必须放在最后，避免正则匹配干扰其他项
+		{ "澳元", "AUDCNY" },
+		{ "加元", "CADCNY" },
+		{ "瑞郎", "CHFCNY" },
+		{ "欧元", "EURCNY" },
+		{ "英镑", "GBPCNY" },
+		{ "港元", "HKDCNY" },
+		{ "港币", "HKDCNY" },
+		{ "新西兰元", "NZDCNY" },
+		{ "新加坡元", "SGDCNY" },
+		{ "台币", "TWDCNY" }
 	};
 
 
@@ -134,7 +134,7 @@ struct exchangerate_fetcher_op{
 			}
 		
 		if (list.empty()){
-			sender( std::string( money + literal_to_utf8str(" 无汇率数据或avbot暂不支持")));
+			sender( std::string( money + " 无汇率数据或avbot暂不支持"));
 		}else{
 			std::string url = boost::str(boost::format("http://hq.sinajs.cn/?_=%d&list=%s") % std::time(0) % list);
 			avhttp::async_read_body(*stream, url, * buf, *this);
@@ -157,9 +157,8 @@ struct exchangerate_fetcher_op{
 			boost::regex ex("var ([^=]*)=\"[0-9]*:[0-9]*:[0-9]*,([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),([0-9\\.\\-]*),(.*)\"");
 			if (boost::regex_search(jscript.c_str(), what, ex))
 			{
-				std::string msg = boost::str(
-					boost::format(literal_to_utf8str("%s 当前汇率 %s 昨收 %s 今开 %s 最高 %s 最低 %S 买入 %s 卖出 %s "))
-					% what[10] % what[9] % what[4] % what[6] % what[7] % what[8] % what[9] % what[3]);
+				std::string msg = boost::str(boost::format("%s 当前汇率 %s 昨收 %s 今开 %s 最高 %s 最低 %S 买入 %s 卖出 %s ")
+											% what[10] % what[9] % what[4] % what[6] % what[7] % what[8] % what[9] % what[3]);
 
 				sender(msg);
 			}
@@ -208,7 +207,7 @@ public:
 			str += "|";
 		}
 		str += EOR_lists[ EOR_Number - 1 ].money;
-		str += literal_to_utf8str(")(汇率)?");
+		str += ")(汇率)?";
 		
 		boost::cmatch what;
 		if (boost::regex_search(textmsg.c_str(), what, boost::regex(str)))
