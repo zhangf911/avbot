@@ -259,7 +259,7 @@ class ipdb
 private: // private member
 	uint32_t m_filesize;
 	const char* m_file;
-	char* m_curptr;
+	const char* m_curptr;
 	size_t m_first_record;
 	size_t m_last_record;
 
@@ -536,7 +536,7 @@ public:
 	}
 
 public:
-	ipdb(char*	memptr, size_t len)
+	ipdb(const char*	memptr, size_t len)
 		: m_file(memptr)
 	{
 		m_filesize = len;

@@ -16,23 +16,154 @@
 
 class iplocation : avbotextension
 {
-	// 这么多 extension 的 qqwry 数据库当然得共享啦！ 共享那肯定就是用的共享指针.
-	boost::shared_ptr<QQWry::ipdb> m_ipdb;
-public:
-	template<class MsgSender>
-	iplocation(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name, boost::shared_ptr<QQWry::ipdb> ipdb)
-		: avbotextension(_io_service, sender, channel_name)
-		, m_ipdb(ipdb)
+	// download qqwy.dat file and decode it and return decoded data.
+	// so the user can decide to write to file or just pass it to the constructor
+	template<class uncompressfunc, class Handler>
+	struct download_qqwry_dat_op : boost::asio::coroutine
 	{
+		boost::asio::io_service& m_io_service;
+
+		uncompressfunc m_uncompress;
+		Handler m_handler;
+
+		boost::shared_ptr<avhttp::http_stream> m_http_stream;
+		boost::shared_ptr<boost::asio::streambuf> m_buf_copywrite_rar;
+		boost::shared_ptr<boost::asio::streambuf> m_buf_qqwry_rar;
+
+		download_qqwry_dat_op(boost::asio::io_service& _io_service, uncompressfunc uncompress, Handler handler)
+			: m_io_service(_io_service)
+			, m_uncompress(uncompress)
+			, m_handler(handler)
+		{
+			// start downloading copyrite.rar
+			m_http_stream.reset(new avhttp::http_stream(m_io_service));
+			m_buf_copywrite_rar.reset(new boost::asio::streambuf);
+			avhttp::async_read_body(*m_http_stream, "http://update.cz88.net/ip/copywrite.rar", *m_buf_copywrite_rar, *this);
+		}
+
+		void operator()(boost::system::error_code ec, std::size_t bytes_transfered)
+		{
+			BOOST_ASIO_CORO_REENTER(this)
+			{
+				// 然后下 qqwry.dat
+				m_http_stream.reset(new avhttp::http_stream(m_io_service));
+				m_buf_qqwry_rar.reset(new boost::asio::streambuf);
+
+				BOOST_ASIO_CORO_YIELD avhttp::async_read_body(
+					*m_http_stream,
+					"http://update.cz88.net/ip/qqwry.rar",
+					*m_buf_qqwry_rar,
+					*this
+					);
+
+				// 解码
+				{
+					std::string copywrite, qqwry;
+
+					m_buf_copywrite_rar->sgetn(&copywrite[0], boost::asio::buffer_size(m_buf_copywrite_rar->data()));
+					m_buf_qqwry_rar->sgetn(&qqwry[0], bytes_transfered);
+
+					std::string m_decoded = QQWry::decodeQQWryDat(copywrite, qqwry, m_uncompress);
+
+					// callback
+					m_handler(m_decoded);
+				}
+			}
+		}
+
+	};
+
+public:
+	template<class uncompressfunc, class Handler>
+	static void download_qqwry_dat(boost::asio::io_service& io_service, uncompressfunc uncompress, Handler handler)
+	{
+		iplocation::download_qqwry_dat_op<uncompressfunc, Handler> op(io_service, uncompress, handler);
 	}
+
+	struct ipdb_mgr
+	{
+	private:
+		boost::asio::io_service & m_io_service;
+		boost::function<int(unsigned char *pDest, unsigned long *pDest_len, const unsigned char *pSource, unsigned long source_len)> m_uncompress;
+	public:
+		boost::shared_ptr<QQWry::ipdb> db;
+	public:
+		template<typename uncompressfunc>
+		ipdb_mgr(boost::asio::io_service & _io_servcie, uncompressfunc uncompress_)
+			: m_uncompress(uncompress_)
+			, m_io_service(_io_servcie)
+		{
+
+		}
+
+		bool search_and_build_db()
+		{
+			if (boost::filesystem::exists("/tmp/qqwry.dat"))
+			{
+				// good
+				db.reset(new QQWry::ipdb("/tmp/qqwry.dat"));
+				return true;
+			}
+
+			boost::filesystem::path p;
+			p = "qqwry.dat";
+			// find qqwry.dat
+			if (boost::filesystem::exists(p))
+			{
+				db.reset(new QQWry::ipdb("qqwry.dat"));
+				return true;
+				// good
+			}
+
+#ifdef _WIN32
+			// find pathof(avbot.exe)/qqwry.dat
+
+			char exePATH[_MAX_PATH];
+
+			::GetModuleFileName(NULL, exePATH, sizeof(exePATH));
+			p = exePATH;
+			p = p.parent_path();
+			p /= "qqwry.dat";
+
+			if (boost::filesystem::exists(p))
+			{
+				db.reset(new QQWry::ipdb(p.string().c_str()));
+				return true;
+				// good
+			}			// construct
+#endif // _WIN32
+			// find /var/lib/qqwry.dat
+			if (boost::filesystem::exists("/var/lib/qqwry.dat"))
+			{
+				db.reset(new QQWry::ipdb("/var/lib/qqwry.dat"));
+				return true;
+				// good
+			}
+			// 找不到，得找个机会去 .. 下载
+
+			iplocation::download_qqwry_dat(m_io_service, m_uncompress, *this);
+		}
+
+		void operator()(std::string decoded_qqwry_dat)
+		{
+			// save to /tmp/qqwry.dat or qqwry.dat depend on the OS
+			boost::filesystem::path savepath;
+#ifndef _WIN32
+			savepath = "/tmp/qqwry.dat";
+#else
+			savepath = "qqwry.dat";
+#endif
+			db.reset(new QQWry::ipdb(decoded_qqwry_dat.data(), decoded_qqwry_dat.length()));
+		}
+
+		bool is_ready() const
+		{
+			return db.operator bool();
+		}
+	};
 
 	void operator()(boost::property_tree::ptree msg)
 	{
- 		if (!m_ipdb)
-		{
-			return;
-		}
-
 		if (msg.get<std::string>("channel") != m_channel_name)
 			return;
 
@@ -43,9 +174,6 @@ public:
 		boost::cmatch what;
 
 		try{
-
-
-
 			if (
 				boost::regex_search(
 				textmsg.c_str(),
@@ -56,11 +184,17 @@ public:
 				)
 				)
 			{
+				if (!m_ipdb_mgr->is_ready())
+				{
+					m_sender("吼吼，还木有纯真数据库，暂时无法查询");
+					return;
+				}
+
 				std::string matchedip = what[1];
 				ipaddr.s_addr = ::inet_addr(matchedip.c_str());
 				// ip 地址是这样查询的 .qqbot locate 8.8.8.8
 				// 或者直接聊天内容就是完整的一个 ip 地址
-				QQWry::IPLocation l = m_ipdb->GetIPLocation(ipaddr);
+				QQWry::IPLocation l = m_ipdb_mgr->db->GetIPLocation(ipaddr);
 
 				// 找到后，发给聊天窗口.
 
@@ -69,8 +203,7 @@ public:
 					% matchedip
 					% local_encode_to_utf8(l.country)
 					% local_encode_to_utf8(l.area)
-					));
-
+				));
 			}
 		}
 		catch (const std::runtime_error&)
@@ -79,15 +212,15 @@ public:
 		// 或者通过其他方式激活
 
 	}
-
-	// download qqwy.dat file and decode it and return decoded data.
-	// so the user can decide to write to file or just pass it to the constructor
-	template<class uncompressfunc>
-	static void download_qqwry_dat(uncompressfunc uncompress)
+	template<class MsgSender>
+	iplocation(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name, boost::shared_ptr<ipdb_mgr> _ipdb_mgr)
+		: avbotextension(_io_service, sender, channel_name)
+		, m_ipdb_mgr(_ipdb_mgr)
 	{
-				
-
 	}
+private:
+	// 这么多 extension 的 qqwry 数据库当然得共享啦！ 共享那肯定就是用的共享指针.
+	boost::shared_ptr<ipdb_mgr> m_ipdb_mgr;
 };
 
 #endif // iplocation_h__

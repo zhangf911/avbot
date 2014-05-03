@@ -1,6 +1,10 @@
 
 #include <boost/asio.hpp>
-
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#else
+#include "qqwry/miniz.c"
+#endif
 #include "libavbot/avbot.hpp"
 #include "extension.hpp"
 
@@ -78,17 +82,20 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		)
 	);
 
-	static boost::shared_ptr<QQWry::ipdb> ipdb;
+	static boost::shared_ptr<iplocation::ipdb_mgr> ipdb_mgr;
 
-	if (!ipdb)
+	if (!ipdb_mgr)
 	{
-		ipdb.reset(new QQWry::ipdb("qqwry.dat"));
+		// check for file "qqwry.dat"
+		// if not exist, then download that file
+		// after download that file, construct ipdb
+		ipdb_mgr.reset(new  iplocation::ipdb_mgr(mybot.get_io_service(), uncompress));
 	}
 
 	mybot.on_message.connect(
 		iplocation(io_service,
 			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
-			channel_name, ipdb
+			channel_name, ipdb_mgr
 		)
 	);
 }
