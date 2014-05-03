@@ -59,8 +59,9 @@ class iplocation : avbotextension
 				// 解码
 				{
 					std::string copywrite, qqwry;
-
-					m_buf_copywrite_rar->sgetn(&copywrite[0], boost::asio::buffer_size(m_buf_copywrite_rar->data()));
+					copywrite.resize(boost::asio::buffer_size(m_buf_copywrite_rar->data()));
+					m_buf_copywrite_rar->sgetn(&copywrite[0], copywrite.size());
+					qqwry.resize(bytes_transfered);
 					m_buf_qqwry_rar->sgetn(&qqwry[0], bytes_transfered);
 
 					std::string m_decoded = QQWry::decodeQQWryDat(copywrite, qqwry, m_uncompress);
@@ -153,6 +154,8 @@ public:
 #else
 			savepath = "qqwry.dat";
 #endif
+			std::ofstream qqwrydatfile(savepath.string().c_str(), std::ios::binary);
+			qqwrydatfile.write(decoded_qqwry_dat.data(), decoded_qqwry_dat.size());
 			db.reset(new QQWry::ipdb(decoded_qqwry_dat.data(), decoded_qqwry_dat.length()));
 		}
 

@@ -90,6 +90,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		// if not exist, then download that file
 		// after download that file, construct ipdb
 		ipdb_mgr.reset(new  iplocation::ipdb_mgr(mybot.get_io_service(), uncompress));
+		ipdb_mgr->search_and_build_db();
 	}
 
 	mybot.on_message.connect(
