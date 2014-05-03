@@ -5,8 +5,11 @@
  *
  */
 
-
+#ifdef _MSC_VER
 #include <direct.h>
+#else
+#include <unistd.h>
+#endif
 #include <string>
 #include <algorithm>
 #include <vector>
