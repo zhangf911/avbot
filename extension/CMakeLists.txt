@@ -3,6 +3,7 @@ option(ENABLE_LUA "enable lua script support" OFF)
 
 add_library(extension STATIC extension.cpp joke.cpp urlpreview.cpp bulletin.cpp )
 
+include_directories(../qqwry/include)
 
 if(ENABLE_LUA)
 

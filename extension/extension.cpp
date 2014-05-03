@@ -16,6 +16,7 @@
 #include "metalprice.hpp"
 #include "stockprice.hpp"
 #include "exchangerate.hpp"
+#include "iplocation.hpp"
 
 // dummy file
 
@@ -74,6 +75,20 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		::exchangerate(io_service,
 					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
 					channel_name
+		)
+	);
+
+	static boost::shared_ptr<QQWry::ipdb> ipdb;
+
+	if (!ipdb)
+	{
+		ipdb.reset(new QQWry::ipdb("qqwry.dat"));
+	}
+
+	mybot.on_message.connect(
+		iplocation(io_service,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
+			channel_name, ipdb
 		)
 	);
 }
