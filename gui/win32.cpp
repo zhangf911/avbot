@@ -1,4 +1,8 @@
 
+#include <boost/function.hpp>
+#include <boost/thread/mutex.hpp>
+#include <atomic>
+
 #ifndef _WIN32_IE
 #define _WIN32_IE 0x0600
 #endif
@@ -22,8 +26,90 @@ namespace fs = boost::filesystem;
 
 #include <windows.h>
 
+class auto_handle
+{
+	boost::shared_ptr<void> m_handle;
+public:
+	explicit auto_handle(HANDLE handle)
+		: m_handle(handle, CloseHandle)
+	{
+	}
+
+	operator HANDLE ()
+	{
+		return (HANDLE)m_handle.get();
+	}
+};
+
+// asio like run loop
+class avgui_service : boost::noncopyable
+{
+	auto_handle m_interrupt;
+	mutable boost::mutex mutex;
+
+	std::atomic<bool> m_quit;
+
+	std::vector < boost::function<void()> > m_handers;
+
+public:
+	avgui_service()
+		: m_interrupt(CreateEventW(0, 1, 0, 0))
+	{
+	}
+
+	template<class Handler>
+	void post(Handler h)
+	{
+		boost::mutex::scoped_lock l(mutex);
+		m_handers.push_back(h);
+		SetEvent(m_interrupt);
+	}
+
+	void run_once()
+	{
+		HANDLE interrupt = m_interrupt;
+
+		auto ret = ::MsgWaitForMultipleObjectsEx(0, &interrupt, INFINITE, QS_ALLEVENTS, MWMO_ALERTABLE | MWMO_INPUTAVAILABLE);
+
+		// 检查消息列队吧
+		if (ret == 1)
+		{
+			MSG msg;
+			GetMessage(&msg, NULL, 0, 0);
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else
+		{
+			boost::mutex::scoped_lock l(mutex);
+			if (!m_handers.empty())
+			{
+				for (auto & f : m_handers)
+				{
+					f();
+				}
+				m_handers.clear();
+			}
+			ResetEvent(interrupt);
+		}
+	}
+
+	void run()
+	{
+		while (!is_stoped())
+		{
+			run_once();
+		}
+	}
+
+	bool is_stoped()
+	{
+		return m_quit;
+	}
+};
 #include "fsconfig.ipp"
 
+avgui_service avgui_msgloop_service;
 // 重启qqbot
 #define WM_RESTART_AV_BOT WM_USER + 5
 
@@ -79,8 +165,6 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 	return FALSE;
 }
-
-
 
 void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircnick,
 					std::string & ircroom, std::string & ircpwd,
@@ -213,3 +297,4 @@ void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircn
 		}
 	}
 }
+
