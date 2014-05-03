@@ -103,7 +103,7 @@ struct urlpreview
 		if( ec )
 		{
 			// 报告出错。
-			m_sender( boost::str( boost::format(literal_to_utf8str("@%s, 获取url有错 %s")) % m_speaker % ec.message() ) );
+			m_sender( boost::str( boost::format(u8"@%s, 获取url有错 %s") % m_speaker % ec.message() ) );
 			return;
 		}
 
@@ -113,7 +113,7 @@ struct urlpreview
 		if( ! is_html( opt.find( avhttp::http_options::content_type ) ) )
 		{
 			// 报告类型就可以
-			m_sender( boost::str( boost::format(literal_to_utf8str("%s 发的 ⇪ 类型是 %s ")) % m_speaker % opt.find( avhttp::http_options::content_type ) ) );
+			m_sender( boost::str( boost::format(u8"%s 发的 ⇪ 类型是 %s ") % m_speaker % opt.find( avhttp::http_options::content_type ) ) );
 			return;
 		}
 
@@ -146,7 +146,7 @@ struct urlpreview
 	{
 		if( ec && ec != boost::asio::error::eof )
 		{
-			m_sender( boost::str( boost::format(literal_to_utf8str("@%s, 获取url有错 %s")) % m_speaker % ec.message() ) );
+			m_sender( boost::str( boost::format(u8"@%s, 获取url有错 %s") % m_speaker % ec.message() ) );
 			return;
 		}
 
@@ -184,11 +184,11 @@ struct urlpreview
 
 				title = html_unescape(title);
 				// 将 &bnp 这种反格式化.
-				m_sender( boost::str( boost::format(literal_to_utf8str("@%s ⇪ 标题： %s ")) % m_speaker % title ) );
+				m_sender( boost::str( boost::format(u8"@%s ⇪ 标题： %s ") % m_speaker % title ) );
 			}
 			catch( const std::runtime_error & )
 			{
-				m_sender( boost::str( boost::format(literal_to_utf8str("@%s ⇪ 解码网页发生错误 ")) % m_speaker ) );
+				m_sender( boost::str( boost::format(u8"@%s ⇪ 解码网页发生错误 ") % m_speaker ) );
 			}
 		}
 		else
@@ -199,7 +199,7 @@ struct urlpreview
 			if (m_redirect < 10 && boost::regex_search(content.c_str(), what, ex)){
 				urlpreview(io_service, m_sender, m_speaker, what[1], m_redirect + 1);
 			}else{
-				m_sender( boost::str( boost::format(literal_to_utf8str("@%s ⇪ url 无标题 ")) % m_speaker ) );
+				m_sender( boost::str( boost::format(u8"@%s ⇪ url 无标题 ") % m_speaker ) );
 			}
 		}
 	}

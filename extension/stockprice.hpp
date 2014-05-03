@@ -291,7 +291,7 @@ struct stock_fetcher_op
 	  , m_status(0)
 	{
 		boost::trim(m_query);
-		if (m_query == literal_to_utf8str("上证指数") || m_query == literal_to_utf8str("大盘") || m_query == "") {
+		if (m_query == u8"上证指数" || m_query == u8"大盘" || m_query == "") {
 			m_query = "000001";
 		} else {
 			// 检查股票参数是否是数字字符串, 如果不是, 则输出不支持的查询.
@@ -300,7 +300,7 @@ struct stock_fetcher_op
 				if (*i >= '0' && *i <= '9') {
 					continue;
 				} else {
-					m_sender(std::string(literal_to_utf8str("avbot暂不支持该查询 ") + m_query + literal_to_utf8str(" 格式, 请使用股票代码进行查询.")));
+					m_sender(std::string(u8"avbot暂不支持该查询 " + m_query + u8" 格式, 请使用股票代码进行查询."));
 					return;
 				}
 			}
@@ -327,7 +327,7 @@ struct stock_fetcher_op
 					double change = sh.current_price - sh.before_close_price;
 					double volume_of_trade = (double)sh.turnover / 100000000.0f;
 					std::string amount = to_price(sh.business);
-					std::string msg = boost::str(boost::format(literal_to_utf8str("%s: %0.2f 开盘价: %0.2f 最高价：%0.2f 最低价：%0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f亿手 成交额: %s"))
+					std::string msg = boost::str(boost::format(u8"%s: %0.2f 开盘价: %0.2f 最高价：%0.2f 最低价：%0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f亿手 成交额: %s")
 						% sh.stock_name % sh.current_price % sh.current_open_price %sh.best_high_price %sh.best_low_price % change_rate % change % volume_of_trade % amount);
 					m_sender(msg);
 				}
@@ -336,7 +336,7 @@ struct stock_fetcher_op
 				if (parser_stock_data(jscript, sd)) {
 					if (sd.stock_name == "") {
 						if (m_status != 0) {
-							m_sender(std::string(literal_to_utf8str("avbot没有查询到 ") + m_query + literal_to_utf8str(" 相关信息.")));
+							m_sender(std::string(u8"avbot没有查询到 " + m_query + u8" 相关信息."));
 							return;
 						}
 						m_status++;
@@ -351,7 +351,7 @@ struct stock_fetcher_op
 					double change = sd.current_price - sd.before_close_price;
 					double volume_of_trade = (double)sd.volume / 1000000.0f;
 					std::string amount = to_price(sd.amount);
-					std::string msg = boost::str(boost::format(literal_to_utf8str("%s: %0.2f 开盘价: %0.2f 最高价：%0.2f 最低价：%0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f万手 成交额: %s"))
+					std::string msg = boost::str(boost::format(u8"%s: %0.2f 开盘价: %0.2f 最高价：%0.2f 最低价：%0.2f 涨跌幅: %0.2f%% 涨跌: %0.2f 成交量: %0.2f万手 成交额: %s")
 						% sd.stock_name % sd.current_price % sd.current_open_price %sd.best_high_price %sd.best_low_price % change_rate % change % volume_of_trade % amount);
 					m_sender(msg);
 				}
@@ -395,7 +395,7 @@ public:
 		std::string textmsg = boost::trim_copy(msg.get<std::string>("message.text"));
 
 		boost::cmatch what;
-		if (boost::regex_search(textmsg.c_str(), what, boost::regex(literal_to_utf8str(".qqbot 股票(.*)"))))
+		if (boost::regex_search(textmsg.c_str(), what, boost::regex(u8".qqbot 股票(.*)")))
 		{
 			stock::stock_fetcher(io_service, m_sender, std::string(what[1]));
 		}
