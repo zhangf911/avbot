@@ -2,7 +2,12 @@ cmake_minimum_required(VERSION 2.6)
 project(avbot)
 
 # ============== cpack ===============
+if(MSVC)
+set(CPACK_GENERATOR "TBZ2")
+else()
 set(CPACK_GENERATOR "TBZ2;DEB;RPM")
+endif(MSVC)
+
 set(CPACK_SOURCE_GENERATOR "TBZ2")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "avbot Q群云秘书")
 SET(CPACK_PACKAGE_VENDOR "avplayer.org")
@@ -268,7 +273,9 @@ target_link_libraries(avbot libavbot avlog extension)
 
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
+if(NOT MSVC)
 install(TARGETS avbot RUNTIME DESTINATION bin)
+endif()
 
 if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
