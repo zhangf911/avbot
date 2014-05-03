@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2013  microcai <microcai@fedoraproject.org>
  * Copyright (C) 2013  ericsimith <ericsimith@hotmail.com>
  *
