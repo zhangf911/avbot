@@ -86,6 +86,7 @@ public:
 	private:
 		boost::asio::io_service & m_io_service;
 		boost::function<int(unsigned char *pDest, unsigned long *pDest_len, const unsigned char *pSource, unsigned long source_len)> m_uncompress;
+		std::string decoded_data;
 	public:
 		boost::shared_ptr<QQWry::ipdb> db;
 	public:
@@ -142,11 +143,17 @@ public:
 			}
 			// 找不到，得找个机会去 .. 下载
 
-			iplocation::download_qqwry_dat(m_io_service, m_uncompress, *this);
+			iplocation::download_qqwry_dat(
+				m_io_service,
+				m_uncompress,
+				boost::bind(&ipdb_mgr::qqwry_downloaded,this,_1)
+			);
+			return false;
 		}
 
-		void operator()(std::string decoded_qqwry_dat)
+		void qqwry_downloaded(std::string decoded_qqwry_dat)
 		{
+			decoded_data = boost::move(decoded_qqwry_dat);
 			// save to /tmp/qqwry.dat or qqwry.dat depend on the OS
 			boost::filesystem::path savepath;
 #ifndef _WIN32
@@ -155,13 +162,13 @@ public:
 			savepath = "qqwry.dat";
 #endif
 			std::ofstream qqwrydatfile(savepath.string().c_str(), std::ios::binary);
-			qqwrydatfile.write(decoded_qqwry_dat.data(), decoded_qqwry_dat.size());
-			db.reset(new QQWry::ipdb(decoded_qqwry_dat.data(), decoded_qqwry_dat.length()));
+			qqwrydatfile.write(decoded_data.data(), decoded_data.size());
+			db.reset(new QQWry::ipdb(decoded_data.data(), decoded_data.length()));
 		}
 
 		bool is_ready() const
 		{
-			return db.operator bool();
+			return !!db;
 		}
 	};
 
