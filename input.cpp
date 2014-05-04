@@ -35,34 +35,44 @@ struct console_read_line_op
 	Handler m_handler;
 	boost::asio::windows::object_handle& console_handle;
 	std::vector<WCHAR> readbuf;
+	DWORD m_savedmode;
 
 	console_read_line_op(boost::asio::windows::object_handle& _console_handle, Handler handler)
 		: console_handle(_console_handle)
 		, m_handler(handler)
 	{
+		GetConsoleMode(console_handle.native_handle(), &m_savedmode);
+		SetConsoleMode(
+			console_handle.native_handle(),
+			ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_EXTENDED_FLAGS | ENABLE_INSERT_MODE
+		);
 		console_handle.async_wait(*this);
 	}
 
 	// async_wait 调用到这里
 	void operator()(boost::system::error_code ec)
 	{
-		WCHAR c;
-		DWORD r;
-
-		ReadConsole(console_handle.native_handle(), &c, 1, &r, 0);
-
-		// 判定 是不是读取到了 "\n"
-		// 是的话就可以调用 handler 了
-		if (c == L'\n')
+		DWORD r =0;
+		INPUT_RECORD ir;
+		ReadConsoleInputW(console_handle.native_handle(), &ir, 1, &r);
+		if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown && ir.Event.KeyEvent.uChar.UnicodeChar)
 		{
-			// 读取到行尾啦！回调吧
-			std::string thisline = wide_to_utf8(std::wstring(readbuf.data(), readbuf.size()));
-			readbuf.clear();
-			m_handler(thisline);
-			return;
+			WCHAR c = ir.Event.KeyEvent.uChar.UnicodeChar;
+			WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), &c, 1, &r, 0);
+			// 判定 是不是读取到了 "\n"
+			// 是的话就可以调用 handler 了
+			if (c == L'\r')
+			{
+				// 读取到行尾啦！回调吧
+				std::string thisline = wide_to_utf8(std::wstring(readbuf.data(), readbuf.size()));
+				readbuf.clear();
+				SetConsoleMode(console_handle.native_handle(), m_savedmode);
+				m_handler(thisline);
+				return;
+			}
+			readbuf.push_back(c);
 		}
 
-		readbuf.push_back(c);
 		// 重复读取
 		console_handle.async_wait(*this);
 	}
