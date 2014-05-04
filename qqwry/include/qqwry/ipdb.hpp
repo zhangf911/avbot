@@ -250,6 +250,82 @@ struct IP_regon
 
 class ipdb
 {
+	struct auto_file_handle
+	{
+#ifdef _WIN32
+		HANDLE m_fd;
+#else
+		int m_fd;
+#endif // _WIN32
+		void do_close()
+		{
+#ifdef _WIN32
+			if (m_fd!=INVALID_HANDLE_VALUE)
+				CloseHandle(m_fd);
+#else
+			if (m_fd( >=0)
+				close(m_fd);
+#endif
+		}
+
+		~auto_file_handle()
+		{
+			do_close();
+		}
+
+		auto_file_handle()
+#ifdef _WIN32
+			:m_fd(INVALID_HANDLE_VALUE)
+#else
+			:m_fd(-1)
+#endif
+		{
+		}
+
+#ifdef _WIN32
+		explicit auto_file_handle(HANDLE _fd)
+#else
+		explicit auto_file_handle(int _fd)
+#endif // _WIN32
+			: m_fd(_fd)
+		{
+		}
+
+#ifdef _WIN32
+		void operator =(HANDLE _fd)
+		{
+			do_close();
+			m_fd = _fd;
+		}
+#else
+		void operator =(int _fd)
+		{
+			do_close();
+			m_fd = _fd;
+		}
+
+#endif // _WIN32
+
+#ifdef _WIN32
+		HANDLE
+#else
+		int
+#endif // _WIN32
+		get_fd()
+		{
+			return m_fd;
+		}
+
+		explicit operator bool()
+		{
+#ifdef _WIN32
+			return m_fd != INVALID_HANDLE_VALUE;
+#else
+			return m_fd >= 0;
+#endif
+		}
+	};
+
 	enum
 	{
 		REDIRECT_MODE_1 = 1,
@@ -264,8 +340,7 @@ private: // private member
 	size_t m_last_record;
 
 #ifdef _WIN32
-	HANDLE	m_filemap;
-	HANDLE	m_ipfile;
+	auto_file_handle m_filemap;
 #else
 	bool   m_backup_byfile;
 #endif // _WIN32
@@ -544,47 +619,45 @@ public:
 		m_first_record = GetDWORD(0);
 		m_last_record = GetDWORD(4);
 		m_curptr = memptr;
-#ifdef _WIN32
-		m_filemap = NULL;
-		m_ipfile = INVALID_HANDLE_VALUE;
-#else
+#ifndef _WIN32
 		m_backup_byfile = false;
 #endif
 	}
+
+
 	ipdb(const char* ipDateFile)
 	{
-#ifndef _WIN32
-		int
-#endif // _WIN32
-		m_ipfile =
+		auto_file_handle m_ipfile(
 #ifdef _WIN32
-			CreateFile(ipDateFile, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+			CreateFile(ipDateFile, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)
 #else
-			open(ipDateFile, O_RDONLY);
+			open(ipDateFile, O_RDONLY)
 #endif // _WIN32
-		if (-1 == (int) m_ipfile)
+		);
+		
+		if ( m_ipfile)
 		{
 			throw ("File Open Failed!");
 		}
 
 #ifdef _WIN32
-		m_filesize = GetFileSize(m_ipfile, 0);
+		m_filesize = GetFileSize(m_ipfile.get_fd(), 0);
 #else
 		struct stat fst;
 		fstat(m_ipfile, &fst);
 		m_filesize = fst.st_size;
 #endif // _WIN#32
 #ifdef _WIN32
-		m_filemap = CreateFileMapping((HANDLE) m_ipfile, 0, PAGE_READONLY, 0, m_filesize, 0);
+		m_filemap = CreateFileMapping((HANDLE) m_ipfile.get_fd(), 0, PAGE_READONLY, 0, m_filesize, 0);
 
 		if (!m_filemap)
 		{
 			throw ("CreatFileMapping Failed!");
 		}
 
-		m_file = (char*) MapViewOfFile(m_filemap, FILE_MAP_READ, 0, 0, m_filesize);
+		m_file = (char*) MapViewOfFile(m_filemap.get_fd(), FILE_MAP_READ, 0, 0, m_filesize);
 #else
-		m_file = (char*) mmap(0, m_filesize, PROT_READ, MAP_PRIVATE, m_ipfile, 0);
+		m_file = (char*)mmap(0, m_filesize, PROT_READ, MAP_PRIVATE, (int)m_ipfile.get_fd(), 0);
 #endif
 
 		if (!m_file)
@@ -594,7 +667,6 @@ public:
 
 #ifndef _WIN32
 		m_backup_byfile = true;
-		close(m_ipfile);
 #endif // _WIN32
 		m_curptr = (char*) m_file;
 		m_first_record = GetDWORD(0);
@@ -607,11 +679,6 @@ public:
 		if (m_filemap)
 		{
 			UnmapViewOfFile((void*) m_file);
-			CloseHandle(m_filemap);
-		}
-		if (m_ipfile != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(m_ipfile);
 		}
 #else
 		if (m_backup_byfile)
