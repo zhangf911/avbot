@@ -263,7 +263,7 @@ class ipdb
 			if (m_fd!=INVALID_HANDLE_VALUE)
 				CloseHandle(m_fd);
 #else
-			if (m_fd( >=0)
+			if (m_fd >=0)
 				close(m_fd);
 #endif
 		}
@@ -644,7 +644,7 @@ public:
 		m_filesize = GetFileSize(m_ipfile.get_fd(), 0);
 #else
 		struct stat fst;
-		fstat(m_ipfile, &fst);
+		fstat(m_ipfile.get_fd(), &fst);
 		m_filesize = fst.st_size;
 #endif // _WIN#32
 #ifdef _WIN32
