@@ -10,7 +10,6 @@
 
 class avbot_vc_feed_input : boost::noncopyable
 {
-
 public:
 	avbot_vc_feed_input(boost::asio::io_service & io_service)
 	  : m_io_service(io_service)
@@ -36,7 +35,9 @@ public:
 		typedef boost::function<void(boost::system::error_code, std::string)> handler_type;
 		BOOST_FOREACH(const handler_type& handler, m_input_wait_handlers)
 		{
-			handler(boost::system::error_code(), line);
+			m_io_service.post(
+				boost::asio::detail::bind_handler(handler, boost::system::error_code(), line)
+			);
 		}
 		m_input_wait_handlers.clear();
 	}

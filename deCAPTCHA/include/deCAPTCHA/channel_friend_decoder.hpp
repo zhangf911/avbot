@@ -39,7 +39,8 @@ inline bool is_vc(std::string str)
 }
 
 template<class Sender, class AsyncInputer, class Handler>
-class channel_friend_decoder_op : boost::asio::coroutine {
+class channel_friend_decoder_op : boost::asio::coroutine
+{
 public:
 	channel_friend_decoder_op(boost::asio::io_service & io_service,
 			Sender sender, AsyncInputer async_inputer,
@@ -51,51 +52,51 @@ public:
 		);
 	}
 
-	template<class error_code>
-	void operator()(error_code ec, std::string str)
+	void operator()(boost::system::error_code ec, std::string str)
 	{
 		std::string tmp;
-		BOOST_ASIO_CORO_REENTER(this)
+		if (ec)
 		{
-			for (; !ec;)
-			{
-				// send to xmpp and irc.
-				// 向 频道广播消息.
-				m_sender("请查看qqlog目录下的vercode.jpeg 然后用\".qqbot vc XXX\"输入验证码:");
-
-				// 同时向命令行也广播
-				std::cerr << literal_to_localstr("请查看qqlog目录下的vercode.jpeg 然后输入验证码: ");
-				std::cerr.flush();
-
-				// 等待输入
-				BOOST_ASIO_CORO_YIELD m_async_inputer(*this);
-				// 检查 str
-				if(str.length() == 4 && is_vc(str))
-				{
-					// 是 vc 的话就调用 handler
-					m_io_service.post(
-						boost::asio::detail::bind_handler(
-							m_handler, ec, std::string("IRC/XMPP 好友辅助验证码解码器"), str, boost::function<void()>()
-						)
-					);
-					return;
-				}
-
-				if ( check_qqbot_vc(str, tmp)){
-					m_io_service.post(
-						boost::asio::detail::bind_handler(
-							m_handler, ec, std::string("IRC/XMPP 好友辅助验证码解码器"), tmp, boost::function<void()>()
-						)
-					);
-					return;
-				}
-			}
-
 			m_io_service.post(
 				boost::asio::detail::bind_handler(
-					m_handler, ec, std::string("IRC/XMPP 好友辅助验证码解码器"), std::string(), boost::function<void()>()
+				m_handler, ec, std::string("IRC/XMPP 好友辅助验证码解码器"), std::string(), boost::function<void()>()
 				)
-			);
+				);
+			return;
+		}
+
+		BOOST_ASIO_CORO_REENTER(this)
+		{
+			// send to xmpp and irc.
+			// 向 频道广播消息.
+			m_sender("请查看qqlog目录下的vercode.jpeg 然后用\".qqbot vc XXX\"输入验证码:");
+
+			// 同时向命令行也广播
+			std::cerr << literal_to_localstr("请查看qqlog目录下的vercode.jpeg 然后输入验证码: ");
+			std::cerr.flush();
+
+			// 等待输入
+			BOOST_ASIO_CORO_YIELD m_async_inputer(*this);
+			// 检查 str
+			if(str.length() == 4 && is_vc(str))
+			{
+				// 是 vc 的话就调用 handler
+				m_io_service.post(
+					boost::asio::detail::bind_handler(
+						m_handler, ec, std::string("IRC/XMPP 好友辅助验证码解码器"), str, boost::function<void()>()
+					)
+				);
+				return;
+			}
+
+			if ( check_qqbot_vc(str, tmp)){
+				m_io_service.post(
+					boost::asio::detail::bind_handler(
+						m_handler, ec, std::string("IRC/XMPP 好友辅助验证码解码器"), tmp, boost::function<void()>()
+					)
+				);
+				return;
+			}
 		}
 	}
 private:
