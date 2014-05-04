@@ -10,6 +10,10 @@
 #else
 #include <unistd.h>
 #endif
+#ifdef _WIN32
+#include <Windows.h>
+#include <mmsystem.h>
+#endif
 #include <string>
 #include <algorithm>
 #include <vector>
@@ -82,6 +86,7 @@ namespace po = boost::program_options;
 extern "C" void avbot_setup_seghandler();
 extern "C" const char * avbot_version();
 extern "C" const char * avbot_version_build_time();
+extern "C" int playsound();
 
 char * execpath;
 avlog logfile;			// 用于记录日志文件.
@@ -798,7 +803,9 @@ rungui:
 		"https://avlog.avplayer.org/cache/tj.php",
 		boost::bind(&avhttp::http_stream::close, &s)
 	);
-
+#ifdef _WIN32
+	avloop_idle_post(io_service, playsound);
+#endif
 	avloop_run(io_service);
 	return 0;
 }
