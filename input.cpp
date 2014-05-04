@@ -44,7 +44,7 @@ struct console_read_line_op
 		GetConsoleMode(console_handle.native_handle(), &m_savedmode);
 		SetConsoleMode(
 			console_handle.native_handle(),
-			ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_EXTENDED_FLAGS | ENABLE_INSERT_MODE
+			ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT
 		);
 		console_handle.async_wait(*this);
 	}
@@ -58,7 +58,35 @@ struct console_read_line_op
 		if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown && ir.Event.KeyEvent.uChar.UnicodeChar)
 		{
 			WCHAR c = ir.Event.KeyEvent.uChar.UnicodeChar;
-			WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), &c, 1, &r, 0);
+			if (c == L'\b')
+			{
+				// 退格键啊，应该删了
+//				WriteConsoleOutputW();
+				if (!readbuf.empty())
+				{
+					WCHAR lc = readbuf.back();
+					
+					readbuf.pop_back();
+					
+					if (lc >= 256)
+					{
+						WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), L"\b \b \b", 5, &r, 0);
+					}
+					else
+					{
+						WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), L"\b \b", 3, &r, 0);
+					}
+				}
+			}
+			else
+			{
+				readbuf.push_back(c);
+			}
+
+			if (iswprint(c))
+			{
+				WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), &c, 1, &r, 0);
+			}
 			// 判定 是不是读取到了 "\n"
 			// 是的话就可以调用 handler 了
 			if (c == L'\r')
@@ -66,11 +94,11 @@ struct console_read_line_op
 				// 读取到行尾啦！回调吧
 				std::string thisline = wide_to_utf8(std::wstring(readbuf.data(), readbuf.size()));
 				readbuf.clear();
+				WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), L"\n", 1, &r, 0);
 				SetConsoleMode(console_handle.native_handle(), m_savedmode);
 				m_handler(thisline);
 				return;
 			}
-			readbuf.push_back(c);
 		}
 
 		// 重复读取
