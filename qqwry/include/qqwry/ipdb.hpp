@@ -635,7 +635,7 @@ public:
 #endif // _WIN32
 		);
 		
-		if ( m_ipfile)
+		if (! m_ipfile)
 		{
 			throw ("File Open Failed!");
 		}
