@@ -1,7 +1,7 @@
 ﻿
 #include <boost/signals2.hpp>
 #include <boost/asio.hpp>
-#ifndef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+#if !defined(BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR) && !defined(BOOST_ASIO_HAS_WINDOWS_OBJECT_HANDLE)
 #include <boost/thread.hpp>
 #endif
 #include <boost/stringencodings.hpp>
