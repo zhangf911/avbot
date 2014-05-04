@@ -100,10 +100,14 @@ foreach(CompilerFlag ${CompilerFlags})
 endforeach()
 
 foreach(CompilerFlag ${CompilerFlags})
+  string(REPLACE "/W3" "/W1" ${CompilerFlag} "${${CompilerFlag}}")
+endforeach()
+
+foreach(CompilerFlag ${CompilerFlags})
   string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
 endforeach()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /MP")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG")
 
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
@@ -190,7 +194,7 @@ endif()
 
 find_package(OpenSSL)
 
-add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD)
+add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD -DDISABLE_LOGGER)
 
 configure_file(avbot.rc.in ${PROJECT_BINARY_DIR}/avbot.rc)
 
