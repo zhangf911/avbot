@@ -22,6 +22,10 @@
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 
+#ifdef _MSC_VER
+#pragma execution_character_set("utf-8")
+#endif
+
 namespace decaptcha{
 namespace decoder{
 
@@ -42,20 +46,6 @@ public:
 			const std::string & buffer, Handler handler)
 		: m_io_service(io_service), m_sender(sender), m_async_inputer(async_inputer), m_handler(handler)
 	{
-		// send to xmpp and irc.
-		// 向 频道广播消息.
-	#if !defined(_MSC_VER)
-		m_sender( "请查看qqlog目录下的vercode.jpeg 然后用\".qqbot vc XXX\"输入验证码:" );
-	# else
-		m_sender( "..." );
-	#endif
-
-		// 同时向命令行也广播
-		std::wcerr << L"请查看qqlog目录下的vercode.jpeg 然后输入验证码: " <<  std::flush ;
-		std::wcerr.flush();
-
-		// 等待输入
-
 		m_io_service.post(
 			boost::asio::detail::bind_handler(*this, boost::system::error_code(), std::string())
 		);
@@ -67,7 +57,17 @@ public:
 		std::string tmp;
 		BOOST_ASIO_CORO_REENTER(this)
 		{
-			while (!ec){
+			for (; !ec;)
+			{
+				// send to xmpp and irc.
+				// 向 频道广播消息.
+				m_sender("请查看qqlog目录下的vercode.jpeg 然后用\".qqbot vc XXX\"输入验证码:");
+
+				// 同时向命令行也广播
+				std::cerr << literal_to_localstr("请查看qqlog目录下的vercode.jpeg 然后输入验证码: ");
+				std::cerr.flush();
+
+				// 等待输入
 				BOOST_ASIO_CORO_YIELD m_async_inputer(*this);
 				// 检查 str
 				if(str.length() == 4 && is_vc(str))
