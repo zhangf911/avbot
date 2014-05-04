@@ -8,7 +8,8 @@
 #include <boost/concept_check.hpp>
 #include <boost/timedcall.hpp>
 
-class avbot_vc_feed_input{
+class avbot_vc_feed_input : boost::noncopyable
+{
 
 public:
 	avbot_vc_feed_input(boost::asio::io_service & io_service)
@@ -55,7 +56,8 @@ public:
 
 	void call_this_to_feed_timeout()
 	{
-		BOOST_FOREACH(boost::function<void (boost::system::error_code, std::string)> handler ,  m_input_wait_handlers)
+		typedef boost::function<void(boost::system::error_code, std::string)> handler_type;
+		BOOST_FOREACH(const handler_type& handler, m_input_wait_handlers)
 		{
 			handler(boost::system::errc::make_error_code(boost::system::errc::timed_out), std::string());
 		}
