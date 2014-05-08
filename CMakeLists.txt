@@ -21,6 +21,8 @@ endif()
 
 set(OBJCOPYFORMAT "${OBJCOPYFORMATELF}-${OBJCOPYFORMATENDIAN}")
 
+if(NOT CMAKE_CXX_COMPILER MATCHES "icc")
+
 CHECK_CXX_COMPILER_FLAG(-std=c++11 LIBCXX_HAS_STDCXX11_FLAG)
 
 if(LIBCXX_HAS_STDCXX11_FLAG)
@@ -37,6 +39,8 @@ else()
 
 endif()
 endif()
+
+endif() # if(NOT CMAKE_CXX_COMPILER MATCHES "icc")
 
 # ============== cpack ===============
 if(MSVC)
