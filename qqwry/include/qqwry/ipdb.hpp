@@ -316,7 +316,10 @@ class ipdb
 			return m_fd;
 		}
 
-		explicit operator bool()
+#if !defined(BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS)
+		explicit
+#endif
+		operator bool() const
 		{
 #ifdef _WIN32
 			return m_fd != INVALID_HANDLE_VALUE;
