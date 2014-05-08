@@ -427,7 +427,7 @@ protected:
 				match = detail::match_exp((char*) country, (char*) exp_country);
 				if (match)
 				{
-					country_matched.insert(std::pair<uint32_t, char*> (country - m_file , 0));
+					country_matched.insert(std::make_pair<uint32_t, char*> (country - m_file , 0));
 
 					parea = pRecord + strlen(country) + 1;
 
@@ -464,7 +464,7 @@ protected:
 				if (match)
 				{
 					// update the matched area list
-					area_matched.insert(std::pair<uint32_t, char*> (detail::Get3BYTEptr(parea + 1), 0));
+					area_matched.insert(std::make_pair<uint32_t, char*> (detail::Get3BYTEptr(parea + 1), 0));
 				}
 				else
 				{
@@ -476,7 +476,7 @@ protected:
 			match = detail::match_exp(Get_String(parea), (char*) exp_area);
 			// update the matched area list
 			if (match)
-				area_matched.insert(std::pair<uint32_t, char*> ((parea - m_file) & 0xFFFFFF , 0));
+				area_matched.insert(std::make_pair<uint32_t, char*> ((parea - m_file) & 0xFFFFFF , 0));
 			else
 				return false;
 		}
