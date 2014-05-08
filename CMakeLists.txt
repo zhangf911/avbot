@@ -5,6 +5,22 @@ if (NOT MSVC)
 
 include(CheckCXXCompilerFlag)
 
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+	set(OBJCOPYFORMATENDIAN "x86-64")
+	set(BINARY_ARCHITECTURE "i386")
+else()
+	set(OBJCOPYFORMATENDIAN "${CMAKE_SYSTEM_PROCESSOR}")
+	set(BINARY_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
+endif()
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(OBJCOPYFORMATELF "elf64")
+else()
+	set(OBJCOPYFORMATELF "elf32")
+endif()
+
+set(OBJCOPYFORMAT "${OBJCOPYFORMATELF}-${OBJCOPYFORMATENDIAN}")
+
 CHECK_CXX_COMPILER_FLAG(-std=c++11 LIBCXX_HAS_STDCXX11_FLAG)
 
 if(LIBCXX_HAS_STDCXX11_FLAG)
@@ -251,6 +267,7 @@ add_subdirectory(extension)
 
 configure_file(version.c.in version.c @ONLY)
 
+
 set(AVBOT_SOURCES
 # 	avbot_rpc_server.cpp
 	main.cpp
@@ -270,13 +287,22 @@ list(APPEND AVBOT_SOURCES backtrace.cpp)
 endif()
 
 if(WIN32)
-list(APPEND AVBOT_SOURCES sound.cpp)
+list(APPEND AVBOT_SOURCES sound.cpp )
+else()
+
+add_custom_command(OUTPUT tweet.o
+	COMMAND ${CMAKE_OBJCOPY} -I binary -O ${OBJCOPYFORMAT} -B ${BINARY_ARCHITECTURE} ${CMAKE_CURRENT_SOURCE_DIR}/tweet.wav tweet.o
+	DEPENDS tweet.wav WORKING_DIRECTORY ${CMAKE_CURRENT_BUILD_DIR}
+  )
+
+list(APPEND AVBOT_SOURCES tweet.o )
 endif()
+
 add_executable(avbot ${AVBOT_SOURCES} ${AVBOTRPC_SOURCES})
+
 if(NOT WIN32)
 target_link_libraries(avbot -rdynamic)
 endif()
-
 
 if(WIN32)
 add_subdirectory(gui)
