@@ -119,13 +119,11 @@ public:
 
 #ifdef _WIN32
 			// find pathof(avbot.exe)/qqwry.dat
-
-			char exePATH[_MAX_PATH];
-
+			{char exePATH[4096];
 			::GetModuleFileName(NULL, exePATH, sizeof(exePATH));
-			p = exePATH;
-			p = p.parent_path();
-			p /= "qqwry.dat";
+			p = exePATH;}
+
+			p = p.parent_path() / "qqwry.dat";
 
 			if (boost::filesystem::exists(p))
 			{
