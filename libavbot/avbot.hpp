@@ -66,6 +66,8 @@ public:
 	void set_irc_account(std::string nick = autonick(), std::string password = "" , std::string server = "irc.freenode.net:6667", bool use_ssl = false);
 	// 调用这个加入 IRC 频道.
 	void irc_join_room(std::string room_name);
+	// 调用这个加入 IRC 频道, 并提供频道密码.
+	void irc_join_room(std::string room_name, std::string room_passwd);
 
 	// 调用这个设置 XMPP 账户.
 	void set_xmpp_account(std::string user, std::string password, std::string nick="avbot", std::string server="");

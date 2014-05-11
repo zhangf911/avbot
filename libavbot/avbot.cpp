@@ -459,6 +459,12 @@ void avbot::irc_join_room( std::string room_name )
 		m_irc_account->join(room_name);
 }
 
+void avbot::irc_join_room(std::string room_name, std::string room_passwd)
+{
+	if (m_irc_account)
+		m_irc_account->join(room_name, room_passwd);
+}
+
 void avbot::set_xmpp_account( std::string user, std::string password, std::string nick, std::string server )
 {
 	m_xmpp_account.reset(new xmpp(m_io_service, user, password, server, nick));

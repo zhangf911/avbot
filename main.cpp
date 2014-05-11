@@ -423,7 +423,7 @@ int daemon(int nochdir, int noclose)
 int main(int argc, char * argv[])
 {
 	std::string qqnumber, qqpwd;
-	std::string ircnick, ircroom, ircpwd, ircserver;
+	std::string ircnick, ircroom, ircroom_pass, ircpwd, ircserver;
 	std::string xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick;
 	std::string cfgfile;
 	std::string logdir;
@@ -481,6 +481,8 @@ int main(int argc, char * argv[])
 		"irc password")
 	("ircrooms", po::value<std::string>(&ircroom),
 		"irc room")
+	("ircrooms_passwd", po::value<std::string>(&ircroom_pass),
+		"irc passwd for room")
 	("ircserver", po::value<std::string>(&ircserver)->default_value("irc.freenode.net:6667"),
 		"irc server, default to freenode")
 
@@ -765,7 +767,10 @@ rungui:
 	boost::split(ircrooms, ircroom, boost::is_any_of(","));
 	BOOST_FOREACH(std::string room , ircrooms)
 	{
-		mybot.irc_join_room(std::string("#") + room);
+		if (ircroom_pass.empty())
+			mybot.irc_join_room(std::string("#") + room);
+		else
+			mybot.irc_join_room(std::string("#") + room, ircroom_pass);
 	}
 
 	std::vector<std::string> xmpprooms;
