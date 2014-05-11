@@ -29,3 +29,6 @@ target_link_libraries(extension libluascript)
 endif()
 
 
+if(ZLIB_FOUND)
+target_link_libraries(extension ${ZLIB_LIBRARIES})
+endif()
