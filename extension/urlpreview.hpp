@@ -18,16 +18,19 @@
 
 #include "extension.hpp"
 
-
-class urlpreview : avbotextension
+class urlpreview
 {
 	typedef std::pair<std::string, boost::posix_time::ptime> urllist_item_type;
 	typedef boost::circular_buffer_space_optimized<urllist_item_type> urllist_type;
 	boost::shared_ptr<urllist_type>	urllist;
+	boost::asio::io_service &io_service;
+	boost::function<void ( std::string ) > m_sender;
+
 public:
 	template<class MsgSender>
 	urlpreview( boost::asio::io_service &_io_service,  MsgSender sender)
-		: avbotextension(_io_service, sender)
+		: m_sender(sender)
+		, io_service(_io_service)
 		, urllist(boost::make_shared<boost::circular_buffer_space_optimized<std::pair<std::string, boost::posix_time::ptime> > >(20))
 	{
 	}

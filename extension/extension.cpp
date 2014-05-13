@@ -37,7 +37,7 @@ static void sender(avbot & mybot,std::string channel_name, std::string txt, bool
 void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name)
 {
 	mybot.on_message.connect(
-		botextension(
+		avbot_extension(
 			channel_name,
 			joke(
 				io_service,
@@ -49,7 +49,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	);
 
 	mybot.on_message.connect(
-		botextension(
+		avbot_extension(
 			channel_name,
 			urlpreview(io_service,
 				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
@@ -67,7 +67,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	);
 #endif
 	mybot.on_message.connect (
-		botextension(
+		avbot_extension(
 			channel_name,
 			::bulletin(
 				io_service,
@@ -77,7 +77,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		)
 	);
 	mybot.on_message.connect (
-		botextension(
+		avbot_extension(
 			channel_name,
 			::metalprice(
 				io_service,
@@ -86,7 +86,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		)
 	);
 	mybot.on_message.connect (
-		botextension(
+		avbot_extension(
 			channel_name,
 			::stockprice(
 				io_service,
@@ -95,7 +95,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		)
 	);
 	mybot.on_message.connect (
-		botextension(
+		avbot_extension(
 			channel_name,
 			::exchangerate(
 				io_service,
@@ -116,7 +116,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	}
 
 	mybot.on_message.connect(
-		botextension(
+		avbot_extension(
 			channel_name,
 			iplocation(
 				io_service,

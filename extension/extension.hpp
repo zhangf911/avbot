@@ -18,7 +18,7 @@ public:
 };
 
 template<class ExtensionType>
-class avbotexteison_adapter :  public avbotexteison_interface
+class avbotexteison_adapter : public avbotexteison_interface
 {
 	boost::scoped_ptr<ExtensionType> m_pextension;
 	void operator()(const boost::property_tree::ptree & msg)
@@ -41,7 +41,7 @@ public:
 } // namespace detail
 
 // type erasure for avbot extension
-class botextension
+class avbot_extension
 {
 	boost::shared_ptr<detail::avbotexteison_interface> m_exteison_obj;
 	std::string m_channel_name;
@@ -49,27 +49,27 @@ class botextension
 public:
 
 	template<class ExtensionType>
-	botextension(std::string channel_name, const ExtensionType & obj)
+	avbot_extension(std::string channel_name, const ExtensionType & obj)
 		: m_channel_name( channel_name )
 	{
 		m_exteison_obj.reset(new detail::avbotexteison_adapter<ExtensionType>(obj));
 	}
 
 	template<class ExtensionType>
-	botextension & operator = (const ExtensionType & extensionobj)
+	avbot_extension & operator = (const ExtensionType & extensionobj)
 	{
 		m_exteison_obj.reset(new detail::avbotexteison_adapter<ExtensionType>(extensionobj));
 		return *this;
 	}
 
 	template<class ExtensionType>
-	botextension & operator = (ExtensionType * extensionobj)
+	avbot_extension & operator = (ExtensionType * extensionobj)
 	{
 		m_exteison_obj.reset(new detail::avbotexteison_adapter<ExtensionType>(extensionobj));
 		return *this;
 	}
 
-	botextension & operator = (const botextension & rhs)
+	avbot_extension & operator = (const avbot_extension & rhs)
 	{
 		m_exteison_obj = rhs.m_exteison_obj;
 		m_channel_name = rhs.m_channel_name;
@@ -90,19 +90,6 @@ public:
         }
 	}
 	typedef void result_type;
-};
-
-class avbotextension
-{
-protected:
-	boost::asio::io_service &io_service;
-	boost::function<void ( std::string ) > m_sender;
-
-	template<class MsgSender>
-	avbotextension( boost::asio::io_service &_io_service,  MsgSender sender)
-		: io_service( _io_service ), m_sender( sender )
-	{
-	}
 };
 
 void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name);

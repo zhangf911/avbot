@@ -26,9 +26,11 @@
 
 #include "extension.hpp"
 
-class joke : avbotextension
+class joke
 {
 private:
+	boost::asio::io_service &io_service;
+	boost::function<void ( std::string ) > m_sender;
 	boost::shared_ptr<boost::posix_time::seconds> m_interval;
 	boost::shared_ptr<boost::asio::deadline_timer> m_timer;
 	std::string m_channel_name;
@@ -43,7 +45,8 @@ private:
 public:
 	template<class MsgSender>
 	joke(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name, boost::posix_time::seconds interval = boost::posix_time::seconds(3600))
-	  : avbotextension(_io_service, sender)
+	  : m_sender(sender)
+	  , io_service(_io_service)
 	  , m_channel_name(channel_name)
 	  ,	m_timer(new boost::asio::deadline_timer(_io_service))
 	  , m_interval(new boost::posix_time::seconds(interval))
@@ -55,8 +58,9 @@ public:
 
 	template<class MsgSender, class AsyncJokeFetcher>
 	joke(boost::asio::io_service & _io_service, MsgSender sender, AsyncJokeFetcher _async_jokefecher, std::string channel_name, boost::posix_time::seconds interval = boost::posix_time::seconds(3600))
-	  : avbotextension(_io_service, sender)
+	  : m_sender(sender)
 	  , m_channel_name(channel_name)
+	  , io_service(_io_service)
 	  , m_timer(new boost::asio::deadline_timer(_io_service))
 	  , m_async_jokefecher(_async_jokefecher)
 	  , m_interval(new boost::posix_time::seconds(interval))

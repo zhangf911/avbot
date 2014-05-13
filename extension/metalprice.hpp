@@ -89,14 +89,17 @@ void metalprice_fetcher(boost::asio::io_service & io_service, MsgSender sender, 
 
 }
 
-class metalprice : avbotextension
+class metalprice
 {
 private:
+	boost::asio::io_service &io_service;
+	boost::function<void ( std::string ) > m_sender;
 
 public:
 	template<class MsgSender>
 	metalprice(boost::asio::io_service & _io_service, MsgSender sender)
-	  : avbotextension(_io_service, sender)
+		: m_sender(sender)
+		, io_service(_io_service)
 	{
 	}
 

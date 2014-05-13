@@ -376,14 +376,17 @@ void stock_fetcher(boost::asio::io_service & io_service, MsgSender sender, std::
 } // namespace stock
 
 
-class stockprice : avbotextension
+class stockprice
 {
 private:
+	boost::asio::io_service &io_service;
+	boost::function<void ( std::string ) > m_sender;
 
 public:
 	template<class MsgSender>
 	stockprice(boost::asio::io_service &io, MsgSender sender)
-	  : avbotextension(io, sender)
+	  : m_sender(sender)
+	  , io_service(io)
 	{}
 
 	void operator()(const boost::system::error_code &error);
