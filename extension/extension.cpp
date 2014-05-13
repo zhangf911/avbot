@@ -82,8 +82,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			channel_name,
 			::metalprice(
 				io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-				channel_name
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
 			)
 		)
 	);
@@ -92,8 +91,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			channel_name,
 			::stockprice(
 				io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-				channel_name
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
 			)
 		)
 	);
@@ -125,7 +123,6 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			iplocation(
 				io_service,
 				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
-				channel_name,
 				ipdb_mgr
 			)
 		)

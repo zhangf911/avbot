@@ -95,8 +95,8 @@ private:
 
 public:
 	template<class MsgSender>
-	metalprice(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name)
-	  : avbotextension(_io_service, sender, channel_name)
+	metalprice(boost::asio::io_service & _io_service, MsgSender sender)
+	  : avbotextension(_io_service, sender, "")
 	{
 	}
 

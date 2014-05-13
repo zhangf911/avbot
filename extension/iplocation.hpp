@@ -11,10 +11,10 @@
 #include <avhttp.hpp>
 #include <avhttp/async_read_body.hpp>
 
-#include "extension.hpp"
+#include "boost/stringencodings.hpp"
 #include "qqwry/ipdb.hpp"
 
-class iplocation : avbotextension
+class iplocation
 {
 	// download qqwy.dat file and decode it and return decoded data.
 	// so the user can decide to write to file or just pass it to the constructor
@@ -219,14 +219,17 @@ public:
 
 	}
 	template<class MsgSender>
-	iplocation(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name, boost::shared_ptr<ipdb_mgr> _ipdb_mgr)
-		: avbotextension(_io_service, sender, channel_name)
+	iplocation(boost::asio::io_service & _io_service, MsgSender sender, boost::shared_ptr<ipdb_mgr> _ipdb_mgr)
+		: io_service( _io_service )
+		, m_sender( sender )
 		, m_ipdb_mgr(_ipdb_mgr)
 	{
 	}
 private:
 	// 这么多 extension 的 qqwry 数据库当然得共享啦！ 共享那肯定就是用的共享指针.
 	boost::shared_ptr<ipdb_mgr> m_ipdb_mgr;
+	boost::asio::io_service &io_service;
+	boost::function<void ( std::string ) > m_sender;
 };
 
 #endif // iplocation_h__
