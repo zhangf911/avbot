@@ -54,7 +54,7 @@ class iplocation : avbotextension
 					"http://update.cz88.net/ip/qqwry.rar",
 					*m_buf_qqwry_rar,
 					*this
-					);
+				);
 
 				// 解码
 				{
