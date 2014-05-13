@@ -10,25 +10,6 @@
 #include "libavbot/avbot.hpp"
 #include "boost/stringencodings.hpp"
 
-class avbotextension
-{
-protected:
-	boost::asio::io_service &io_service;
-	boost::function<void ( std::string ) > m_sender;
-	std::string m_channel_name;
-
-	template<class MsgSender>
-	avbotextension( boost::asio::io_service &_io_service,  MsgSender sender, std::string channel_name )
-		: io_service( _io_service ), m_sender( sender ), m_channel_name( channel_name )
-	{
-	}
-public:
-	typedef void result_type;
-};
-
-
-void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name);
-
 namespace detail{
 class avbotexteison_interface
 {
@@ -111,3 +92,17 @@ public:
 	typedef void result_type;
 };
 
+class avbotextension
+{
+protected:
+	boost::asio::io_service &io_service;
+	boost::function<void ( std::string ) > m_sender;
+
+	template<class MsgSender>
+	avbotextension( boost::asio::io_service &_io_service,  MsgSender sender)
+		: io_service( _io_service ), m_sender( sender )
+	{
+	}
+};
+
+void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name);

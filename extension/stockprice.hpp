@@ -383,7 +383,7 @@ private:
 public:
 	template<class MsgSender>
 	stockprice(boost::asio::io_service &io, MsgSender sender)
-	  : avbotextension(io, sender, "")
+	  : avbotextension(io, sender)
 	{}
 
 	void operator()(const boost::system::error_code &error);

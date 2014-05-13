@@ -42,7 +42,8 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			joke(
 				io_service,
 				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
-				channel_name, boost::posix_time::seconds(600)
+				channel_name,
+				boost::posix_time::seconds(600)
 			)
 		)
 	);
@@ -51,8 +52,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		botextension(
 			channel_name,
 			urlpreview(io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-				channel_name
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
 			)
 		)
 	);
@@ -61,8 +61,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		botextension(
 			channel_name,
 			callluascript(io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-				channel_name
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
 			)
 		)
 	);
@@ -100,8 +99,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			channel_name,
 			::exchangerate(
 				io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-				channel_name
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
 			)
 		)
 	);

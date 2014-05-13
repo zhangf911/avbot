@@ -77,7 +77,7 @@ void bulletin::schedule_next() const
 				{
 					// 设定 expires
 					m_timer->expires_from_now(*titr - now + boost::posix_time::seconds( std::rand() % 30 +15 ));
-					m_timer->async_wait(boost::bind( *this, _1, std::string(what[6])));
+					m_timer->async_wait(boost::bind<void>(*this, _1, std::string(what[6])));
 					return;
 				}
 			}else if (boost::regex_match(cronline.c_str(), what, ex2)){
@@ -90,7 +90,7 @@ void bulletin::schedule_next() const
 				{
 					// 设定 expires
 					m_timer->expires_from_now(*titr - now + boost::posix_time::seconds( std::rand() % 30 + 15 ));
-					m_timer->async_wait(boost::bind( *this, _1, std::string("bulletin.txt")));
+					m_timer->async_wait(boost::bind<void>(*this, _1, std::string("bulletin.txt")));
 					return;
 				}
 			}

@@ -20,7 +20,7 @@ class callluascript
 {
 	boost::asio::io_service &io_service;
 	boost::function<void ( std::string ) > m_sender;
-	std::string m_channel_name;
+
 	mutable boost::shared_ptr<lua_State> m_lua_State;
 
 	void load_lua() const;

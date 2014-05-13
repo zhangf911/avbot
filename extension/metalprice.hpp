@@ -96,7 +96,7 @@ private:
 public:
 	template<class MsgSender>
 	metalprice(boost::asio::io_service & _io_service, MsgSender sender)
-	  : avbotextension(_io_service, sender, "")
+	  : avbotextension(_io_service, sender)
 	{
 	}
 

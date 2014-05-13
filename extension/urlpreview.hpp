@@ -26,8 +26,9 @@ class urlpreview : avbotextension
 	boost::shared_ptr<urllist_type>	urllist;
 public:
 	template<class MsgSender>
-	urlpreview( boost::asio::io_service &_io_service,  MsgSender sender, std::string channel_name )
-		: avbotextension(_io_service, sender, channel_name), urllist(boost::make_shared<boost::circular_buffer_space_optimized<std::pair<std::string, boost::posix_time::ptime> > >(20))
+	urlpreview( boost::asio::io_service &_io_service,  MsgSender sender)
+		: avbotextension(_io_service, sender)
+		, urllist(boost::make_shared<boost::circular_buffer_space_optimized<std::pair<std::string, boost::posix_time::ptime> > >(20))
 	{
 	}
 	// on_message 回调.

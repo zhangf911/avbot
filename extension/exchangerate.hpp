@@ -186,8 +186,8 @@ private:
 
 public:
 	template<class MsgSender>
-	exchangerate(boost::asio::io_service & _io_service, MsgSender sender, std::string channel_name)
-	  : avbotextension(_io_service, sender, channel_name)
+	exchangerate(boost::asio::io_service & _io_service, MsgSender sender)
+	  : avbotextension(_io_service, sender)
 	{
 	}
 

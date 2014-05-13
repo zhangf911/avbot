@@ -31,8 +31,8 @@ struct lua_sender
 	}
 };
 
-callluascript::callluascript( boost::asio::io_service &_io_service,  boost::function<void ( std::string ) >  sender, std::string channel_name )
-	: io_service( _io_service ), m_sender( sender ), m_channel_name( channel_name )
+callluascript::callluascript( boost::asio::io_service &_io_service,  boost::function<void ( std::string ) >  sender)
+	: io_service( _io_service ), m_sender( sender )
 {
 }
 
