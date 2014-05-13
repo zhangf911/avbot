@@ -20,21 +20,21 @@ public:
 template<class ExtensionType>
 class avbotexteison_adapter : public avbotexteison_interface
 {
-	boost::scoped_ptr<ExtensionType> m_pextension;
+	ExtensionType m_pextension;
 	void operator()(const boost::property_tree::ptree & msg)
 	{
-		(*m_pextension)(msg);
+		m_pextension(msg);
 	}
 
 public:
 	avbotexteison_adapter(const ExtensionType & obj)
 	{
-		m_pextension.reset(new ExtensionType(obj));
+		m_pextension = obj;
 	}
 
 	avbotexteison_adapter(ExtensionType * obj)
 	{
-		m_pextension.reset(obj);
+		m_pextension = *obj;
 	}
 };
 
