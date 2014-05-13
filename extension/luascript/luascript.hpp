@@ -27,7 +27,7 @@ class callluascript
 	void call_lua(std::string jsondata) const ;
 
 public:
-	callluascript( boost::asio::io_service &_io_service,  boost::function<void ( std::string ) >  sender, std::string channel_name );
+	callluascript(boost::asio::io_service &_io_service, boost::function<void(std::string)> sender);
 	~callluascript();
 	// on_message 回调.
 	void operator()( boost::property_tree::ptree message ) const;
