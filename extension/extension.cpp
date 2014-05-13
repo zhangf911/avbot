@@ -79,7 +79,7 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	mybot.on_message.connect (
 		avbot_extension(
 			channel_name,
-			::metalprice(
+			make_metalprice(
 				io_service,
 				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
 			)

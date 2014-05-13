@@ -89,14 +89,13 @@ void metalprice_fetcher(boost::asio::io_service & io_service, MsgSender sender, 
 
 }
 
+template<class MsgSender>
 class metalprice
 {
 private:
 	boost::asio::io_service &io_service;
-	boost::function<void ( std::string ) > m_sender;
-
+	typename boost::remove_reference<MsgSender>::type m_sender;
 public:
-	template<class MsgSender>
 	metalprice(boost::asio::io_service & _io_service, MsgSender sender)
 		: m_sender(sender)
 		, io_service(_io_service)
@@ -116,5 +115,12 @@ public:
 		}
 	}
 };
+
+template<class MsgSender>
+metalprice<MsgSender>
+make_metalprice(boost::asio::io_service & io_service, const MsgSender & sender)
+{
+	return metalprice<MsgSender>(io_service, sender);
+}
 
 #endif // __GOLDPRICE_HPP_
