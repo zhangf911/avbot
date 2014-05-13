@@ -184,13 +184,14 @@ public:
 		try{
 			if (
 				boost::regex_search(
-				textmsg.c_str(),
-				what,
-				boost::regex(
-				"((((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5]))\\.){3}((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5])))"
+					textmsg.c_str(),
+					what,
+					boost::regex(
+						"((((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5]))\\.){3}((1\\d{2})|(2[0-4]\\d)|(25[0-5])|(\\d{1,2})))"
+					),
+					boost::match_default
 				)
-				)
-				)
+			)
 			{
 				if (!m_ipdb_mgr->is_ready())
 				{
