@@ -197,7 +197,7 @@ public:
 			{
 				if (!m_ipdb_mgr->is_ready())
 				{
-					m_sender("吼吼，还木有纯真数据库，暂时无法查询");
+					m_sender(std::string("吼吼，还木有纯真数据库，暂时无法查询"));
 					return;
 				}
 
