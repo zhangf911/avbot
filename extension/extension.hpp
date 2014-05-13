@@ -10,10 +10,12 @@
 #include "libavbot/avbot.hpp"
 #include "boost/stringencodings.hpp"
 
+class avbot_extension;
+
 namespace detail{
 class avbotexteison_interface
 {
-public:
+	friend class avbot_extension;
 	virtual void operator()(const boost::property_tree::ptree & msg) = 0;
 };
 
@@ -23,7 +25,7 @@ class avbotexteison_adapter : public avbotexteison_interface
 	ExtensionType m_pextension;
 	void operator()(const boost::property_tree::ptree & msg)
 	{
-		m_pextension(msg);
+		(m_pextension)(msg);
 	}
 
 public:
@@ -49,23 +51,35 @@ class avbot_extension
 public:
 
 	template<class ExtensionType>
-	avbot_extension(std::string channel_name, const ExtensionType & obj)
+	avbot_extension(std::string channel_name, const ExtensionType & extensionobj)
 		: m_channel_name( channel_name )
 	{
-		m_exteison_obj.reset(new detail::avbotexteison_adapter<ExtensionType>(obj));
+		m_exteison_obj.reset(
+			new detail::avbotexteison_adapter<
+				typename boost::remove_reference<ExtensionType>::type
+			>(extensionobj)
+		);
 	}
 
 	template<class ExtensionType>
 	avbot_extension & operator = (const ExtensionType & extensionobj)
 	{
-		m_exteison_obj.reset(new detail::avbotexteison_adapter<ExtensionType>(extensionobj));
+		m_exteison_obj.reset(
+			new detail::avbotexteison_adapter<
+				typename boost::remove_reference<ExtensionType>::type
+			>(extensionobj)
+		);
 		return *this;
 	}
 
 	template<class ExtensionType>
 	avbot_extension & operator = (ExtensionType * extensionobj)
 	{
-		m_exteison_obj.reset(new detail::avbotexteison_adapter<ExtensionType>(extensionobj));
+		m_exteison_obj.reset(
+			new detail::avbotexteison_adapter<
+			typename boost::remove_reference<ExtensionType>::type
+			>(extensionobj)
+		);
 		return *this;
 	}
 

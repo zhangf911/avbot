@@ -375,15 +375,14 @@ void stock_fetcher(boost::asio::io_service & io_service, MsgSender sender, std::
 
 } // namespace stock
 
-
+template<class MsgSender>
 class stockprice
 {
 private:
 	boost::asio::io_service &io_service;
-	boost::function<void ( std::string ) > m_sender;
+	MsgSender m_sender;
 
 public:
-	template<class MsgSender>
 	stockprice(boost::asio::io_service &io, MsgSender sender)
 	  : m_sender(sender)
 	  , io_service(io)
@@ -404,5 +403,12 @@ public:
 		}
 	}
 };
+
+template<class MsgSender>
+stockprice<typename boost::remove_reference<MsgSender>::type>
+make_stockprice(boost::asio::io_service &io, MsgSender sender)
+{
+	return  stockprice<typename boost::remove_reference<MsgSender>::type>(io,sender);
+}
 
 #endif // __STOCK_HPP__
