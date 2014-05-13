@@ -33,8 +33,8 @@ public:
 	}
 
 	avbotexteison_adapter(ExtensionType * obj)
+		: m_pextension(*obj)
 	{
-		m_pextension = *obj;
 	}
 };
 
