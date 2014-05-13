@@ -104,9 +104,6 @@ public:
 
 	void operator()(boost::property_tree::ptree msg)
 	{
- 		if( msg.get<std::string>( "channel" ) != m_channel_name )
-			return;
-
 		std::string textmsg = boost::trim_copy( msg.get<std::string>( "message.text" ) );
 
 		boost::cmatch what;

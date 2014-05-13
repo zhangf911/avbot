@@ -117,7 +117,7 @@ struct EOR{
 
 namespace exchange{
 
-// http://hq.sinajs.cn/?rn=1376405746416&list=USDCNY  
+// http://hq.sinajs.cn/?rn=1376405746416&list=USDCNY
 // 只查询sina支持的EOR_lists中的货币汇率
 template<class MsgSender>
 struct exchangerate_fetcher_op{
@@ -126,13 +126,13 @@ struct exchangerate_fetcher_op{
 	  : io_service(_io_service), sender(_sender), stream(new avhttp::http_stream(_io_service)), money(_money), buf(boost::make_shared<boost::asio::streambuf>())
 	{
 		std::string list;
-		
+
 		for ( int i = 0; i < EOR_Number; i++ )
 			if ( money == EOR_lists[i].money ){
 				list = EOR_lists[i].list;
 				break;
 			}
-		
+
 		if (list.empty()){
 			sender( std::string( money + " 无汇率数据或avbot暂不支持"));
 		}else{
@@ -195,11 +195,8 @@ public:
 
 	void operator()(boost::property_tree::ptree msg)
 	{
- 		if( msg.get<std::string>( "channel" ) != m_channel_name )
-			return;
-
 		std::string textmsg = boost::trim_copy( msg.get<std::string>( "message.text" ) );
-		
+
 		// 组合正则表达式 str == ".qqbot (美元|欧元|日元|......)(汇率)?"
 		std::string str = ".qqbot (";
 		for ( int i = 0; i < EOR_Number - 1; i++){
@@ -208,7 +205,7 @@ public:
 		}
 		str += EOR_lists[ EOR_Number - 1 ].money;
 		str += ")(汇率)?";
-		
+
 		boost::cmatch what;
 		if (boost::regex_search(textmsg.c_str(), what, boost::regex(str)))
 		{

@@ -46,7 +46,7 @@ static inline std::string get_char_set( std::string type,  const std::string & h
 	else if( boost::regex_search( header.c_str(), what, ex2 ) )
 	{
 		return what[1];
-	}	
+	}
 
 	return "utf8";
 }
@@ -211,11 +211,6 @@ struct urlpreview
 
 void urlpreview::operator()( boost::property_tree::ptree message )
 {
-	if( message.get<std::string>( "channel" ) != m_channel_name )
-	{
-		return;
-	}
-
 	// 检查 URL
 	std::string txt = message.get<std::string>( "message.text" );
 	std::string speaker = message.get<std::string>( "who.nick" );; // 发了 url 的人的 nick
@@ -228,7 +223,7 @@ void urlpreview::operator()( boost::property_tree::ptree message )
 	// 使用 boost_regex_search
 	boost::regex ex( "https?://[\\w\\d\\.\\?\\$\\-\\+\\|&@#/%=~_!:,]*[\\w\\d\\+&@#/%=~_\\|\\$]" );
 	boost::cmatch what;
-	
+
 	while(boost::regex_search( txt.c_str(), what, ex ))
 	{
 		std::string url = what[0];
@@ -243,7 +238,7 @@ bool urlpreview::can_preview(std::string speaker, std::string urlstr)
 	boost::regex ex;
 	// 内置数据库, 然后是 ${qqlog}/blockurls.txt
 	try{
-	
+
 		avhttp::url url(urlstr);
 
 

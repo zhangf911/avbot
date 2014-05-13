@@ -37,48 +37,74 @@ static void sender(avbot & mybot,std::string channel_name, std::string txt, bool
 void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybot , std::string channel_name)
 {
 	mybot.on_message.connect(
-		joke(io_service,
-			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
-			channel_name, boost::posix_time::seconds(600)
+		botextension(
+			channel_name,
+			joke(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
+				channel_name, boost::posix_time::seconds(600)
+			)
 		)
 	);
 
 	mybot.on_message.connect(
-		::urlpreview(io_service,
-					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-					channel_name
+		botextension(
+			channel_name,
+			urlpreview(io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
+				channel_name
+			)
 		)
 	);
 #ifdef ENABLE_LUA
 	mybot.on_message.connect(
-		::callluascript(io_service,
-					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-					channel_name
+		botextension(
+			channel_name,
+			callluascript(io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
+				channel_name
+			)
 		)
 	);
 #endif
-	mybot.on_message.connect(
-		::bulletin(io_service,
-					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-					channel_name
+	mybot.on_message.connect (
+		botextension(
+			channel_name,
+			::bulletin(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
+				channel_name
+			)
 		)
 	);
-	mybot.on_message.connect(
-		::metalprice(io_service,
-					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-					channel_name
+	mybot.on_message.connect (
+		botextension(
+			channel_name,
+			::metalprice(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
+				channel_name
+			)
 		)
 	);
-	mybot.on_message.connect(
-		::stockprice(io_service,
-					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-					channel_name
+	mybot.on_message.connect (
+		botextension(
+			channel_name,
+			::stockprice(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
+				channel_name
+			)
 		)
 	);
-	mybot.on_message.connect(
-		::exchangerate(io_service,
-					io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
-					channel_name
+	mybot.on_message.connect (
+		botextension(
+			channel_name,
+			::exchangerate(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1)),
+				channel_name
+			)
 		)
 	);
 
@@ -94,9 +120,14 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	}
 
 	mybot.on_message.connect(
-		iplocation(io_service,
-			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
-			channel_name, ipdb_mgr
+		botextension(
+			channel_name,
+			iplocation(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
+				channel_name,
+				ipdb_mgr
+			)
 		)
 	);
 }

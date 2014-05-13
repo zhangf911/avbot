@@ -165,58 +165,55 @@ void joke::operator()( boost::property_tree::ptree msg )
 {
 	try
 	{
-		if( msg.get<std::string>( "channel" ) == m_channel_name )
+		// do joke control here
+		std::string textmsg = boost::trim_copy( msg.get<std::string>( "message.text" ) );
+
+		if( textmsg ==  ".qqbot joke off" )
 		{
-			// do joke control here
-			std::string textmsg = boost::trim_copy( msg.get<std::string>( "message.text" ) );
+			// 其实关闭不掉的, 就是延长到 24 个小时了, 嘻嘻.
+			* m_interval = boost::posix_time::seconds( 3600 * 24 );
+			m_sender("笑话关闭.");
+			save_setting();
+		}
+		else if( textmsg == ".qqbot joke on" )
+		{
 
-			if( textmsg ==  ".qqbot joke off" )
+			* m_interval = boost::posix_time::seconds( 600 );
+
+			m_sender("笑话开启.");
+			save_setting();
+		}
+		else if (can_joke(textmsg)){
+			m_timer->expires_from_now(boost::posix_time::seconds(2));
+			m_timer->async_wait(*this);
+			return;
+		}
+		else
+		{
+			// .qqbot joke interval XXX
+			boost::cmatch what;
+			boost::regex ex( "\\.qqbot joke interval (.*)" );
+
+			if( boost::regex_match( textmsg.c_str(), what, ex ) )
 			{
-				// 其实关闭不掉的, 就是延长到 24 个小时了, 嘻嘻.
-				* m_interval = boost::posix_time::seconds( 3600 * 24 );
-				m_sender("笑话关闭.");
-				save_setting();
-			}
-			else if( textmsg == ".qqbot joke on" )
-			{
-
-				* m_interval = boost::posix_time::seconds( 600 );
-
-				m_sender("笑话开启.");
-				save_setting();
-			}
-			else if (can_joke(textmsg)){
-				m_timer->expires_from_now(boost::posix_time::seconds(2));
-				m_timer->async_wait(*this);
-				return;
-			}
-			else
-			{
-				// .qqbot joke interval XXX
-				boost::cmatch what;
-				boost::regex ex( "\\.qqbot joke interval (.*)" );
-
-				if( boost::regex_match( textmsg.c_str(), what, ex ) )
+				try
 				{
-					try
-					{
-						int sec =  boost::lexical_cast<int>( what[1] );
+					int sec =  boost::lexical_cast<int>( what[1] );
 
-						if( sec < 10 )
-						{
-							m_sender( boost::str( boost::format("混蛋, %d 秒太短了!") % sec ) );
-						}
-						else
-						{
-							* m_interval = boost::posix_time::seconds( sec );
-							m_sender( boost::str( boost::format("笑话间隔为 %d 秒.") % sec ) );
-							save_setting();
-						}
+					if( sec < 10 )
+					{
+						m_sender( boost::str( boost::format("混蛋, %d 秒太短了!") % sec ) );
 					}
-					catch( const boost::bad_lexical_cast & err ) {}
+					else
+					{
+						* m_interval = boost::posix_time::seconds( sec );
+						m_sender( boost::str( boost::format("笑话间隔为 %d 秒.") % sec ) );
+						save_setting();
+					}
 				}
+				catch( const boost::bad_lexical_cast & err ) {}
 			}
-		}// else ignore other channel message
+		}
 	}
 	catch( const boost::property_tree::ptree_error & err )
 	{
