@@ -28,8 +28,8 @@ class avbotexteison_adapter : public avbotexteison_interface
 
 public:
 	avbotexteison_adapter(const ExtensionType & obj)
+		: m_pextension(obj)
 	{
-		m_pextension = obj;
 	}
 
 	avbotexteison_adapter(ExtensionType * obj)
