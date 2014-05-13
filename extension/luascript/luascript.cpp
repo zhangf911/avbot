@@ -92,11 +92,6 @@ void callluascript::call_lua( std::string jsondata ) const
 
 void callluascript::operator()( boost::property_tree::ptree message ) const
 {
-	if( message.get<std::string>( "channel" ) != m_channel_name )
-	{
-		return;
-	}
-
 	load_lua();
 	std::stringstream jsondata;
 	boost::property_tree::json_parser::write_json(jsondata, message);
