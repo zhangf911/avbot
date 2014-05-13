@@ -104,21 +104,21 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 		)
 	);
 
-	static boost::shared_ptr<iplocation::ipdb_mgr> ipdb_mgr;
+	static boost::shared_ptr<iplocationdetail::ipdb_mgr> ipdb_mgr;
 
 	if (!ipdb_mgr)
 	{
 		// check for file "qqwry.dat"
 		// if not exist, then download that file
 		// after download that file, construct ipdb
-		ipdb_mgr.reset(new  iplocation::ipdb_mgr(mybot.get_io_service(), uncompress));
+		ipdb_mgr.reset(new  iplocationd::ipdb_mgr(mybot.get_io_service(), uncompress));
 		ipdb_mgr->search_and_build_db();
 	}
 
 	mybot.on_message.connect(
 		avbot_extension(
 			channel_name,
-			iplocation(
+			make_iplocation(
 				io_service,
 				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
 				ipdb_mgr

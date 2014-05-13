@@ -7,6 +7,7 @@
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 
 #include <avhttp.hpp>
 #include <avhttp/async_read_body.hpp>
@@ -14,162 +15,165 @@
 #include "boost/stringencodings.hpp"
 #include "qqwry/ipdb.hpp"
 
-class iplocation
+namespace iplocationdetail{
+
+// download qqwy.dat file and decode it and return decoded data.
+// so the user can decide to write to file or just pass it to the constructor
+template<class uncompressfunc, class Handler>
+struct download_qqwry_dat_op : boost::asio::coroutine
 {
-	// download qqwy.dat file and decode it and return decoded data.
-	// so the user can decide to write to file or just pass it to the constructor
-	template<class uncompressfunc, class Handler>
-	struct download_qqwry_dat_op : boost::asio::coroutine
+	boost::asio::io_service& m_io_service;
+
+	uncompressfunc m_uncompress;
+	Handler m_handler;
+
+	boost::shared_ptr<avhttp::http_stream> m_http_stream;
+	boost::shared_ptr<boost::asio::streambuf> m_buf_copywrite_rar;
+	boost::shared_ptr<boost::asio::streambuf> m_buf_qqwry_rar;
+
+	download_qqwry_dat_op(boost::asio::io_service& _io_service, uncompressfunc uncompress, Handler handler)
+		: m_io_service(_io_service)
+		, m_uncompress(uncompress)
+		, m_handler(handler)
 	{
-		boost::asio::io_service& m_io_service;
-
-		uncompressfunc m_uncompress;
-		Handler m_handler;
-
-		boost::shared_ptr<avhttp::http_stream> m_http_stream;
-		boost::shared_ptr<boost::asio::streambuf> m_buf_copywrite_rar;
-		boost::shared_ptr<boost::asio::streambuf> m_buf_qqwry_rar;
-
-		download_qqwry_dat_op(boost::asio::io_service& _io_service, uncompressfunc uncompress, Handler handler)
-			: m_io_service(_io_service)
-			, m_uncompress(uncompress)
-			, m_handler(handler)
-		{
-			// start downloading copyrite.rar
-			m_http_stream.reset(new avhttp::http_stream(m_io_service));
-			m_buf_copywrite_rar.reset(new boost::asio::streambuf);
-			avhttp::async_read_body(*m_http_stream, "http://update.cz88.net/ip/copywrite.rar", *m_buf_copywrite_rar, *this);
-		}
-
-		void operator()(boost::system::error_code ec, std::size_t bytes_transfered)
-		{
-			BOOST_ASIO_CORO_REENTER(this)
-			{
-				// 然后下 qqwry.dat
-				m_http_stream.reset(new avhttp::http_stream(m_io_service));
-				m_buf_qqwry_rar.reset(new boost::asio::streambuf);
-
-				BOOST_ASIO_CORO_YIELD avhttp::async_read_body(
-					*m_http_stream,
-					"http://update.cz88.net/ip/qqwry.rar",
-					*m_buf_qqwry_rar,
-					*this
-				);
-
-				// 解码
-				{
-					std::string copywrite, qqwry;
-					copywrite.resize(boost::asio::buffer_size(m_buf_copywrite_rar->data()));
-					m_buf_copywrite_rar->sgetn(&copywrite[0], copywrite.size());
-					qqwry.resize(bytes_transfered);
-					m_buf_qqwry_rar->sgetn(&qqwry[0], bytes_transfered);
-
-					std::string m_decoded = QQWry::decodeQQWryDat(copywrite, qqwry, m_uncompress);
-
-					// callback
-					m_handler(m_decoded);
-				}
-			}
-		}
-
-	};
-
-public:
-	template<class uncompressfunc, class Handler>
-	static void download_qqwry_dat(boost::asio::io_service& io_service, uncompressfunc uncompress, Handler handler)
-	{
-		iplocation::download_qqwry_dat_op<uncompressfunc, Handler> op(io_service, uncompress, handler);
+		// start downloading copyrite.rar
+		m_http_stream.reset(new avhttp::http_stream(m_io_service));
+		m_buf_copywrite_rar.reset(new boost::asio::streambuf);
+		avhttp::async_read_body(*m_http_stream, "http://update.cz88.net/ip/copywrite.rar", *m_buf_copywrite_rar, *this);
 	}
 
-	struct ipdb_mgr
+	void operator()(boost::system::error_code ec, std::size_t bytes_transfered)
 	{
-	private:
-		boost::asio::io_service & m_io_service;
-		boost::function<int(unsigned char *pDest, unsigned long *pDest_len, const unsigned char *pSource, unsigned long source_len)> m_uncompress;
-		std::string decoded_data;
-	public:
-		boost::shared_ptr<QQWry::ipdb> db;
-	public:
-		template<typename uncompressfunc>
-		ipdb_mgr(boost::asio::io_service & _io_servcie, uncompressfunc uncompress_)
-			: m_uncompress(uncompress_)
-			, m_io_service(_io_servcie)
+		BOOST_ASIO_CORO_REENTER(this)
 		{
+			// 然后下 qqwry.dat
+			m_http_stream.reset(new avhttp::http_stream(m_io_service));
+			m_buf_qqwry_rar.reset(new boost::asio::streambuf);
 
+			BOOST_ASIO_CORO_YIELD avhttp::async_read_body(
+				*m_http_stream,
+				"http://update.cz88.net/ip/qqwry.rar",
+				*m_buf_qqwry_rar,
+				*this
+				);
+
+			// 解码
+			{
+				std::string copywrite, qqwry;
+				copywrite.resize(boost::asio::buffer_size(m_buf_copywrite_rar->data()));
+				m_buf_copywrite_rar->sgetn(&copywrite[0], copywrite.size());
+				qqwry.resize(bytes_transfered);
+				m_buf_qqwry_rar->sgetn(&qqwry[0], bytes_transfered);
+
+				std::string m_decoded = QQWry::decodeQQWryDat(copywrite, qqwry, m_uncompress);
+
+				// callback
+				m_handler(m_decoded);
+			}
+		}
+	}
+};
+
+template<class uncompressfunc, class Handler>
+void download_qqwry_dat(boost::asio::io_service& io_service, uncompressfunc uncompress, Handler handler)
+{
+	download_qqwry_dat_op<uncompressfunc, Handler> op(io_service, uncompress, handler);
+}
+
+struct ipdb_mgr
+{
+private:
+	boost::asio::io_service & m_io_service;
+	boost::function<int(unsigned char *pDest, unsigned long *pDest_len, const unsigned char *pSource, unsigned long source_len)> m_uncompress;
+	std::string decoded_data;
+public:
+	boost::shared_ptr<QQWry::ipdb> db;
+public:
+	template<typename uncompressfunc>
+	ipdb_mgr(boost::asio::io_service & _io_servcie, uncompressfunc uncompress_)
+		: m_uncompress(uncompress_)
+		, m_io_service(_io_servcie)
+	{
+
+	}
+
+	bool search_and_build_db()
+	{
+		if (boost::filesystem::exists("/tmp/qqwry.dat"))
+		{
+			// good
+			db.reset(new QQWry::ipdb("/tmp/qqwry.dat"));
+			return true;
 		}
 
-		bool search_and_build_db()
+		boost::filesystem::path p;
+		p = "qqwry.dat";
+		// find qqwry.dat
+		if (boost::filesystem::exists(p))
 		{
-			if (boost::filesystem::exists("/tmp/qqwry.dat"))
-			{
-				// good
-				db.reset(new QQWry::ipdb("/tmp/qqwry.dat"));
-				return true;
-			}
-
-			boost::filesystem::path p;
-			p = "qqwry.dat";
-			// find qqwry.dat
-			if (boost::filesystem::exists(p))
-			{
-				db.reset(new QQWry::ipdb("qqwry.dat"));
-				return true;
-				// good
-			}
+			db.reset(new QQWry::ipdb("qqwry.dat"));
+			return true;
+			// good
+		}
 
 #ifdef _WIN32
-			// find pathof(avbot.exe)/qqwry.dat
-			{char exePATH[4096];
-			::GetModuleFileName(NULL, exePATH, sizeof(exePATH));
-			p = exePATH;}
+		// find pathof(avbot.exe)/qqwry.dat
+		{char exePATH[4096];
+		::GetModuleFileName(NULL, exePATH, sizeof(exePATH));
+		p = exePATH; }
 
-			p = p.parent_path() / "qqwry.dat";
+		p = p.parent_path() / "qqwry.dat";
 
-			if (boost::filesystem::exists(p))
-			{
-				db.reset(new QQWry::ipdb(p.string().c_str()));
-				return true;
-				// good
-			}			// construct
+		if (boost::filesystem::exists(p))
+		{
+			db.reset(new QQWry::ipdb(p.string().c_str()));
+			return true;
+			// good
+		}			// construct
 #endif // _WIN32
-			// find /var/lib/qqwry.dat
-			if (boost::filesystem::exists("/var/lib/qqwry.dat"))
-			{
-				db.reset(new QQWry::ipdb("/var/lib/qqwry.dat"));
-				return true;
-				// good
-			}
-			// 找不到，得找个机会去 .. 下载
+		// find /var/lib/qqwry.dat
+		if (boost::filesystem::exists("/var/lib/qqwry.dat"))
+		{
+			db.reset(new QQWry::ipdb("/var/lib/qqwry.dat"));
+			return true;
+			// good
+		}
+		// 找不到，得找个机会去 .. 下载
 
-			iplocation::download_qqwry_dat(
-				m_io_service,
-				m_uncompress,
-				boost::bind(&ipdb_mgr::qqwry_downloaded,this,_1)
+		download_qqwry_dat(
+			m_io_service,
+			m_uncompress,
+			boost::bind(&ipdb_mgr::qqwry_downloaded, this, _1)
 			);
-			return false;
-		}
+		return false;
+	}
 
-		void qqwry_downloaded(std::string decoded_qqwry_dat)
-		{
-			decoded_data = boost::move(decoded_qqwry_dat);
-			// save to /tmp/qqwry.dat or qqwry.dat depend on the OS
-			boost::filesystem::path savepath;
+	void qqwry_downloaded(std::string decoded_qqwry_dat)
+	{
+		decoded_data = boost::move(decoded_qqwry_dat);
+		// save to /tmp/qqwry.dat or qqwry.dat depend on the OS
+		boost::filesystem::path savepath;
 #ifndef _WIN32
-			savepath = "/tmp/qqwry.dat";
+		savepath = "/tmp/qqwry.dat";
 #else
-			savepath = "qqwry.dat";
+		savepath = "qqwry.dat";
 #endif
-			std::ofstream qqwrydatfile(savepath.string().c_str(), std::ios::binary);
-			qqwrydatfile.write(decoded_data.data(), decoded_data.size());
-			db.reset(new QQWry::ipdb(decoded_data.data(), decoded_data.length()));
-		}
+		std::ofstream qqwrydatfile(savepath.string().c_str(), std::ios::binary);
+		qqwrydatfile.write(decoded_data.data(), decoded_data.size());
+		db.reset(new QQWry::ipdb(decoded_data.data(), decoded_data.length()));
+	}
 
-		bool is_ready() const
-		{
-			return !!db;
-		}
-	};
+	bool is_ready() const
+	{
+		return !!db;
+	}
+};
 
+} // namespace iplocationdetail
+
+template<typename MsgSender>
+class iplocation
+{
 	void operator()(boost::property_tree::ptree msg)
 	{
 		std::string textmsg = boost::trim_copy(msg.get<std::string>("message.text"));
@@ -218,8 +222,8 @@ public:
 		// 或者通过其他方式激活
 
 	}
-	template<class MsgSender>
-	iplocation(boost::asio::io_service & _io_service, MsgSender sender, boost::shared_ptr<ipdb_mgr> _ipdb_mgr)
+public:
+	iplocation(boost::asio::io_service & _io_service, const MsgSender & sender, boost::shared_ptr<iplocationdetail::ipdb_mgr> _ipdb_mgr)
 		: io_service( _io_service )
 		, m_sender( sender )
 		, m_ipdb_mgr(_ipdb_mgr)
@@ -227,9 +231,15 @@ public:
 	}
 private:
 	// 这么多 extension 的 qqwry 数据库当然得共享啦！ 共享那肯定就是用的共享指针.
-	boost::shared_ptr<ipdb_mgr> m_ipdb_mgr;
+	boost::shared_ptr<iplocationdetail::ipdb_mgr> m_ipdb_mgr;
 	boost::asio::io_service &io_service;
-	boost::function<void ( std::string ) > m_sender;
+	MsgSender m_sender;
 };
+
+template<typename MsgSender>
+iplocation<typename boost::remove_reference<MsgSender>::type> make_iplocation(boost::asio::io_service & _io_service, const MsgSender & sender, boost::shared_ptr<iplocationdetail::ipdb_mgr> _ipdb_mgr)
+{
+	return iplocation<typename boost::remove_reference<MsgSender>::type>(_io_service, sender, _ipdb_mgr);
+}
 
 #endif // iplocation_h__
