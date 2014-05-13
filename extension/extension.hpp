@@ -15,7 +15,7 @@ class avbot_extension;
 namespace detail{
 class avbotexteison_interface
 {
-	friend class avbot_extension;
+public:
 	virtual void operator()(const boost::property_tree::ptree & msg) = 0;
 };
 
