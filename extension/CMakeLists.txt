@@ -6,7 +6,15 @@ if (ZLIB_FOUND)
 add_definitions(-DHAVE_ZLIB)
 endif()
 
-add_library(extension STATIC extension.cpp joke.cpp urlpreview.cpp bulletin.cpp )
+add_library(extension STATIC
+	extension.hpp extension.cpp
+	exchangerate.hpp
+	html.hpp
+	iplocation.hpp
+	joke.hpp joke.cpp
+	urlpreview.hpp	urlpreview.cpp
+	bulletin.hpp bulletin.cpp
+	metalprice.hpp stockprice.hpp)
 
 include_directories(../qqwry/include)
 

@@ -273,7 +273,11 @@ configure_file(version.c.in version.c @ONLY)
 
 
 set(AVBOT_SOURCES
-# 	avbot_rpc_server.cpp
+	auto_welcome.hpp
+	avbot_vc_feed_input.hpp
+	botctl.hpp
+	counter.hpp
+	input.hpp
 	main.cpp
 	botctl.cpp
 	input.cpp
@@ -284,6 +288,7 @@ set(AVBOT_SOURCES
 
 set(AVBOTRPC_SOURCES
 	rpc/server.cpp
+	rpc/server.hpp
 )
 
 if(NOT WIN32)

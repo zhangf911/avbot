@@ -1,7 +1,9 @@
 project(libpop3)
 find_package(Boost 1.54 COMPONENTS regex system locale)
 
-add_library(mailexchange STATIC pop3.cpp smtp.cpp)
+file(GLOB MAILEXCHANGE_IMPL_HEADERS "*.hpp")
+
+add_library(mailexchange STATIC pop3.cpp smtp.cpp ${MAILEXCHANGE_IMPL_HEADERS})
 target_link_libraries(mailexchange ${Boost_LIBRARIES})
 
 if(ENABLE_STATIC)
