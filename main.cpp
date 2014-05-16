@@ -12,6 +12,7 @@
 #endif
 #ifdef _WIN32
 #include <Windows.h>
+#include <commctrl.h>
 #include <mmsystem.h>
 #endif
 #include <string>
@@ -422,6 +423,9 @@ int daemon(int nochdir, int noclose)
 
 int main(int argc, char * argv[])
 {
+#ifdef _WIN32
+	::InitCommonControls();
+#endif
 	std::string qqnumber, qqpwd;
 	std::string ircnick, ircroom, ircroom_pass, ircpwd, ircserver;
 	std::string xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick;
