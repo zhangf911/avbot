@@ -13,8 +13,8 @@
 #define IDC_EDIT_XMPP_CHANNEL           1006
 #define IDC_EDIT_XMPP_NICK              1007
 #define IDC_EDIT_XMPP_PWD               1008
-#define IDC_CHECK_XMPP                  1009
-#define IDC_CHECK_IRC                   1010
+#define IDC_CHECK_IRC                   1009
+#define IDC_CHECK_XMPP                  1010
 
 // Next default values for new objects
 // 

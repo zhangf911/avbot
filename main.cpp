@@ -815,6 +815,6 @@ rungui:
 #ifdef _WIN32
 	avloop_idle_post(io_service, playsound);
 #endif
-	avloop_run(io_service);
+	avloop_run_gui(io_service);
 	return 0;
 }
