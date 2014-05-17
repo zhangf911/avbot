@@ -815,6 +815,13 @@ rungui:
 #ifdef _WIN32
 	avloop_idle_post(io_service, playsound);
 #endif
+	boost::asio::signal_set terminator_signal(io_service);
+	terminator_signal.add(SIGINT);
+	terminator_signal.add(SIGTERM);
+#if defined(SIGQUIT)
+	terminator_signal.add(SIGQUIT);
+#endif // defined(SIGQUIT)
+	terminator_signal.async_wait(boost::bind(&boost::asio::io_service::stop, &io_service));
 	avloop_run_gui(io_service);
 	return 0;
 }
