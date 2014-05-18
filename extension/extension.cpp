@@ -22,6 +22,10 @@
 #include "exchangerate.hpp"
 #include "iplocation.hpp"
 
+#ifdef _WIN32
+#include "dllextension.hpp"
+#endif
+
 // dummy file
 
 extern avlog logfile;			// 用于记录日志文件.
@@ -125,4 +129,17 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			)
 		)
 	);
+
+#ifdef _WIN32
+	mybot.on_message.connect(
+		avbot_extension(
+			channel_name,
+			make_dllextention(
+				io_service,
+				channel_name,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
+			)
+		)
+	);	
+#endif
 }

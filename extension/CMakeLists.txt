@@ -14,7 +14,8 @@ add_library(extension STATIC
 	joke.hpp joke.cpp
 	urlpreview.hpp	urlpreview.cpp
 	bulletin.hpp bulletin.cpp
-	metalprice.hpp stockprice.hpp)
+	metalprice.hpp stockprice.hpp
+	dllextension.hpp)
 
 include_directories(../qqwry/include)
 
