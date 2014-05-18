@@ -190,6 +190,7 @@ static void ExtractDlgSettings(HWND hDlg, avbot_dlg_settings & out)
 	}
 }
 
+// 这里是真正的消息回调函数，支持闭包！
 bool dlgproc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam, avbot_dlg_settings & settings)
 {
 	BOOL fError;
@@ -238,31 +239,8 @@ bool dlgproc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam, avbot_dlg
 typedef boost::function<bool(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)> av_dlgproc_t;
 
 namespace detail {
-// 选项设置框框的消息回调函数
-static BOOL CALLBACK internal_clusure_dlg_proc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	BOOL ret = FALSE;
-
-	if(message == WM_INITDIALOG)
-	{
-		SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
-	}
-	auto cb_ptr = GetWindowLongPtr(hwndDlg, DWLP_USER);
-	av_dlgproc_t * real_callback_ptr = reinterpret_cast<av_dlgproc_t*>(cb_ptr);
-	if (cb_ptr)
-	{
-		ret = (*real_callback_ptr)(hwndDlg, message, wParam, 0);
-	}
-	if (message == WM_DESTROY)
-	{
-		SetWindowLongPtr(hwndDlg, DWLP_USER, 0);
-		if (real_callback_ptr)
-			boost::checked_delete(real_callback_ptr);
-	}
-	return ret;
+static BOOL CALLBACK internal_clusure_dlg_proc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam);
 }
-
-} // namespace detail
 
 void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircnick,
 					std::string & ircroom, std::string & ircpwd,
@@ -287,6 +265,34 @@ void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircn
 	assert(ret == reinterpret_cast<INT_PTR>(&out));
 	// 返回值其实是一个指针，指向一块牛逼的内存。存放对话框记录的东西
 }
+
+namespace detail {
+
+// 消息回调封装，间接调用闭包版
+static BOOL CALLBACK internal_clusure_dlg_proc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	BOOL ret = FALSE;
+
+	if (message == WM_INITDIALOG)
+	{
+		SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
+	}
+	auto cb_ptr = GetWindowLongPtr(hwndDlg, DWLP_USER);
+	av_dlgproc_t * real_callback_ptr = reinterpret_cast<av_dlgproc_t*>(cb_ptr);
+	if (cb_ptr)
+	{
+		ret = (*real_callback_ptr)(hwndDlg, message, wParam, 0);
+	}
+	if (message == WM_DESTROY)
+	{
+		SetWindowLongPtr(hwndDlg, DWLP_USER, 0);
+		if (real_callback_ptr)
+			boost::checked_delete(real_callback_ptr);
+	}
+	return ret;
+}
+
+} // namespace detail
 
 #if defined _M_IX86
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
