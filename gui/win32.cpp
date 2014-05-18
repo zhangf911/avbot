@@ -1,7 +1,9 @@
-
+﻿
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
 #include <atomic>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 #ifndef _WIN32_IE
 #define _WIN32_IE 0x0600
@@ -188,27 +190,24 @@ static void ExtractDlgSettings(HWND hDlg, avbot_dlg_settings & out)
 	}
 }
 
-// 选项设置框框的消息回调函数
-BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+bool dlgproc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam, avbot_dlg_settings & settings)
 {
 	BOOL fError;
 
 	switch (message)
 	{
 	case WM_INITDIALOG:
-		SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
-		InitDlgSettings(hwndDlg, *reinterpret_cast<avbot_dlg_settings*>(lParam));
+		InitDlgSettings(hwndDlg, settings);
 		return TRUE;
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
 		case IDOK:
 			// 通知主函数写入数据并重启
-			{
-				avbot_dlg_settings * out = reinterpret_cast<avbot_dlg_settings*>(GetWindowLongPtr(hwndDlg, DWLP_USER));
-				ExtractDlgSettings(hwndDlg, *out);
-				EndDialog(hwndDlg, (INT_PTR)out);
-			}
+		{
+			ExtractDlgSettings(hwndDlg, settings);
+			EndDialog(hwndDlg, (INT_PTR)&settings);
+		}
 			return TRUE;
 		case IDCANCEL:
 			EndDialog(hwndDlg, 0);
@@ -221,7 +220,7 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_CHANNEL), enable);
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_NICK), enable);
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_XMPP_PWD), enable);
-			}return TRUE;
+		}return TRUE;
 		case IDC_CHECK_IRC:{
 			BOOL enable = FALSE;
 			if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IRC) == BST_CHECKED) enable = TRUE;
@@ -229,11 +228,37 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_CHANNEL), enable);
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_NICK), enable);
 			EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_IRC_PWD), enable);
-			}return TRUE;
+		}return TRUE;
 		}
 	}
 
 	return FALSE;
+}
+
+typedef boost::function<bool(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)> av_dlgproc_t;
+
+// 选项设置框框的消息回调函数
+BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	BOOL ret = FALSE;
+
+	if(message == WM_INITDIALOG)
+	{
+		SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
+	}
+	auto cb_ptr = GetWindowLongPtr(hwndDlg, DWLP_USER);
+	av_dlgproc_t * real_callback_ptr = reinterpret_cast<av_dlgproc_t*>(cb_ptr);
+	if (cb_ptr)
+	{
+		ret = (*real_callback_ptr)(hwndDlg, message, wParam, 0);
+	}
+	if (message == WM_DESTROY)
+	{
+		SetWindowLongPtr(hwndDlg, DWLP_USER, 0);
+		if (real_callback_ptr)
+			boost::checked_delete(real_callback_ptr);
+	}
+	return ret;
 }
 
 void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircnick,
@@ -243,9 +268,12 @@ void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircn
 	// windows下面弹出选项设置框框.
 	HMODULE hIns = GetModuleHandle(NULL);
 
+
 	// 开启个模态对话框
 	avbot_dlg_settings out = { qqnumber, qqpwd, ircnick, ircpwd, ircroom, xmppuser, xmpppwd, xmpproom };
-	INT_PTR ret = DialogBoxParam(hIns, MAKEINTRESOURCE(IDD_AVSETTINGS_DIALOG), NULL, (DLGPROC)DlgProc, (LPARAM)&out);
+	av_dlgproc_t * real_proc = new av_dlgproc_t(boost::bind(&dlgproc, _1, _2, _3, _4, boost::ref(out)));
+
+	INT_PTR ret = DialogBoxParam(hIns, MAKEINTRESOURCE(IDD_AVSETTINGS_DIALOG), NULL, (DLGPROC)DlgProc, (LPARAM)real_proc);
 
 	// 处理返回值，消息循环里应该调用 	EndDialog() 退出模块对话框
 	if (!ret)
