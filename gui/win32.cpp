@@ -237,8 +237,9 @@ bool dlgproc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam, avbot_dlg
 
 typedef boost::function<bool(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)> av_dlgproc_t;
 
+namespace detail {
 // 选项设置框框的消息回调函数
-BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static BOOL CALLBACK internal_clusure_dlg_proc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	BOOL ret = FALSE;
 
@@ -261,6 +262,8 @@ BOOL CALLBACK DlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	return ret;
 }
 
+} // namespace detail
+
 void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircnick,
 					std::string & ircroom, std::string & ircpwd,
 					std::string &xmppuser, std::string & xmppserver,std::string & xmpppwd, std::string & xmpproom, std::string &xmppnick)
@@ -273,7 +276,7 @@ void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircn
 	avbot_dlg_settings out = { qqnumber, qqpwd, ircnick, ircpwd, ircroom, xmppuser, xmpppwd, xmpproom };
 	av_dlgproc_t * real_proc = new av_dlgproc_t(boost::bind(&dlgproc, _1, _2, _3, _4, boost::ref(out)));
 
-	INT_PTR ret = DialogBoxParam(hIns, MAKEINTRESOURCE(IDD_AVSETTINGS_DIALOG), NULL, (DLGPROC)DlgProc, (LPARAM)real_proc);
+	INT_PTR ret = DialogBoxParam(hIns, MAKEINTRESOURCE(IDD_AVSETTINGS_DIALOG), NULL, (DLGPROC)detail::internal_clusure_dlg_proc, (LPARAM)real_proc);
 
 	// 处理返回值，消息循环里应该调用 	EndDialog() 退出模块对话框
 	if (!ret)
