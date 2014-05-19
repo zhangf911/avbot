@@ -16,6 +16,8 @@ extern "C"{
 #include <luajit-2.0/lauxlib.h>
 }
 
+#include "../extension.hpp"
+
 class callluascript
 {
 	boost::asio::io_service &io_service;
@@ -32,3 +34,5 @@ public:
 	// on_message 回调.
 	void operator()( boost::property_tree::ptree message ) const;
 };
+
+avbot_extension make_luascript(std::string channel_name, boost::asio::io_service &_io_service, boost::function<void(std::string)> sender);

@@ -307,6 +307,16 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tweet.o
 list(APPEND AVBOT_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/tweet.o )
 endif()
 
+if(MSVC)
+
+if(CMAKE_CL_64)
+LINK_DIRECTORIES( "${CMAKE_CURRENT_SOURCE_DIR}/extension/luascript/msvc_x64/")
+else()
+LINK_DIRECTORIES( "${CMAKE_CURRENT_SOURCE_DIR}/extension/luascript/msvc_x86/")
+endif()
+
+endif()
+
 add_executable(avbot ${AVBOT_SOURCES} ${AVBOTRPC_SOURCES})
 
 if(NOT WIN32)
@@ -352,3 +362,5 @@ check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME)
 if(HAVE_CLOCK_GETTIME)
         target_link_libraries(avbot -lrt)
 endif(HAVE_CLOCK_GETTIME)
+
+

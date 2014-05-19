@@ -62,11 +62,10 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	);
 #ifdef ENABLE_LUA
 	mybot.on_message.connect(
-		avbot_extension(
+		make_luascript(
 			channel_name,
-			callluascript(io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
-			)
+			io_service,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
 		)
 	);
 #endif

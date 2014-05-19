@@ -1,4 +1,4 @@
-
+﻿
 extern "C" {
 #include <luajit-2.0/luajit.h>
 #include <luajit-2.0/lualib.h>
@@ -16,7 +16,9 @@ namespace fs = boost::filesystem;
 
 #include "luascript.hpp"
 
-#include "boost/json_create_escapes_utf8.hpp"
+#include "boost/json_parser_write.hpp"
+#include "boost/stringencodings.hpp"
+#include <delayimp.h>
 
 struct lua_sender
 {
@@ -70,7 +72,7 @@ void callluascript::load_lua() const
 			luabind::def( "send_channel_message", luabind::tag_function<void( const char * )>( lua_sender( m_sender ) ) )
 		];
 
-		luaL_dofile( L, luafile.c_str() );
+		luaL_dofile( L, luafile.string().c_str() );
 	}
 }
 
@@ -98,4 +100,80 @@ void callluascript::operator()( boost::property_tree::ptree message ) const
 	boost::property_tree::json_parser::write_json(jsondata, message);
 
 	call_lua(jsondata.str());
+}
+
+
+#ifdef _WIN32
+
+LONG WINAPI DelayLoadExceptionFilter(PEXCEPTION_POINTERS pep)
+{
+	switch (pep->ExceptionRecord->ExceptionCode)
+	{
+	case  VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND):
+		return EXCEPTION_EXECUTE_HANDLER;
+	}
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+
+// 先测试 lua51.dll 的存在性，如果不存在，就别继续啦！
+static bool test_lua51_dll()
+{
+	__try
+	{
+		LUAJIT_VERSION_SYM();
+		return true;
+	}
+	__except (DelayLoadExceptionFilter(GetExceptionInformation()))
+	{
+		return false;
+	}
+	return false;
+}
+
+#else
+
+// 别的平台没有延迟加载技术
+static bool test_lua51_dll()
+{
+	LUAJIT_VERSION_SYM();
+	return true;
+}
+
+#endif // _WIN32
+
+static void dumy_func(boost::property_tree::ptree message)
+{
+}
+
+avbot_extension make_luascript(std::string channel_name, boost::asio::io_service &_io_service, boost::function<void(std::string)> sender)
+{
+	if (test_lua51_dll())
+	{
+		std::cerr << literal_to_localstr("lua51.dll 找到啦！！ 脚本功能开启！") << std::endl;
+		return avbot_extension(
+			channel_name,
+			callluascript(_io_service, sender)
+		);
+	}
+	else
+	{
+#ifdef _WIN32
+		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
+		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
+		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
+		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
+		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
+		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
+		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
+		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
+		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
+		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
+
+#endif // _WIN32
+		return avbot_extension(
+			channel_name,
+			&dumy_func
+		);
+	}
 }
