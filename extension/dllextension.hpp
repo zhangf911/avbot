@@ -37,13 +37,11 @@ private:
 	boost::asio::io_service &io_service;
 	std::string m_channel;
 	typename boost::remove_reference<MsgSender>::type m_sender;
-	HMODULE m_dll_module;
 public:
-	dllextention_caller(boost::asio::io_service & _io_service, std::string _channel, MsgSender sender, HMODULE dll_module)
+	dllextention_caller(boost::asio::io_service & _io_service, std::string _channel, MsgSender sender)
 		: m_sender(sender)
 		, io_service(_io_service)
 		, m_channel(_channel)
-		, m_dll_module(dll_module)
 	{
 	}
 
@@ -53,19 +51,42 @@ public:
 
 	void operator()(boost::property_tree::ptree msg)
 	{
-		if (m_dll_module)
-		{
-			std::string textmsg = boost::trim_copy(msg.get<std::string>("message.text"));
+		std::string textmsg = boost::trim_copy(msg.get<std::string>("message.text"));
 
-			boost::thread t(boost::bind(&dllextention_caller<MsgSender>::call_dll_message, this, textmsg, m_channel, m_sender));
-			t.detach();
-		}
+		boost::thread t(boost::bind(&dllextention_caller<MsgSender>::call_dll_message, this, textmsg, m_channel, m_sender));
+		t.detach();
 	}
 
 	void call_dll_message(std::string textmsg, std::string channel, boost::function<void(std::string)> sender)
 	{
-		
-		auto p = GetProcAddress(m_dll_module, "avbot_on_message");
+		boost::shared_ptr<void> dll_module;
+		static boost::mutex m;
+		{
+			boost::mutex::scoped_lock l(m);
+
+			dll_module.reset(
+				LoadLibraryW(L"avbotextension"),
+				[&](void * p)
+				{
+					boost::mutex::scoped_lock l(m);
+					FreeLibrary((HMODULE)p);
+					std::cerr << literal_to_localstr("已卸载 avbotextension.dll") << std::endl;
+			}
+			);
+
+			if (dll_module)
+			{
+				std::cerr << literal_to_localstr("已加载 avbotextension.dll!!!") << std::endl;
+			}
+			else
+			{
+				std::cerr << literal_to_localstr("没有找到 avbotextension.dll!!!") << std::endl;
+				std::cerr << literal_to_localstr("无调用!") << std::endl;
+				return ;
+			}
+		}
+
+		auto p = GetProcAddress((HMODULE)(dll_module.get()), "avbot_on_message");
 		avbot_on_message_t f = reinterpret_cast<avbot_on_message_t>(p);
 
 		if (!f)
@@ -81,34 +102,14 @@ public:
 	}
 };
 
-static void once_run_dllextention(HMODULE & dll_module)
-{
-	dll_module = LoadLibrary("avbotextension.dll");
-	if (!dll_module)
-	{
-		std::cerr << "没有找到 avbotextension.dll!!!" << std::endl;
-		std::cerr << "禁用 dll 扩展！" << std::endl;
-	}	
-}
-
 template<class MsgSender>
-dllextention_caller<MsgSender>
-make_dllextention(boost::asio::io_service & io_service, std::string _channel, const MsgSender & sender)
+avbot_extension make_dllextention(boost::asio::io_service & io_service,
+	std::string _channel, const MsgSender & sender)
 {
-#ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
-	static boost::once_flag once;
-	//static boost::once_flag once2 = BOOST_ONCE_INIT;
-#else
-	static boost::once_flag once = BOOST_ONCE_INIT;
-	//static boost::once_flag once2 = once;
-#endif
-	// 在这里加载 DLL 并发送消息
-	// 加载 DLL 然后执行，然后将 DLL 释放
-	static HMODULE dll_module;
-
-	boost::call_once(boost::bind(&once_run_dllextention, boost::ref(dll_module)), once);
-
-	return dllextention_caller<MsgSender>(io_service, _channel, sender, dll_module);
+	return avbot_extension(
+		_channel,
+		dllextention_caller<typename boost::remove_reference<MsgSender>::type>(io_service, _channel, sender)
+	);
 }
 
 #endif // __DLL_EXTENSION_HPP_
