@@ -45,7 +45,7 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 	boost::replace_all( message, "\r", "" );
 	boost::replace_all( message, "\n", "" );
 
-	boost::regex ex( "<div class=\"content\" title=.*?>(.*?)</div><div (id|class)" );
+	boost::regex ex( "<div class=\"content\" title=.*?>(.*?)</div><div class=\"(.*?)\"" );
 	boost::smatch what;
 	std::string::const_iterator startpos = message.begin();
 	std::string::const_iterator endpos = message.end();
@@ -53,8 +53,8 @@ static std::string get_joke_content(std::istream &response_stream , boost::mt199
 	while(boost::regex_search( startpos, endpos, what, ex ))
 	{
 		std::string content(what[1].first, what[1].second);
-		std::string idclass(what[2].first, what[2].second);
-		if ( idclass == "id" )	// 只选择不含图的条目
+		std::string cls(what[2].first, what[2].second);
+		if(cls != "thumb")
 		{
 			boost::replace_all( content, "<br/><br/>", "\r\n");
 			boost::replace_all( content, "<br/>", "\r\n");
