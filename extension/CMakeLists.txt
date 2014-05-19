@@ -15,6 +15,8 @@ add_library(extension STATIC
 	urlpreview.hpp	urlpreview.cpp
 	bulletin.hpp bulletin.cpp
 	metalprice.hpp stockprice.hpp
+	staticcontent.hpp
+	staticcontent.cpp
 	dllextension.hpp)
 
 include_directories(../qqwry/include)

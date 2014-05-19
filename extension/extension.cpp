@@ -21,6 +21,7 @@
 #include "stockprice.hpp"
 #include "exchangerate.hpp"
 #include "iplocation.hpp"
+#include "staticcontent.hpp"
 
 #ifdef _WIN32
 #include "dllextension.hpp"
@@ -125,6 +126,16 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 				io_service,
 				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0)),
 				ipdb_mgr
+			)
+		)
+	);
+
+	mybot.on_message.connect(
+		avbot_extension(
+			channel_name,
+			make_static_content(
+				io_service,
+				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
 			)
 		)
 	);
