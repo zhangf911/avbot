@@ -138,7 +138,7 @@ static bool test_lua51_dll()
 	return false;
 }
 
-#else
+#elif defined(_WIN32)
 
 // 别的平台没有延迟加载技术
 static bool test_lua51_dll()
@@ -154,6 +154,13 @@ static bool test_lua51_dll()
 		return true;
 	}
 	return false;
+}
+
+#else 
+
+static bool test_lua51_dll()
+{
+	return true;
 }
 
 #endif // _MSC_VER
