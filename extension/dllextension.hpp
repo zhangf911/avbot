@@ -86,8 +86,8 @@ static void once_run_dllextention(HMODULE & dll_module)
 	dll_module = LoadLibrary("avbotextension.dll");
 	if (!dll_module)
 	{
-		std::cerr << "没有找到 avbotextension.dll!!!" << std::endl;
-		std::cerr << "禁用 dll 扩展！" << std::endl;
+		std::cerr << literal_to_localstr("没有找到 avbotextension.dll!!!") << std::endl;
+		std::cerr << literal_to_localstr("禁用 dll 扩展！") << std::endl;
 	}	
 }
 
