@@ -34,7 +34,7 @@ else()
 	if(LIBCXX_HAS_STDCXX0X_FLAG)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 	else()
-		message(FATAL "meed at least gcc 4.4 or clang 3.2")
+		message(FATAL "need at least gcc 4.4 or clang 3.2")
 	endif()
 
 endif()
