@@ -112,9 +112,9 @@ void callluascript::operator()( boost::property_tree::ptree message ) const
 
 #ifdef _MSC_VER
 
-LONG WINAPI DelayLoadExceptionFilter(PEXCEPTION_POINTERS pep)
+LONG WINAPI DelayLoadExceptionFilter(DWORD exceptioncode)
 {
-	switch (pep->ExceptionRecord->ExceptionCode)
+	switch (exceptioncode)
 	{
 	case  VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND):
 		return EXCEPTION_EXECUTE_HANDLER;
@@ -131,7 +131,7 @@ static bool test_lua51_dll()
 		LUAJIT_VERSION_SYM();
 		return true;
 	}
-	__except (DelayLoadExceptionFilter(GetExceptionInformation()))
+	__except (DelayLoadExceptionFilter(GetExceptionCode()))
 	{
 		return false;
 	}
