@@ -18,7 +18,11 @@ namespace fs = boost::filesystem;
 
 #include "boost/json_parser_write.hpp"
 #include "boost/stringencodings.hpp"
+
+#ifdef _MSC_VER
 #include <delayimp.h>
+#endif // _WIN32
+
 
 struct lua_sender
 {
