@@ -59,8 +59,6 @@ endif()
 else(MSVC)
 # if mingw
 set(LUAJIT_LIBRARIES lua51.lib)
-# link_directories( "${CMAKE_CURRENT_SOURCE_DIR}/luascript/mingw64" )
-
 endif(MSVC)
 
 endif(NOT WIN32)

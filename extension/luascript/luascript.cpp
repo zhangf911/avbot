@@ -107,7 +107,7 @@ void callluascript::operator()( boost::property_tree::ptree message ) const
 }
 
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 
 LONG WINAPI DelayLoadExceptionFilter(PEXCEPTION_POINTERS pep)
 {
@@ -144,7 +144,7 @@ static bool test_lua51_dll()
 	return true;
 }
 
-#endif // _WIN32
+#endif // _MSC_VER
 
 static void dumy_func(boost::property_tree::ptree message)
 {
@@ -162,7 +162,7 @@ avbot_extension make_luascript(std::string channel_name, boost::asio::io_service
 	}
 	else
 	{
-#ifdef _WIN32
+#ifdef _MSC_VER
 		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
 		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
 		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
