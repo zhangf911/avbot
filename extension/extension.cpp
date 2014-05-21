@@ -131,12 +131,10 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	);
 
 	mybot.on_message.connect(
-		avbot_extension(
+		make_static_content(
+			io_service,
 			channel_name,
-			make_static_content(
-				io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
-			)
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
 		)
 	);
 
@@ -147,6 +145,6 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			channel_name,
 			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
 		)
-	);	
+	);
 #endif
 }

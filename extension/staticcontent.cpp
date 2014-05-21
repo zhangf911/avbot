@@ -7,6 +7,25 @@ namespace fs = boost::filesystem;
 #include <ctime>
 #include <boost/foreach.hpp>
 
+struct StaticContent
+{
+	StaticContent(asio::io_service& io, boost::function<void(std::string)> sender);
+
+	void operator()(boost::system::error_code ec) {}
+
+	void operator()(const ptree& pt);
+
+	asio::io_service& io_;
+	boost::function<void(std::string)> sender_;
+	typedef boost::regex Keywords;
+	typedef std::vector<std::string> Messages;
+	std::map<Keywords, Messages> static_contents_;
+
+	boost::random::mt19937 g_;
+	boost::uniform_int<> d_;
+
+};
+
 StaticContent::StaticContent(asio::io_service& io, boost::function<void(std::string)> sender)
 	: io_(io)
 	, sender_(sender)
@@ -43,4 +62,12 @@ void StaticContent::operator()(const ptree& pt)
 			sender_(item.second[d_(g_) % item.second.size()]);
 		}
 	}
+}
+
+avbot_extension make_static_content(asio::io_service& io, std::string channel_name, boost::function<void(std::string)> sender)
+{
+	return avbot_extension(
+		channel_name,
+		StaticContent(io, sender)
+	);
 }
