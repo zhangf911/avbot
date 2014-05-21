@@ -10,6 +10,7 @@
 #ifndef BOOST_PROPERTY_TREE_DETAIL_JSON_PARSER_WRITE_HPP_INCLUDED
 #define BOOST_PROPERTY_TREE_DETAIL_JSON_PARSER_WRITE_HPP_INCLUDED
 
+#include <boost/version.hpp>
 #include <boost/property_tree/detail/json_parser_error.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/next_prior.hpp>
@@ -17,12 +18,17 @@
 #include <string>
 #include <ostream>
 
-namespace boost { namespace property_tree { namespace json_parser
+namespace boost { namespace property_tree {
+#if BOOST_VERSION >= 105500
+	namespace json_parser
+#else
+	namespace info_parser
+#endif
 {
 
     // Create necessary escape sequences from illegal characters
     template<class Ch>
-    std::basic_string<Ch> create_escapes(const std::basic_string<Ch> &s)
+    inline std::basic_string<Ch> create_escapes(const std::basic_string<Ch> &s)
     {
         std::basic_string<Ch> result;
         typename std::basic_string<Ch>::const_iterator b = s.begin();
@@ -64,7 +70,7 @@ namespace boost { namespace property_tree { namespace json_parser
     }
 
     template<class Ptree>
-    void write_json_helper(std::basic_ostream<typename Ptree::key_type::value_type> &stream, 
+    inline void write_json_helper(std::basic_ostream<typename Ptree::key_type::value_type> &stream,
                            const Ptree &pt,
                            int indent, bool pretty)
     {
@@ -126,7 +132,7 @@ namespace boost { namespace property_tree { namespace json_parser
 
     // Verify if ptree does not contain information that cannot be written to json
     template<class Ptree>
-    bool verify_json(const Ptree &pt, int depth)
+    inline bool verify_json(const Ptree &pt, int depth)
     {
 
         typedef typename Ptree::key_type::value_type Ch;
@@ -153,7 +159,7 @@ namespace boost { namespace property_tree { namespace json_parser
     
     // Write ptree to json stream
     template<class Ptree>
-    void write_json_internal(std::basic_ostream<typename Ptree::key_type::value_type> &stream, 
+    inline void write_json_internal(std::basic_ostream<typename Ptree::key_type::value_type> &stream,
                              const Ptree &pt,
                              const std::string &filename,
                              bool pretty)

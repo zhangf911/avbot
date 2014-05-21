@@ -11,6 +11,7 @@
 #define BOOST_PROPERTY_TREE_DETAIL_JSON_PARSER_READ_HPP_INCLUDED
 
 //#define BOOST_SPIRIT_DEBUG
+#include <boost/version.hpp>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/detail/ptree_utils.hpp>
@@ -23,7 +24,12 @@
 #include <vector>
 #include <algorithm>
 
-namespace boost { namespace property_tree { namespace json_parser
+namespace boost { namespace property_tree {
+#if BOOST_VERSION >= 105500
+	namespace json_parser
+#else
+	namespace info_parser
+#endif
 {
 
     ///////////////////////////////////////////////////////////////////////
