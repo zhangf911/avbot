@@ -203,12 +203,14 @@ static std::string imgurlformater(avbot::av_message_tree qqmessage, std::string 
 {
 	std::string cface = qqmessage.get<std::string>("name");
 
-	return boost::str(
-		boost::format("%s/images/%s/%s")
-		% baseurl
-		% avbot::image_subdir_name(cface)
-		% cface
-   );
+	return avhttp::detail::escape_path(
+		boost::str(
+			boost::format("%s/images/%s/%s")
+			% baseurl
+			% avbot::image_subdir_name(cface)
+			% cface
+		)
+	);
 }
 
 static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::session & db)
