@@ -23,6 +23,10 @@ namespace fs = boost::filesystem;
 
 #ifdef _WIN32
 #include <excpt.h>
+#include <winerror.h>
+#ifndef FACILITY_VISUALCPP
+#define FACILITY_VISUALCPP  ((LONG)0x6d)
+#endif
 #include <delayimp.h>
 #endif // _WIN32
 
