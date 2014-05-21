@@ -60,7 +60,7 @@ endif()
 
 else(MSVC)
 # if mingw
-set(LUAJIT_LIBRARIES lua51.lib)
+set(LUAJIT_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/libsformingw64/liblua51.dll.a)
 endif(MSVC)
 
 endif(NOT WIN32)
