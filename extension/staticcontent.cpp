@@ -5,8 +5,9 @@ using namespace boost::property_tree::xml_parser;
 namespace fs = boost::filesystem;
 #include <boost/regex.hpp>
 #include <ctime>
+#include <boost/foreach.hpp>
 
-StaticContent::StaticContent(asio::io_service& io, std::function<void(std::string)> sender)
+StaticContent::StaticContent(asio::io_service& io, boost::function<void(std::string)> sender)
 	: io_(io)
 	, sender_(sender)
 	, d_(0, 10000)
@@ -17,11 +18,11 @@ StaticContent::StaticContent(asio::io_service& io, std::function<void(std::strin
 	{
 		ptree pt;
 		read_xml(filename, pt);
-		for(auto item : pt.get_child("static"))
+		BOOST_FOREACH(const ptree::value_type & item,  pt.get_child("static"))
 		{
 			std::string keyword = item.second.get<std::string>("keyword");
-			std::vector<std::string> messages;	
-			for(auto message : item.second.get_child("messages"))
+			std::vector<std::string> messages;
+			BOOST_FOREACH(const ptree::value_type & message,  item.second.get_child("messages"))
 			{
 				messages.push_back(message.second.get_value<std::string>());
 			}
@@ -32,8 +33,10 @@ StaticContent::StaticContent(asio::io_service& io, std::function<void(std::strin
 
 void StaticContent::operator()(const ptree& pt)
 {
+	typedef std::pair<Keywords, Messages> item_type;
 	std::string text = pt.get<std::string>("message.text");
-	for(auto item : static_contents_)
+
+	BOOST_FOREACH(const item_type & item,  static_contents_)
 	{
 		if(boost::regex_search(text, item.first))
 		{

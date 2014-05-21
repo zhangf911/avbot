@@ -3,17 +3,18 @@
 namespace asio = boost::asio;
 using boost::property_tree::ptree;
 #include <boost/random.hpp>
+#include <boost/function.hpp>
 
 struct StaticContent
 {
-	StaticContent(asio::io_service& io, std::function<void(std::string)> sender);
+	StaticContent(asio::io_service& io, boost::function<void(std::string)> sender);
 
 	void operator()(boost::system::error_code ec) {}
 
 	void operator()(const ptree& pt);
 
 	asio::io_service& io_;
-	std::function<void(std::string)> sender_;
+	boost::function<void(std::string)> sender_;
 	typedef boost::regex Keywords;
 	typedef std::vector<std::string> Messages;
 	std::map<Keywords, Messages> static_contents_;
@@ -22,7 +23,6 @@ struct StaticContent
 	boost::uniform_int<> d_;
 
 };
-
 
 template<typename MsgSender>
 StaticContent
