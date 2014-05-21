@@ -154,7 +154,7 @@ endif()
 
  include_directories( ${PROJECT_SOURCE_DIR}/openssl/include)
 
- if( NOT MSVC)
+ if(MINGW)
   link_directories(${PROJECT_SOURCE_DIR}/libsformingw32/mingw64)
   link_directories(${PROJECT_SOURCE_DIR}/libsformingw32/mingw32)
  endif()
