@@ -26,7 +26,7 @@ StaticContent::StaticContent(asio::io_service& io, boost::function<void(std::str
 			{
 				messages.push_back(message.second.get_value<std::string>());
 			}
-			static_contents_[boost::regex(keyword)] = boost::move(messages);
+			static_contents_[boost::regex(keyword)] = messages;
 		}
 	}
 }
