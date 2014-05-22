@@ -97,10 +97,35 @@ static std::string progname;
 static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
+template<typename ReturnType, typename Arg1, typename Arg2>
+struct single_invoker
+{
+	boost::shared_ptr<bool> m_invoked;
+	boost::shared_ptr<
+		boost::function<typename ReturnType(typename Arg1, typename Arg2)>
+	> m_hander;
+
+	single_invoker(boost::function<typename ReturnType(typename Arg1, typename Arg2)> _hander)
+		: m_hander(boost::make_shared< boost::function<typename ReturnType(typename Arg1, typename Arg2)> >(_hander))
+		, m_invoked(boost::make_shared<bool>(true))
+	{}
+
+	ReturnType operator()(Arg1 arg1, Arg2 arg2)
+	{
+		if (!*m_invoked)
+		{
+			*m_invoked = true;
+			(*m_hander)(arg1, arg2);
+		}
+	}
+	typedef ReturnType result_type;
+};
+
 static void channel_friend_decoder_vc_inputer(boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
 {
-	vcinput.async_input_read_timeout(30, handler);
-	set_do_vc(boost::bind(handler, boost::system::error_code(), _1));
+	single_invoker<void, boost::system::error_code, std::string> wraper( handler);
+	vcinput.async_input_read_timeout(30, wraper);
+	set_do_vc(boost::bind(wraper, boost::system::error_code(), _1));
 }
 
 static void vc_code_decoded(boost::system::error_code ec, std::string provider,
@@ -684,9 +709,6 @@ rungui:
 	// 连接到 std input
 	connect_stdinput(
 		boost::bind(&avbot_vc_feed_input::call_this_to_feed_line, &vcinput, _1)
-	);
-	mybot.on_message.connect(
-		boost::bind(&avbot_vc_feed_input::call_this_to_feed_message, &vcinput, _1)
 	);
 
 	if (!hydati_key.empty())
