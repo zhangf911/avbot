@@ -107,7 +107,7 @@ struct single_invoker
 
 	single_invoker(boost::function<typename ReturnType(typename Arg1, typename Arg2)> _hander)
 		: m_hander(boost::make_shared< boost::function<typename ReturnType(typename Arg1, typename Arg2)> >(_hander))
-		, m_invoked(boost::make_shared<bool>(true))
+		, m_invoked(boost::make_shared<bool>(false))
 	{}
 
 	ReturnType operator()(Arg1 arg1, Arg2 arg2)
