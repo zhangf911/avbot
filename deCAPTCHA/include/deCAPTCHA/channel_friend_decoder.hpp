@@ -59,9 +59,13 @@ public:
 		{
 			m_io_service.post(
 				boost::asio::detail::bind_handler(
-				m_handler, ec, std::string("IRC/XMPP 好友辅助验证码解码器"), std::string(), boost::function<void()>()
+					m_handler,
+					ec,
+					std::string("IRC/XMPP 好友辅助验证码解码器"),
+					std::string(),
+					boost::function<void()>()
 				)
-				);
+			);
 			return;
 		}
 
@@ -77,6 +81,11 @@ public:
 
 			// 等待输入
 			BOOST_ASIO_CORO_YIELD m_async_inputer(*this);
+			if (ec == boost::asio::error::timed_out)
+			{
+				// 控制台输入超时，转向irc
+			}
+			str = boost::trim_copy(str);
 			// 检查 str
 			if(str.length() == 4 && is_vc(str))
 			{
@@ -97,6 +106,15 @@ public:
 				);
 				return;
 			}
+			m_io_service.post(
+				boost::asio::detail::bind_handler(
+					m_handler,
+					ec,
+					std::string("IRC/XMPP 好友辅助验证码解码器"),
+					std::string(),
+					boost::function<void()>()
+				)
+			);
 		}
 	}
 private:

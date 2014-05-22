@@ -97,6 +97,12 @@ static std::string progname;
 static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
+static void channel_friend_decoder_vc_inputer(boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
+{
+	vcinput.async_input_read_timeout(30, handler);
+	set_do_vc(boost::bind(handler, boost::system::error_code(), _1));
+}
+
 static void vc_code_decoded(boost::system::error_code ec, std::string provider,
 	std::string vccode, boost::function<void()> reportbadvc, avbot & mybot)
 {
@@ -726,8 +732,9 @@ rungui:
 
 	decaptcha.add_decoder(
 		decaptcha::decoder::channel_friend_decoder(
-			io_service, boost::bind(&avbot::broadcast_message, &mybot, _1),
-			boost::bind(&avbot_vc_feed_input::async_input_read_timeout, &vcinput, 45, _1)
+			io_service,
+			boost::bind(&avbot::broadcast_message, &mybot, _1),
+			boost::bind(&channel_friend_decoder_vc_inputer, _1, boost::ref(vcinput))
 		)
 	);
 
