@@ -97,20 +97,24 @@ static std::string progname;
 static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
-template<typename ReturnType, typename Arg1, typename Arg2>
-struct single_invoker
+template<typename Signature>
+class single_invoker;
+
+template<typename R, typename Arg1, typename Arg2>
+struct single_invoker<R(Arg1, Arg2)>
 {
+	typedef R(Signature)(Arg1, Arg2);
 	boost::shared_ptr<bool> m_invoked;
 	boost::shared_ptr<
-		boost::function<typename ReturnType(typename Arg1, typename Arg2)>
+		boost::function<Signature>
 	> m_hander;
 
-	single_invoker(boost::function<typename ReturnType(typename Arg1, typename Arg2)> _hander)
-		: m_hander(boost::make_shared< boost::function<typename ReturnType(typename Arg1, typename Arg2)> >(_hander))
+	single_invoker(std::function<Signature> _hander)
+		: m_hander(boost::make_shared< boost::function<Signature> >(_hander))
 		, m_invoked(boost::make_shared<bool>(false))
 	{}
 
-	ReturnType operator()(Arg1 arg1, Arg2 arg2)
+	R operator()(Arg1 arg1, Arg2 arg2)
 	{
 		if (!*m_invoked)
 		{
@@ -118,12 +122,12 @@ struct single_invoker
 			(*m_hander)(arg1, arg2);
 		}
 	}
-	typedef ReturnType result_type;
+	typedef R result_type;
 };
 
 static void channel_friend_decoder_vc_inputer(boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
 {
-	single_invoker<void, boost::system::error_code, std::string> wraper( handler);
+	single_invoker<void( boost::system::error_code, std::string)> wraper( handler);
 	vcinput.async_input_read_timeout(30, wraper);
 	set_do_vc(boost::bind(wraper, boost::system::error_code(), _1));
 }
