@@ -46,6 +46,7 @@ namespace po = boost::program_options;
 #include <boost/locale.hpp>
 #include <boost/signals2.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/preprocessor.hpp>
 #include <locale.h>
 #include <cstring>
 #include <stdlib.h>
@@ -100,30 +101,37 @@ static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 template<typename Signature>
 class single_invoker;
 
-template<typename R, typename Arg1, typename Arg2>
-struct single_invoker<R(Arg1, Arg2)>
-{
-	typedef R(Signature)(Arg1, Arg2);
-	boost::shared_ptr<bool> m_invoked;
-	boost::shared_ptr<
-		boost::function<Signature>
-	> m_hander;
+#define TEXT(z, n, text) text ## n
+#define ARG(z, n, _) Arg ## n arg ## n
 
-	single_invoker(std::function<Signature> _hander)
-		: m_hander(boost::make_shared< boost::function<Signature> >(_hander))
-		, m_invoked(boost::make_shared<bool>(false))
-	{}
+#define SINGLE_INVOKER(z, n, _) \
+	template<typename R, BOOST_PP_ENUM(BOOST_PP_INC(n), TEXT, typename Arg)> \
+	struct single_invoker<R( BOOST_PP_ENUM(BOOST_PP_INC(n), TEXT, Arg) )> \
+	{ \
+		typedef R(Signature)(BOOST_PP_ENUM(BOOST_PP_INC(n), TEXT, Arg)); \
+		boost::shared_ptr<bool> m_invoked; \
+		boost::shared_ptr< \
+			boost::function<Signature> \
+		> m_handler; \
+		\
+		single_invoker(std::function<Signature> _handler) \
+			: m_handler(boost::make_shared< boost::function<Signature> >(_handler)) \
+			, m_invoked(boost::make_shared<bool>(false)) \
+		{} \
+		\
+		R operator()(BOOST_PP_ENUM(BOOST_PP_INC(n), ARG, nil)) \
+		{ \
+			if(!*m_invoked) \
+			{ \
+				*m_invoked = true; \
+				(*m_handler)(BOOST_PP_ENUM(BOOST_PP_INC(n), TEXT, arg)); \
+			} \
+		} \
+		typedef R result_type; \
+	};
 
-	R operator()(Arg1 arg1, Arg2 arg2)
-	{
-		if (!*m_invoked)
-		{
-			*m_invoked = true;
-			(*m_hander)(arg1, arg2);
-		}
-	}
-	typedef R result_type;
-};
+
+BOOST_PP_REPEAT_FROM_TO(0, 10, SINGLE_INVOKER, nil)
 
 static void channel_friend_decoder_vc_inputer(boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
 {
