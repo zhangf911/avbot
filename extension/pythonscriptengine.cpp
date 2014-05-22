@@ -1,3 +1,4 @@
+#ifdef ENABLE_PYTHON
 #include "pythonscriptengine.hpp"
 #include <boost/property_tree/json_parser.hpp>
 #include <Python.h>
@@ -85,3 +86,6 @@ avbot_extension make_python_script_engine(asio::io_service& io, std::string chan
 		PythonScriptEngine(io, sender)
 		);
 }
+
+#endif // ENABLE_PYTHON
+

@@ -77,7 +77,6 @@ endif(ENABLE_LUA)
 
 if(ENABLE_PYTHON)
 	add_definitions(-DENABLE_PYTHON)
-	set(Boost_USE_STATIC_LIBS ON)
 	find_package(PythonLibsNew REQUIRED)
 	include_directories(${PYTHON_INCLUDE_DIRS})
 	link_directories(${PYTHON_LIBRARIE_DIRS})
