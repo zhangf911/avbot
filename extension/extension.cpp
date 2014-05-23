@@ -23,6 +23,10 @@
 #include "iplocation.hpp"
 #include "staticcontent.hpp"
 
+#ifdef ENABLE_PYTHON
+#include "pythonscriptengine.hpp"
+#endif // ENABLE_PYTHON
+
 #ifdef _WIN32
 #include "dllextension.hpp"
 #endif
@@ -137,6 +141,16 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
 		)
 	);
+
+#ifdef ENABLE_PYTHON
+	mybot.on_message.connect(
+		make_python_script_engine(
+			io_service,
+			channel_name,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
+		)
+	);
+#endif 
 
 #ifdef _WIN32
 	mybot.on_message.connect(

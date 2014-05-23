@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(avbot)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
 if (NOT MSVC)
 
 include(CheckCXXCompilerFlag)
