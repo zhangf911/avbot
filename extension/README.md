@@ -24,3 +24,24 @@ avbot-extension avbot 扩展
 		</item>
 	</static>
 	```
+	
+* python script - python支持
+	
+	需要在编译时开启，依赖python和boost.python模块
+	
+	```
+	# coding: UTF-8
+	import json
+	decoder = json.JSONDecoder()
+	
+	# MessageHandler.send_message 将在cpp里面设置
+	class MessageHandler:
+	
+		def on_message(self, str):
+			msg = decoder.decode(str)
+			if msg["who"]["name"] == "hyq":
+				self.send_message("hyq 你好")
+	
+	print "python module loaded"
+	
+	```
