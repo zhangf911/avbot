@@ -159,7 +159,7 @@ endif()
  link_directories(${PROJECT_SOURCE_DIR}/libsformingw64)
 endif()
 
-if(NOT MSVC)
+if(NOT MSVC AND NOT APPLE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
 
@@ -312,12 +312,6 @@ if(WIN32)
 list(APPEND AVBOT_SOURCES sound.cpp )
 else()
 
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tweet.o
-	COMMAND ${CMAKE_OBJCOPY} -I binary -O ${OBJCOPYFORMAT} -B ${BINARY_ARCHITECTURE} tweet.wav ${CMAKE_CURRENT_BINARY_DIR}/tweet.o
-	DEPENDS tweet.wav WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  )
-
-list(APPEND AVBOT_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/tweet.o )
 endif()
 
 if(MSVC)

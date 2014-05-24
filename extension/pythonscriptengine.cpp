@@ -10,6 +10,16 @@ boost::system::error_code no_handle_func;
 
 bool python_init = false;
 
+struct MessageSender
+{
+    boost::function<void(std::string)> sender_;
+    
+    void send_message(std::string msg)
+    {
+        sender_(msg);
+    }
+};
+
 class PythonScriptEngine
 {
 public:
@@ -17,15 +27,27 @@ public:
 		: io_(io)
 		, sender_(sender)
 	{
-		if (!python_init)
-		{
-			Py_Initialize();
-			python_init = true;
-		}
-
-		module_ = py::import("avbot");
-		py::object send_message = py::make_function(sender_);
-		py::def("send_message", send_message);
+        try {
+            if (!python_init)
+            {
+                Py_Initialize();
+                python_init = true;
+                py::scope module_ = py::import("avbot");
+                global_ = module_.attr("__dict__");
+                
+                py::class_<MessageSender>("MessageSender")
+                    .def("send_message", &MessageSender::send_message);
+            }
+            py::object pysender = global_["MessageSender"]();
+            py::extract<MessageSender&>(pysender)().sender_ = sender_;
+            pyhandler_ = global_["MessageHandler"]();
+            pyhandler_.attr("send_message") = pysender.attr("send_message");
+        }
+        catch(...)
+        {
+            PyErr_Print();
+            throw;
+        }
 	}
 
 	~PythonScriptEngine()
@@ -35,16 +57,25 @@ public:
 
 	void operator()(const boost::property_tree::ptree& msg)
 	{
-		std::stringstream ss;
-		boost::property_tree::json_parser::write_json(ss, msg);
-		module_.attr("on_message")(ss.str());
+        try {
+            std::stringstream ss;
+            boost::property_tree::json_parser::write_json(ss, msg);
+            pyhandler_.attr("on_message")(ss.str());
+        }
+        catch(...)
+        {
+            PyErr_Print();
+        }
 	}
 
 private:
 	asio::io_service& io_;
 	boost::function < void(std::string)> sender_;
-	py::object module_;
+    static py::object global_;
+    py::object pyhandler_;
 };
+
+py::object PythonScriptEngine::global_;
 
 
 avbot_extension make_python_script_engine(asio::io_service& io, std::string channel_name, boost::function<void(std::string)> sender)

@@ -1,6 +1,6 @@
 
 option(ENABLE_LUA "enable lua script support" OFF)
-option(ENABLE_PYTHON "enable python script support" ON)
+option(ENABLE_PYTHON "enable python script support" OFF)
 
 find_package(ZLIB)
 if (ZLIB_FOUND)
@@ -84,6 +84,7 @@ if(ENABLE_PYTHON)
 
 	find_package(Boost REQUIRED COMPONENTS python)
 	target_link_libraries(extension ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY})
+	message("extension ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY}")
 endif(ENABLE_PYTHON)
 
 

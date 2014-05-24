@@ -147,9 +147,9 @@ elseif(APPLE)
      # Seems to require "-undefined dynamic_lookup" instead of linking
      # against the .dylib, otherwise it crashes. This flag is added
      # below
-    set(PYTHON_LIBRARY "")
-    #set(PYTHON_LIBRARY
-    #    "${PYTHON_PREFIX}/lib/libpython${PYTHON_LIBRARY_SUFFIX}.dylib")
+	 #set(PYTHON_LIBRARY "")
+    set(PYTHON_LIBRARY
+        "${PYTHON_PREFIX}/lib/libpython${PYTHON_LIBRARY_SUFFIX}.dylib")
 else()
     if(${PYTHON_SIZEOF_VOID_P} MATCHES 8)
         set(_PYTHON_LIBS_SEARCH "${PYTHON_PREFIX}/lib64" "${PYTHON_PREFIX}/lib")
