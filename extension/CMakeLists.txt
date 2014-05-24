@@ -26,9 +26,8 @@ set(EXTENSION_SOURCES
 
 include_directories(../qqwry/include)
 
-if(ENABLE_LUA)
-
 	# 检查 windows 环境， 是的话，启用 delay load 支持
+endif(ENABLE_LUA)
 
 	if(NOT WIN32)
 
@@ -65,9 +64,6 @@ if(ENABLE_LUA)
 	endif(NOT WIN32)
 
 	add_subdirectory(luascript)
-
-	target_link_libraries(extension libluascript)
-
 endif(ENABLE_LUA)
 
 if(ENABLE_PYTHON)
@@ -77,7 +73,6 @@ if(ENABLE_PYTHON)
 	link_directories(${PYTHON_LIBRARIE_DIRS})
 
 	find_package(Boost REQUIRED COMPONENTS python)
-	target_link_libraries(extension ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY})
 
 	list(APPEND EXTENSION_SOURCES
 		pythonscriptengine.hpp
@@ -87,6 +82,14 @@ endif(ENABLE_PYTHON)
 
 add_library(extension STATIC ${EXTENSION_SOURCES})
 
+if(ENABLE_PYTHON)
+	target_link_libraries(extension ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY})
+endif(ENABLE_PYTHON)
+
 if(ZLIB_FOUND)
 target_link_libraries(extension ${ZLIB_LIBRARIES})
+endif()
+
+if(ENABLE_LUA)
+	target_link_libraries(extension libluascript)
 endif()
