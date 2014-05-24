@@ -5,8 +5,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 if (NOT MSVC)
 
-include(CheckCXXCompilerFlag)
-
 if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
 	set(OBJCOPYFORMATENDIAN "x86-64")
 	set(BINARY_ARCHITECTURE "i386")
@@ -23,70 +21,12 @@ endif()
 
 set(OBJCOPYFORMAT "${OBJCOPYFORMATELF}-${OBJCOPYFORMATENDIAN}")
 
-if(NOT CMAKE_CXX_COMPILER MATCHES "icc")
-
-CHECK_CXX_COMPILER_FLAG(-std=gnu++11 LIBCXX_HAS_STDCXX11_FLAG)
-
-if(LIBCXX_HAS_STDCXX11_FLAG)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
-else()
-
-	CHECK_CXX_COMPILER_FLAG(-std=c++0x LIBCXX_HAS_STDCXX0X_FLAG)
-
-	if(LIBCXX_HAS_STDCXX0X_FLAG)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-	else()
-		message(FATAL "need at least gcc 4.4 or clang 3.2")
-	endif()
-
-endif()
 endif()
 
-endif() # if(NOT CMAKE_CXX_COMPILER MATCHES "icc")
+include(cxx11.cmake)
+include(cpacksettings.cmake)
+include(tweakvcflasgs.cmake)
 
-# ============== cpack ===============
-if(MSVC)
-set(CPACK_GENERATOR "TBZ2")
-else()
-set(CPACK_GENERATOR "TBZ2;DEB;RPM")
-endif(MSVC)
-
-set(CPACK_SOURCE_GENERATOR "TBZ2")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "avbot Q群云秘书")
-SET(CPACK_PACKAGE_VENDOR "avplayer.org")
-SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
-SET(CPACK_PACKAGE_VERSION_MAJOR "9")
-SET(CPACK_PACKAGE_VERSION_MINOR "99")
-SET(CPACK_PACKAGE_VERSION_PATCH "9")
-if(WIN32)
-	SET(CPACK_PACKAGE_INSTALL_DIRECTORY "avbot")
-else()
-	SET(CPACK_PACKAGE_INSTALL_DIRECTORY "/")
-endif()
-
-IF(WIN32 AND NOT UNIX)
-  # There is a bug in NSI that does not handle full unix paths properly. Make
-  # sure there is at least one set of four (4) backlasshes.
-  SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\avbot.ico")
-  SET(CPACK_NSIS_INSTALLED_ICON_NAME "avbot.exe")
-  SET(CPACK_NSIS_DISPLAY_NAME "avbot(qqbot) by avplayer.org")
-  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\qqbot.avplayer.org")
-  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\qqbot.avplayer.org")
-  SET(CPACK_NSIS_CONTACT "microcaicai@gmail.com")
-  SET(CPACK_NSIS_MODIFY_PATH ON)
-ELSE(WIN32 AND NOT UNIX)
-  SET(CPACK_STRIP_FILES "avbot")
-  SET(CPACK_SOURCE_STRIP_FILES "")
-ENDIF(WIN32 AND NOT UNIX)
-SET(CPACK_PACKAGE_EXECUTABLES "avbot" "avbot")
-
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "mosir") #required
-
-SET(CPACK_SOURCE_IGNORE_FILES "${CPACK_SOURCE_IGNORE_FILES};${CMAKE_CURRENT_BINARY_DIR};\\\\.git;\\\\.kdev.*;\\\\.travis\\\\.yml")
-INCLUDE(CPack)
-
-# =================================================
 #SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 option(ENABLE_STATIC "link to boost staticaly" ON)
 option(ENABLE_TEST "build xmpp/pop3 test" OFF)
@@ -101,39 +41,6 @@ if(WIN32)
 set(ENABLE_LIBGCC_STATIC ON)
 set(ENABLE_LIBSTDCXX_STATIC ON)
 set(ENABLE_STATIC ON)
-endif()
-
-if(MSVC)
-
-set(CompilerFlags
-        CMAKE_CXX_FLAGS
-        CMAKE_CXX_FLAGS_DEBUG
-        CMAKE_CXX_FLAGS_RELEASE
-        CMAKE_C_FLAGS
-        CMAKE_C_FLAGS_DEBUG
-        CMAKE_C_FLAGS_RELEASE
-		CMAKE_EXE_LINKER_FLAGS
-		CMAKE_EXE_LINKER_FLAGS_DEBUG
-		CMAKE_EXE_LINKER_FLAGS_RELEASE
-        )
-
-foreach(CompilerFlag ${CompilerFlags})
-  string(REPLACE "/MDd" "/MTd" ${CompilerFlag} "${${CompilerFlag}}")
-endforeach()
-
-foreach(CompilerFlag ${CompilerFlags})
-  string(REPLACE "/W3" "/W1" ${CompilerFlag} "${${CompilerFlag}}")
-endforeach()
-
-foreach(CompilerFlag ${CompilerFlags})
-  string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
-endforeach()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /MP")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG")
-
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS}  /ignore:4099 /DEBUG /MTd /NODEFAULTLIB:libcmt.lib")
 endif()
 
 if(WIN32)
