@@ -89,7 +89,7 @@ struct  hex_from_bin   :  public boost::iterator_adaptor <
 
 	static inline char char_to_hex(uint c)
 	{
-		static char table['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
+		static char table[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 		return table[c];
 	}
 
@@ -106,7 +106,7 @@ struct  hex_from_bin   :  public boost::iterator_adaptor <
 		++m_base;
 	}
 
-	bin_from_hex(const Base & _base)
+	hex_from_bin(const Base & _base)
 		: m_base(_base)
 	{
 	}
