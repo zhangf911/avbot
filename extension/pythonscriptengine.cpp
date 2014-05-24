@@ -1,4 +1,4 @@
-#ifdef ENABLE_PYTHON
+
 #include "pythonscriptengine.hpp"
 #include <boost/property_tree/json_parser.hpp>
 #include <Python.h>
@@ -14,7 +14,7 @@ bool python_init = false;
 struct MessageSender
 {
     boost::function<void(std::string)> sender_;
-    
+
     void send_message(std::string msg)
     {
         sender_(msg);
@@ -35,7 +35,7 @@ public:
                 python_init = true;
                 py::scope module_ = py::import("avbot");
                 global_ = module_.attr("__dict__");
-                
+
                 py::class_<MessageSender>("MessageSender")
                     .def("send_message", &MessageSender::send_message);
             }
@@ -84,8 +84,5 @@ avbot_extension make_python_script_engine(asio::io_service& io, std::string chan
 	return avbot_extension(
 		channel_name,
 		PythonScriptEngine(io, sender)
-		);
+	);
 }
-
-#endif // ENABLE_PYTHON
-

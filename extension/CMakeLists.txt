@@ -7,7 +7,8 @@ if (ZLIB_FOUND)
 add_definitions(-DHAVE_ZLIB)
 endif()
 
-add_library(extension STATIC
+set(EXTENSION_SOURCES
+
 	extension.hpp extension.cpp
 	exchangerate.hpp
 	html.hpp
@@ -18,62 +19,56 @@ add_library(extension STATIC
 	metalprice.hpp stockprice.hpp
 	staticcontent.hpp
 	staticcontent.cpp
-	pythonscriptengine.hpp
-	pythonscriptengine.cpp
-	dllextension.hpp)
+
+	dllextension.hpp
+)
+
 
 include_directories(../qqwry/include)
 
 if(ENABLE_LUA)
 
-# ºÏ≤È windows ª∑æ≥£¨  «µƒª∞£¨∆Ù”√ delay load ÷ß≥÷
+	# Ê£ÄÊü• windows ÁéØÂ¢ÉÔºå ÊòØÁöÑËØùÔºåÂêØÁî® delay load ÊîØÊåÅ
 
-if(NOT WIN32)
+	if(NOT WIN32)
 
-find_package(PkgConfig REQUIRED)
+		find_package(PkgConfig REQUIRED)
 
-pkg_check_modules(LUAJIT REQUIRED luajit>=2.0)
+		pkg_check_modules(LUAJIT REQUIRED luajit>=2.0)
 
-add_definitions(-DENABLE_LUA)
-include_directories(
-	${LUAJIT_INCLUDE_DIRS}
-	)
+		add_definitions(-DENABLE_LUA)
+		include_directories(
+			${LUAJIT_INCLUDE_DIRS}
+		)
 
-else(NOT WIN32)
+	else(NOT WIN32)
+		# windows ÁéØÂ¢ÉÂΩìÁÑ∂‰∏çÊòØ‰ΩøÁî® pkgconfig Âï¶ÔºåÂí±‰ΩøÁî®ÁöÑÊòØ avbot Ê∫êÁ†ÅÈáåÂ∏¶ÁöÑÔºåÂòªÂòª
+		add_definitions(-DENABLE_LUA)
+		include_directories(luascript/luainclude/)
+		include_directories(luascript/luainclude/luajit-2.0)
 
-# windows ª∑æ≥µ±»ª≤ª « π”√ pkgconfig ¿≤£¨‘€ π”√µƒ « avbot ‘¥¬Î¿Ô¥¯µƒ£¨Œ˚Œ˚
+		if(MSVC)
+			if(CMAKE_CL_64)
+			set(LUAJIT_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/luascript/msvc_x64/lua51.lib")
+			else()
+			set(LUAJIT_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/luascript/msvc_x86/lua51.lib")
+			endif()
 
-add_definitions(-DENABLE_LUA)
-include_directories(luascript/luainclude/)
-include_directories(luascript/luainclude/luajit-2.0)
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DELAYLOAD:lua51.dll" )
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DELAYLOAD:lua51.dll" PARENT_SCOPE)
 
-if(MSVC)
+		else(MSVC)
+			# if mingw
+			set(LUAJIT_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/../libsformingw64/liblua51.dll.a)
+		endif(MSVC)
 
-if(CMAKE_CL_64)
-set(LUAJIT_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/luascript/msvc_x64/lua51.lib")
-else()
-set(LUAJIT_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/luascript/msvc_x86/lua51.lib")
-endif()
+	endif(NOT WIN32)
 
-if(MSVC)
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DELAYLOAD:lua51.dll" )
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DELAYLOAD:lua51.dll" PARENT_SCOPE)
+	add_subdirectory(luascript)
 
-endif()
-
-else(MSVC)
-# if mingw
-set(LUAJIT_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/../libsformingw64/liblua51.dll.a)
-endif(MSVC)
-
-endif(NOT WIN32)
-
-add_subdirectory(luascript)
-
-target_link_libraries(extension libluascript)
+	target_link_libraries(extension libluascript)
 
 endif(ENABLE_LUA)
-
 
 if(ENABLE_PYTHON)
 	add_definitions(-DENABLE_PYTHON)
@@ -83,8 +78,14 @@ if(ENABLE_PYTHON)
 
 	find_package(Boost REQUIRED COMPONENTS python)
 	target_link_libraries(extension ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY})
+
+	list(APPEND EXTENSION_SOURCES
+		pythonscriptengine.hpp
+		pythonscriptengine.cpp
+	)
 endif(ENABLE_PYTHON)
 
+add_library(extension STATIC ${EXTENSION_SOURCES})
 
 if(ZLIB_FOUND)
 target_link_libraries(extension ${ZLIB_LIBRARIES})
