@@ -37,6 +37,7 @@ namespace js = boost::property_tree::json_parser;
 #include "boost/timedcall.hpp"
 #include "boost/urlencode.hpp"
 #include "boost/stringencodings.hpp"
+#include "boost/bin_from_hex.hpp"
 
 #include "webqq_impl.hpp"
 
@@ -278,52 +279,24 @@ public:
 	}
 
 private:
-	struct is_not_hexdigit
-	{
-		bool operator()(const char c)
-		{
-			if (c >= '0' && c <= '9')
-				return false;
-			if (c >= 'a' && c <= 'f')
-				return false;
-			if (c >= 'A' && c <= 'F')
-				return false;
-			return true;
-		}
-	};
-
 	bool is_md5(std::string s)
 	{
 		if (s.length() != 32)
 			return false;
 		// check for non hex code
-		if (std::find_if(s.begin(), s.end(), is_not_hexdigit()) != s.end())
+		if (std::find_if_not(s.begin(), s.end(), boost::is_any_of("0123456789abcdefABCDEF")) != s.end())
 			return false;
 		return true;
 	}
 
-	uint8_t hex_to_int(const char c)
-	{
-		switch (c)
-		{
-		case '0': case '1': case '2': case '3': case '4':
-		case '5': case '6': case '7': case '8': case '9':
-			return c - '0';
-		case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-			return c - 'a' + 10;
-		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-			return c - 'A' + 10;
-		}
-	}
-
 	std::string hexstring_to_bin(std::string md5string)
 	{
-		std::vector<uint8_t> ret(16);
-		for (int i = 0; i < md5string.length(); i+=2)
-		{
-			ret[i / 2] = (hex_to_int(md5string[i]) << 4) | hex_to_int(md5string[i + 1]);
-		}
-		return std::string(reinterpret_cast<const char*>(ret.data()), 16);
+		typedef boost::archive::iterators::transform_width<
+			boost::bin_from_hex<std::string::iterator>,
+			8, 4, uint8_t> bin_from_hex_iterator;
+
+		return std::string(bin_from_hex_iterator(md5string.begin()),
+			bin_from_hex_iterator(md5string.end()));
 	}
 
 	/**
