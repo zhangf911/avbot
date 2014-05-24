@@ -27,7 +27,7 @@ set(EXTENSION_SOURCES
 include_directories(../qqwry/include)
 
 	# 检查 windows 环境， 是的话，启用 delay load 支持
-endif(ENABLE_LUA)
+if(ENABLE_LUA)
 
 	if(NOT WIN32)
 
