@@ -62,4 +62,69 @@ struct  bin_from_hex   :  public boost::iterator_adaptor <
 	}
 };
 
+template<typename Base>
+struct  hex_from_bin   :  public boost::iterator_adaptor <
+	hex_from_bin<Base>,
+	Base,
+	char,
+	boost::single_pass_traversal_tag,
+	char
+>
+{
+	friend class boost::iterator_core_access;
+	typedef BOOST_DEDUCED_TYPENAME boost::iterator_adaptor <
+		hex_from_bin<Base>,
+		Base,
+		char,
+		boost::single_pass_traversal_tag,
+		char
+	> super_t;
+
+	typedef hex_from_bin<Base> this_t;
+	typedef char CharType;
+
+	typedef typename boost::iterator_value<Base>::type base_value_type;
+
+	Base m_base;
+
+	static inline char char_to_hex(uint c)
+	{
+		static char table['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
+		return table[c];
+	}
+
+	CharType dereference() const {
+		return char_to_hex(*m_base);
+	}
+
+	// standard iterator interface
+	bool equal(const this_t & rhs) const {
+		return m_base == rhs.m_base;
+	}
+
+	void increment(){
+		++m_base;
+	}
+
+	bin_from_hex(const Base & _base)
+		: m_base(_base)
+	{
+	}
+};
+
+#ifdef _______EXAMPLE_TEST_CODE
+
+// 就是这样的代码. 就完成转换了, 细细.
+std::string bintohexstrubg(std::string md5bin)
+{
+	typedef boost::hex_from_bin<
+			boost::archive::iterators::transform_width<std::string::iterator, 4, 8, char>
+	> hex_from_bin_iterator;
+
+	return std::string(hex_from_bin_iterator(md5bin.begin()),
+		hex_from_bin_iterator(md5bin.end()));
+}
+
+#endif
+
 }
