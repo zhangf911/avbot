@@ -1,5 +1,6 @@
 
 #include "pythonscriptengine.hpp"
+#include "boost/json_parser_write.hpp"
 #include <boost/property_tree/json_parser.hpp>
 #include <Python.h>
 #include <boost/python.hpp>
