@@ -246,9 +246,9 @@ if(APPLE AND WITH_ICONV)
 target_link_libraries(avbot -liconv)
 endif()
 
-target_link_libraries(avbot libavbot avlog extension soci_core_static soci_sqlite3_static)
+target_link_libraries(avbot libavbot avlog extension soci_core_static soci_sqlite3_static sqlite3)
 
-target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${SQLITE3_LIBRARIES})
+target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 if(NOT MSVC)
 install(TARGETS avbot RUNTIME DESTINATION bin)
