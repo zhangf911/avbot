@@ -338,7 +338,7 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 	return FALSE;
 }
 
-void async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(std::string)> donecallback)
+HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(std::string)> donecallback)
 {
 	HMODULE hIns = GetModuleHandle(NULL);
 
@@ -353,9 +353,20 @@ void async_input_box_get_input_with_image(boost::asio::io_service & io_service, 
 	av_dlgproc_t * real_proc = new av_dlgproc_t(boost::bind(&input_box_get_input_with_image_dlgproc, _1, _2, _3, _4, settings));
 
 	HWND dlgwnd = CreateDialogParam(hIns, MAKEINTRESOURCE(IDD_INPUT_VERCODE), GetDesktopWindow(), (DLGPROC)detail::internal_clusure_dlg_proc, (LPARAM)real_proc);
+	RECT	rtWindow = { 0 };
+	RECT	rtContainer = { 0 };
+
+	GetWindowRect(dlgwnd, &rtWindow);
+	rtWindow.right -= rtWindow.left;
+	rtWindow.bottom -= rtWindow.top;
+
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &rtContainer, 0);
+
+	SetWindowPos(dlgwnd, NULL, (rtContainer.right - rtWindow.right) / 2, (rtContainer.bottom - rtWindow.bottom) / 2, 0, 0, SWP_NOSIZE);
 	::ShowWindow(dlgwnd, SW_SHOWNORMAL);
 	SetForegroundWindow(dlgwnd);
 	avloop_gui_add_dlg(io_service, dlgwnd);
+	return dlgwnd;
 }
 
 namespace detail {
