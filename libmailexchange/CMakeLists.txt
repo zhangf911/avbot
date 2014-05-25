@@ -20,7 +20,11 @@ if(ENABLE_STATIC)
 endif()
 
 if(WIN32 AND WITH_ICONV)
+	if(MSVC)
+	target_link_libraries(mailexchange crypt32.lib ws2_32.lib)
+	else()
 	target_link_libraries(mailexchange -liconv -lcrypt32 -lws2_32 )
+	endif()
 endif()
 
 if( ENABLE_TEST )

@@ -99,5 +99,9 @@ endif()
 
 if(WIN32)
 	# SCHANNEL
+	if(MSVC)
+	target_link_libraries(gloox crypt32.lib secur32.lib crypt32.lib ws2_32.lib)
+	else()
 	target_link_libraries(gloox -lcrypt32 -lsecur32 -lcrypt32 -lws2_32)
+	endif()
 endif()
