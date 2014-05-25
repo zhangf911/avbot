@@ -1,4 +1,4 @@
-find_package(Boost 1.55 REQUIRED COMPONENTS date_time regex system log)
+find_package(Boost 1.55 REQUIRED COMPONENTS date_time regex system log coroutine context )
 include_directories(${Boost_INCLUDE_DIRS})
 
 option(INTERNALGLOOX "use bundled gloox" ON)
