@@ -140,17 +140,21 @@ configure_file(avbot.rc.in ${PROJECT_BINARY_DIR}/avbot.rc)
 
 add_subdirectory(sqlite)
 
-set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/")
-set(SQLITE3_LIBRARIES sqlite3)
+get_property(sqlite_lib_location TARGET sqlite3 PROPERTY LOCATION)
+message (STATUS "sqlite_lib_location == ${sqlite_lib_location}")
 
-include(soci.cmake)
+set(SQLITE_ROOT_DIR "${PROJECT_BINARY_DIR}/sqlite/")
+set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/")
+set(SQLITE3_LIBRARIES "${sqlite_lib_location}")
+set(SQLITE3_LIBRARY "")
+set(SQLITE3_FOUND TRUE)
+
+add_subdirectory(soci/src EXCLUDE_FROM_ALL)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(soci/src/core)
 include_directories(soci/src/backends/sqlite3)
 include_directories(${SQLITE3_INCLUDE_DIR})
-
-target_link_libraries(soci_sqlite3 soci_core ${SQLITE3_LIBRARIES})
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
@@ -246,9 +250,9 @@ if(APPLE AND WITH_ICONV)
 target_link_libraries(avbot -liconv)
 endif()
 
-target_link_libraries(avbot libavbot avlog extension)
+target_link_libraries(avbot libavbot avlog extension soci_core_static soci_sqlite3_static)
 
-target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${SQLITE3_LIBRARIES})
 
 if(NOT MSVC)
 install(TARGETS avbot RUNTIME DESTINATION bin)
@@ -263,4 +267,11 @@ if(HAVE_CLOCK_GETTIME)
         target_link_libraries(avbot -lrt)
 endif(HAVE_CLOCK_GETTIME)
 
-
+if (NOT WIN32)
+  set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/soci/src/cmake/modules ${CMAKE_MODULE_PATH})
+  find_package(DL)
+  if(DL_FOUND)
+    include_directories(${DL_INCLUDE_DIR})
+    target_link_libraries(avbot ${DL_LIBRARY})
+  endif()
+endif()
