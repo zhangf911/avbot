@@ -133,11 +133,15 @@ class single_invoker;
 
 BOOST_PP_REPEAT_FROM_TO(0, 10, SINGLE_INVOKER, nil)
 
-static void channel_friend_decoder_vc_inputer(boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
+static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
 {
 	single_invoker<void( boost::system::error_code, std::string)> wraper( handler);
 	vcinput.async_input_read_timeout(30, wraper);
 	set_do_vc(boost::bind(wraper, boost::system::error_code(), _1));
+
+	// also fire up an input box and the the input there!
+	void async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(std::string)> donecallback);
+	async_input_box_get_input_with_image(vcinput.get_io_service(), vcimagebuffer, boost::bind(wraper, boost::system::error_code(), _1));
 }
 
 static void vc_code_decoded(boost::system::error_code ec, std::string provider,
@@ -768,7 +772,7 @@ rungui:
 		decaptcha::decoder::channel_friend_decoder(
 			io_service,
 			boost::bind(&avbot::broadcast_message, &mybot, _1),
-			boost::bind(&channel_friend_decoder_vc_inputer, _1, boost::ref(vcinput))
+			boost::bind(&channel_friend_decoder_vc_inputer, _1, _2, boost::ref(vcinput))
 		)
 	);
 

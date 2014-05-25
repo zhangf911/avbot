@@ -65,6 +65,11 @@ public:
 		m_input_wait_handlers.clear();
 	}
 
+	boost::asio::io_service & get_io_service()
+	{
+		return m_io_service;
+	}
+
 private:
 	std::vector<boost::function<void (boost::system::error_code, std::string)> >
 			m_input_wait_handlers;

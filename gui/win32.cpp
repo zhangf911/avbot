@@ -17,16 +17,23 @@
 #include "resource.h"
 #endif
 
+#include <OleCtl.h>
+#include <Ole2.h>
+#include <OCIdl.h>
+
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
 #include <boost/log/trivial.hpp>
-
+#include <boost/scope_exit.hpp>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
+#include <boost/asio/io_service.hpp>
 
 #include <windows.h>
+
+#include "boost/avloop.hpp"
 
 class auto_handle
 {
@@ -191,7 +198,7 @@ static void ExtractDlgSettings(HWND hDlg, avbot_dlg_settings & out)
 }
 
 // 这里是真正的消息回调函数，支持闭包！
-bool dlgproc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam, avbot_dlg_settings & settings)
+static bool dlgproc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam, avbot_dlg_settings & settings)
 {
 	BOOL fError;
 
@@ -264,6 +271,91 @@ void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircn
 	}
 	assert(ret == reinterpret_cast<INT_PTR>(&out));
 	// 返回值其实是一个指针，指向一块牛逼的内存。存放对话框记录的东西
+}
+
+struct input_box_get_input_with_image_settings
+{
+	std::string imagedata;
+	boost::function<void(std::string)> donecallback;
+	LPPICTURE pPic;
+	boost::asio::io_service * io_service;
+	~input_box_get_input_with_image_settings()
+	{
+		if (pPic)
+			pPic->Release();
+	}
+};
+
+typedef boost::shared_ptr<input_box_get_input_with_image_settings> input_box_get_input_with_image_settings_ptr;
+
+static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam, input_box_get_input_with_image_settings_ptr settings)
+{
+	switch (message)
+	{
+	case WM_INITDIALOG:
+		{
+			HBITMAP hbitmap = CreateBitmap(32, 32, 3, 32, 0);
+			HGLOBAL hglobal = GlobalAlloc(GMEM_MOVEABLE, settings->imagedata.size());
+
+			{
+				LPVOID  locked_mem = GlobalLock(hglobal);
+				std::copy(settings->imagedata.begin(), settings->imagedata.end(), reinterpret_cast<char*>(locked_mem));
+				GlobalUnlock(hglobal);
+			}
+			IStream * istream;
+
+			CreateStreamOnHGlobal(hglobal, 1, &istream);
+			OleLoadPicture(istream, 0, TRUE, IID_IPicture, (LPVOID*)&(settings->pPic));
+			istream->Release();
+			settings->pPic->get_Handle((OLE_HANDLE*)&hbitmap);
+			// decode the jpeg img data to bitmap and call set img
+			SendMessage(GetDlgItem(hwndDlg, IDC_VERCODE_DISPLAY), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM) hbitmap);			
+		}
+		return TRUE;
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case IDOK:
+			// 获取验证码，然后回调
+		{
+			std::string vcstr;
+			vcstr.resize(8);
+			vcstr.resize(GetDlgItemTextA(hwndDlg, IDC_INPUT_VERYCODE, &vcstr[0], vcstr.size()));
+			settings->donecallback(vcstr);
+			avloop_gui_del_dlg(*(settings->io_service), hwndDlg);
+			DestroyWindow(hwndDlg);
+		}
+			return TRUE;
+		case IDCANCEL:
+			settings->donecallback("");
+			avloop_gui_del_dlg(*(settings->io_service), hwndDlg);
+			DestroyWindow(hwndDlg);
+			// 退出消息循环
+			return TRUE;
+		}
+		return FALSE;
+	}
+	return FALSE;
+}
+
+void async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(std::string)> donecallback)
+{
+	HMODULE hIns = GetModuleHandle(NULL);
+
+	input_box_get_input_with_image_settings setting;
+	setting.imagedata = imagedata;
+	setting.donecallback = donecallback;
+	setting.pPic = NULL;
+	setting.io_service = &io_service;
+
+	input_box_get_input_with_image_settings_ptr settings(new input_box_get_input_with_image_settings(setting));
+
+	av_dlgproc_t * real_proc = new av_dlgproc_t(boost::bind(&input_box_get_input_with_image_dlgproc, _1, _2, _3, _4, settings));
+
+	HWND dlgwnd = CreateDialogParam(hIns, MAKEINTRESOURCE(IDD_INPUT_VERCODE), GetDesktopWindow(), (DLGPROC)detail::internal_clusure_dlg_proc, (LPARAM)real_proc);
+	::ShowWindow(dlgwnd, SW_SHOWNORMAL);
+	SetForegroundWindow(dlgwnd);
+	avloop_gui_add_dlg(io_service, dlgwnd);
 }
 
 namespace detail {

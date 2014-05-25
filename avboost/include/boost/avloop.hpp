@@ -49,7 +49,7 @@ class Win32MsgLoopService
 	}
 
 	bool m_is_stoped;
-
+	std::vector<HWND> m_dialogs;
 public:
 	Win32MsgLoopService(boost::asio::io_service& owner)
 		: boost::asio::detail::service_base<Win32MsgLoopService>(owner)
@@ -70,6 +70,11 @@ public:
 		MSG msg;
 		if (PeekMessage(&msg, 0, 0, 0, 1))
 		{
+			for (HWND hwd: m_dialogs)
+			{
+				if(IsDialogMessage(hwd, &msg))
+					return;
+			}
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -78,11 +83,44 @@ public:
 			m_is_stoped = true;
 		}
 	}
+
+	void add_dlg(HWND dlghwnd)
+	{
+		m_dialogs.push_back(dlghwnd);
+	}
+
+	void remove_dlg(HWND hwd)
+	{
+		std::remove(m_dialogs.begin(), m_dialogs.end(), hwd);
+	}
 };
 
 #endif
 
 } // namespace detail
+
+#ifdef _WIN32
+static void avloop_gui_add_dlg(boost::asio::io_service& io_service, HWND dlghwnd)
+{
+	using namespace ::detail;
+
+	if (!boost::asio::has_service<Win32MsgLoopService>(io_service))
+		boost::asio::add_service(io_service, new Win32MsgLoopService(io_service));
+
+	boost::asio::use_service<Win32MsgLoopService>(io_service).add_dlg(dlghwnd);
+}
+
+static void avloop_gui_del_dlg(boost::asio::io_service& io_service, HWND dlghwnd)
+{
+	using namespace ::detail;
+
+	if (!boost::asio::has_service<Win32MsgLoopService>(io_service))
+		boost::asio::add_service(io_service, new Win32MsgLoopService(io_service));
+
+	boost::asio::use_service<Win32MsgLoopService>(io_service).remove_dlg(dlghwnd);
+}
+#endif
+
 
 template<class Handler>
 void avloop_idle_post(boost::asio::io_service& io_service, Handler handler)
