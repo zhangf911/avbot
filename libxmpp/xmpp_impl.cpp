@@ -36,27 +36,30 @@ using namespace gloox;
 
 namespace xmppimpl{
 
-void xmpp_asio_connector::cb_handle_connecting( const boost::system::error_code& ec )
-{
-	if( ec ) {
-		// 链接失败
-		this->m_handler->handleDisconnect( this, gloox::ConnStreamClosed );
-		return ;
-	}
-
-	m_state = StateConnected;
-	this->m_handler->handleConnect( this );
-	this->recv( 0 );
-}
-
 gloox::ConnectionError xmpp_asio_connector::connect()
 {
+	boost::system::error_code ec;
 	m_state = gloox::StateConnecting;
+
 	avproxy::async_proxy_connect(
 		avproxy::autoproxychain( m_socket, m_query ),
-		boost::bind( &xmpp_asio_connector::cb_handle_connecting, this, _1 )
+		//boost::bind( &xmpp_asio_connector::cb_handle_connecting, this, _1 )
+		(*m_yield_context)[ec]
 	);
-	return gloox::ConnNoError;
+
+	// 然后到这里就完成连接了
+	if (!ec)
+	{
+		m_state = gloox::StateConnected;
+		m_handler->handleConnect(this);
+		return gloox::ConnNoError;
+	}
+	else
+	{
+		m_state = gloox::StateDisconnected;
+		std::cout << ec.message() << std::endl;
+		return gloox::ConnConnectionRefused;
+	}
 }
 
 void xmpp_asio_connector::disconnect()
@@ -68,71 +71,33 @@ void xmpp_asio_connector::disconnect()
 
 gloox::ConnectionError xmpp_asio_connector::receive()
 {
-	// should not be called
-	BOOST_ASSERT( 1 );
-	return ConnIoError;
-}
-
-void xmpp_asio_connector::cb_handle_asio_read( const boost::system::error_code& error, std::size_t bytes_transferred )
-{
-	if( error ) {
-		if( m_state == gloox::StateConnected ) {
-			if( error == boost::asio::error::eof )
-				this->m_handler->handleDisconnect( this, ConnNoError );
-			else if( error == boost::asio::error::connection_reset || error == boost::asio::error::broken_pipe )
-				this->m_handler->handleDisconnect( this, gloox::ConnStreamClosed );
-			else
-				this->m_handler->handleDisconnect( this, gloox::ConnIoError );
-		}
-	} else {
-		std::string data(m_readbuf.begin(), bytes_transferred);
-
-		this->m_handler->handleReceivedData( this, data );
-
-		// 发起异步读取
-		m_socket.async_read_some(
-				boost::asio::buffer(m_readbuf),
-				boost::bind( &xmpp_asio_connector::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
-		);
+	while (recv(-1) == ConnNoError)
+	{
 	}
-}
-
-
-gloox::ConnectionError xmpp_asio_connector::recv( int timeout )
-{
-	BOOST_ASSERT( timeout == 0 );
-
-	// 发起异步读取
-	m_socket.async_read_some( boost::asio::buffer( m_readbuf ),
-							  boost::bind( &xmpp_asio_connector::cb_handle_asio_read, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
-							);
+	m_handler->handleDisconnect(this, ConnNoError);
 	return ConnNoError;
 }
 
-void xmpp_asio_connector::cb_handle_asio_write( const boost::system::error_code& error, std::size_t bytes_transferred )
+gloox::ConnectionError xmpp_asio_connector::recv( int timeout )
 {
-	if( error ) {
-		if( m_state == gloox::StateConnected ) {
-			if( error == boost::asio::error::eof )
-				this->m_handler->handleDisconnect( this, ConnNoError );
-			else if( error == boost::asio::error::connection_reset || error == boost::asio::error::broken_pipe )
-				this->m_handler->handleDisconnect( this, gloox::ConnStreamClosed );
-			else
-				this->m_handler->handleDisconnect( this, gloox::ConnIoError );
-		}
+	boost::system::error_code ec;
+	std::size_t bytes_transferred = m_socket.async_read_some(boost::asio::buffer(m_readbuf), (*m_yield_context)[ec]);
+	// should not be called
+	if (!ec)
+	{
+		std::string data(m_readbuf.begin(), bytes_transferred);
+
+		this->m_handler->handleReceivedData(this, data);
+		return ConnNoError;
 	}
+	return ConnIoError;
 }
 
 bool xmpp_asio_connector::send( const std::string& data )
 {
-	if( m_socket.is_open() && m_state == StateConnected ) {
-		m_socket.async_write_some( boost::asio::buffer( data ),
-								   boost::bind( &xmpp_asio_connector::cb_handle_asio_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
-								 );
-		return true;
-	}
-
-	return false;
+	boost::system::error_code ec;
+	boost::asio::async_write(m_socket, boost::asio::buffer(data), boost::asio::transfer_all(), (*m_yield_context)[ec]);
+	return ! ec;
 }
 
 xmpp_asio_connector::xmpp_asio_connector(boost::shared_ptr<xmpp> _xmpp,
@@ -143,6 +108,23 @@ xmpp_asio_connector::xmpp_asio_connector(boost::shared_ptr<xmpp> _xmpp,
 	, m_socket( io_service )
 	, m_query( _query )
 {
+}
+
+void xmpp_asio_connector::cleanup()
+{
+	boost::system::error_code ec;
+	// 清理资源
+	this->m_socket.close(ec);
+	m_xmpp.reset();
+}
+
+void xmpp_asio_connector::coroutine_start(boost::asio::yield_context this_coro_context)
+{
+	// 协程在这里，开始连接！
+	this->m_yield_context = &this_coro_context;
+	this->m_xmpp->m_client.connect(true);
+	// 连接木有了
+
 }
 
 xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick )
@@ -172,8 +154,9 @@ void xmpp::start()
 		xmppclientport = boost::lexical_cast<std::string>( m_client.port() );
 
 	avproxy::proxy::tcp::query query( m_client.server(), xmppclientport );
-	m_client.setConnectionImpl(new xmpp_asio_connector(shared_from_this(), &m_client, query));
-	m_client.connect(0);
+	xmpp_asio_connector * new_tcp_connector = new xmpp_asio_connector(shared_from_this(), &m_client, query);
+	m_client.setConnectionImpl(new_tcp_connector);
+	boost::asio::spawn(io_service, boost::bind(&xmpp_asio_connector::coroutine_start, new_tcp_connector, _1));
 }
 
 void xmpp::join( std::string roomjid )

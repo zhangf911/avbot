@@ -24,6 +24,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
+#include <boost/asio/spawn.hpp>
+
 #include <boost/enable_shared_from_this.hpp>
 
 # include <gloox/logsink.h>
@@ -43,6 +45,7 @@ class xmpp_asio_connector : public gloox::ConnectionBase {
 public:
 	xmpp_asio_connector(boost::shared_ptr<xmpp> xmpp, gloox::ConnectionDataHandler* cdh,
 		boost::asio::ip::tcp::resolver::query _query);
+	void coroutine_start(boost::asio::yield_context);
 private: // for gloox::ConnectionTCPClient
 	virtual bool send( const std::string& data );
 	virtual gloox::ConnectionError connect();
@@ -50,20 +53,17 @@ private: // for gloox::ConnectionTCPClient
 	virtual void getStatistics( long int& totalIn, long int& totalOut ) {}
 	virtual gloox::ConnectionError receive();
 	virtual gloox::ConnectionError recv( int timeout = -1 );
+	virtual void cleanup();
 	virtual ConnectionBase* newInstance() const {
 		return new xmpp_asio_connector(m_xmpp, m_handler, m_query );
 	}
-private: // for asio callbacks
-	void cb_handle_connecting( const boost::system::error_code & ec );
-	void cb_handle_asio_read( const boost::system::error_code & error, std::size_t bytes_transferred );
-	void cb_handle_asio_write( const boost::system::error_code & error, std::size_t bytes_transferred );
-
 private:
 	boost::asio::io_service	&io_service;
 	boost::asio::ip::tcp::socket m_socket;
 	boost::asio::ip::tcp::resolver::query m_query;
 	boost::array<char, 8192> m_readbuf;
 	boost::shared_ptr<xmpp> m_xmpp;
+	boost::asio::yield_context * m_yield_context;
 };
 
 class xmpp
@@ -72,6 +72,7 @@ class xmpp
 	, gloox::MUCRoomHandler
 	, public boost::enable_shared_from_this<xmpp>
 {
+	friend class xmpp_asio_connector;
 public:
 	xmpp( boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick );
 	void join( std::string roomjid );
