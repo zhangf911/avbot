@@ -143,8 +143,6 @@ static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::
 	// also fire up an input box and the the input there!
 	HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(std::string)> donecallback);
 	HWND hwnd = async_input_box_get_input_with_image(vcinput.get_io_service(), vcimagebuffer, boost::bind(wraper, boost::system::error_code(), _1));
-	// 设定超时关闭
-	boost::delayedcallsec(vcinput.get_io_service(), 30, boost::bind<void>(&SendMessage, hwnd, WM_COMMAND, IDCANCEL, 0));
 #endif // _WIN32
 }
 

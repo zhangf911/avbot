@@ -334,6 +334,10 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 			return TRUE;
 		}
 		return FALSE;
+	case WM_TIMER:
+		KillTimer(hwndDlg, wParam);
+		PostMessage(hwndDlg, WM_COMMAND, IDCANCEL, 0);
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -366,6 +370,7 @@ HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, 
 	::ShowWindow(dlgwnd, SW_SHOWNORMAL);
 	SetForegroundWindow(dlgwnd);
 	avloop_gui_add_dlg(io_service, dlgwnd);
+	SetTimer(dlgwnd, 0, 38000, NULL);
 	return dlgwnd;
 }
 
