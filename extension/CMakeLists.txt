@@ -23,6 +23,7 @@ set(EXTENSION_SOURCES
 	dllextension.hpp
 )
 
+add_subdirectory(libzmq EXCLUDE_FROM_ALL)
 
 include_directories(../qqwry/include)
 
@@ -66,6 +67,7 @@ if(ENABLE_LUA)
 	add_subdirectory(luascript)
 endif(ENABLE_LUA)
 
+
 if(ENABLE_PYTHON)
 	add_definitions(-DENABLE_PYTHON)
 	find_package(PythonLibsNew REQUIRED)
@@ -93,3 +95,6 @@ endif()
 if(ENABLE_LUA)
 	target_link_libraries(extension libluascript)
 endif()
+
+target_link_libraries(extension libzmq-static)
+
