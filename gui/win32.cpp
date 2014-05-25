@@ -356,7 +356,7 @@ HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, 
 
 	av_dlgproc_t * real_proc = new av_dlgproc_t(boost::bind(&input_box_get_input_with_image_dlgproc, _1, _2, _3, _4, settings));
 
-	HWND dlgwnd = CreateDialogParam(hIns, MAKEINTRESOURCE(IDD_INPUT_VERCODE), GetDesktopWindow(), (DLGPROC)detail::internal_clusure_dlg_proc, (LPARAM)real_proc);
+	HWND dlgwnd = CreateDialogParam(hIns, MAKEINTRESOURCE(IDD_INPUT_VERCODE), GetConsoleWindow(), (DLGPROC)detail::internal_clusure_dlg_proc, (LPARAM)real_proc);
 	RECT	rtWindow = { 0 };
 	RECT	rtContainer = { 0 };
 
@@ -364,8 +364,14 @@ HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, 
 	rtWindow.right -= rtWindow.left;
 	rtWindow.bottom -= rtWindow.top;
 
-	SystemParametersInfo(SPI_GETWORKAREA, 0, &rtContainer, 0);
-
+	if (GetParent(dlgwnd))
+	{
+		GetWindowRect(GetParent(dlgwnd), &rtContainer);
+	}
+	else
+	{
+		SystemParametersInfo(SPI_GETWORKAREA, 0, &rtContainer, 0);
+	}
 	SetWindowPos(dlgwnd, NULL, (rtContainer.right - rtWindow.right) / 2, (rtContainer.bottom - rtWindow.bottom) / 2, 0, 0, SWP_NOSIZE);
 	::ShowWindow(dlgwnd, SW_SHOWNORMAL);
 	SetForegroundWindow(dlgwnd);
