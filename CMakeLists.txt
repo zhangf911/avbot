@@ -23,15 +23,15 @@ set(OBJCOPYFORMAT "${OBJCOPYFORMATELF}-${OBJCOPYFORMATENDIAN}")
 
 endif()
 
-include(cxx11.cmake)
 include(cpacksettings.cmake)
+INCLUDE(CPack)
+
+include(cxx11.cmake)
 include(tweakvcflasgs.cmake)
 
 #SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 option(ENABLE_STATIC "link to boost staticaly" ON)
 option(ENABLE_TEST "build xmpp/pop3 test" OFF)
-option(ENABLE_CXX11 "build avbot with cxx11" OFF)
-option(ENABLE_LTO "build avbot with LTO" OFF)
 option(ENABLE_LIBSTDCXX_STATIC "link to static libstdc++" OFF)
 option(ENABLE_LIBGCC_STATIC "link to static libgcc" OFF)
 option(WITH_ICONV "boost is build with iconv" ON)
@@ -44,26 +44,23 @@ set(ENABLE_STATIC ON)
 endif()
 
 if(WIN32)
-add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
-if(NOT MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
-endif()
+	add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+	if(NOT MSVC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
+	endif()
+	
+	if(MSVC)
+	 if(CMAKE_CL_64)
+		link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
+	 else()
+		link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
+	 endif()
 
-if(MSVC)
- if(CMAKE_CL_64)
-	link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
- else()
-	link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
- endif()
-
-else()
-	link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
-	link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
-endif()
-
- include_directories( ${PROJECT_SOURCE_DIR}/openssl/include)
-
- link_directories(${PROJECT_SOURCE_DIR}/libsformingw64)
+	else()
+		link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
+		link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
+	endif()
+	link_directories(${PROJECT_SOURCE_DIR}/libsformingw64)
 endif()
 
 if(NOT MSVC AND NOT APPLE)
@@ -105,14 +102,6 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc ")
 endif()
 endif()
 
-if(ENABLE_CXX11)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
-if(ENABLE_LTO)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-	set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -flto -Wl,-flto")
-endif()
-
 find_package(Boost 1.55 REQUIRED COMPONENTS timer chrono log log_setup date_time filesystem system program_options regex locale)
 
 if(MSVC)
@@ -132,7 +121,6 @@ add_definitions(-DWIN32_LEAN_AND_MEAN)
 add_definitions(-DNOMINMAX)
 endif()
 
-find_package(OpenSSL)
 
 add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD -DDISABLE_LOGGER)
 
@@ -150,6 +138,14 @@ set(SQLITE3_LIBRARY "")
 set(SQLITE3_FOUND TRUE)
 
 add_subdirectory(soci/src EXCLUDE_FROM_ALL)
+
+if(NOT WIN32)
+find_package(OpenSSL)
+else()
+set(OpenSSL_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/openssl/include)
+include_directories("${PROJECT_SOURCE_DIR}/openssl/include")
+include_directories("${PROJECT_SOURCE_DIR}/openssl/include")
+endif(NOT WIN32)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(soci/src/core)
