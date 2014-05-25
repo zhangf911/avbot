@@ -801,7 +801,7 @@ rungui:
 		mybot.set_irc_account(ircnick, ircpwd, ircserver);
 
 	if (!xmppuser.empty())
-		mybot.set_xmpp_account(xmppuser, xmpppwd, xmppserver, xmppnick);
+		mybot.set_xmpp_account(xmppuser, xmpppwd, xmppnick, xmppserver);
 
 	if (!mailaddr.empty())
 		mybot.set_mail_account(mailaddr, mailpasswd, pop3server, smtpserver);
