@@ -425,5 +425,5 @@ void set_do_vc(boost::function<void(std::string)> f)
 
 void set_do_vc()
 {
-	do_vc_code = boost::function<void(std::string)>();
+	do_vc_code.clear();
 }
