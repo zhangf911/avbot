@@ -23,7 +23,7 @@ if(WITH_TWEETNACL)
     )
 
   set(TWEETNACL_SOURCES
-    tweetnacl/src/tweetnacl.c 
+    tweetnacl/src/tweetnacl.c
     )
   if(WIN32)
   else()
@@ -590,6 +590,7 @@ if(MSVC)
     OUTPUT_NAME "libzmq")
 else()
     add_library(libzmq SHARED ${sources} ${public_headers} ${html-docs} ${readme-docs} ${zmq-pkgconfig})
+	add_library(libzmq-static STATIC ${sources})
     if(ZMQ_BUILD_FRAMEWORK)
       set_target_properties(libzmq PROPERTIES
                             FRAMEWORK TRUE
