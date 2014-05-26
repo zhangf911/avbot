@@ -128,8 +128,8 @@ endif(NOT WIN32)
 
 if(WITH_QT_GUI)
 	add_definitions(-DWITH_QT_GUI)
-	include_directories(qt-gui)
-	add_subdirectory(qt-gui)
+	include_directories(gui/qt-gui)
+	add_subdirectory(gui/qt-gui)
 endif()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -218,8 +218,8 @@ if(NOT WIN32)
 endif()
 
 if(WIN32)
-	add_subdirectory(gui)
-	target_link_libraries(avbot avbotgui)
+	add_subdirectory(gui/win32-gui)
+
 	if(MSVC)
 		target_link_libraries(avbot ssleay32.lib libeay32.lib zlib.lib crypt32.lib secur32.lib ws2_32.lib comctl32.lib mswsock.lib winmm.lib)
 	else()
@@ -266,8 +266,8 @@ if (NOT WIN32)
 	endif()
 endif()
 
-if (WITH_QT_GUI)
-	target_link_libraries(avbot qt-gui)
+if (WITH_QT_GUI OR WIN32)
+	target_link_libraries(avbot avbotgui)
 endif()
 
 if (ALSA_FOUND)
