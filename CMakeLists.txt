@@ -113,7 +113,7 @@ set(SQLITE_ROOT_DIR "${PROJECT_BINARY_DIR}/sqlite/")
 set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/")
 set(SQLITE3_LIBRARIES "${sqlite_lib_location}")
 set(SQLITE3_LIBRARY "")
-set(SQLITE3_FOUND TRUE)
+set(SQLite3_FOUND ON)
 
 add_subdirectory(soci/src EXCLUDE_FROM_ALL)
 
