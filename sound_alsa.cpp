@@ -85,8 +85,12 @@ static void play_thread(const Chunk_fmt* fmt_chunk = NULL, const Chunk * pcm_chu
 		return;
 	}
 	ret = snd_pcm_set_params(pcm.get(), format, SND_PCM_ACCESS_RW_INTERLEAVED, fmt_chunk->channels, fmt_chunk->samplerate, 1, 1000000);
-	ret = snd_pcm_writei(pcm.get(), pcm_chunk->Chunkdata,  frames);
-	ret = snd_pcm_drain(pcm.get());
+	ret = snd_pcm_wait(pcm, 1000);
+	if (ret )
+	{
+		ret = snd_pcm_writei(pcm.get(), pcm_chunk->Chunkdata,  frames);
+		ret = snd_pcm_drain(pcm.get());
+	}
 }
 
 extern "C" int playsound()
