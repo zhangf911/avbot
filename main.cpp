@@ -484,7 +484,7 @@ int main(int argc, char * argv[])
 	("version,v", 	"output version")
 	("help,h", 	"produce help message")
 	("daemon,d", 	"go to background")
-#ifdef WIN32
+#if defined(WIN32) || defined(WITH_QT_GUI)
 	("gui,g",	 	"pop up settings dialog")
 #endif
 
@@ -614,7 +614,7 @@ int main(int argc, char * argv[])
 			AVLOG_ERR <<  "no command line arg and config file not found neither.";
 			AVLOG_ERR <<  "try to add command line arg "
 				"or put config file in /etc/qqbotrc or ~/.qqbotrc";
-#ifdef WIN32
+#if defined(WIN32) || defined(WITH_QT_GUI)
 			goto rungui;
 #endif
 			exit(1);
@@ -644,7 +644,7 @@ int main(int argc, char * argv[])
 	avbot_setup_seghandler();
 # endif
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(WITH_QT_GUI)
 rungui:
 
 	if (qqnumber.empty() || qqpwd.empty() || vm.count("gui") > 0)
