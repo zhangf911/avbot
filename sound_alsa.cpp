@@ -2,20 +2,18 @@
 #include <cstdlib>
 #include <cstdio>
 #include <assert.h>
-
+#include <endian.h>
 #include <boost/thread.hpp>
 #include <alsa/asoundlib.h>
 #include <alsa/pcm.h>
 #include <alsa/output.h>
 
-extern const char _binary_tweet_wav_start;
-extern const char _binary_tweet_wav_end;
+extern const char _binary_tweet_wav_start[];
+extern const char _binary_tweet_wav_end[];
 #pragma pack(1)
 
 struct RIFF {
-	//uint32_t signature;
-	char signature[4];
-
+	uint32_t signature;
 	uint32_t chunksize;
 	uint32_t type;
 	char chunks[1];
@@ -63,16 +61,16 @@ static void play_thread(const Chunk_fmt* fmt_chunk = NULL, const Chunk * pcm_chu
 
 	snd_pcm_format_t format = SND_PCM_FORMAT_S16_LE;
 
-	if (fmt_chunk->samplebits == 16)
+	if (le16toh(fmt_chunk->samplebits) == 16)
 	{
 		format = SND_PCM_FORMAT_S16_LE;
 	}
-	if (fmt_chunk->samplebits == 8)
+	if (le16toh(fmt_chunk->samplebits) == 8)
 	{
 		format = SND_PCM_FORMAT_U8;
 	}
 
-	snd_pcm_uframes_t frames = pcm_chunk->data_size  / (  fmt_chunk->channels * fmt_chunk->samplebits/8);
+	snd_pcm_uframes_t frames = pcm_chunk->data_size / ( le16toh(fmt_chunk->channels) * le16toh(fmt_chunk->samplebits)/8);
 
 	int ret;
 	boost::shared_ptr<snd_pcm_t> pcm;
@@ -84,8 +82,8 @@ static void play_thread(const Chunk_fmt* fmt_chunk = NULL, const Chunk * pcm_chu
 	{
 		return;
 	}
-	ret = snd_pcm_set_params(pcm.get(), format, SND_PCM_ACCESS_RW_INTERLEAVED, fmt_chunk->channels, fmt_chunk->samplerate, 1, 1000000);
-	ret = snd_pcm_wait(pcm, 1000);
+	ret = snd_pcm_set_params(pcm.get(), format, SND_PCM_ACCESS_RW_INTERLEAVED, le16toh(fmt_chunk->channels), le16toh(fmt_chunk->samplebits), 1, 1000000);
+	ret = snd_pcm_wait(pcm.get(), 1000);
 	if (ret )
 	{
 		ret = snd_pcm_writei(pcm.get(), pcm_chunk->Chunkdata,  frames);
@@ -95,10 +93,10 @@ static void play_thread(const Chunk_fmt* fmt_chunk = NULL, const Chunk * pcm_chu
 
 extern "C" int playsound()
 {
-	const RIFF* riff = reinterpret_cast<const RIFF*>(&_binary_tweet_wav_start);
+	const RIFF* riff = reinterpret_cast<const RIFF*>(_binary_tweet_wav_start);
 
-//	assert(reinterpret_cast<const RIFF*>(_binary_tweet_wav_start)->signature ==  'RIFF');
-//	assert(reinterpret_cast<const RIFF*>(_binary_tweet_wav_start)->type ==  'WAVE');
+	assert(le32toh(reinterpret_cast<const RIFF*>(_binary_tweet_wav_start)->signature) == 0x46464952);
+	assert(le32toh(reinterpret_cast<const RIFF*>(_binary_tweet_wav_start)->type) == 0x45564157);
 
 	// 遍历 Chunk
 
@@ -108,8 +106,8 @@ extern "C" int playsound()
 
 	for (
 		const Chunk* p_chunk = reinterpret_cast<const Chunk*>(riff->chunks);
-		reinterpret_cast<const char*>(p_chunk) < &_binary_tweet_wav_end;
-		p_chunk = reinterpret_cast<const Chunk*>(p_chunk->Chunkdata + (p_chunk->data_size))
+		reinterpret_cast<const char*>(p_chunk) < _binary_tweet_wav_end;
+		p_chunk = reinterpret_cast<const Chunk*>(p_chunk->Chunkdata + le32toh(p_chunk->data_size))
 	)
 	{
 		if (std::string(p_chunk->id, 4) == "fmt ")
