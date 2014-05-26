@@ -1,4 +1,5 @@
 	* 使用 stackfull 协程重写 xmpp 逻辑。
+	* 移除 boost.log 依赖，我能说 boost.log 是个垃圾库么？
 
 10.0
 	* 新增 python 脚本支持。
