@@ -41,6 +41,7 @@ struct  bin_from_hex   :  public boost::iterator_adaptor <
 		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
 			return c - 'A' + 10;
 		}
+		return '?';
 	}
 
 	CharType dereference() const {
