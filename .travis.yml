@@ -9,7 +9,7 @@ before_install:
   - sudo apt-get install -qq wget liblua5.1-dev libluajit-5.1-dev boost1.55
 
 before_script:
-  LDFLAGS="-lrt"  cmake -DENABLE_LUA=on  .
+  LDFLAGS="-lrt"  cmake -DENABLE_LUA=on  . -DENABLE_ZMQ=OFF
 
 script:
   make
