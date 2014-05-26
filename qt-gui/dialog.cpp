@@ -27,13 +27,19 @@ Dialog::~Dialog()
 #define ASSIGN(field) (field) = ui->field->text().toStdString()
 	ASSIGN(qqnum);
 	ASSIGN(qqpwd);
-	ASSIGN(ircnick);
-	ASSIGN(ircroom);
-	ASSIGN(ircpwd);
-	ASSIGN(xmppnick);
-	ASSIGN(xmpppwd);
-	ASSIGN(xmpproom);
-	ASSIGN(xmppserver);
+    if(ui->enable_irc->checkState() == Qt::Checked)
+    {
+        ASSIGN(ircnick);
+        ASSIGN(ircroom);
+        ASSIGN(ircpwd);
+    }
+    if(ui->enable_xmpp->checkState() == Qt::Checked)
+    {
+        ASSIGN(xmppnick);
+        ASSIGN(xmpppwd);
+        ASSIGN(xmpproom);
+        ASSIGN(xmppserver);
+    }
     delete ui;
 }
 
