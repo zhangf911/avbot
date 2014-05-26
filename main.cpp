@@ -125,24 +125,42 @@ class single_invoker;
 
 BOOST_PP_REPEAT_FROM_TO(0, 10, SINGLE_INVOKER, nil)
 
+static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr<HWND> hwnd)
+{
+	DestroyWindow(*hwnd);
+	handler(ec, str);
+}
+
 static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
 {
+	boost::shared_ptr<HWND> hwnd_ptr((HWND*)malloc(sizeof(HWND)), free);
 	single_invoker<void( boost::system::error_code, std::string)> wraper( handler);
-	vcinput.async_input_read_timeout(30, wraper);
-	set_do_vc(boost::bind(wraper, boost::system::error_code(), _1));
+	boost::function<void(boost::system::error_code, std::string)> secondwrapper = boost::bind(wrappered_hander, _1, _2, wraper, hwnd_ptr);
+	vcinput.async_input_read_timeout(35, secondwrapper);
+	set_do_vc(boost::bind(secondwrapper, boost::system::error_code(), _1));
 
 #ifdef _WIN32
 	// also fire up an input box and the the input there!
-	HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(std::string)> donecallback);
-	HWND hwnd = async_input_box_get_input_with_image(vcinput.get_io_service(), vcimagebuffer, boost::bind(wraper, boost::system::error_code(), _1));
+	HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(boost::system::error_code, std::string)> donecallback);
+	HWND hwnd = async_input_box_get_input_with_image(vcinput.get_io_service(), vcimagebuffer, boost::bind(secondwrapper, _1, _2));
+	*hwnd_ptr = hwnd;
 #endif // _WIN32
 }
 
 static void vc_code_decoded(boost::system::error_code ec, std::string provider,
 	std::string vccode, boost::function<void()> reportbadvc, avbot & mybot)
 {
+	set_do_vc();
+	need_vc = false;
+
+	// 关闭 settings 对话框 ，如果还没关闭的话
+
 	if (ec)
 	{
+		printf("\r");
+		fflush(stdout);
+		AVLOG_ERR << literal_to_localstr("解码出错，重登录 ...");
+		mybot.broadcast_message("验证码有错，重新登录QQ");
 		mybot.relogin_qq_account();
 		return;
 	}
@@ -154,7 +172,6 @@ static void vc_code_decoded(boost::system::error_code ec, std::string provider,
 		mybot.broadcast_message("验证码已输入");
 
 	mybot.feed_login_verify_code(vccode, reportbadvc);
-	need_vc = false;
 }
 
 static void on_verify_code(std::string imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)

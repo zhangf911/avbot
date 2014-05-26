@@ -277,7 +277,7 @@ void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string & ircn
 struct input_box_get_input_with_image_settings
 {
 	std::string imagedata;
-	boost::function<void(std::string)> donecallback;
+	boost::function<void(boost::system::error_code, std::string)> donecallback;
 	LPPICTURE pPic;
 	boost::asio::io_service * io_service;
 	UINT_PTR timerid;
@@ -325,15 +325,15 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 			std::string vcstr;
 			vcstr.resize(8);
 			vcstr.resize(GetDlgItemTextA(hwndDlg, IDC_INPUT_VERYCODE, &vcstr[0], vcstr.size()));
-			settings->donecallback(vcstr);
+			settings->donecallback(boost::system::error_code(), vcstr);
+			settings->donecallback.clear();
 			avloop_gui_del_dlg(*(settings->io_service), hwndDlg);
-			DestroyWindow(hwndDlg);
 		}
 			return TRUE;
 		case IDCANCEL:
-			settings->donecallback("");
+			settings->donecallback(boost::asio::error::timed_out, "");
+			settings->donecallback.clear();
 			avloop_gui_del_dlg(*(settings->io_service), hwndDlg);
-			DestroyWindow(hwndDlg);
 			// 退出消息循环
 			return TRUE;
 		}
@@ -357,16 +357,16 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 			else
 			{
 				KillTimer(hwndDlg, wParam);
-				PostMessage(hwndDlg, WM_COMMAND, IDCANCEL, 0);
+				SendMessage(hwndDlg, WM_COMMAND, IDCANCEL, 0);
 			}
 			settings->remain_time--;
-	}
+		}
 		return TRUE;
 	}
 	return FALSE;
 }
 
-HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(std::string)> donecallback)
+HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(boost::system::error_code, std::string)> donecallback)
 {
 	HMODULE hIns = GetModuleHandle(NULL);
 
@@ -375,7 +375,7 @@ HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, 
 	setting.donecallback = donecallback;
 	setting.pPic = NULL;
 	setting.io_service = &io_service;
-	setting.remain_time = 30;
+	setting.remain_time = 32;
 
 	input_box_get_input_with_image_settings_ptr settings(new input_box_get_input_with_image_settings(setting));
 

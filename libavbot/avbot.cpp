@@ -434,7 +434,7 @@ void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::n
 
 void avbot::relogin_qq_account()
 {
-// 	m_qq_account->login();
+	feed_login_verify_code("", boost::function<void()>());
 }
 
 void avbot::feed_login_verify_code( std::string vcode, boost::function<void()> badvcreporter)
