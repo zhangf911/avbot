@@ -472,6 +472,12 @@ int daemon(int nochdir, int noclose)
 
 #include "fsconfig.ipp"
 
+void sighandler(boost::asio::io_service & io)
+{
+	io.stop();
+	std::cout << "Quiting..." << std::endl;
+}
+
 int main(int argc, char * argv[])
 {
 #ifdef _WIN32
@@ -870,7 +876,7 @@ rungui:
 #if defined(SIGQUIT)
 	terminator_signal.add(SIGQUIT);
 #endif // defined(SIGQUIT)
-	terminator_signal.async_wait(boost::bind(&boost::asio::io_service::stop, &io_service));
+	terminator_signal.async_wait(boost::bind(&sighandler, boost::ref(io_service)));
 	avloop_run_gui(io_service);
 	return 0;
 }
