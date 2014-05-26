@@ -18,23 +18,23 @@ option(WITH_ICONV "boost is build with iconv" ON)
 option(WITH_ICU "boost is build with icu " OFF)
 
 if(WIN32)
-set(ENABLE_LIBGCC_STATIC ON)
-set(ENABLE_LIBSTDCXX_STATIC ON)
-set(ENABLE_STATIC ON)
+	set(ENABLE_LIBGCC_STATIC ON)
+	set(ENABLE_LIBSTDCXX_STATIC ON)
+	set(ENABLE_STATIC ON)
 endif()
 
 if(WIN32)
 	add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
 	if(NOT MSVC)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
 	endif()
 
 	if(MSVC)
-	 if(CMAKE_CL_64)
-		link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
-	 else()
-		link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
-	 endif()
+		if(CMAKE_CL_64)
+			link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
+		else()
+			link_directories(${PROJECT_SOURCE_DIR}/openssl/lib)
+		endif()
 
 	else()
 		link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
@@ -44,30 +44,30 @@ if(WIN32)
 endif()
 
 if(NOT MSVC AND NOT APPLE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
 
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0 -O3")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g0 -O3")
+	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g0 -O3")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g0 -O3")
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
 endif()
 
 if(CMAKE_BUILD_TYPE EQUAL "TEST")
-set(ENABLE_STATIC ON)
+	set(ENABLE_STATIC ON)
 endif()
 
 if(ENABLE_STATIC)
-set(Boost_USE_STATIC_LIBS        ON)
-set(Boost_USE_STATIC_RUNTIME    ON)
+	set(Boost_USE_STATIC_LIBS        ON)
+	set(Boost_USE_STATIC_RUNTIME    ON)
 else(ENABLE_STATIC)
-ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+	ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 endif()
 
 if(ENABLE_LIBSTDCXX_STATIC OR WIN32)
 	if(NOT MSVC)
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ ")
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ ")
 	endif()
 
 	set(Boost_USE_STATIC_LIBS        ON)
@@ -75,28 +75,28 @@ if(ENABLE_LIBSTDCXX_STATIC OR WIN32)
 endif()
 
 if(ENABLE_LIBGCC_STATIC OR WIN32)
-if(NOT MSVC)
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc ")
-endif()
+	if(NOT MSVC)
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc ")
+	endif()
 endif()
 
 find_package(Boost 1.55 REQUIRED COMPONENTS timer chrono date_time filesystem system program_options regex locale)
 
 if(MSVC)
-# add_definitions( -DBOOST_ALL_NO_LIB )
-link_directories(${Boost_LIBRARY_DIR})
+	# add_definitions( -DBOOST_ALL_NO_LIB )
+	link_directories(${Boost_LIBRARY_DIR})
 endif()
 
 #add_definitions(-DBOOST_LOG_NO_THREADS)
 find_package(Threads)
 
 if(WIN32)
-add_definitions(-DBOOST_ALL_STATIC_LINK)
-add_definitions(-DBOOST_THREAD_USE_LIB)
-add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
-add_definitions(-DBOOST_ALL_STATIC_LINK)
-add_definitions(-DWIN32_LEAN_AND_MEAN)
-add_definitions(-DNOMINMAX)
+	add_definitions(-DBOOST_ALL_STATIC_LINK)
+	add_definitions(-DBOOST_THREAD_USE_LIB)
+	add_definitions(-DBOOST_FILESYSTEM_STATIC_LINK)
+	add_definitions(-DBOOST_ALL_STATIC_LINK)
+	add_definitions(-DWIN32_LEAN_AND_MEAN)
+	add_definitions(-DNOMINMAX)
 endif()
 
 
@@ -118,11 +118,11 @@ set(SQLite3_FOUND ON)
 add_subdirectory(soci/src EXCLUDE_FROM_ALL)
 
 if(NOT WIN32)
-find_package(OpenSSL)
+	find_package(OpenSSL)
 else()
-set(OpenSSL_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/openssl/include)
-include_directories("${PROJECT_SOURCE_DIR}/openssl/include")
-include_directories("${PROJECT_SOURCE_DIR}/openssl/include")
+	set(OpenSSL_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/openssl/include)
+	include_directories("${PROJECT_SOURCE_DIR}/openssl/include")
+	include_directories("${PROJECT_SOURCE_DIR}/openssl/include")
 endif(NOT WIN32)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -162,75 +162,75 @@ set(AVBOT_SOURCES
 	avbot_log_search.cpp
 	${PROJECT_BINARY_DIR}/version.c
 	${PROJECT_BINARY_DIR}/avbot.rc
-)
+	)
 
 set(AVBOTRPC_SOURCES
 	rpc/server.cpp
 	rpc/server.hpp
-)
+	)
 
 if(NOT WIN32)
-list(APPEND AVBOT_SOURCES backtrace.cpp)
+	list(APPEND AVBOT_SOURCES backtrace.cpp)
 endif()
 
 if(WIN32)
-list(APPEND AVBOT_SOURCES sound.cpp )
+	list(APPEND AVBOT_SOURCES sound.cpp )
 else()
 
-find_package(ALSA)
+	find_package(ALSA)
 
-if (ALSA_FOUND)
-	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tweet.o
-		COMMAND ${CMAKE_LINKER} -r -b binary -o ${CMAKE_CURRENT_BINARY_DIR}/tweet.o tweet.wav
-		DEPENDS tweet.wav WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	)
+	if (ALSA_FOUND)
+		add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tweet.o
+			COMMAND ${CMAKE_LINKER} -r -b binary -o ${CMAKE_CURRENT_BINARY_DIR}/tweet.o tweet.wav
+			DEPENDS tweet.wav WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			)
 
-	include_directories(${ALSA_INCLUDE_DIR})
-	list(APPEND AVBOT_SOURCES sound_alsa.cpp)
-	list(APPEND AVBOT_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/tweet.o )
-else()
-	list(APPEND AVBOT_SOURCES sound_dumy.cpp)
-endif()
+		include_directories(${ALSA_INCLUDE_DIR})
+		list(APPEND AVBOT_SOURCES sound_alsa.cpp)
+		list(APPEND AVBOT_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/tweet.o )
+	else()
+		list(APPEND AVBOT_SOURCES sound_dumy.cpp)
+	endif()
 
 endif()
 
 if(MSVC)
 
-if(CMAKE_CL_64)
-LINK_DIRECTORIES( "${CMAKE_CURRENT_SOURCE_DIR}/extension/luascript/msvc_x64/")
-else()
-LINK_DIRECTORIES( "${CMAKE_CURRENT_SOURCE_DIR}/extension/luascript/msvc_x86/")
-endif()
+	if(CMAKE_CL_64)
+		LINK_DIRECTORIES( "${CMAKE_CURRENT_SOURCE_DIR}/extension/luascript/msvc_x64/")
+	else()
+		LINK_DIRECTORIES( "${CMAKE_CURRENT_SOURCE_DIR}/extension/luascript/msvc_x86/")
+	endif()
 
 endif()
 
 add_executable(avbot ${AVBOT_SOURCES} ${AVBOTRPC_SOURCES})
 
 if(NOT WIN32)
-target_link_libraries(avbot -rdynamic)
+	target_link_libraries(avbot -rdynamic)
 endif()
 
 if(WIN32)
-add_subdirectory(gui)
-target_link_libraries(avbot avbotgui)
-if(MSVC)
-target_link_libraries(avbot ssleay32.lib libeay32.lib zlib.lib crypt32.lib secur32.lib ws2_32.lib comctl32.lib mswsock.lib winmm.lib)
-else()
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -lcrypt32 -lmswsock")
-target_link_libraries(avbot -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 -lmswsock -lwinmm)
-endif()
-add_definitions(-U__STRICT_ANSI__)
+	add_subdirectory(gui)
+	target_link_libraries(avbot avbotgui)
+	if(MSVC)
+		target_link_libraries(avbot ssleay32.lib libeay32.lib zlib.lib crypt32.lib secur32.lib ws2_32.lib comctl32.lib mswsock.lib winmm.lib)
+	else()
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -lcrypt32 -lmswsock")
+		target_link_libraries(avbot -lssl -lcrypto -lcrypt32 -lws2_32 -lcomctl32 -lmswsock -lwinmm)
+	endif()
+	add_definitions(-U__STRICT_ANSI__)
 
-if(WITH_ICONV AND NOT MSVC)
-target_link_libraries(avbot -liconv)
-endif()
+	if(WITH_ICONV AND NOT MSVC)
+		target_link_libraries(avbot -liconv)
+	endif()
 
 else()
-target_link_libraries(avbot ${OPENSSL_LIBRARIES} )
+	target_link_libraries(avbot ${OPENSSL_LIBRARIES} )
 endif()
 
 if(APPLE AND WITH_ICONV)
-target_link_libraries(avbot -liconv)
+	target_link_libraries(avbot -liconv)
 endif()
 
 target_link_libraries(avbot libavbot avlog extension soci_core_static soci_sqlite3_static sqlite3)
@@ -238,7 +238,7 @@ target_link_libraries(avbot libavbot avlog extension soci_core_static soci_sqlit
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 if(NOT MSVC)
-install(TARGETS avbot RUNTIME DESTINATION bin)
+	install(TARGETS avbot RUNTIME DESTINATION bin)
 endif()
 
 if( NOT Boost_USE_STATIC_RUNTIME )
@@ -247,18 +247,18 @@ endif()
 
 check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME)
 if(HAVE_CLOCK_GETTIME)
-        target_link_libraries(avbot -lrt)
+	target_link_libraries(avbot -lrt)
 endif(HAVE_CLOCK_GETTIME)
 
 if (NOT WIN32)
-  set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/soci/src/cmake/modules ${CMAKE_MODULE_PATH})
-  find_package(DL)
-  if(DL_FOUND)
-    include_directories(${DL_INCLUDE_DIR})
-    target_link_libraries(avbot ${DL_LIBRARY})
-  endif()
+	set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/soci/src/cmake/modules ${CMAKE_MODULE_PATH})
+	find_package(DL)
+	if(DL_FOUND)
+		include_directories(${DL_INCLUDE_DIR})
+		target_link_libraries(avbot ${DL_LIBRARY})
+	endif()
 endif()
 
 if (ALSA_FOUND)
-    target_link_libraries(avbot ${ALSA_LIBRARY})
+	target_link_libraries(avbot ${ALSA_LIBRARY})
 endif()
