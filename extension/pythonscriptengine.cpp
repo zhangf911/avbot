@@ -11,6 +11,7 @@ boost::system::error_code no_module;
 boost::system::error_code no_handle_func;
 
 bool python_init = false;
+bool disable_python = true;
 
 struct MessageSender
 {
@@ -44,11 +45,11 @@ public:
             py::extract<MessageSender&>(pysender)().sender_ = sender_;
             pyhandler_ = global_["MessageHandler"]();
             pyhandler_.attr("send_message") = pysender.attr("send_message");
+            disable_python = false;
         }
         catch(...)
         {
             PyErr_Print();
-            throw;
         }
 	}
 
@@ -59,6 +60,8 @@ public:
 
 	void operator()(const boost::property_tree::ptree& msg)
 	{
+		if (disable_python)
+			return;
         try {
             std::stringstream ss;
             boost::property_tree::json_parser::write_json(ss, msg);
