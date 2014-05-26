@@ -1,6 +1,7 @@
 
 option(ENABLE_LUA "enable lua script support" OFF)
 option(ENABLE_PYTHON "enable python script support" OFF)
+option(ENABLE_ZMQ "enable zmq support" ON)
 
 find_package(ZLIB)
 if (ZLIB_FOUND)
@@ -23,7 +24,9 @@ set(EXTENSION_SOURCES
 	dllextension.hpp
 )
 
+if (ENABLE_ZMQ)
 add_subdirectory(libzmq EXCLUDE_FROM_ALL)
+endif()
 
 include_directories(../qqwry/include)
 
@@ -96,5 +99,6 @@ if(ENABLE_LUA)
 	target_link_libraries(extension libluascript)
 endif()
 
+if (ENABLE_ZMQ)
 target_link_libraries(extension libzmq-static)
-
+endif()
