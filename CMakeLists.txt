@@ -3,26 +3,6 @@ project(avbot)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
-if (NOT MSVC)
-
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-	set(OBJCOPYFORMATENDIAN "x86-64")
-	set(BINARY_ARCHITECTURE "i386")
-else()
-	set(OBJCOPYFORMATENDIAN "${CMAKE_SYSTEM_PROCESSOR}")
-	set(BINARY_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
-endif()
-
-if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-	set(OBJCOPYFORMATELF "elf64")
-else()
-	set(OBJCOPYFORMATELF "elf32")
-endif()
-
-set(OBJCOPYFORMAT "${OBJCOPYFORMATELF}-${OBJCOPYFORMATENDIAN}")
-
-endif()
-
 include(cpacksettings.cmake)
 INCLUDE(CPack)
 
@@ -48,7 +28,7 @@ if(WIN32)
 	if(NOT MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0")
 	endif()
-	
+
 	if(MSVC)
 	 if(CMAKE_CL_64)
 		link_directories(${PROJECT_SOURCE_DIR}/openssl/lib64)
@@ -198,9 +178,9 @@ list(APPEND AVBOT_SOURCES sound.cpp )
 else()
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tweet.o
-	COMMAND ${CMAKE_OBJCOPY} -I binary -O ${OBJCOPYFORMAT} -B ${BINARY_ARCHITECTURE} tweet.wav ${CMAKE_CURRENT_BINARY_DIR}/tweet.o
+	COMMAND ${CMAKE_LINKER} -r -b binary -o ${CMAKE_CURRENT_BINARY_DIR}/tweet.o tweet.wav
 	DEPENDS tweet.wav WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  )
+)
 
 list(APPEND AVBOT_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/tweet.o )
 endif()
