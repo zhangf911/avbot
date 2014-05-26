@@ -125,17 +125,23 @@ class single_invoker;
 
 BOOST_PP_REPEAT_FROM_TO(0, 10, SINGLE_INVOKER, nil)
 
+#ifdef  _WIN32
 static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr<HWND> hwnd)
 {
 	DestroyWindow(*hwnd);
 	handler(ec, str);
 }
+#endif
 
 static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
 {
+#ifdef  _WIN32
 	boost::shared_ptr<HWND> hwnd_ptr((HWND*)malloc(sizeof(HWND)), free);
 	single_invoker<void( boost::system::error_code, std::string)> wraper( handler);
 	boost::function<void(boost::system::error_code, std::string)> secondwrapper = boost::bind(wrappered_hander, _1, _2, wraper, hwnd_ptr);
+#else
+	single_invoker<void( boost::system::error_code, std::string)> secondwrapper( handler);
+#endif
 	vcinput.async_input_read_timeout(35, secondwrapper);
 	set_do_vc(boost::bind(secondwrapper, boost::system::error_code(), _1));
 
