@@ -861,9 +861,9 @@ rungui:
 		"https://avlog.avplayer.org/cache/tj.php",
 		boost::bind(&avhttp::http_stream::close, &s)
 	);
-#ifdef _WIN32
+
 	avloop_idle_post(io_service, playsound);
-#endif
+
 	boost::asio::signal_set terminator_signal(io_service);
 	terminator_signal.add(SIGINT);
 	terminator_signal.add(SIGTERM);
