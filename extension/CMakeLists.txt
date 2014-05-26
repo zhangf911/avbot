@@ -1,5 +1,5 @@
 
-option(ENABLE_LUA "enable lua script support" OFF)
+option(ENABLE_LUA "enable lua script support" ON)
 option(ENABLE_PYTHON "enable python script support" OFF)
 option(ENABLE_ZMQ "enable zmq support" ON)
 
@@ -37,16 +37,18 @@ if(ENABLE_LUA)
 
 		find_package(PkgConfig REQUIRED)
 
-		pkg_check_modules(LUAJIT REQUIRED luajit>=2.0)
-
-		add_definitions(-DENABLE_LUA)
-		include_directories(
-			${LUAJIT_INCLUDE_DIRS}
-		)
+		pkg_check_modules(LUAJIT luajit>=2.0)
+		if(LUAJIT_FOUND)
+			add_definitions(-DENABLE_LUA)
+			include_directories(${LUAJIT_INCLUDE_DIRS})
+		else()
+			set(ENABLE_LUA OFF)
+		endif()
 
 	else(NOT WIN32)
 		# windows 环境当然不是使用 pkgconfig 啦，咱使用的是 avbot 源码里带的，嘻嘻
 		add_definitions(-DENABLE_LUA)
+		set(LUAJIT_FOUND TRUE)
 		include_directories(luascript/luainclude/)
 		include_directories(luascript/luainclude/luajit-2.0)
 
@@ -66,8 +68,9 @@ if(ENABLE_LUA)
 		endif(MSVC)
 
 	endif(NOT WIN32)
-
-	add_subdirectory(luascript)
+	if(LUAJIT_FOUND)
+		add_subdirectory(luascript)
+	endif()
 endif(ENABLE_LUA)
 
 
@@ -95,7 +98,7 @@ if(ZLIB_FOUND)
 target_link_libraries(extension ${ZLIB_LIBRARIES})
 endif()
 
-if(ENABLE_LUA)
+if(LUAJIT_FOUND)
 	target_link_libraries(extension libluascript)
 endif()
 
