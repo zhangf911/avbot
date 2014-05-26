@@ -22,9 +22,9 @@ public:
 
 
 private slots:
-	void on_checkBox_toggled(bool checked);
+	void on_enable_irc_toggled(bool checked);
 
-	void on_checkBox_2_toggled(bool checked);
+	void on_enable_xmpp_toggled(bool checked);
 
 private:
 	Ui::Dialog *ui;

@@ -44,7 +44,7 @@ Dialog::~Dialog()
 }
 
 
-void Dialog::on_checkBox_toggled(bool checked)
+void Dialog::on_enable_irc_toggled(bool checked)
 {
 	for(int i = 0; i < ui->ircbox->count(); i++)
 	{
@@ -52,7 +52,7 @@ void Dialog::on_checkBox_toggled(bool checked)
 	}
 }
 
-void Dialog::on_checkBox_2_toggled(bool checked)
+void Dialog::on_enable_xmpp_toggled(bool checked)
 {
 	for(int i = 0; i < ui->xmppbox1->count(); i++)
 	{
