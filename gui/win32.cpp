@@ -4,6 +4,7 @@
 #include <atomic>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/format.hpp>
 
 #ifndef _WIN32_IE
 #define _WIN32_IE 0x0600
@@ -279,6 +280,8 @@ struct input_box_get_input_with_image_settings
 	boost::function<void(std::string)> donecallback;
 	LPPICTURE pPic;
 	boost::asio::io_service * io_service;
+	UINT_PTR timerid;
+	int remain_time;
 	~input_box_get_input_with_image_settings()
 	{
 		if (pPic)
@@ -310,6 +313,7 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 			settings->pPic->get_Handle((OLE_HANDLE*)&hbitmap);
 			// decode the jpeg img data to bitmap and call set img
 			SendMessage(GetDlgItem(hwndDlg, IDC_VERCODE_DISPLAY), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM) hbitmap);
+			SetTimer(hwndDlg, 2, 1000, 0);
 		}
 		return TRUE;
 	case WM_COMMAND:
@@ -335,8 +339,28 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 		}
 		return FALSE;
 	case WM_TIMER:
-		KillTimer(hwndDlg, wParam);
-		PostMessage(hwndDlg, WM_COMMAND, IDCANCEL, 0);
+		{
+			if (settings->remain_time>=0)
+			{
+				if (settings->remain_time < 15)
+				{
+					std::wstring title;
+					title = (boost::wformat(L"输入验证码 （剩余 %d 秒）") % settings->remain_time).str();
+					// 更新窗口标题！
+					SetWindowTextW(hwndDlg, title.c_str());
+					if (settings->remain_time == 5)
+					{
+						FlashWindow(hwndDlg, settings->remain_time & 1);
+					}
+				}
+			}
+			else
+			{
+				KillTimer(hwndDlg, wParam);
+				PostMessage(hwndDlg, WM_COMMAND, IDCANCEL, 0);
+			}
+			settings->remain_time--;
+	}
 		return TRUE;
 	}
 	return FALSE;
@@ -351,10 +375,12 @@ HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, 
 	setting.donecallback = donecallback;
 	setting.pPic = NULL;
 	setting.io_service = &io_service;
+	setting.remain_time = 30;
 
 	input_box_get_input_with_image_settings_ptr settings(new input_box_get_input_with_image_settings(setting));
 
 	av_dlgproc_t * real_proc = new av_dlgproc_t(boost::bind(&input_box_get_input_with_image_dlgproc, _1, _2, _3, _4, settings));
+
 
 	HWND dlgwnd = CreateDialogParam(hIns, MAKEINTRESOURCE(IDD_INPUT_VERCODE), GetConsoleWindow(), (DLGPROC)detail::internal_clusure_dlg_proc, (LPARAM)real_proc);
 	RECT	rtWindow = { 0 };
@@ -376,7 +402,6 @@ HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, 
 	::ShowWindow(dlgwnd, SW_SHOWNORMAL);
 	SetForegroundWindow(dlgwnd);
 	avloop_gui_add_dlg(io_service, dlgwnd);
-	SetTimer(dlgwnd, 0, 38000, NULL);
 	return dlgwnd;
 }
 
