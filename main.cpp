@@ -673,7 +673,7 @@ rungui:
 
 	if (qqnumber.empty() || qqpwd.empty() || vm.count("gui") > 0)
 	{
-		show_dialog(qqnumber, qqpwd, ircnick, ircroom, ircpwd,
+		setup_dialog(qqnumber, qqpwd, ircnick, ircroom, ircpwd,
 			xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick);
 	}
 

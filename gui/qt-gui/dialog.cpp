@@ -4,8 +4,8 @@
 #include <iostream>
 
 Dialog::Dialog(
-		std::string &qqnum, std::string &qqpwd, 
-		std::string &ircnick, std::string &ircroom, std::string &ircpwd, 
+		std::string &qqnum, std::string &qqpwd,
+		std::string &ircnick, std::string &ircroom, std::string &ircpwd,
 		std::string &xmppuser, std::string &xmppserver, std::string &xmpppwd, std::string &xmpproom, std::string &xmppnick)
 	: QDialog(NULL)
     , ui(new Ui::Dialog)
@@ -64,9 +64,9 @@ void Dialog::on_checkBox_2_toggled(bool checked)
     }
 }
 
-void show_dialog(
-		std::string &qqnum, std::string &qqpwd, 
-		std::string &ircnick, std::string &ircroom, std::string &ircpwd, 
+void setup_dialog(
+		std::string &qqnum, std::string &qqpwd,
+		std::string &ircnick, std::string &ircroom, std::string &ircpwd,
 		std::string &xmppuser, std::string &xmppserver, std::string &xmpppwd, std::string &xmpproom, std::string &xmppnick)
 {
     int argc = 1;
