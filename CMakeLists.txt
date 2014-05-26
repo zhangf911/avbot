@@ -80,7 +80,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc ")
 endif()
 endif()
 
-find_package(Boost 1.55 REQUIRED COMPONENTS timer chrono log log_setup date_time filesystem system program_options regex locale)
+find_package(Boost 1.55 REQUIRED COMPONENTS timer chrono date_time filesystem system program_options regex locale)
 
 if(MSVC)
 # add_definitions( -DBOOST_ALL_NO_LIB )

@@ -1,5 +1,4 @@
 
-#include <boost/log/trivial.hpp>
 #include <boost/asio.hpp>
 #include <boost/format.hpp>
 #include <boost/base64.hpp>

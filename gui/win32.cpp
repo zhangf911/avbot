@@ -25,7 +25,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include <boost/log/trivial.hpp>
+
 #include <boost/scope_exit.hpp>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
@@ -309,7 +309,7 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 			istream->Release();
 			settings->pPic->get_Handle((OLE_HANDLE*)&hbitmap);
 			// decode the jpeg img data to bitmap and call set img
-			SendMessage(GetDlgItem(hwndDlg, IDC_VERCODE_DISPLAY), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM) hbitmap);			
+			SendMessage(GetDlgItem(hwndDlg, IDC_VERCODE_DISPLAY), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM) hbitmap);
 		}
 		return TRUE;
 	case WM_COMMAND:

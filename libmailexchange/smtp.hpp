@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <string>
-#include <boost/log/trivial.hpp>
+
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/bind.hpp>
@@ -11,6 +11,7 @@
 #include "boost/timedcall.hpp"
 #include "boost/avloop.hpp"
 #include "boost/avproxy.hpp"
+#include "boost/logging.hpp"
 
 #include "internet_mail_format.hpp"
 
@@ -37,7 +38,7 @@ public:
 			boost::trim_right( line );
 			boost::cmatch what;
 
-			BOOST_LOG_TRIVIAL(debug) <<  line <<  std::endl;
+			AVLOG_DBG <<  line;
 			std::string ex1 = boost::str( boost::format( "%d (.*)?" ) % response_code );
 			std::string ex2 = boost::str( boost::format( "%d-(.*)?" ) % response_code );
 

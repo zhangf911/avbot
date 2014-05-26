@@ -5,7 +5,7 @@
 #include <string>
 #include <iostream>
 
-#include <boost/log/trivial.hpp>
+
 #include <boost/make_shared.hpp>
 #include <boost/foreach.hpp>
 #include <boost/asio.hpp>
@@ -16,9 +16,10 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/signals2.hpp>
 #include <boost/async_coro_queue.hpp>
-
+#include "avhttp/logging.hpp"
 #include "boost/avproxy.hpp"
 #include "boost/timedcall.hpp"
+#include "boost/logging.hpp"
 
 #include "./irc.hpp"
 
@@ -317,11 +318,11 @@ public:
 			{
 				if (m_client->c_retry_cuont > m_client->retry_count_)
 				{
-					BOOST_LOG_TRIVIAL(error) <<  "irc: to many retries! quite irc!";
+					AVLOG_ERR <<  "irc: to many retries! quite irc!";
 					return;
 				}
 
-				BOOST_LOG_TRIVIAL(info) <<  "irc: connecting to server: "
+				AVLOG_INFO <<  "irc: connecting to server: "
 				<< m_client->server_  << " ...";
 
 				BOOST_ASIO_CORO_YIELD async_connect_irc(
@@ -331,10 +332,10 @@ public:
 				if (ec)
 				{
 
-					BOOST_LOG_TRIVIAL(error) << "irc: error connecting to server : "
+					AVLOG_ERR << "irc: error connecting to server : "
 						<< ec.message();
 
-					BOOST_LOG_TRIVIAL(info) <<  "retry in 15s ...";
+					AVLOG_INFO <<  "retry in 15s ...";
 
 					m_client->c_retry_cuont ++;
 
@@ -347,7 +348,7 @@ public:
 
 			} while (ec);
 
-			BOOST_LOG_TRIVIAL(info) <<  "irc: conneted to server "
+			AVLOG_INFO <<  "irc: conneted to server "
 				<< m_client->server_  << " .";
 
 			m_client->response_.consume(m_client->response_.size());

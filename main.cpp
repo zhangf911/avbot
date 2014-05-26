@@ -21,14 +21,6 @@
 #include <signal.h>
 #include <fstream>
 
-#define BOOST_LOG_USE_NATIVE_SYSLOG
-
-#include <boost/log/trivial.hpp>
-#include <boost/log/sinks.hpp>
-#include <boost/log/sinks/sink.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/core.hpp>
-
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
@@ -155,7 +147,7 @@ static void vc_code_decoded(boost::system::error_code ec, std::string provider,
 		return;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << literal_to_localstr("使用 ") 	<<  utf8_to_local_encode(provider)
+	AVLOG_INFO << literal_to_localstr("使用 ") 	<<  utf8_to_local_encode(provider)
 		<< literal_to_localstr(" 成功解码验证码!");
 
 	if (provider == "IRC/XMPP 好友辅助验证码解码器")
@@ -167,7 +159,7 @@ static void vc_code_decoded(boost::system::error_code ec, std::string provider,
 
 static void on_verify_code(std::string imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)
 {
-	BOOST_LOG_TRIVIAL(info) << "got vercode from TX, now try to auto resovle it ... ...";
+	AVLOG_INFO << "got vercode from TX, now try to auto resovle it ... ...";
 
 	need_vc = true;
 	// 保存文件.
@@ -431,37 +423,6 @@ static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
 	{}
 }
 
-#ifndef _WIN32
-static void init_native_syslog()
-{
-	namespace logging = boost::log;
-	namespace sinks = boost::log::sinks;
-	namespace keywords = boost::log::keywords;
-	typedef sinks::synchronous_sink<sinks::syslog_backend> sink_t;
-
-	boost::shared_ptr<logging::core> core = logging::core::get();
-
-	// Create a backend
-	boost::shared_ptr<sinks::syslog_backend> backend(
-				new sinks::syslog_backend(
-					keywords::facility = sinks::syslog::user,
-					keywords::use_impl = sinks::syslog::native
-				)
-	);
-
-	// Set the straightforward level translator for the "Severity" attribute of type int
-	backend->set_severity_mapper(
-		sinks::syslog::direct_severity_mapping<int>("Severity")
-	);
-
-	// Wrap it into the frontend and register in the core.
-	// The backend requires synchronization in the frontend.
-	core->add_sink(boost::make_shared< sink_t >(backend));
-}
-#else
-static void init_native_syslog() {}
-#endif
-
 #ifdef WIN32
 int daemon(int nochdir, int noclose)
 {
@@ -483,6 +444,7 @@ int main(int argc, char * argv[])
 #ifdef _WIN32
 	::InitCommonControls();
 #endif
+
 	std::string qqnumber, qqpwd;
 	std::string ircnick, ircroom, ircroom_pass, ircpwd, ircserver;
 	std::string xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick;
@@ -643,14 +605,14 @@ int main(int argc, char * argv[])
 				config = configfilepath();
 			}
 
-			BOOST_LOG_TRIVIAL(info) << "loading config from: " << config.string();
+			AVLOG_INFO << "loading config from: " << config.string();
 			po::store(po::parse_config_file<char>(config.string().c_str(), desc), vm);
 			po::notify(vm);
 		}
 		catch (char const * e)
 		{
-			BOOST_LOG_TRIVIAL(fatal) <<  "no command line arg and config file not found neither.";
-			BOOST_LOG_TRIVIAL(fatal) <<  "try to add command line arg "
+			AVLOG_ERR <<  "no command line arg and config file not found neither.";
+			AVLOG_ERR <<  "try to add command line arg "
 				"or put config file in /etc/qqbotrc or ~/.qqbotrc";
 #ifdef WIN32
 			goto rungui;
@@ -665,7 +627,7 @@ int main(int argc, char * argv[])
 		io_service.notify_fork(boost::asio::io_service::fork_prepare);
 		daemon(0, 0);
 		io_service.notify_fork(boost::asio::io_service::fork_child);
-		init_native_syslog();
+		AVLOG_INIT_LOGGER("/tmp");
 	}
 
 	if (!logdir.empty())
@@ -718,7 +680,7 @@ rungui:
 
 	if (qqnumber.empty() || qqpwd.empty())
 	{
-		BOOST_LOG_TRIVIAL(fatal) << literal_to_localstr("请设置qq号码和密码.");
+		AVLOG_ERR << literal_to_localstr("请设置qq号码和密码.");
 		exit(1);
 	}
 
@@ -856,9 +818,9 @@ rungui:
 	{
 		if (!avbot_start_rpc(io_service, rpcport, mybot, avlogdb))
 		{
-			BOOST_LOG_TRIVIAL(warning) <<  "bind to port " <<  rpcport <<  " failed!";
-			BOOST_LOG_TRIVIAL(warning) <<  "Did you happened to already run an avbot? ";
-			BOOST_LOG_TRIVIAL(warning) <<  "Now avbot will run without RPC support. ";
+			AVLOG_WARN <<  "bind to port " <<  rpcport <<  " failed!";
+			AVLOG_WARN <<  "Did you happened to already run an avbot? ";
+			AVLOG_WARN <<  "Now avbot will run without RPC support. ";
 		};
 	}
 
