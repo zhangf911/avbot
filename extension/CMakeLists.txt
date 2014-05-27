@@ -26,6 +26,7 @@ set(EXTENSION_SOURCES
 
 if (ENABLE_ZMQ)
 add_subdirectory(libzmq EXCLUDE_FROM_ALL)
+list(APPEND EXTENSION_SOURCES zmqpublisher.cpp zmqpublisher.hpp)
 endif()
 
 include_directories(../qqwry/include)
