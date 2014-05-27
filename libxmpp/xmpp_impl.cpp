@@ -25,16 +25,53 @@
 #include <gloox/message.h>
 #include <gloox/mucroom.h>
 
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "boost/timedcall.hpp"
 #include "boost/avproxy.hpp"
-
+#include "boost/logging.hpp"
 #include "xmpp_impl.hpp"
 
 using namespace gloox;
 
 namespace xmppimpl{
+
+struct send_coro
+{
+	typedef void result_type;
+	xmpp_asio_connector * _connector;
+
+	send_coro(xmpp_asio_connector * connector)
+	  : _connector(connector)
+	{
+	}
+
+	void operator()()
+	{
+		// start !
+		_connector->m_send_queue.async_pop(*this);
+	}
+
+	void operator()(boost::system::error_code ec, std::size_t bytes_transfered, boost::shared_ptr<std::string> maintain_data_to_be_send)
+	{
+		// check for errors and restart again
+		(*this)();
+	}
+
+	void operator()(boost::system::error_code ec, boost::shared_ptr<std::string> data_to_be_send)
+	{
+		if (!ec)
+		{
+			boost::asio::async_write(
+				_connector->m_socket,
+				boost::asio::buffer(*data_to_be_send),
+				boost::asio::transfer_all(),
+				boost::bind<void>(*this, _1, _2, data_to_be_send)
+			);
+		}
+	}
+};
 
 gloox::ConnectionError xmpp_asio_connector::connect()
 {
@@ -57,7 +94,7 @@ gloox::ConnectionError xmpp_asio_connector::connect()
 	else
 	{
 		m_state = gloox::StateDisconnected;
-		std::cout << ec.message() << std::endl;
+		AVLOG_ERR <<  "xmpp: " << ec.message();
 		return gloox::ConnConnectionRefused;
 	}
 }
@@ -81,23 +118,26 @@ gloox::ConnectionError xmpp_asio_connector::receive()
 gloox::ConnectionError xmpp_asio_connector::recv( int timeout )
 {
 	boost::system::error_code ec;
-	std::size_t bytes_transferred = m_socket.async_read_some(boost::asio::buffer(m_readbuf), (*m_yield_context)[ec]);
+	boost::asio::streambuf readbuf;
+	std::size_t bytes_transferred = boost::asio::async_read(m_socket, readbuf, boost::asio::transfer_at_least(1), (*m_yield_context)[ec]);
 	// should not be called
 	if (!ec)
 	{
-		std::string data(m_readbuf.begin(), bytes_transferred);
+		std::string data;
+		data.resize(bytes_transferred);
+		readbuf.sgetn(&data[0], bytes_transferred);
 
 		this->m_handler->handleReceivedData(this, data);
 		return ConnNoError;
 	}
+	AVLOG_ERR << "xmpp recv error:" <<  ec.message();
 	return ConnIoError;
 }
 
-bool xmpp_asio_connector::send( const std::string& data )
+bool xmpp_asio_connector::send(const std::string& data )
 {
-	boost::system::error_code ec;
-	boost::asio::async_write(m_socket, boost::asio::buffer(data), boost::asio::transfer_all(), (*m_yield_context)[ec]);
-	return ! ec;
+	m_send_queue.push(boost::make_shared<std::string>(data));
+	return true;
 }
 
 xmpp_asio_connector::xmpp_asio_connector(boost::shared_ptr<xmpp> _xmpp,
@@ -107,7 +147,13 @@ xmpp_asio_connector::xmpp_asio_connector(boost::shared_ptr<xmpp> _xmpp,
 	, io_service(_xmpp->get_ioservice())
 	, m_socket( io_service )
 	, m_query( _query )
+	, m_send_queue(io_service)
 {
+}
+
+xmpp_asio_connector::~xmpp_asio_connector()
+{
+
 }
 
 void xmpp_asio_connector::cleanup()
@@ -116,19 +162,34 @@ void xmpp_asio_connector::cleanup()
 	// 清理资源
 	this->m_socket.close(ec);
 	m_xmpp.reset();
+	m_send_queue.clear();
 }
 
 void xmpp_asio_connector::coroutine_start(boost::asio::yield_context this_coro_context)
 {
-	// 协程在这里，开始连接！
-	this->m_yield_context = &this_coro_context;
-	this->m_xmpp->m_client.connect(true);
-	// 连接木有了
+    try
+    {
+		// 协程在这里，开始连接！
+		this->m_yield_context = &this_coro_context;
 
+		// 开启发送协程
+
+		send_coro(this)();
+
+		this->m_xmpp->m_client.connect(true);
+		// 连接木有了
+    }
+    catch (std::exception& e)
+    {
+    }
 }
 
 xmpp::xmpp( boost::asio::io_service& asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick )
-	: io_service( asio ), m_jid( xmppuser + "/" + xmppnick ), m_client( m_jid, xmpppasswd ), m_xmppnick( xmppnick )
+	: io_service( asio )
+	, m_jid( xmppuser + "/" + xmppnick )
+	, m_client( m_jid, xmpppasswd )
+	, m_xmppnick( xmppnick )
+	, xmpp_stand(asio)
 {
 	m_client.registerConnectionListener( this );
 	m_client.registerMessageHandler( this );
@@ -154,9 +215,9 @@ void xmpp::start()
 		xmppclientport = boost::lexical_cast<std::string>( m_client.port() );
 
 	avproxy::proxy::tcp::query query( m_client.server(), xmppclientport );
-	xmpp_asio_connector * new_tcp_connector = new xmpp_asio_connector(shared_from_this(), &m_client, query);
-	m_client.setConnectionImpl(new_tcp_connector);
-	boost::asio::spawn(io_service, boost::bind(&xmpp_asio_connector::coroutine_start, new_tcp_connector, _1));
+	current_connector = new xmpp_asio_connector(shared_from_this(), &m_client, query);
+	m_client.setConnectionImpl(current_connector);
+	boost::asio::spawn(io_service, boost::bind(&xmpp_asio_connector::coroutine_start, current_connector, _1));
 }
 
 void xmpp::join( std::string roomjid )
@@ -174,9 +235,11 @@ void xmpp::on_room_message( boost::function<void ( std::string xmpproom, std::st
 void xmpp::send_room_message( std::string xmpproom, std::string message )
 {
 	//查找啊.
-	BOOST_FOREACH( boost::shared_ptr<gloox::MUCRoom> room, m_rooms ) {
-		if( room->name() == xmpproom ) {
-			room->send( message );
+	BOOST_FOREACH(boost::shared_ptr<gloox::MUCRoom> room, m_rooms)
+	{
+		if (room->name() == xmpproom)
+		{
+			room->send(message);
 		}
 	}
 }
@@ -195,12 +258,14 @@ void xmpp::handleMUCMessage( gloox::MUCRoom* room, const gloox::Message& msg, bo
 
 bool xmpp::onTLSConnect( const gloox::CertInfo& info )
 {
+	AVLOG_INFO << "xmpp: " << "conntected to server " << info.server << " verifyed by " << info.issuer << " with " << info.protocol;
 	return true;
 }
 
 void xmpp::onConnect()
 {
-	BOOST_FOREACH( boost::shared_ptr<gloox::MUCRoom> room,  m_rooms ) {
+	BOOST_FOREACH( boost::shared_ptr<gloox::MUCRoom> room,  m_rooms )
+	{
 		room->join();
 		room->getRoomInfo();
 		room->getRoomItems();
@@ -230,6 +295,7 @@ void xmpp::handleMUCError( gloox::MUCRoom* room, gloox::StanzaError error )
 
 void xmpp::handleMUCInfo( gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm )
 {
+	AVLOG_INFO << "xmpp: " << "joined  " << name;
 }
 
 void xmpp::handleMUCInviteDecline( gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason )
@@ -247,6 +313,7 @@ void xmpp::handleMUCParticipantPresence( gloox::MUCRoom* room, const gloox::MUCR
 
 bool xmpp::handleMUCRoomCreation( gloox::MUCRoom* room )
 {
+	AVLOG_ERR << "xmpp: " << "no room \"" << room->name() << "\" attempt to create on";
 	return true;
 }
 

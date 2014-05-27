@@ -3,6 +3,6 @@ include(${QT_USE_FILE})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 QT4_WRAP_UI(ui_dialog dialog.ui)
 QT4_WRAP_CPP(moc_dialog dialog.h)
-add_library(qt-gui STATIC dialog.h dialog.cpp ${ui_dialog} ${moc_dialog})
-target_link_libraries(qt-gui ${QT_LIBRARIES})
+add_library(avbotgui STATIC dialog.h dialog.cpp ${ui_dialog} ${moc_dialog})
+target_link_libraries(avbotgui ${QT_LIBRARIES})
 

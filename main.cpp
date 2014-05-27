@@ -77,6 +77,8 @@ namespace po = boost::program_options;
 #include "deCAPTCHA/jsdati_decoder.hpp"
 #include "deCAPTCHA/hydati_decoder.hpp"
 
+#include "gui/avbotgui.hpp"
+
 extern "C" void avbot_setup_seghandler();
 extern "C" const char * avbot_version();
 extern "C" const char * avbot_version_build_time();
@@ -147,7 +149,6 @@ static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::
 
 #ifdef _WIN32
 	// also fire up an input box and the the input there!
-	HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(boost::system::error_code, std::string)> donecallback);
 	HWND hwnd = async_input_box_get_input_with_image(vcinput.get_io_service(), vcimagebuffer, boost::bind(secondwrapper, _1, _2));
 	*hwnd_ptr = hwnd;
 #endif // _WIN32
@@ -672,12 +673,7 @@ rungui:
 
 	if (qqnumber.empty() || qqpwd.empty() || vm.count("gui") > 0)
 	{
-		void show_dialog(std::string & qqnumer, std::string & qqpwd,
-			std::string & ircnick, std::string & ircroom, std::string & ircpwd,
-			std::string & xmppuser, std::string & xmppserver, std::string & xmpppwd,
-			std::string & xmpproom, std::string & xmppnick);
-
-		show_dialog(qqnumber, qqpwd, ircnick, ircroom, ircpwd,
+		setup_dialog(qqnumber, qqpwd, ircnick, ircroom, ircpwd,
 			xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick);
 	}
 

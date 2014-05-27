@@ -76,7 +76,6 @@ endif(ENABLE_LUA)
 
 
 if(ENABLE_PYTHON)
-	add_definitions(-DENABLE_PYTHON)
 	find_package(PythonLibsNew REQUIRED)
 	include_directories(${PYTHON_INCLUDE_DIRS})
 	link_directories(${PYTHON_LIBRARIE_DIRS})
@@ -92,6 +91,8 @@ endif(ENABLE_PYTHON)
 add_library(extension STATIC ${EXTENSION_SOURCES})
 
 if(ENABLE_PYTHON)
+	set_target_properties(extension
+		PROPERTIES COMPILE_FLAGS "-DENABLE_PYTHON")
 	target_link_libraries(extension ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY})
 endif(ENABLE_PYTHON)
 
