@@ -186,7 +186,7 @@ private:
 		if (m_list.empty())
 		{
 			// 进入睡眠过程.
-			m_wait_handlers.push(handler);
+			m_wait_handlers.push_back(handler);
 		}
 		else
 		{
