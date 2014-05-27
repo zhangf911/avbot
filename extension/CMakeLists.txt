@@ -105,6 +105,7 @@ if(LUAJIT_FOUND)
 endif()
 
 if (ENABLE_ZMQ)
-	set_target_properties(extension PROPERTIES COMPILE_FLAGS "-DENABLE_ZMQ")
+	set_target_properties(extension 
+		PROPERTIES COMPILE_FLAGS "-DENABLE_ZMQ")
 	target_link_libraries(extension libzmq-static)
 endif()
