@@ -27,6 +27,10 @@
 #include "pythonscriptengine.hpp"
 #endif // ENABLE_PYTHON
 
+#ifdef ENABLE_ZMQ
+#include "zmqpublisher.hpp"
+#endif
+
 #ifdef _WIN32
 #include "dllextension.hpp"
 #endif
@@ -145,6 +149,16 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 #ifdef ENABLE_PYTHON
 	mybot.on_message.connect(
 		make_python_script_engine(
+			io_service,
+			channel_name,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
+		)
+	);
+#endif
+
+#ifdef ENABLE_ZMQ
+	mybot.on_message.connect(
+		make_zmq_publisher(
 			io_service,
 			channel_name,
 			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))

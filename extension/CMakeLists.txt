@@ -1,7 +1,7 @@
 
 option(ENABLE_LUA "enable lua script support" ON)
 option(ENABLE_PYTHON "enable python script support" OFF)
-option(ENABLE_ZMQ "enable zmq support" ON)
+option(ENABLE_ZMQ "enable zmq support" OFF)
 
 find_package(ZLIB)
 if (ZLIB_FOUND)
@@ -25,7 +25,10 @@ set(EXTENSION_SOURCES
 )
 
 if (ENABLE_ZMQ)
-add_subdirectory(libzmq EXCLUDE_FROM_ALL)
+	set(WITH_TWEETNACL OFF)
+	include_directories(libzmq/include)
+	add_subdirectory(libzmq EXCLUDE_FROM_ALL)
+	list(APPEND EXTENSION_SOURCES zmqpublisher.cpp zmqpublisher.hpp)
 endif()
 
 include_directories(../qqwry/include)
@@ -96,7 +99,7 @@ if(ENABLE_PYTHON)
 endif(ENABLE_PYTHON)
 
 if(ZLIB_FOUND)
-target_link_libraries(extension ${ZLIB_LIBRARIES})
+	target_link_libraries(extension ${ZLIB_LIBRARIES})
 endif()
 
 if(LUAJIT_FOUND)
@@ -104,5 +107,7 @@ if(LUAJIT_FOUND)
 endif()
 
 if (ENABLE_ZMQ)
-target_link_libraries(extension libzmq-static)
+	set_target_properties(extension 
+		PROPERTIES COMPILE_FLAGS "-DENABLE_ZMQ")
+	target_link_libraries(extension libzmq-static)
 endif()
