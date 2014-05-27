@@ -29,6 +29,8 @@ if (ENABLE_ZMQ)
 	include_directories(libzmq/include)
 	add_subdirectory(libzmq EXCLUDE_FROM_ALL)
 	list(APPEND EXTENSION_SOURCES zmqpublisher.cpp zmqpublisher.hpp)
+	set_source_files_properties(zmqpublisher.cpp
+		PROPERTIES COMPILE_FLAGS "-DZMQ_STATIC")
 endif()
 
 include_directories(../qqwry/include)
@@ -107,7 +109,7 @@ if(LUAJIT_FOUND)
 endif()
 
 if (ENABLE_ZMQ)
-	set_target_properties(extension 
+	set_source_files_properties(extension.cpp
 		PROPERTIES COMPILE_FLAGS "-DENABLE_ZMQ")
 	target_link_libraries(extension libzmq-static)
 endif()
