@@ -57,6 +57,7 @@ namespace po = boost::program_options;
 
 #include "boost/stringencodings.hpp"
 #include "boost/avloop.hpp"
+#include <boost/invoke_wrapper.hpp>
 
 #include "libavbot/avbot.hpp"
 #include "libavlog/avlog.hpp"
@@ -92,41 +93,6 @@ static std::string progname;
 static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
-template<typename Signature>
-class single_invoker;
-
-#define TEXT(z, n, text) text ## n
-#define ARG(z, n, _) Arg ## n arg ## n
-
-#define SINGLE_INVOKER(z, n, _) \
-	template<typename R, BOOST_PP_ENUM(BOOST_PP_INC(n), TEXT, typename Arg)> \
-	struct single_invoker<R( BOOST_PP_ENUM(BOOST_PP_INC(n), TEXT, Arg) )> \
-	{ \
-		typedef R(Signature)(BOOST_PP_ENUM(BOOST_PP_INC(n), TEXT, Arg)); \
-		boost::shared_ptr<bool> m_invoked; \
-		boost::shared_ptr< \
-			boost::function<Signature> \
-		> m_handler; \
-		\
-		single_invoker(std::function<Signature> _handler) \
-			: m_handler(boost::make_shared< boost::function<Signature> >(_handler)) \
-			, m_invoked(boost::make_shared<bool>(false)) \
-		{} \
-		\
-		R operator()(BOOST_PP_ENUM(BOOST_PP_INC(n), ARG, nil)) \
-		{ \
-			if(!*m_invoked) \
-			{ \
-				*m_invoked = true; \
-				(*m_handler)(BOOST_PP_ENUM(BOOST_PP_INC(n), TEXT, arg)); \
-			} \
-		} \
-		typedef R result_type; \
-	};
-
-
-BOOST_PP_REPEAT_FROM_TO(0, 10, SINGLE_INVOKER, nil)
-
 #ifdef  _WIN32
 static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr<HWND> hwnd)
 {
@@ -139,10 +105,10 @@ static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::
 {
 #ifdef  _WIN32
 	boost::shared_ptr<HWND> hwnd_ptr((HWND*)malloc(sizeof(HWND)), free);
-	single_invoker<void( boost::system::error_code, std::string)> wraper( handler);
+	boost::invoke_wrapper::invoke_once<void( boost::system::error_code, std::string)> wraper( handler);
 	boost::function<void(boost::system::error_code, std::string)> secondwrapper = boost::bind(wrappered_hander, _1, _2, wraper, hwnd_ptr);
 #else
-	single_invoker<void( boost::system::error_code, std::string)> secondwrapper( handler);
+	boost::invoke_wrapper::invoke_once<void(boost::system::error_code, std::string)> secondwrapper(handler);
 #endif
 	vcinput.async_input_read_timeout(35, secondwrapper);
 	set_do_vc(boost::bind(secondwrapper, boost::system::error_code(), _1));
