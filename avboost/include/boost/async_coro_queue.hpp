@@ -124,33 +124,8 @@ private:
 	{
 		return system::errc::make_error_code(system::errc::operation_canceled);
 	}
-
-// 公开的接口。
-public:
-
-	/*
-	 *  回调的类型是 void pop_handler(boost::system::error_code ec, value_type)
-	 *
-	 *  value_type 由容器（作为模板参数）决定。
-	 *  例子是
-
-		// ec 如果有错误,  只可能是 boost::asio::error::operation_aborted
-
-		void pop_handler(boost::system::error_code ec, value_type value)
-		{
-			// DO SOME THING WITH value
-
-			// start again
-			list.async_pop(pop_handler);
-		}
-
-		// 然后在其他地方
-		list.push(value); 即可唤醒 pop_handler
-
-	 *  NOTE: 如果列队里有数据， 回调将投递(不是立即回调，是立即投递到 io_service), 否则直到有数据才回调.
-     */
 	template<class Handler>
-	void async_pop(Handler handler)
+	void async_pop_impl(Handler handler)
 	{
 		if (m_list.empty())
 		{
@@ -168,15 +143,12 @@ public:
 					handler, boost::system::error_code(), m_list.front()
 				)
 			);
- 			m_list.pop_front();
+			m_list.erase(m_list.begin());
 		}
 	}
 
-	/**
-     * 用法同 async_pop, 但是增加了一个超时参数
-     */
 	template<class Handler>
-	void async_pop(Handler handler, boost::asio::deadline_timer::duration_type timeout)
+	void async_pop_impl(Handler handler, boost::asio::deadline_timer::duration_type timeout)
 	{
 		if (m_list.empty())
 		{
@@ -203,6 +175,68 @@ public:
 	}
 
 
+// 公开的接口。
+public:
+
+	/*
+	 *  回调的类型是 void pop_handler(boost::system::error_code ec, value_type)
+	 *
+	 *  value_type 由容器（作为模板参数）决定。
+	 *  例子是
+
+		// ec 如果有错误,  只可能是 boost::asio::error::operation_aborted
+
+		void pop_handler(boost::system::error_code ec, value_type value)
+		{
+			// DO SOME THING WITH value
+
+			// start again
+			list.async_pop(pop_handler);
+		}
+
+		// 然后在其他地方
+		list.push(value); 即可唤醒 pop_handler
+
+	 *  NOTE: 如果列队里有数据， 回调将投递(不是立即回调，是立即投递到 io_service), 否则直到有数据才回调.
+     */
+	template<class RealHandler>
+	inline BOOST_ASIO_INITFN_RESULT_TYPE(RealHandler,
+		void(boost::system::error_code, value_type))
+	async_pop(RealHandler handler)
+	{
+		using namespace boost::asio;
+
+		//BOOST_ASIO_CONNECT_HANDLER_CHECK(RealHandler, handler) type_check;
+		boost::asio::detail::async_result_init<
+			RealHandler, void(boost::system::error_code)> init(
+			BOOST_ASIO_MOVE_CAST(RealHandler)(handler));
+
+		async_pop_impl<
+			BOOST_ASIO_HANDLER_TYPE(RealHandler, void(boost::system::error_code, value_type))
+		>(init.handler);
+		return init.result.get();
+	}
+	/**
+     * 用法同 async_pop, 但是增加了一个超时参数
+     */
+
+	template<class Handler>
+	inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler,
+		void(boost::system::error_code, value_type))
+	async_pop(Handler handler, boost::asio::deadline_timer::duration_type timeout)
+	{
+		using namespace boost::asio;
+
+		//BOOST_ASIO_CONNECT_HANDLER_CHECK(RealHandler, handler) type_check;
+		boost::asio::detail::async_result_init<
+			Handler, void(boost::system::error_code)> init(
+			BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+		async_pop_impl<
+			BOOST_ASIO_HANDLER_TYPE(Handler, void(boost::system::error_code, value_type))
+		>(init.handler, timeout);
+		return init.result.get();
+	}
 	/**
 	 * 向列队投递数据。
 	 * 如果列队为空，并且有协程正在休眠在 async_pop 上， 则立即唤醒此协程，并投递数据给此协程
