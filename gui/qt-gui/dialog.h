@@ -10,28 +10,24 @@ class Dialog;
 
 class Dialog : public QDialog
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
 	Dialog(
 		std::string &qqnum, std::string &qqpwd, 
 		std::string &ircnick, std::string &ircroom, std::string &ircpwd, 
 		std::string &xmppuser, std::string &xmppserver, std::string &xmpppwd, std::string &xmpproom, std::string &xmppnick);
-    ~Dialog();
-
-    friend void show_dialog(std::string & qqnumber, std::string & qqpwd, std::string &     ircnick,
-                            std::string & ircroom, std::string & ircpwd,
-                            std::string &xmppuser, std::string & xmppserver,std::string & xmpppwd, std::string & xmpproom, std::string &xmppnick);
+	~Dialog();
 
 
 
 private slots:
-    void on_checkBox_toggled(bool checked);
+	void on_enable_irc_toggled(bool checked);
 
-    void on_checkBox_2_toggled(bool checked);
+	void on_enable_xmpp_toggled(bool checked);
 
 private:
-    Ui::Dialog *ui;
+	Ui::Dialog *ui;
 	std::string& qqnum;
 	std::string& qqpwd;
 	std::string& ircnick;

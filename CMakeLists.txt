@@ -127,8 +127,6 @@ else()
 endif(NOT WIN32)
 
 if(WITH_QT_GUI)
-	add_definitions(-DWITH_QT_GUI)
-	include_directories(gui/qt-gui)
 	add_subdirectory(gui/qt-gui)
 endif()
 
@@ -267,6 +265,9 @@ if (NOT WIN32)
 endif()
 
 if (WITH_QT_GUI OR WIN32)
+	if(WITH_QT_GUI)
+		set_target_properties(avbot PROPERTIES COMPILE_FLAGS "-DWITH_QT_GUI")
+	endif()
 	target_link_libraries(avbot avbotgui)
 endif()
 
