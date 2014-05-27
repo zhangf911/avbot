@@ -5,7 +5,7 @@
 #include <boost/thread.hpp>
 #include <boost/circular_buffer.hpp>
 
-class ZmqPublisher
+class ZmqPublisher : boost::noncopyable
 {
 public:
 	struct Message {
@@ -15,11 +15,12 @@ public:
 
 	ZmqPublisher()
 		: io_()
+		, work_(io_)
 		, queue_(io_, 10)
 	{
-		ctx_ = zmq_ctx_new();
-		socket_ = zmq_socket(ctx_, ZMQ_PUB);
-		zmq_bind(socket_, "tcp://*:8123");
+		ctx_.reset(zmq_ctx_new(), zmq_ctx_term);
+		socket_.reset(zmq_socket(ctx_.get(), ZMQ_PUB), zmq_close);
+		zmq_bind(socket_.get(), "tcp://*:8123");
 		queue_.async_pop(boost::bind(&ZmqPublisher::on_queue_pop, this, _1, _2));
 		boost::thread(boost::bind(&asio::io_service::run, boost::ref(io_))).detach();
 	}
@@ -27,8 +28,7 @@ public:
 	virtual ~ZmqPublisher()
 	{
 		queue_.cancele();
-		zmq_close(socket_);
-		zmq_ctx_term(ctx_);
+		io_.stop();
 	}
 
 	void send(const std::string& channel, const std::string& str)
@@ -41,18 +41,21 @@ public:
 
 	void on_queue_pop(boost::system::error_code ec, const Message& value)
 	{
-		zmq_send(socket_, value.channel_name.c_str(), value.channel_name.size(), ZMQ_SNDMORE);
-		zmq_send(socket_, value.body.c_str(), value.body.size(), 0);
+		zmq_send(socket_.get(), value.channel_name.c_str(), value.channel_name.size(), ZMQ_SNDMORE);
+		zmq_send(socket_.get(), value.body.c_str(), value.body.size(), 0);
+		queue_.async_pop(boost::bind(&ZmqPublisher::on_queue_pop, this, _1, _2));
 	}
 
 private:
 	asio::io_service io_;
+	asio::io_service::work work_;
+	
 	boost::async_coro_queue< 
 		boost::circular_buffer_space_optimized<
 			Message
 		> > queue_;
-	void* ctx_;
-	void* socket_;
+	boost::shared_ptr<void> ctx_;
+	boost::shared_ptr<void> socket_;
 };
 
 class ZmqPublisherClient

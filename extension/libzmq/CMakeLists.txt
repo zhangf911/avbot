@@ -3,6 +3,10 @@
 cmake_minimum_required(VERSION 2.8)
 project(ZeroMQ)
 
+if(WIN32)
+	add_definitions(-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+endif()
+
 option(WITH_OPENPGM "Build with support for OpenPGM" OFF)
 
 if(APPLE)
