@@ -36,6 +36,7 @@
 #include <gloox/connectionbase.h>
 
 #include <boost/signals2.hpp>
+#include <boost/async_coro_queue.hpp>
 
 namespace xmppimpl {
 
@@ -57,13 +58,20 @@ private: // for gloox::ConnectionTCPClient
 	virtual ConnectionBase* newInstance() const {
 		return new xmpp_asio_connector(m_xmpp, m_handler, m_query );
 	}
-private:
+	virtual ~xmpp_asio_connector();
+public:
 	boost::asio::io_service	&io_service;
 	boost::asio::ip::tcp::socket m_socket;
 	boost::asio::ip::tcp::resolver::query m_query;
-	boost::array<char, 8192> m_readbuf;
 	boost::shared_ptr<xmpp> m_xmpp;
 	boost::asio::yield_context * m_yield_context;
+
+	boost::async_coro_queue<
+		std::vector<
+			boost::shared_ptr<std::string>
+		>
+	> m_send_queue;
+
 };
 
 class xmpp
@@ -112,6 +120,9 @@ private:
 	boost::signals2::signal<
 		void (std::string xmpproom, std::string who, std::string message)
 	> m_sig_room_message;
+
+	boost::asio::io_service::strand xmpp_stand;
+	xmpp_asio_connector * current_connector;
 };
 
 }
