@@ -66,12 +66,13 @@ public:
 	boost::shared_ptr<xmpp> m_xmpp;
 	boost::asio::yield_context * m_yield_context;
 
-	boost::async_coro_queue<
+	typedef boost::async_coro_queue<
 		std::vector<
-			boost::shared_ptr<std::string>
+			std::string
 		>
-	> m_send_queue;
-
+	> send_queue_type;
+	send_queue_type m_send_queue;
+	volatile bool m_in_coro;
 };
 
 class xmpp
