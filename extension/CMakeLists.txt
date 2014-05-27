@@ -25,6 +25,8 @@ set(EXTENSION_SOURCES
 )
 
 if (ENABLE_ZMQ)
+	set(WITH_TWEETNACL OFF)
+	include_directories(libzmq/include)
 	add_subdirectory(libzmq EXCLUDE_FROM_ALL)
 	list(APPEND EXTENSION_SOURCES zmqpublisher.cpp zmqpublisher.hpp)
 endif()
