@@ -186,7 +186,8 @@ bool xmpp_asio_connector::send(const std::string& data_to_be_send)
 	if (m_in_coro)
 	{
 		boost::system::error_code ec;
-		boost::asio::async_write(m_socket, boost::asio::buffer(data_to_be_send), boost::asio::transfer_all(), (*m_yield_context)[ec]);
+		boost::asio::async_write(m_socket, boost::asio::buffer(data_to_be_send),
+			boost::asio::transfer_all(), (*m_yield_context)[ec]);
 		return !ec;
 	}
 	else
