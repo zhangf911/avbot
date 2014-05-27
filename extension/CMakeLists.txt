@@ -1,7 +1,7 @@
 
 option(ENABLE_LUA "enable lua script support" ON)
 option(ENABLE_PYTHON "enable python script support" OFF)
-option(ENABLE_ZMQ "enable zmq support" ON)
+option(ENABLE_ZMQ "enable zmq support" OFF)
 
 find_package(ZLIB)
 if (ZLIB_FOUND)
