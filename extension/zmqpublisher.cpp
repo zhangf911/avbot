@@ -56,5 +56,5 @@ private:
 
 avbot_extension make_zmq_publisher(asio::io_service &io, std::string channel_name, boost::function<void (std::string)> sender)
 {
-	return avbot_extension(ZmqPublisherClient(io, channel_name, sender));
+	return avbot_extension(channel_name, ZmqPublisherClient(io, channel_name, sender));
 }
