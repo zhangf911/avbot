@@ -25,6 +25,7 @@
 #include <gloox/message.h>
 #include <gloox/mucroom.h>
 
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "boost/timedcall.hpp"
@@ -257,12 +258,14 @@ void xmpp::handleMUCMessage( gloox::MUCRoom* room, const gloox::Message& msg, bo
 
 bool xmpp::onTLSConnect( const gloox::CertInfo& info )
 {
+	AVLOG_INFO << "xmpp: " << "conntected to server " << info.server << " verifyed by " << info.issuer << " with " << info.protocol;
 	return true;
 }
 
 void xmpp::onConnect()
 {
-	BOOST_FOREACH( boost::shared_ptr<gloox::MUCRoom> room,  m_rooms ) {
+	BOOST_FOREACH( boost::shared_ptr<gloox::MUCRoom> room,  m_rooms )
+	{
 		room->join();
 		room->getRoomInfo();
 		room->getRoomItems();
@@ -292,6 +295,7 @@ void xmpp::handleMUCError( gloox::MUCRoom* room, gloox::StanzaError error )
 
 void xmpp::handleMUCInfo( gloox::MUCRoom* room, int features, const std::string& name, const gloox::DataForm* infoForm )
 {
+	AVLOG_INFO << "xmpp: " << "joined  " << name;
 }
 
 void xmpp::handleMUCInviteDecline( gloox::MUCRoom* room, const gloox::JID& invitee, const std::string& reason )
@@ -309,6 +313,7 @@ void xmpp::handleMUCParticipantPresence( gloox::MUCRoom* room, const gloox::MUCR
 
 bool xmpp::handleMUCRoomCreation( gloox::MUCRoom* room )
 {
+	AVLOG_ERR << "xmpp: " << "no room \"" << room->name() << "\" attempt to create on";
 	return true;
 }
 
