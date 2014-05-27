@@ -621,20 +621,25 @@ endif()
 target_link_libraries(libzmq ${SODIUM_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 if(HAVE_WS2_32)
   target_link_libraries(libzmq ws2_32)
+  target_link_libraries(libzmq-static ws2_32)
 elseif(HAVE_WS2)
   target_link_libraries(libzmq ws2)
+  target_link_libraries(libzmq-static ws2)
 endif()
 
 if(HAVE_RPCRT4)
   target_link_libraries(libzmq rpcrt4)
+  target_link_libraries(libzmq-static rpcrt4)
 endif()
 
 if(HAVE_IPHLAPI)
   target_link_libraries(libzmq iphlpapi)
+  target_link_libraries(libzmq-static iphlpapi)
 endif()
 
 if(RT_LIBRARY)
   target_link_libraries(libzmq ${RT_LIBRARY})
+  target_link_libraries(libzmq-static ${RT_LIBRARY})
 endif()
 
 set(perf-tools local_lat
