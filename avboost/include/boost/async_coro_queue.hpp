@@ -208,7 +208,7 @@ public:
 
 		//BOOST_ASIO_CONNECT_HANDLER_CHECK(RealHandler, handler) type_check;
 		boost::asio::detail::async_result_init<
-			RealHandler, void(boost::system::error_code)> init(
+			RealHandler, void(boost::system::error_code, value_type)> init(
 			BOOST_ASIO_MOVE_CAST(RealHandler)(handler));
 
 		async_pop_impl<
@@ -229,7 +229,7 @@ public:
 
 		//BOOST_ASIO_CONNECT_HANDLER_CHECK(RealHandler, handler) type_check;
 		boost::asio::detail::async_result_init<
-			Handler, void(boost::system::error_code)> init(
+			Handler, void(boost::system::error_code, value_type)> init(
 			BOOST_ASIO_MOVE_CAST(Handler)(handler));
 
 		async_pop_impl<
