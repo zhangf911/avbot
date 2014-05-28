@@ -366,7 +366,7 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 	return FALSE;
 }
 
-boost::function<void()> async_input_box_get_input_with_image(boost::asio::io_service & io_service
+boost::function<void()> async_input_box_get_input_with_image(boost::asio::io_service & io_service,
 	std::string imagedata, boost::function<void(boost::system::error_code, std::string)> donecallback)
 {
 	HMODULE hIns = GetModuleHandle(NULL);
