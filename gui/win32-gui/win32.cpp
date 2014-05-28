@@ -366,7 +366,8 @@ static bool input_box_get_input_with_image_dlgproc(HWND hwndDlg, UINT message, W
 	return FALSE;
 }
 
-HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, std::string imagedata, boost::function<void(boost::system::error_code, std::string)> donecallback)
+boost::function<void()> async_input_box_get_input_with_image(boost::asio::io_service & io_service
+	std::string imagedata, boost::function<void(boost::system::error_code, std::string)> donecallback)
 {
 	HMODULE hIns = GetModuleHandle(NULL);
 
@@ -402,7 +403,7 @@ HWND async_input_box_get_input_with_image(boost::asio::io_service & io_service, 
 	::ShowWindow(dlgwnd, SW_SHOWNORMAL);
 	SetForegroundWindow(dlgwnd);
 	avloop_gui_add_dlg(io_service, dlgwnd);
-	return dlgwnd;
+	return boost::bind<void>(&DestroyWindow, dlgwnd);
 }
 
 namespace detail {

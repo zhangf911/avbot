@@ -94,9 +94,12 @@ static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
 #ifdef  _WIN32
-static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr<HWND> hwnd)
+static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr< boost::function<void()> > closer)
 {
-	DestroyWindow(*hwnd);
+	if (*closer)
+	{
+		(*closer)();
+	}
 	handler(ec, str);
 }
 #endif
@@ -104,9 +107,9 @@ static void wrappered_hander(boost::system::error_code ec, std::string str, boos
 static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
 {
 #ifdef  _WIN32
-	boost::shared_ptr<HWND> hwnd_ptr((HWND*)malloc(sizeof(HWND)), free);
+	boost::shared_ptr< boost::function<void()> > closer(new boost::function<void()>);
 	boost::invoke_wrapper::invoke_once<void( boost::system::error_code, std::string)> wraper( handler);
-	boost::function<void(boost::system::error_code, std::string)> secondwrapper = boost::bind(wrappered_hander, _1, _2, wraper, hwnd_ptr);
+	boost::function<void(boost::system::error_code, std::string)> secondwrapper = boost::bind(wrappered_hander, _1, _2, wraper, closer);
 #else
 	boost::invoke_wrapper::invoke_once<void(boost::system::error_code, std::string)> secondwrapper(handler);
 #endif
@@ -115,8 +118,7 @@ static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::
 
 #ifdef _WIN32
 	// also fire up an input box and the the input there!
-	HWND hwnd = async_input_box_get_input_with_image(vcinput.get_io_service(), vcimagebuffer, boost::bind(secondwrapper, _1, _2));
-	*hwnd_ptr = hwnd;
+	*closer = async_input_box_get_input_with_image(vcinput.get_io_service(), vcimagebuffer, boost::bind(secondwrapper, _1, _2));
 #endif // _WIN32
 }
 
