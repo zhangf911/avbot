@@ -116,6 +116,8 @@ set(SQLITE3_LIBRARIES "${sqlite_lib_location}")
 set(SQLITE3_LIBRARY "")
 set(SQLite3_FOUND ON)
 
+include_directories(sqlite/include)
+
 add_subdirectory(soci/src EXCLUDE_FROM_ALL)
 
 if(NOT WIN32)
@@ -133,7 +135,6 @@ endif()
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(soci/src/core)
 include_directories(soci/src/backends/sqlite3)
-include_directories(sqlite/include)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
