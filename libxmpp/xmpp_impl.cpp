@@ -182,9 +182,10 @@ gloox::ConnectionError xmpp_asio_connector::recv( int timeout )
 }
 
 #ifdef _MSC_VER
-#define memory_barrier() _mm_mfence()
+#define memory_barrier() std::atomic_signal_fence(std::memory_order_seq_cst)
+//_mm_mfence() _ReadWriteBarrier()
 #elif defined(__GNUC__)
-#define memory_barrier() __sync_synchronize()
+#define memory_barrier() do{ asm volatile("" ::: "memory"); }while(0)
 #else
 #define memory_barrier() do{ int i;}while(0)
 #endif
