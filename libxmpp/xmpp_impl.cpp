@@ -183,7 +183,7 @@ gloox::ConnectionError xmpp_asio_connector::recv( int timeout )
 
 #ifdef _MSC_VER
 #define memory_barrier() _mm_mfence()
-#elif defined(__gnuc__)
+#elif defined(__GNUC__)
 #define memory_barrier() __sync_synchronize()
 #else
 #define memory_barrier() do{ int i;}while(0)
