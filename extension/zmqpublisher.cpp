@@ -61,10 +61,11 @@ private:
 class ZmqPublisherClient
 {
 public:
-	ZmqPublisherClient(asio::io_service &io, std::string channel_name, boost::function<void (std::string)> sender)
+	ZmqPublisherClient(boost::shared_ptr<ZmqPublisher> zmq_publisher, asio::io_service &io, std::string channel_name, boost::function<void(std::string)> sender)
 		: io_(io)
 		, channel_name_(channel_name)
 		, sender_(sender)
+		, publisher_(zmq_publisher)
 	{
 	}
 
@@ -72,7 +73,7 @@ public:
 	{
 		std::stringstream ss;
 		boost::property_tree::json_parser::write_json(ss, msg);
-		publisher_.send(channel_name_, ss.str());
+		publisher_->send(channel_name_, ss.str());
 	}
 
 private:
@@ -80,12 +81,17 @@ private:
 	std::string channel_name_;
 	boost::function<void (std::string)> sender_;
 
-	static ZmqPublisher publisher_;
+	boost::shared_ptr<ZmqPublisher> publisher_;
 };
 
-ZmqPublisher ZmqPublisherClient::publisher_;
+//ZmqPublisher ZmqPublisherClient::publisher_;
 
 avbot_extension make_zmq_publisher(asio::io_service &io, std::string channel_name, boost::function<void (std::string)> sender)
 {
-	return avbot_extension(channel_name, ZmqPublisherClient(io, channel_name, sender));
+	static boost::shared_ptr<ZmqPublisher> zmq;
+	if (!zmq)
+	{
+		zmq.reset(new ZmqPublisher);
+	}
+	return avbot_extension(channel_name, ZmqPublisherClient(zmq, io, channel_name, sender));
 }
