@@ -133,7 +133,7 @@ endif()
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(soci/src/core)
 include_directories(soci/src/backends/sqlite3)
-include_directories(${SQLITE3_INCLUDE_DIR})
+include_directories(sqlite/include)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
