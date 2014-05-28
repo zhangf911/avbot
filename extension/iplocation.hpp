@@ -55,7 +55,7 @@ struct download_qqwry_dat_op : boost::asio::coroutine
 				"http://update.cz88.net/ip/qqwry.rar",
 				*m_buf_qqwry_rar,
 				*this
-				);
+			);
 
 			// 解码
 			{

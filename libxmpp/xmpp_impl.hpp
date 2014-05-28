@@ -21,6 +21,7 @@
 
 #include <string>
 #include <vector>
+#include <boost/atomic.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
@@ -72,7 +73,7 @@ public:
 		>
 	> send_queue_type;
 	send_queue_type m_send_queue;
-	volatile bool m_in_coro;
+	boost::atomic<bool> m_in_coro;
 };
 
 class xmpp
