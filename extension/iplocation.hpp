@@ -144,7 +144,7 @@ public:
 			m_io_service,
 			m_uncompress,
 			boost::bind(&ipdb_mgr::qqwry_downloaded, this, _1)
-			);
+		);
 		return false;
 	}
 
