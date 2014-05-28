@@ -15,6 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifdef _MSC_VER
+#include <atomic>
+#define memory_barrier() std::atomic_signal_fence(std::memory_order_seq_cst)
+//_mm_mfence() _ReadWriteBarrier()
+#elif defined(__GNUC__)
+#define memory_barrier() do{ asm volatile("" ::: "memory"); }while(0)
+#else
+#define memory_barrier() do{ int i;}while(0)
+#endif
+
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
@@ -180,15 +190,6 @@ gloox::ConnectionError xmpp_asio_connector::recv( int timeout )
 	AVLOG_ERR << "xmpp recv error:" <<  ec.message();
 	return ConnIoError;
 }
-
-#ifdef _MSC_VER
-#define memory_barrier() std::atomic_signal_fence(std::memory_order_seq_cst)
-//_mm_mfence() _ReadWriteBarrier()
-#elif defined(__GNUC__)
-#define memory_barrier() do{ asm volatile("" ::: "memory"); }while(0)
-#else
-#define memory_barrier() do{ int i;}while(0)
-#endif
 
 bool xmpp_asio_connector::send(const std::string& data_to_be_send)
 {
