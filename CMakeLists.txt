@@ -1,6 +1,19 @@
 cmake_minimum_required(VERSION 2.6)
 project(avbot)
 
+#-----------------------------------------------------------------------------
+# force off-tree build
+if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
+message(FATAL_ERROR "do not run cmake inside avbot source directory
+Remove the CMakeCache.txt file and try again from another folder, e.g.:
+   rm CMakeCache.txt
+   mkdir make
+   cd make
+   cmake ..
+")
+endif()
+
+
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 include(cpacksettings.cmake)
