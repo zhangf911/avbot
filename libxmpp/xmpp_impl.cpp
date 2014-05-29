@@ -137,24 +137,8 @@ void xmpp_asio_connector::disconnect()
 gloox::ConnectionError xmpp_asio_connector::receive()
 {
 	boost::system::error_code ec;
-	while (recv(-1) == ConnNoError)
-	{
-// 		int which = async_wait_pop_or_read(m_send_queue, m_socket, (*m_yield_context)[ec]);
-// 		if (ec == boost::asio::error::operation_aborted)
-// 			return ConnNoError;			
-// 		if (which == 0)
-// 		{
-// 			// 发送数据
-// 			std::string data_to_be_send = m_send_queue.async_pop((*m_yield_context)[ec]);
-// 			boost::asio::async_write(m_socket, boost::asio::buffer(data_to_be_send), boost::asio::transfer_all(), (*m_yield_context)[ec]);
-// 		}
-// 		else
-// 		{
-// 			// 读取数据
-// 			if (recv(-1) != ConnNoError)
-// 				break;
-// 		}
-	}
+
+	while (recv(-1) == ConnNoError){}
 
 	m_in_coro = 1;
 	m_handler->handleDisconnect(this, ConnNoError);
