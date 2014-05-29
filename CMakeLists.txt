@@ -124,8 +124,11 @@ get_property(sqlite_lib_location TARGET sqlite3 PROPERTY LOCATION)
 message (STATUS "sqlite_lib_location == ${sqlite_lib_location}")
 
 set(SQLITE_ROOT_DIR "${PROJECT_BINARY_DIR}/sqlite/")
+set(SQLITE3_INCLUDES "${PROJECT_SOURCE_DIR}/sqlite/include/" CACHE PATH "include dir for sqlite3.h")
 set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/")
+set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/" CACHE PATH "include dir for sqlite3.h" FORCE)
 set(SQLITE3_LIBRARIES "${sqlite_lib_location}")
+set(SQLITE3_LIBRARIES "${sqlite_lib_location}" CACHE FILEPATH "lib file to link to sqlite")
 set(SQLITE3_LIBRARY "")
 set(SQLite3_FOUND ON)
 
