@@ -10,7 +10,7 @@ before_install:
   - mkdir -pv build
 
 before_script:
-  cd build && LDFLAGS="-lrt" cmake -DENABLE_LUA=on  -DENABLE_ZMQ=ON ..
+  cd build && LDFLAGS="-lrt" cmake -DENABLE_LUA=on -DENABLE_PYTHON=on -DENABLE_ZMQ=ON ..
 
 script:
   make -j3
