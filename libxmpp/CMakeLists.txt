@@ -8,7 +8,7 @@ add_subdirectory(gloox)
 include_directories(gloox)
 endif()
 
-add_library(xmpp STATIC xmpp_impl.cpp xmpp.cpp)
+add_library(xmpp STATIC xmpp_impl.hpp xmpp_impl.cpp xmpp.hpp xmpp.cpp)
 target_link_libraries(xmpp ${Boost_LIBRARIES})
 
 if(INTERNALGLOOX)

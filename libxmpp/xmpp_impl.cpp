@@ -47,65 +47,54 @@ using namespace gloox;
 
 namespace xmppimpl{
 
-template<class CoroQueue, class AsioAsyncStream, class Handler>
-struct async_wait_pop_or_read_op
+template<typename AsioAsyncStream, typename CoroQueue>
+struct async_background_send_coro
 {
-	async_wait_pop_or_read_op(CoroQueue & queue, AsioAsyncStream & stream, Handler handler)
-		: m_queue(&queue)
-		, m_stream(&stream)
-		, m_handler(handler)
+	typedef void result_type;
+	CoroQueue & m_coro_queue;
+	AsioAsyncStream & m_socket;
+	boost::shared_ptr<std::string> m_data_in_send;
+	boost::atomic<bool>	& m_pending_write;
+
+	async_background_send_coro(AsioAsyncStream & _socket, CoroQueue & _coro_queue, boost::atomic<bool> & _pending_write)
+		: m_coro_queue(_coro_queue)
+		, m_socket(_socket)
+		, m_pending_write(_pending_write)
 	{
 	}
 
-	void start()
+	void operator()()
 	{
-		boost::invoke_wrapper::invoke_once<void(boost::system::error_code, std::size_t)> handler_wrapper(*this);
-		m_queue->async_wait(boost::bind(handler_wrapper, _1, 1));
-		boost::asio::async_read(*m_stream, boost::asio::null_buffers(), handler_wrapper);
+		if (m_coro_queue.empty())
+		{
+			m_pending_write = 0;
+		}
+		// start !
+		m_coro_queue.async_pop(*this);
 	}
 
 	void operator()(boost::system::error_code ec, std::size_t bytes_transfered)
 	{
-		if (bytes_transfered == 1)
-		{
-			// 明显这个是 queue 的回调，呵呵
-			m_handler(ec, 0);
-		}
-		else if (bytes_transfered == 0)
-		{
-			// 这个是 async_read 的回调
-			m_handler(ec, 1);
-		}
+		// check for errors and restart again
+		if (!ec)
+			(*this)();
 	}
 
-	CoroQueue * m_queue;
-	AsioAsyncStream * m_stream;
-	Handler m_handler;
+	void operator()(boost::system::error_code ec, std::string data_to_be_send)
+	{
+		if (!ec)
+		{
+			m_pending_write = 1;
+			m_data_in_send = boost::make_shared<std::string>(data_to_be_send);
+			boost::asio::async_write(
+				m_socket,
+				boost::asio::buffer(*m_data_in_send),
+				boost::asio::transfer_all(),
+				*this
+			);
+		}
+	}
 };
-
-// async wait the coro_queue or the socket to became ready
-// hander signature:  void handler(boost::system::error_code, std::size_t which)
-template<class Handler>
-inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler,
-	void(boost::system::error_code, std::size_t))
-	async_wait_pop_or_read(xmpp_asio_connector::send_queue_type & queue, boost::asio::ip::tcp::socket & stream, Handler handler)
-{
-	using namespace boost::asio;
-
-	BOOST_ASIO_READ_HANDLER_CHECK(Handler, handler) handler_check;
-
-	boost::asio::detail::async_result_init<
-		Handler, void(boost::system::error_code, std::size_t)> init(
-		BOOST_ASIO_MOVE_CAST(Handler)(handler));
-
-	async_wait_pop_or_read_op<
-		xmpp_asio_connector::send_queue_type,
-		boost::asio::ip::tcp::socket,
-		BOOST_ASIO_HANDLER_TYPE(Handler, void(boost::system::error_code, std::size_t))
-	> op(queue, stream, init.handler);
-	op.start();
-	return init.result.get();
-}
 
 gloox::ConnectionError xmpp_asio_connector::connect()
 {
@@ -121,6 +110,9 @@ gloox::ConnectionError xmpp_asio_connector::connect()
 	// 然后到这里就完成连接了
 	if (!ec)
 	{
+		// 开启 后台发送 协程
+		async_background_send_coro<boost::asio::ip::tcp::socket, send_queue_type>(m_socket, m_send_queue, m_pending_write)();
+
 		m_state = gloox::StateConnected;
 		m_in_coro = 1;
 		m_handler->handleConnect(this);
@@ -145,23 +137,23 @@ void xmpp_asio_connector::disconnect()
 gloox::ConnectionError xmpp_asio_connector::receive()
 {
 	boost::system::error_code ec;
-	while (!ec)
+	while (recv(-1) == ConnNoError)
 	{
-		int which = async_wait_pop_or_read(m_send_queue, m_socket, (*m_yield_context)[ec]);
-		if (ec == boost::asio::error::operation_aborted)
-			return ConnNoError;			
-		if (which == 0)
-		{
-			// 发送数据
-			std::string data_to_be_send = m_send_queue.async_pop((*m_yield_context)[ec]);
-			boost::asio::async_write(m_socket, boost::asio::buffer(data_to_be_send), boost::asio::transfer_all(), (*m_yield_context)[ec]);
-		}
-		else
-		{
-			// 读取数据
-			if (recv(-1) != ConnNoError)
-				break;
-		}
+// 		int which = async_wait_pop_or_read(m_send_queue, m_socket, (*m_yield_context)[ec]);
+// 		if (ec == boost::asio::error::operation_aborted)
+// 			return ConnNoError;			
+// 		if (which == 0)
+// 		{
+// 			// 发送数据
+// 			std::string data_to_be_send = m_send_queue.async_pop((*m_yield_context)[ec]);
+// 			boost::asio::async_write(m_socket, boost::asio::buffer(data_to_be_send), boost::asio::transfer_all(), (*m_yield_context)[ec]);
+// 		}
+// 		else
+// 		{
+// 			// 读取数据
+// 			if (recv(-1) != ConnNoError)
+// 				break;
+// 		}
 	}
 
 	m_in_coro = 1;
@@ -193,7 +185,7 @@ gloox::ConnectionError xmpp_asio_connector::recv( int timeout )
 
 bool xmpp_asio_connector::send(const std::string& data_to_be_send)
 {
-	if (m_in_coro)
+	if (m_in_coro && !m_pending_write)
 	{
 		boost::system::error_code ec;
 		boost::asio::async_write(m_socket, boost::asio::buffer(data_to_be_send),

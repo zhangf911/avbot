@@ -74,6 +74,7 @@ public:
 	> send_queue_type;
 	send_queue_type m_send_queue;
 	boost::atomic<bool> m_in_coro;
+	boost::atomic<bool> m_pending_write;
 };
 
 class xmpp
