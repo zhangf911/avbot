@@ -13,7 +13,7 @@ before_script:
   cd build && LDFLAGS="-lrt" cmake -DENABLE_LUA=on  -DENABLE_ZMQ=ON ..
 
 script:
-  make -C build
+  make -j3
 
 notifications:
   recipients:
