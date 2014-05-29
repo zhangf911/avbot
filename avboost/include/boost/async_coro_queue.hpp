@@ -390,6 +390,11 @@ public:
 		m_list.clear();
 	}
 
+	bool empty()
+	{
+		return m_list.empty();
+	}
+
 private:
 
 	boost::asio::io_service & m_io_service;
