@@ -245,6 +245,7 @@ void joke::load_setting()
 	}
 	catch( const std::exception & err )
 	{
+		*m_interval = boost::posix_time::seconds(3600 * 24);
 	}
 }
 
