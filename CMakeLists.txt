@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(avbot)
 
 #-----------------------------------------------------------------------------
@@ -131,8 +131,6 @@ set(SQLITE3_LIBRARIES "${sqlite_lib_location}")
 set(SQLITE3_LIBRARIES "${sqlite_lib_location}" CACHE FILEPATH "lib file to link to sqlite")
 set(SQLITE3_LIBRARY "")
 set(SQLite3_FOUND ON)
-
-include_directories(sqlite/include)
 
 add_subdirectory(soci/src EXCLUDE_FROM_ALL)
 

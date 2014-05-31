@@ -11,12 +11,12 @@ if(LIBCXX_HAS_STDCXX11_FLAG)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 else()
 
-	CHECK_CXX_COMPILER_FLAG(-std=c++0x LIBCXX_HAS_STDCXX0X_FLAG)
+	CHECK_CXX_COMPILER_FLAG(-std=gnu++0x LIBCXX_HAS_STDCXX0X_FLAG)
 
 	if(LIBCXX_HAS_STDCXX0X_FLAG)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
 	else()
-		message(FATAL "need at least gcc 4.4 or clang 3.2")
+		message(FATAL "need at least gcc 4.4.7 or clang 3.2")
 	endif()
 
 endif()
