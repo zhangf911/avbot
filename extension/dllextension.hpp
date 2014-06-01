@@ -60,45 +60,41 @@ public:
 	void call_dll_message(std::string textmsg, std::string channel, boost::function<void(std::string)> sender)
 	{
 		boost::shared_ptr<void> dll_module;
-		static boost::mutex m;
+
+		dll_module.reset(
+			LoadLibraryW(L"avbotextension"),
+			[](void * p){
+			if (p)
+			{
+				FreeLibrary((HMODULE)p);
+				AVLOG_DBG << literal_to_localstr("已卸载 avbotextension.dll");
+			}
+		});
+
+		if (dll_module)
 		{
-			boost::mutex::scoped_lock l(m);
-
-			dll_module.reset(
-				LoadLibraryW(L"avbotextension"),
-				[&](void * p)
-				{
-					boost::mutex::scoped_lock l(m);
-					FreeLibrary((HMODULE)p);
-					std::cerr << literal_to_localstr("已卸载 avbotextension.dll") << std::endl;
-			}
-			);
-
-			if (dll_module)
-			{
-				std::cerr << literal_to_localstr("已加载 avbotextension.dll!!!") << std::endl;
-			}
-			else
-			{
-				std::cerr << literal_to_localstr("没有找到 avbotextension.dll!!!") << std::endl;
-				std::cerr << literal_to_localstr("无调用!") << std::endl;
-				return ;
-			}
+			AVLOG_DBG << literal_to_localstr("已加载 avbotextension.dll!!!");
 		}
+		else
+		{
+			AVLOG_ERR << literal_to_localstr("没有找到 avbotextension.dll!!!");
+			return;
+		}
+		
 
 		auto p = GetProcAddress((HMODULE)(dll_module.get()), "avbot_on_message");
 		avbot_on_message_t f = reinterpret_cast<avbot_on_message_t>(p);
 
 		if (!f)
 		{
-			MessageBoxA(0, "avbot_on_message 函数没找到", "avbotdllextension.dll", MB_OK);
+			MessageBoxW(0, L"avbot_on_message 函数没找到", L"avbotdllextension.dll", MB_OK);
 		}
 
 		// 调用 f 吧！
 		boost::cfunction<message_sender_t, void(std::string)> sender_for_c = sender;
 		f(textmsg.c_str(), channel.c_str(), sender_for_c.c_func_ptr(), sender_for_c.c_void_ptr());
 
-		std::cout << "called avbot_on_message()" << std::endl;
+		AVLOG_DBG << "called avbot_on_message()";
 	}
 };
 

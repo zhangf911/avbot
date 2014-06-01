@@ -186,14 +186,6 @@ avbot_extension make_luascript(std::string channel_name, boost::asio::io_service
 	else
 	{
 		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
-		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
-		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
-		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
-		std::cerr << literal_to_localstr("lua51.dll 加载失败，lua 脚本功能被禁止！！！") << std::endl;
-		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
-		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
-		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
-		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
 		std::cerr << literal_to_localstr("如果希望使用lua脚本功能，请将 lua51.dll 和 avbot 放置于同一目录！") << std::endl;
 
 		return avbot_extension(
