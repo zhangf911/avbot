@@ -1,21 +1,25 @@
-#include "staticcontent.hpp"
+#include <boost/asio.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/random.hpp>
+#include <boost/function.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-using namespace boost::property_tree::xml_parser;
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 #include <boost/regex.hpp>
 #include <ctime>
 #include <boost/foreach.hpp>
 
+#include "staticcontent.hpp"
+
 struct StaticContent
 {
-	StaticContent(asio::io_service& io, boost::function<void(std::string)> sender);
+	StaticContent(boost::asio::io_service& io, boost::function<void(std::string)> sender);
 
 	void operator()(boost::system::error_code ec) {}
 
-	void operator()(const ptree& pt);
+	void operator()(const boost::property_tree::ptree& pt);
 
-	asio::io_service& io_;
+	boost::asio::io_service& io_;
 	boost::function<void(std::string)> sender_;
 	typedef boost::regex Keywords;
 	typedef std::vector<std::string> Messages;
@@ -26,22 +30,23 @@ struct StaticContent
 
 };
 
-StaticContent::StaticContent(asio::io_service& io, boost::function<void(std::string)> sender)
+StaticContent::StaticContent(boost::asio::io_service& io, boost::function<void(std::string)> sender)
 	: io_(io)
 	, sender_(sender)
 	, d_(0, 10000)
 {
+	using namespace boost::property_tree::xml_parser;
 	g_.seed(std::time(0));
 	std::string filename = "static.xml";
 	if(fs::exists(filename))
 	{
-		ptree pt;
+		boost::property_tree::ptree pt;
 		read_xml(filename, pt);
-		BOOST_FOREACH(const ptree::value_type & item,  pt.get_child("static"))
+		BOOST_FOREACH(const boost::property_tree::ptree::value_type & item,  pt.get_child("static"))
 		{
 			std::string keyword = item.second.get<std::string>("keyword");
 			std::vector<std::string> messages;
-			BOOST_FOREACH(const ptree::value_type & message,  item.second.get_child("messages"))
+			BOOST_FOREACH(const boost::property_tree::ptree::value_type & message,  item.second.get_child("messages"))
 			{
 				messages.push_back(message.second.get_value<std::string>());
 			}
@@ -50,8 +55,9 @@ StaticContent::StaticContent(asio::io_service& io, boost::function<void(std::str
 	}
 }
 
-void StaticContent::operator()(const ptree& pt)
+void StaticContent::operator()(const boost::property_tree::ptree& pt)
 {
+	using boost::property_tree::ptree;
 	typedef std::pair<Keywords, Messages> item_type;
 	std::string text = pt.get<std::string>("message.text");
 
@@ -64,7 +70,7 @@ void StaticContent::operator()(const ptree& pt)
 	}
 }
 
-avbot_extension make_static_content(asio::io_service& io, std::string channel_name, boost::function<void(std::string)> sender)
+avbot_extension make_static_content(boost::asio::io_service& io, std::string channel_name, boost::function<void(std::string)> sender)
 {
 	return avbot_extension(
 		channel_name,

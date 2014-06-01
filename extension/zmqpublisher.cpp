@@ -1,9 +1,15 @@
-#include "zmqpublisher.hpp"
-#include "zmq.h"
+#include <boost/asio.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/random.hpp>
+#include <boost/function.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/async_coro_queue.hpp>
 #include <boost/thread.hpp>
 #include <boost/circular_buffer.hpp>
+
+#include "zmq.h"
+
+#include "zmqpublisher.hpp"
 
 class ZmqPublisher : boost::noncopyable
 {
@@ -22,7 +28,7 @@ public:
 		socket_.reset(zmq_socket(ctx_.get(), ZMQ_PUB), zmq_close);
 		zmq_bind(socket_.get(), "tcp://*:8123");
 		queue_.async_pop(boost::bind(&ZmqPublisher::on_queue_pop, this, _1, _2));
-		boost::thread(boost::bind(&asio::io_service::run, boost::ref(io_))).detach();
+		boost::thread(boost::bind(&boost::asio::io_service::run, boost::ref(io_))).detach();
 	}
 
 	virtual ~ZmqPublisher()
@@ -47,10 +53,10 @@ public:
 	}
 
 private:
-	asio::io_service io_;
-	asio::io_service::work work_;
-	
-	boost::async_coro_queue< 
+	boost::asio::io_service io_;
+	boost::asio::io_service::work work_;
+
+	boost::async_coro_queue<
 		boost::circular_buffer_space_optimized<
 			Message
 		> > queue_;
@@ -61,7 +67,7 @@ private:
 class ZmqPublisherClient
 {
 public:
-	ZmqPublisherClient(boost::shared_ptr<ZmqPublisher> zmq_publisher, asio::io_service &io, std::string channel_name, boost::function<void(std::string)> sender)
+	ZmqPublisherClient(boost::shared_ptr<ZmqPublisher> zmq_publisher, boost::asio::io_service &io, std::string channel_name, boost::function<void(std::string)> sender)
 		: io_(io)
 		, channel_name_(channel_name)
 		, sender_(sender)
@@ -77,7 +83,7 @@ public:
 	}
 
 private:
-	asio::io_service &io_;
+	boost::asio::io_service &io_;
 	std::string channel_name_;
 	boost::function<void (std::string)> sender_;
 
@@ -86,7 +92,7 @@ private:
 
 //ZmqPublisher ZmqPublisherClient::publisher_;
 
-avbot_extension make_zmq_publisher(asio::io_service &io, std::string channel_name, boost::function<void (std::string)> sender)
+avbot_extension make_zmq_publisher(boost::asio::io_service &io, std::string channel_name, boost::function<void (std::string)> sender)
 {
 	static boost::shared_ptr<ZmqPublisher> zmq;
 	if (!zmq)
