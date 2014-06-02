@@ -111,7 +111,7 @@ gloox::ConnectionError xmpp_asio_connector::connect()
 	if (!ec)
 	{
 		// 开启 后台发送 协程
-		async_background_send_coro<boost::asio::ip::tcp::socket, send_queue_type>(m_socket, m_send_queue, m_pending_write)();
+		async_background_send_coro<decltype(m_socket), decltype(m_send_queue)>(m_socket, m_send_queue, m_pending_write)();
 
 		m_state = gloox::StateConnected;
 		m_in_coro = 1;
@@ -275,7 +275,7 @@ void xmpp::on_room_message( boost::function<void ( std::string xmpproom, std::st
 void xmpp::send_room_message( std::string xmpproom, std::string message )
 {
 	//查找啊.
-	BOOST_FOREACH(boost::shared_ptr<gloox::MUCRoom> room, m_rooms)
+	BOOST_FOREACH(auto room, m_rooms)
 	{
 		if (room->name() == xmpproom)
 		{
@@ -304,7 +304,7 @@ bool xmpp::onTLSConnect( const gloox::CertInfo& info )
 
 void xmpp::onConnect()
 {
-	BOOST_FOREACH( boost::shared_ptr<gloox::MUCRoom> room,  m_rooms )
+	BOOST_FOREACH(auto room,  m_rooms )
 	{
 		room->join();
 		room->getRoomInfo();
@@ -326,7 +326,8 @@ static std::string randomname( std::string m_xmppnick )
 
 void xmpp::handleMUCError( gloox::MUCRoom* room, gloox::StanzaError error )
 {
-	if( error == gloox::StanzaErrorConflict ) {
+	if( error == gloox::StanzaErrorConflict )
+	{
 		// 出现名字冲突，使用一个随机名字.
 		room->setNick( randomname( m_xmppnick ) );
 		room->join();
@@ -353,7 +354,7 @@ void xmpp::handleMUCParticipantPresence( gloox::MUCRoom* room, const gloox::MUCR
 
 bool xmpp::handleMUCRoomCreation( gloox::MUCRoom* room )
 {
-	AVLOG_ERR << "xmpp: " << "no room \"" << room->name() << "\" attempt to create on";
+	AVLOG_ERR << "xmpp: " << "no room \"" << room->name() << "\" attempt to create one";
 	return true;
 }
 
