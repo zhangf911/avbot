@@ -517,7 +517,7 @@ std::string avbot::format_message( const avbot::av_message_tree& message )
 	{
 		linermessage += message.get<std::string>("preamble", "");
 
-		BOOST_FOREACH(const avbot::av_message_tree::value_type & v, message.get_child("message"))
+		BOOST_FOREACH(const auto & v, message.get_child("message"))
 		{
 			if (v.first == "text")
 			{
