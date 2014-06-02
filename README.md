@@ -11,11 +11,15 @@ see [社区维基的avbot介绍](http://wiki.avplayer.org/Avbot)
 cmake >= 2.8
 
 ## GCC 系
+
 centos >= 6.4
+
 ubuntu >= 12.04
+
 debian >= 7
 
 和其他一些 gcc >= 4.4.7 的系统。
+
 centos6 请添加 atrpm 源安装 cmake 2.8 版本。自带的 cmake 2.6 太旧。
 
 ## MSVC 系
@@ -27,6 +31,7 @@ VisutalStudio 2013 - vc120_xp toolset （支持 Windows XP 以上系统）
  启用步骤 
 
   > cmake -G "VisualStudio 12" -T "vc120_xp"
+
   > cmake -G "VisualStudio 12 Win64" -T "vc120_xp"
 
 ## icc 系
@@ -51,6 +56,7 @@ mingw64 >= 4.8
 ## boost 相关
 
 boost 需要至少 1.55 版本。 
+
 boost 请静态编译， gentoo 用户注意 USE=static-libs emerge boost
 
 win 下, boost 请使用 link=static runtime-link=static 执行静态编译 (包括 mingw 下)。
