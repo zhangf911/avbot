@@ -5,8 +5,10 @@ compiler:
 
 before_install:
   - sudo add-apt-repository -y ppa:boost-latest/ppa
+  - sudo add-apt-repository -y ppa:kalakris/cmake
   - sudo apt-get update
-  - sudo apt-get install -qq wget liblua5.1-dev libluajit-5.1-dev boost1.55 cmake
+  - sudo apt-get install cmake
+  - sudo apt-get install -qq wget liblua5.1-dev libluajit-5.1-dev boost1.55
   - mkdir -pv build
 
 before_script:
