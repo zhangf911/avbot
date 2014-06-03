@@ -16,7 +16,7 @@
  *
  */
 #include <boost/make_shared.hpp>
-#include "xmpp.hpp"
+#include <libxmpp/xmpp.hpp>
 #include "xmpp_impl.hpp"
 
 xmpp::xmpp(boost::asio::io_service & asio, std::string xmppuser, std::string xmpppasswd, std::string xmppserver, std::string xmppnick)

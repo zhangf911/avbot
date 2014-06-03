@@ -4,18 +4,15 @@ include_directories(${Boost_INCLUDE_DIRS})
 option(INTERNALGLOOX "use bundled gloox" ON)
 
 if(INTERNALGLOOX)
-add_subdirectory(gloox)
-include_directories(gloox)
+add_subdirectory(src/gloox)
 endif()
 
-add_library(xmpp STATIC xmpp_impl.hpp xmpp_impl.cpp xmpp.hpp xmpp.cpp)
+add_library(xmpp STATIC src/xmpp_impl.hpp src/xmpp_impl.cpp include/libxmpp/xmpp.hpp src/xmpp.cpp)
+target_include_directories(xmpp INTERFACE include PRIVATE include)
+target_include_directories(xmpp PRIVATE src/gloox)
 target_link_libraries(xmpp ${Boost_LIBRARIES})
 
-if(INTERNALGLOOX)
 target_link_libraries(xmpp gloox)
-else()
-target_link_libraries(xmpp -lgloox)
-endif()
 
 if(ENABLE_TEST)
 	add_executable(xmpptest test.cpp)

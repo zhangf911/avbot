@@ -40,3 +40,6 @@ add_custom_command(TARGET avbot POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory libs $<TARGET_FILE_DIR:avbot>)
 
 endif()
+
+target_include_directories(libluascript PRIVATE
+    $<TARGET_PROPERTY:xmpp,INTERFACE_INCLUDE_DIRECTORIES>)
