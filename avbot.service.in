@@ -6,6 +6,8 @@ Wants=network-online.target
 ExecStart=@CMAKE_INSTALL_PREFIX@/bin/avbot
 RestartSec=1s
 Type=simple
+Environment=LANG=en_US.UTF-8
+Environment=TZ=Asia/Shanghai
 
 [Install]
 WantedBy=multi-user.target
