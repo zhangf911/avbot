@@ -476,6 +476,7 @@ int main(int argc, char * argv[])
 	("version,v", 	"output version")
 	("help,h", 	"produce help message")
 	("daemon,d", 	"go to background")
+	("nostdin", 	"don't read from stdin (systemd daemon mode)")
 #if defined(WIN32) || defined(WITH_QT_GUI)
 	("gui,g",	 	"pop up settings dialog")
 #endif
@@ -790,7 +791,7 @@ rungui:
 
 	boost::asio::io_service::work work(io_service);
 
-	if (!vm.count("daemon"))
+	if (!vm.count("daemon") && !vm.count("nostdin"))
 	{
 		start_stdinput(io_service);
 		connect_stdinput(boost::bind(stdin_feed_broadcast , boost::ref(mybot), _1));
