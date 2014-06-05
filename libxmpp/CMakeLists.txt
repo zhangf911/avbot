@@ -9,7 +9,9 @@ endif()
 
 add_library(xmpp STATIC src/xmpp_impl.hpp src/xmpp_impl.cpp include/libxmpp/xmpp.hpp src/xmpp.cpp)
 target_include_directories(xmpp INTERFACE include PRIVATE include)
+if(INTERNALGLOOX)
 target_include_directories(xmpp PRIVATE src/gloox)
+endif()
 target_link_libraries(xmpp ${Boost_LIBRARIES})
 
 target_link_libraries(xmpp gloox)
