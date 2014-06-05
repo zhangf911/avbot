@@ -261,7 +261,7 @@ target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 if(NOT MSVC)
 	install(TARGETS avbot RUNTIME DESTINATION bin)
-	install(FILES avbot.service DESTINATION /lib/systemd/system)
+	install(FILES ${PROJECT_BINARY_DIR}/avbot.service DESTINATION /lib/systemd/system)
 endif()
 
 if( NOT Boost_USE_STATIC_RUNTIME )
