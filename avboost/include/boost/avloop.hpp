@@ -121,6 +121,36 @@ static void avloop_gui_del_dlg(boost::asio::io_service& io_service, HWND dlghwnd
 }
 #endif
 
+namespace{
+	template<class Handler>
+	void avloop_idle_post_impl(boost::asio::io_service& io_service, Handler handler)
+	{
+		using namespace ::detail;
+		if (!boost::asio::has_service<IdleService>(io_service))
+			boost::asio::add_service(io_service, new IdleService(io_service));
+
+		boost::asio::use_service<IdleService>(io_service).post(boost::asio::detail::bind_handler(handler, boost::system::error_code()));
+	}
+
+}
+
+template<typename Handler>
+inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler,
+	void(boost::system::error_code))
+avloop_idle_yield(boost::asio::io_service& io_service, Handler handler)
+{
+	using namespace boost::asio;
+
+	BOOST_ASIO_CONNECT_HANDLER_CHECK(Handler, handler) type_check;
+
+	boost::asio::detail::async_result_init<
+		Handler, void(boost::system::error_code)>
+		init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+	avloop_idle_post_impl<BOOST_ASIO_HANDLER_TYPE(Handler, void(boost::system::error_code))>(
+		io_service, init.handler);
+	return init.result.get();
+}
 
 template<class Handler>
 void avloop_idle_post(boost::asio::io_service& io_service, Handler handler)
