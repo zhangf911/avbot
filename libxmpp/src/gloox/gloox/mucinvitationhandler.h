@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2006-2009 by Jakob Schroeter <js@camaya.net>
+  Copyright (c) 2006-2013 by Jakob Schroeter <js@camaya.net>
   This file is part of the gloox library. http://camaya.net/gloox
 
   This software is distributed under a license. The full license
@@ -18,7 +18,6 @@
 #include "clientbase.h"
 #include "macros.h"
 #include "jid.h"
-#include "mucroom.h"
 
 #include <string>
 
@@ -40,11 +39,7 @@ namespace gloox
        * Constructor. Prepares the given ClientBase for receiving MUC invitations..
        * @param parent A ClientBase instance to prepare.
        */
-      MUCInvitationHandler( ClientBase* parent )
-      {
-        if( parent )
-          parent->registerStanzaExtension( new MUCRoom::MUCUser() );
-      }
+      MUCInvitationHandler( ClientBase* parent );
 
       /**
        * Virtual Destructor.

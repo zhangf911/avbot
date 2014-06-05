@@ -15,6 +15,7 @@ endif()
 remove_definitions(-DWIN32_LEAN_AND_MEAN)
 
 SET( GLOOX_SRC
+gloox/atomicrefcount.cpp
 gloox/amp.cpp
 gloox/annotations.cpp
 gloox/attention.cpp

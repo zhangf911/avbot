@@ -1,5 +1,138 @@
+v1.0.10 -- 09 Apr 2014
+---------------------
+- TLSSChannel: use malloc/realloc/free instead of their legacy Local* variants (fixes #222)
+- VCard: remove \r from vcard photos. Fixes a recent change Facebook made to their vcard pictures (patch by Fernando Sanchez)
+- Jingle: fixed replying; distinguish between 'from' and 'initiator'; added Jingle::Session::setInitiator()
+- Jingle: fixed ::ICEUDP to actually add candidates; added ::Session::initiator(), ::setHandler(), ::sessionAccept( PluginList ); fixed storing of new sessions in ::SessionManager (patches by Erich Keane)
+- Jingle: removed Jingle::setInitiator() and ::setResponder() (now provided by ctor)
+- AtomicRefCount: fixed compilation on iOS (patch by Erich Keane)
+- Jingle::Plugin: added JinglePluginType, pluginType(), and findPlugin() to easily look for and retrieve specific plugins
+- ConnectionBOSH: fixed return value for recv() (patch by Sudarshan Prasad)
+- Parser: get rid of bogus isValid() (fixes #180, #224)
+
+
+
+v1.0.9 -- 15 Oct 2013
+---------------------
+- changed colon to dash in uid generation to possibly fix #191
+- added Channel Binding (needed for SASL SCRAM-SHA-1-PLUS) to SChannel on win32 (untested)
+- fixed SCRAM-SHA-1-PLUS
+
+
+
+v1.0.8 -- 15 Oct 2013
+---------------------
+- ConnectionTLS: make stacked TLS/SSL connections work again with HTTP proxies
+- added SASL SCRAM-SHA-1/SCRAM-SHA-1-PLUS authentication mechanisms (GnuTLS & OpenSSL only) (#201)
+- properly seed the RNG
+- SHA::hex(): finalize() only once
+
+
+
+v1.0.7.1 -- 11 Oct 2013
+---------------------
+- fixed/updated the win32 project files
+
+
+
+v1.0.7 -- 11 Oct 2013
+---------------------
+- added Jingle (XEP-0166)
+- added Jingle ICE-UDP Transport (XEP-0176)
+- added Jingle File Transfer (XEP-0234)
+- fixed compilation in iOS7 SDK (thanks to Kurt Vermeersch)
+- fixed bug in stanza handling/counting related to Stream Management (patch by Norbert Riedlin)
+- added protected ClientBase::stanzasSent() to return sent stanzas (if Stream Management enabled)
+
+
+
+v1.0.6 -- 04 Sep 2013
+---------------------
+- ClientBase: removed check for empty message body --> messages of type chat with empty bodies will be passed on to listeners - required for Message Carbons
+- MessageSession: removed check for empty message body --> messages of type chat with empty bodies will be passed on to listeners - required for Message Carbons
+- don't send presence after stream resumption
+- added ClientBase::sendQueue()
+- documentation updates and fixes
+
+
+
+v1.0.5 -- 02 Sep 2013
+---------------------
+- added support for Stanza Forwarding (XEP-0297)
+- added support for Message Carbons (XEP-0280)
+
+
+
+v1.0.4 -- 30 Aug 2013
+---------------------
+- added support for Stream Management (XEP-0198)
+- Fix some iterator usage for portability related to erase (patch by Daniel Bowen)
+- Ensure setting a connection does not leave a deleted value in the member variable for a time (patch by Daniel Bowen)
+- Add operator< and relatives to JID so that it can be in a map (patch by Daniel Bowen)
+- Sandboxing on Apple doesn't like getprotobyname (patch by Daniel Bowen)
+- MessageSession::send(): removed default argument of 2nd parameter to remove ambiguity of MS::send( string ) (#206) (source incompatible!)
+- VCard: renamed setPhoto( string ) to setPhotoUri( string ) (#166) (source and binary incompatible)
+
+
+
+v1.0.3 -- 22 Jul 2013
+---------------------
+- Changed license to GPLv3
+- removed space from VS project name (--> gloox-1.0)
+- VCardUpdate: fixed handling of empty hash (#203)
+- VCardUpdate: added hasPhoto() to inidicate whether there was a photo tag (#203)
+- compilation fixed when using getaddrinfo (patch by Roy van Dam)
+- Receipt: recognize id attribute (patch by Dídac Pérez) (#208)
+- MessageSession: added MS::send( string& ) to properly provide a base for MUCMS::send( string& ) (#206)
+- really fixed memory leak in prep::idna()
+- gloox.vcproj: removed not-yet-present tlsgnutlsserver.cpp/.h
+
+
+
+v1.0.2 -- 05 Jul 2013
+---------------------
+- SOCKS5Bytestream: Don't wait for incoming data, notify about open stream immediately upon
+connection (patch by Erik Horemans)
+- fixed/updated Code::Blocks and VS project files (fixes #197, #198)
+- fixed memory leak in ClientBase (fixes #204)
+- fixed memory leak in prep::idna()
+
+
+
+v1.0.1 -- 29 Jun 2013
+---------------------
+- Added support for Serverless Messaging (XEP-0174)
+- TLSOpenSSLServer: compilation fix
+- don't bail on DNS TCP queries
+- fixed µs timeout value (now defaults to 1.000.000)
+- omit port in initial greeting (usually -1 anyway)
+- fixed SHA1 hashes of 55 byte strings (#164)
+- fixed CFLAGS and LIBS in pkg-config file (#163)
+- fixed SOCKS5Bytestream double close notification
+- tell gcrypt that we're using pthreads (if available)
+- ClientBase: send IQ error response for unsupported features
+- ClientBase: fixed potential infinite loop on IQ error
+- ClientBase: fixed NTLM auth
+- ClientBase, SEF: mutex-protected SE handling
+- PubSub: added 'subscribe & configure'
+- PubSub: added optional subid
+- SOCKS5BytestreamServer: expose local socket
+- RosterManager: don't use string-comparison on JIDs; use JID class
+- NonSASLAuth: fixed resource usage by deprecating ClientBase::m_selectedResource
+- InBandBytestream: don't call handler in dtor
+- util: fixed long2string()
+- fixed a few leaks in GnutTLS client code (#181)
+- VCard: made getters const (#186) (binary-incompatible change!)
+- PubsubManager: fixed using wrong Tag (#190)
+- Search: fixed search() (#193)
+- DNS: fix socket leak if no network connection is available (#192)
+- PubsubManager: unconditionally call handleItemPublication() (#194)
+- configure: Added -lgcrypt (dependency of GNUTLS)
+
+
+
 v1.0 -- 31 Oct 2009
--------------------
+---------------------
 
 general changes and additions:
 - XEP-0020 (Feature Negotiation) wrapper

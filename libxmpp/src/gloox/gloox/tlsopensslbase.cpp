@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2009 by Jakob Schroeter <js@camaya.net>
+  Copyright (c) 2009-2013 by Jakob Schroeter <js@camaya.net>
   This file is part of the gloox library. http://camaya.net/gloox
 
   This software is distributed under a license. The full license
@@ -248,7 +248,7 @@ namespace gloox
       m_certInfo.status = CertInvalid;
     else
       m_certInfo.status = CertOk;
-# if  OPENSSL_VERSION_NUMBER > 0x10000000L
+
     X509* peer = SSL_get_peer_certificate( m_ssl );
     if( peer )
     {
@@ -274,7 +274,6 @@ namespace gloox
     {
       m_certInfo.status = CertInvalid;
     }
-#endif
 
     const char* tmp;
     tmp = SSL_get_cipher_name( m_ssl );
