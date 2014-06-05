@@ -1,0 +1,11 @@
+[Unit]
+Description=avbot bridges QQ/IRC/XMPP world together
+Wants=network-online.target
+
+[Service]
+ExecStart=@CMAKE_INSTALL_PREFIX@/bin/avbot
+RestartSec=1s
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
