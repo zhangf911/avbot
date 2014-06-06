@@ -121,7 +121,7 @@ configure_file(avbot.service.in ${PROJECT_BINARY_DIR}/avbot.service)
 
 add_subdirectory(sqlite)
 
-get_property(sqlite_lib_location TARGET sqlite3 PROPERTY LOCATION)
+set(sqlite_lib_location  $<TARGET_FILE:sqlite3>)
 message (STATUS "sqlite_lib_location == ${sqlite_lib_location}")
 
 set(SQLITE_ROOT_DIR "${PROJECT_BINARY_DIR}/sqlite/")
