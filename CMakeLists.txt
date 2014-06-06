@@ -121,15 +121,19 @@ configure_file(avbot.service.in ${PROJECT_BINARY_DIR}/avbot.service)
 
 add_subdirectory(sqlite)
 
-set(sqlite_lib_location  $<TARGET_FILE:sqlite3>)
+if(CMAKE_MAJOR_VERSION LESS 3)
+get_target_property(sqlite_lib_location sqlite3 LOCATION)
+else()
+set(sqlite_lib_location  $<TARGET_LINKER_FILE:sqlite3>)
+endif()
 message (STATUS "sqlite_lib_location == ${sqlite_lib_location}")
 
 set(SQLITE_ROOT_DIR "${PROJECT_BINARY_DIR}/sqlite/")
 set(SQLITE3_INCLUDES "${PROJECT_SOURCE_DIR}/sqlite/include/" CACHE PATH "include dir for sqlite3.h")
 set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/")
 set(SQLITE3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/sqlite/include/" CACHE PATH "include dir for sqlite3.h" FORCE)
-set(SQLITE3_LIBRARIES "${sqlite_lib_location}")
-set(SQLITE3_LIBRARIES "${sqlite_lib_location}" CACHE FILEPATH "lib file to link to sqlite")
+set(SQLITE3_LIBRARIES $<TARGET_LINKER_FILE:sqlite3>)
+set(SQLITE3_LIBRARIES $<TARGET_LINKER_FILE:sqlite3> CACHE FILEPATH "lib file to link to sqlite")
 set(SQLITE3_LIBRARY "")
 set(SQLite3_FOUND ON)
 
