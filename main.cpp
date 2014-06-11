@@ -632,10 +632,10 @@ int main(int argc, char * argv[])
 #ifndef _WIN32
 	// 设置到中国的时区，否则 qq 消息时间不对啊.
 	setenv("TZ", "Asia/Shanghai", 1);
+# endif
 
 	// 设置 BackTrace
 	avbot_setup_seghandler();
-# endif
 
 #if defined(_WIN32) || defined(WITH_QT_GUI)
 rungui:

@@ -200,6 +200,10 @@ if(NOT WIN32)
 endif()
 
 if(WIN32)
+	list(APPEND AVBOT_SOURCES minidump.cpp)
+endif()
+
+if(WIN32)
 	list(APPEND AVBOT_SOURCES sound.cpp )
 else()
 
@@ -263,11 +267,6 @@ target_link_libraries(avbot libavbot avlog extension soci_core_static soci_sqlit
 
 target_link_libraries(avbot ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
-if(NOT MSVC)
-	install(TARGETS avbot RUNTIME DESTINATION bin)
-	install(FILES ${PROJECT_BINARY_DIR}/avbot.service DESTINATION /lib/systemd/system)
-endif()
-
 if( NOT Boost_USE_STATIC_RUNTIME )
 	message(STATUS "dynamic link to boost is not recomanded")
 endif()
@@ -295,4 +294,9 @@ endif()
 
 if (ALSA_FOUND)
 	target_link_libraries(avbot ${ALSA_LIBRARY})
+endif()
+
+install(TARGETS avbot RUNTIME DESTINATION bin)
+if(NOT WIN32)
+	install(FILES ${PROJECT_BINARY_DIR}/avbot.service DESTINATION /lib/systemd/system)
 endif()
