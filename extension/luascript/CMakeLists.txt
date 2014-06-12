@@ -36,8 +36,8 @@ target_link_libraries(libluascript delayimp.lib)
 set_target_properties(libluascript PROPERTIES LINK_FLAGS "/DELAYLOAD:lua51.dll")
 endif()
 
-add_custom_command(TARGET avbot POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory libs $<TARGET_FILE_DIR:avbot>)
+add_custom_command(TARGET libluascript POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory libs ${CMAKE_BINARY_DIR})
 
 endif()
 
