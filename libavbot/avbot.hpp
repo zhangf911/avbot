@@ -24,9 +24,9 @@ namespace implementation{
 class avbot_account_indrector : boost::noncopyable
 {
 	friend class concepts::avbot_account;
-	virtual void async_login(boost::function<void(boost::system::error_code)> handler);
-	virtual void async_recv_message(boost::function<void(boost::system::error_code, boost::property_tree::ptree)> handler);
-	virtual void async_send_message(std::string target, std::string message, boost::function<void(boost::system::error_code)> handler);
+	virtual void async_login(boost::function<void(boost::system::error_code)> handler) = 0;
+	virtual void async_recv_message(boost::function<void(boost::system::error_code, boost::property_tree::ptree)> handler) =0 ;
+	virtual void async_send_message(std::string target, std::string message, boost::function<void(boost::system::error_code)> handler) = 0;
 public:
 	virtual ~avbot_account_indrector(){}
 };
@@ -50,17 +50,17 @@ public:
 	{
 	}
 private:
-	void async_login(boost::function<void(boost::system::error_code)> handler)
+	virtual void async_login(boost::function<void(boost::system::error_code)> handler)
 	{
 		m_real_avbot_account.async_login(handler);
 	}
 
-	void async_recv_message(boost::function<void(boost::system::error_code, boost::property_tree::ptree)> handler)
+	virtual void async_recv_message(boost::function<void(boost::system::error_code, boost::property_tree::ptree)> handler)
 	{
 		m_real_avbot_account.async_recv_message(handler);
 	}
 
-	void async_send_message(std::string target, std::string message, boost::function<void(boost::system::error_code)> handler)
+	virtual void async_send_message(std::string target, std::string message, boost::function<void(boost::system::error_code)> handler)
 	{
 		m_real_avbot_account.async_send_message(target, message, handler);
 	}
