@@ -584,7 +584,10 @@ void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, c
 		using namespace boost::lambda;
 		// 如果 flag_quit是真的，那么 this 其实是不能访问的，因为已经析构了。
 		if (!*flag_quit)
-			boost::remove_if(m_accouts.begin(), m_accouts.end(), boost::lambda::_1 == &accounts);
+		{
+			std::remove(m_accouts.begin(), m_accouts.end(), &accounts);
+		}
+//		boost::remove_if(m_accouts.begin(), m_accouts.end(), boost::lambda::_1 == &accounts);
 	}BOOST_SCOPE_EXIT_END
 
 	// 登录执行完成！
@@ -602,13 +605,18 @@ void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, c
 			}
 		} while (ec);
 
-		// 等待并解析协议的消息
-		boost::property_tree::ptree message = accounts.async_recv_message(yield[ec]);
-		flag_check();
+		do 
+		{
+			// 等待并解析协议的消息
+			boost::property_tree::ptree message = accounts.async_recv_message(yield[ec]);
+			flag_check();
 
-		// 调用 broadcast message, 如果没要求退出的话
-		if(!ec)
-			on_message(message);
-		// 掉线了？重登录！
+			// 调用 broadcast message, 如果没要求退出的话
+			if (!ec)
+				on_message(message);
+			// 掉线了？重登录！
+		// 只有遇到了必须要重登录的错误才重登录
+		// 一时半会的网络错误可没事，再获取一下就可以了
+		} while (!accounts.is_error_fatal(ec));
 	} while (  1  );
 }
