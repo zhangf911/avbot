@@ -108,28 +108,27 @@ avbot::avbot( boost::asio::io_service& io_service )
 
 void avbot::add_to_channel( std::string channel_name, std::string room_name )
 {
-	if( m_channels.find( channel_name ) != m_channels.end() )
+	if( m_channel_map.find( channel_name ) != m_channel_map.end() )
 	{
-		av_chanel_map c = m_channels[channel_name];
+		auto c = m_channel_map[channel_name];
 
 		if( std::find( c.begin(), c.end(), room_name ) == c.end() )
 		{
-			m_channels[channel_name].push_back( room_name );
+			m_channel_map[channel_name].push_back( room_name );
 		}
 	}
 	else
 	{
-		av_chanel_map c;
+		av_chanels_t c;
 		c.push_back( room_name );
-		m_channels.insert( std::make_pair( channel_name, c ) );
+		m_channel_map.insert( std::make_pair( channel_name, c ) );
 		signal_new_channel(channel_name);
 	}
 }
 
 std::string avbot::get_channel_name( std::string room_name )
 {
-	typedef std::pair<std::string, av_chanel_map> avbot_channel_item;
-	BOOST_FOREACH(avbot_channel_item c, m_channels)
+	BOOST_FOREACH(auto c, m_channel_map)
 	{
 		if (std::find(c.second.begin(), c.second.end(), room_name)!=c.second.end())
 		{
@@ -141,10 +140,8 @@ std::string avbot::get_channel_name( std::string room_name )
 
 void avbot::broadcast_message( std::string msg)
 {
-	typedef std::pair<std::string, av_chanel_map> avbot_channel_item;
-
 	// 广播消息到所有的频道.
-	BOOST_FOREACH(avbot_channel_item c, m_channels)
+	BOOST_FOREACH(auto c, m_channel_map)
 	{
 		// 好，发消息!
 		broadcast_message(c.first, msg);
@@ -158,7 +155,7 @@ void avbot::broadcast_message( std::string channel_name, std::string msg )
 
 void avbot::broadcast_message(std::string channel_name, std::string exclude_room, std::string msg )
 {
-	BOOST_FOREACH(std::string chatgroupmember, m_channels[channel_name])
+	BOOST_FOREACH(std::string chatgroupmember, m_channel_map[channel_name])
 	{
 		if (chatgroupmember == exclude_room)
 			continue;
@@ -500,7 +497,7 @@ void avbot::forward_message( const boost::property_tree::ptree& message )
 	}
 	else
 	{
-		if( m_channels.find( channel_name ) != m_channels.end() )
+		if( m_channel_map.find( channel_name ) != m_channel_map.end() )
 		{
 			// 好，发消息!
 			broadcast_message( channel_name, room_name( message ), formated );
@@ -555,4 +552,24 @@ std::string avbot::image_subdir_name( std::string cface )
 	boost::replace_all( cface, "}", "" );
 	boost::replace_all( cface, "-", "" );
 	return cface.substr(0, 2);
+}
+
+
+void avbot::add_account(BOOST_ASIO_MOVE_ARG(concepts::avbot_account) accounts)
+{
+	// 创建只属于它的专属协程
+	boost::asio::spawn(get_io_service(), boost::bind(&avbot::accountsroutine, this, accounts, _1));
+}
+
+void avbot::accountsroutine(concepts::avbot_account accounts, boost::asio::yield_context yield)
+{
+	boost::system::error_code ec;
+	// 添加到 m_accounts 里.
+	m_accouts.push_back(accounts);
+
+	// 执行登录!
+	accounts.async_login(yield[ec]);
+	// 登录执行完成！
+	// 开始读取消息
+	accounts.async_recv_message(yield[ec]);
 }

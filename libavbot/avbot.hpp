@@ -1,8 +1,12 @@
 ﻿
 #pragma once
 
+#include <boost/config.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/asio.hpp>
+#include <boost/asio/spawn.hpp>
 #include <boost/signals2.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -11,18 +15,135 @@
 #include "libxmpp/xmpp.hpp"
 #include "libmailexchange/mx.hpp"
 
-class BOOST_SYMBOL_VISIBLE avbot : boost::noncopyable{
+namespace concepts{
+
+class avbot_account;
+
+namespace implementation{
+
+class avbot_account : boost::noncopyable
+{
+	friend concepts::avbot_account;
+
+	virtual ~avbot_account(){}
+	virtual void async_login(boost::function<void(boost::system::error_code)> handler);
+	virtual void async_recv_message(boost::function<void(boost::system::error_code, boost::property_tree::ptree)> handler);
+	virtual void async_send_message(std::string target, std::string message, boost::function<void(boost::system::error_code)> handler);
+};
+
+BOOST_NO_CXX11_DECLTYPE_N3276;
+template<typename T>
+class avbot_account_adapter final : public avbot_account
+{
+	typename boost::remove_reference<T>::type m_real_avbot_account;
+	~avbot_account_adapter(){}
 public:
-	typedef std::vector<std::string> av_chanel_map;
+#ifdef BOOST_ASIO_HAS_MOVE
+	avbot_account_adapter(T && wrapee)
+		: m_real_avbot_account(wrapee)
+	{
+	}
+#endif // !BOOST_ASIO_HAS_MOVE
+	avbot_account_adapter(const T &wrapee)
+		: m_real_avbot_account(wrapee)
+	{
+	}
+private:
+	void async_login(boost::function<void(boost::system::error_code)> handler)
+	{
+		m_real_avbot_account.async_login(handler);
+	}
+
+	void async_recv_message(boost::function<void(boost::system::error_code, boost::property_tree::ptree)> handler)
+	{
+		m_real_avbot_account.async_recv_message(handler);
+	}
+
+	void async_send_message(std::string target, std::string message, boost::function<void(boost::system::error_code)> handler)
+	{
+		m_real_avbot_account.async_send_message(target, message, handler);
+	}
+};
+
+}
+
+// copyable and movable, so it can be put into STL container
+class avbot_account
+{
+	boost::shared_ptr<implementation::avbot_account> _impl;
+public:
+	template<typename Handler>
+	inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code))
+		async_login(BOOST_ASIO_MOVE_ARG(Handler) handler)
+	{
+		using namespace boost::asio;
+		boost::asio::detail::async_result_init<Handler, void(boost::system::error_code)>
+			init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+		_impl->async_login(init.handler);
+
+		return init.result.get();
+	}
+
+	template<typename Handler>
+	inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code, boost::property_tree::ptree))
+		async_recv_message(BOOST_ASIO_MOVE_ARG(Handler) handler)
+	{
+		using namespace boost::asio;
+		boost::asio::detail::async_result_init<Handler, void(boost::system::error_code, boost::property_tree::ptree)>
+			init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+		_impl->async_recv_message(init.handler);
+
+		return init.result.get();
+	}
+
+	template<typename Handler>
+	inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code))
+		async_send_message(std::string target, std::string message, BOOST_ASIO_MOVE_ARG(Handler) handler)
+	{
+		using namespace boost::asio;
+		boost::asio::detail::async_result_init<Handler, void(boost::system::error_code)>
+			init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+		_impl->async_send_message(target, message, init.handler);
+
+		return init.result.get();
+	}
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+	template<typename T>
+	avbot_account(const T & wrapee)
+	{
+		_impl.reset(new implementation::avbot_account_adapter<boost::remove_reference<T>::type>(wrapee));
+	}
+#else
+	template<typename T>
+	avbot_account(T && wrapee)
+	{
+		_impl.reset(new implementation::avbot_account_adapter<boost::remove_reference<T>::type>(wrapee));
+	}
+#endif
+};
+
+}
+
+class BOOST_SYMBOL_VISIBLE avbot : boost::noncopyable
+{
+public:
+	typedef std::vector<std::string> av_chanels_t;
 private:
 	boost::asio::io_service & m_io_service;
+
+	// 把帐户放到 STL 容器里
+	std::vector<concepts::avbot_account> m_accouts;
 
 	boost::shared_ptr<webqq::webqq> m_qq_account;
 	boost::shared_ptr<irc::client> m_irc_account;
 	boost::shared_ptr<xmpp> m_xmpp_account;
 	boost::shared_ptr<mx::mx> m_mail_account;
 	// channel have a name :)
-	std::map<std::string, av_chanel_map> m_channels;
+	std::map<std::string, av_chanels_t> m_channel_map;
 
 public:
 	avbot(boost::asio::io_service & io_service);
@@ -54,6 +175,10 @@ public:
 	boost::shared_ptr<mx::mx> get_mx(){return m_mail_account;}
 	boost::shared_ptr<irc::client> get_irc(){return m_irc_account;}
 public:
+
+	// 调用这个接口添加受 avbot 控制的账户。
+	void add_account(BOOST_ASIO_MOVE_ARG(concepts::avbot_account) accounts);
+
 	// 调用这个添加 QQ 帐号. need_verify_image 会在需要登录验证码的时候调用，buffer 里包含了验证码图片.
 	void set_qq_account(std::string qqnumber, std::string password, need_verify_image cb, bool no_persistent_db = false);
 	// 调用这个重新登陆 QQ
@@ -82,8 +207,8 @@ public:
 public:
 	// NOTE: webqq will create a channel_name name after qq group number automantically
 	void add_to_channel(std::string channel_name, std::string room_name);
-	av_chanel_map get_channel_map(std::string channel_name){
-		return m_channels[channel_name];
+	av_chanels_t get_channel_map(std::string channel_name){
+		return m_channel_map[channel_name];
 	}
 	// 从 "irc:avplayer" 这样的名字获得组合频道的名字.
 	std::string get_channel_name(std::string room_name);
@@ -93,6 +218,8 @@ public:
 	void broadcast_message(std::string channel_name, std::string msg);
 	void broadcast_message(std::string channel_name, std::string exclude_room, std::string msg);
 private:
+	void accountsroutine(concepts::avbot_account accounts, boost::asio::yield_context yield);
+
 	void callback_on_irc_message(irc::irc_msg pMsg);
 	void callback_on_qq_group_message(std::string group_code, std::string who, const std::vector<webqq::qqMsg> & msg);
 	void callback_on_xmpp_group_message(std::string xmpproom, std::string who, std::string message);
