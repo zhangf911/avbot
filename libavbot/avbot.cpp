@@ -97,13 +97,22 @@ static std::string room_name( const avbot::av_message_tree& message )
 }
 
 avbot::avbot( boost::asio::io_service& io_service )
-  : m_io_service(io_service), fetch_img(false)
+	: m_io_service(io_service)
+	, fetch_img(false)
+	, m_quit(boost::make_shared< boost::atomic<bool> >(false))
 {
 	preamble_irc_fmt = "%a 说：";
 	preamble_qq_fmt = "qq(%a)说：";
 	preamble_xmpp_fmt = "(%a)说：";
 
 	on_message.connect(boost::bind(&avbot::forward_message, this, _1));
+}
+
+avbot::~avbot()
+{
+	m_quit = true;
+
+	// then all coroutine will go die
 }
 
 void avbot::add_to_channel( std::string channel_name, std::string room_name )
@@ -558,10 +567,10 @@ std::string avbot::image_subdir_name( std::string cface )
 void avbot::add_account(BOOST_ASIO_MOVE_ARG(concepts::avbot_account) accounts)
 {
 	// 创建只属于它的专属协程
-	boost::asio::spawn(get_io_service(), boost::bind(&avbot::accountsroutine, this, accounts, _1));
+	boost::asio::spawn(get_io_service(), boost::bind(&avbot::accountsroutine, this, m_quit, accounts, _1));
 }
 
-void avbot::accountsroutine(concepts::avbot_account accounts, boost::asio::yield_context yield)
+void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, concepts::avbot_account accounts, boost::asio::yield_context yield)
 {
 	boost::system::error_code ec;
 	// 添加到 m_accounts 里.
@@ -571,5 +580,12 @@ void avbot::accountsroutine(concepts::avbot_account accounts, boost::asio::yield
 	accounts.async_login(yield[ec]);
 	// 登录执行完成！
 	// 开始读取消息
-	accounts.async_recv_message(yield[ec]);
+	while ((!*flag_quit) && (!ec))
+	{
+		// 等待并解析协议的消息
+		boost::property_tree::ptree message = accounts.async_recv_message(yield[ec]);
+		// 调用 broadcast message, 如果没要求退出的话
+		if((!*flag_quit) && (!ec))
+			on_message(message);
+	}
 }

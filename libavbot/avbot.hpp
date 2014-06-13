@@ -2,6 +2,7 @@
 #pragma once
 
 #include <boost/config.hpp>
+#include <boost/atomic.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/noncopyable.hpp>
@@ -159,9 +160,11 @@ private:
 	// channel have a name :)
 	std::map<std::string, av_chanels_t> m_channel_map;
 
+	boost::shared_ptr< boost::atomic<bool> > m_quit;
+
 public:
 	avbot(boost::asio::io_service & io_service);
-
+	~avbot();
 
 public:
 	// 这里是一些公开的成员变量.
@@ -232,7 +235,7 @@ public:
 	void broadcast_message(std::string channel_name, std::string msg);
 	void broadcast_message(std::string channel_name, std::string exclude_room, std::string msg);
 private:
-	void accountsroutine(concepts::avbot_account accounts, boost::asio::yield_context yield);
+	void accountsroutine(boost::shared_ptr<boost::atomic<bool> >, concepts::avbot_account accounts, boost::asio::yield_context yield);
 
 	void callback_on_irc_message(irc::irc_msg pMsg);
 	void callback_on_qq_group_message(std::string group_code, std::string who, const std::vector<webqq::qqMsg> & msg);
