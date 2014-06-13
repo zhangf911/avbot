@@ -584,7 +584,9 @@ void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, c
 		using namespace boost::lambda;
 		// 如果 flag_quit是真的，那么 this 其实是不能访问的，因为已经析构了。
 		if (!*flag_quit)
-			boost::remove_if(m_accouts.begin(), m_accouts.end(), boost::lambda::_1 == &accounts);
+		{
+			std::remove(m_accouts.begin(), m_accouts.end(), & accounts);
+		}
 	}BOOST_SCOPE_EXIT_END
 
 	// 登录执行完成！
