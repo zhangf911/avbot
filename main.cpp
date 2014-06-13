@@ -93,32 +93,33 @@ static std::string progname;
 static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
-
+#if 0
 namespace concepts{
-	namespace implementation{
+namespace implementation{
 
-		template<>
-		class avbot_account_adapter < webqq >
-		{
-			webqq m_webqq;
-		public:
-			avbot_account_adapter(webqq _webqq)
-				m_webqq(_webqq)
-			{
-			}
+template<>
+class avbot_account_adapter < webqq::webqq >
+{
+	webqq::webqq m_webqq;
+public:
+	avbot_account_adapter(webqq::webqq _webqq)
+		m_webqq(_webqq)
+	{
+	}
 
-		private:
+private:
 
-			async_login(boost::function<void(boost::system::error_code)> handler)
-			{
-				m_webqq.async_cface_url_final();
-			}
-
-		};
-
+	async_login(boost::function<void(boost::system::error_code)> handler)
+	{
 
 	}
-}
+
+};
+
+
+}}
+#enfif
+
 #ifdef  _WIN32
 static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr< boost::function<void()> > closer)
 {
