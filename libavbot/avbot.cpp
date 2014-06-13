@@ -579,10 +579,12 @@ void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, c
 	// 添加到 m_accounts 里.
 	m_accouts.push_back(&accounts);
 	
-	BOOST_SCOPE_EXIT(&m_accouts, &accounts)
+	BOOST_SCOPE_EXIT(&m_accouts, &accounts, flag_quit)
 	{
 		using namespace boost::lambda;
-		boost::remove_if(m_accouts.begin(), m_accouts.end(), boost::lambda::_1 == &accounts);
+		// 如果 flag_quit是真的，那么 this 其实是不能访问的，因为已经析构了。
+		if (!*flag_quit)
+			boost::remove_if(m_accouts.begin(), m_accouts.end(), boost::lambda::_1 == &accounts);
 	}BOOST_SCOPE_EXIT_END
 
 	// 登录执行完成！
@@ -599,7 +601,6 @@ void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, c
 				return;
 			}
 		} while (ec);
-
 
 		// 等待并解析协议的消息
 		boost::property_tree::ptree message = accounts.async_recv_message(yield[ec]);
