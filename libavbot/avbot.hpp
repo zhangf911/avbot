@@ -21,23 +21,24 @@ class avbot_account;
 
 namespace implementation{
 
-class avbot_account : boost::noncopyable
+class avbot_account_indrector : boost::noncopyable
 {
-	friend concepts::avbot_account;
-
-	virtual ~avbot_account(){}
+	friend class concepts::avbot_account;
 	virtual void async_login(boost::function<void(boost::system::error_code)> handler);
 	virtual void async_recv_message(boost::function<void(boost::system::error_code, boost::property_tree::ptree)> handler);
 	virtual void async_send_message(std::string target, std::string message, boost::function<void(boost::system::error_code)> handler);
+public:
+	virtual ~avbot_account_indrector(){}
 };
 
-BOOST_NO_CXX11_DECLTYPE_N3276;
 template<typename T>
-class avbot_account_adapter final : public avbot_account
+class avbot_account_adapter : public avbot_account_indrector
 {
+	friend class avbot_account;
+
 	typename boost::remove_reference<T>::type m_real_avbot_account;
-	~avbot_account_adapter(){}
 public:
+	virtual ~avbot_account_adapter(){}
 #ifdef BOOST_ASIO_HAS_MOVE
 	avbot_account_adapter(T && wrapee)
 		: m_real_avbot_account(wrapee)
@@ -70,7 +71,7 @@ private:
 // copyable and movable, so it can be put into STL container
 class avbot_account
 {
-	boost::shared_ptr<implementation::avbot_account> _impl;
+	boost::shared_ptr<implementation::avbot_account_indrector> _impl;
 public:
 	template<typename Handler>
 	inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code))
@@ -111,17 +112,30 @@ public:
 		return init.result.get();
 	}
 
+	avbot_account()
+	{}
+
 #ifdef BOOST_NO_RVALUE_REFERENCES
 	template<typename T>
 	avbot_account(const T & wrapee)
 	{
 		_impl.reset(new implementation::avbot_account_adapter<boost::remove_reference<T>::type>(wrapee));
 	}
+
+	avbot_account(const avbot_account & other)
+	{
+		_impl = other._impl;
+	}
 #else
 	template<typename T>
 	avbot_account(T && wrapee)
 	{
 		_impl.reset(new implementation::avbot_account_adapter<boost::remove_reference<T>::type>(wrapee));
+	}
+
+	avbot_account(avbot_account && other)
+	{
+		_impl = std::move(other._impl);
 	}
 #endif
 };

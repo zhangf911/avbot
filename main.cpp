@@ -93,6 +93,32 @@ static std::string progname;
 static bool need_vc = false;
 static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
+
+namespace concepts{
+	namespace implementation{
+
+		template<>
+		class avbot_account_adapter < webqq >
+		{
+			webqq m_webqq;
+		public:
+			avbot_account_adapter(webqq _webqq)
+				m_webqq(_webqq)
+			{
+			}
+
+		private:
+
+			async_login(boost::function<void(boost::system::error_code)> handler)
+			{
+				m_webqq.async_cface_url_final();
+			}
+
+		};
+
+
+	}
+}
 #ifdef  _WIN32
 static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr< boost::function<void()> > closer)
 {
@@ -663,7 +689,11 @@ rungui:
 	if (! logdir.empty())
 	{
 		logfile.log_path(logdir);
+#ifdef _WIN32
+		SetCurrentDirectoryW(avhttp::detail::utf8_wide(logdir).c_str());
+#else
 		chdir(logdir.c_str());
+#endif // _WIN32
 	}
 
 	if (qqnumber.empty() || qqpwd.empty())
