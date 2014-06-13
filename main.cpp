@@ -93,7 +93,7 @@ avlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.
 static std::string progname;
 static bool need_vc = false;
-static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
+extern std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
 namespace concepts{
 namespace implementation{

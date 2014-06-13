@@ -193,9 +193,10 @@ set(AVBOT_SOURCES
 	botctl.cpp
 	input.cpp
 	avbot_log_search.cpp
+	protocoladapters.cpp
 	${PROJECT_BINARY_DIR}/version.c
 	${PROJECT_BINARY_DIR}/avbot.rc
-	)
+)
 
 set(AVBOTRPC_SOURCES
 	rpc/server.cpp

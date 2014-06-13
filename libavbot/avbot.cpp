@@ -591,7 +591,8 @@ void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, c
 
 	// 登录执行完成！
 	// 开始读取消息
-	do{
+	for(;;)
+	{
 		// 执行登录!
 		flag_check();
 		do{
@@ -617,5 +618,5 @@ void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, c
 		// 只有遇到了必须要重登录的错误才重登录
 		// 一时半会的网络错误可没事，再获取一下就可以了
 		} while (!accounts.is_error_fatal(ec));
-	} while (  1  );
+	}
 }
