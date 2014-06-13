@@ -37,9 +37,8 @@ class avbot_account_adapter : public avbot_account_indrector
 {
 	friend class avbot_account;
 
-	typename boost::remove_reference<T>::type m_real_avbot_account;
+	T m_real_avbot_account;
 public:
-	virtual ~avbot_account_adapter(){}
 #ifdef BOOST_ASIO_HAS_MOVE
 	avbot_account_adapter(T && wrapee)
 		: m_real_avbot_account(wrapee)
@@ -48,6 +47,10 @@ public:
 #endif // !BOOST_ASIO_HAS_MOVE
 	avbot_account_adapter(const T &wrapee)
 		: m_real_avbot_account(wrapee)
+	{
+	}
+private:
+	avbot_account_adapter( const avbot_account_adapter & other )
 	{
 	}
 private:
@@ -123,20 +126,27 @@ public:
 		is_error_fatal = always_false;
 	}
 
-#ifdef BOOST_NO_RVALUE_REFERENCES
-	template<typename T>
-	avbot_account(const T & wrapee)
-	{
-		is_error_fatal = always_false;
-		_impl.reset(new implementation::avbot_account_adapter<boost::remove_reference<T>::type>(wrapee));
-	}
-
 	avbot_account(const avbot_account & other)
 	{
 		_impl = other._impl;
 		is_error_fatal = other.is_error_fatal;
 	}
-#else
+
+	template<typename T>
+	avbot_account(const T & wrapee)
+	{
+		is_error_fatal = always_false;
+		_impl.reset(new implementation::avbot_account_adapter<typename boost::remove_reference<T>::type>(wrapee));
+	}
+	
+#if BOOST_ASIO_HAS_MOVE
+
+	avbot_account(avbot_account && other)
+	{
+		_impl = std::move(other._impl);
+		is_error_fatal = std::move(other.is_error_fatal);
+	}
+
 	template<typename T>
 	avbot_account(T && wrapee)
 	{
@@ -144,12 +154,8 @@ public:
 		_impl.reset(new implementation::avbot_account_adapter<typename boost::remove_reference<T>::type>(wrapee));
 	}
 
-	avbot_account(avbot_account && other)
-	{
-		_impl = std::move(other._impl);
-		is_error_fatal = std::move(other.is_error_fatal);
-	}
 #endif
+	
 	// 致命错误不能恢复，只能禁用这个 account 。
 	boost::function<bool(boost::system::error_code)> is_error_fatal;
 };

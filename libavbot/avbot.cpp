@@ -587,7 +587,6 @@ void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, c
 		{
 			std::remove(m_accouts.begin(), m_accouts.end(), &accounts);
 		}
-//		boost::remove_if(m_accouts.begin(), m_accouts.end(), boost::lambda::_1 == &accounts);
 	}BOOST_SCOPE_EXIT_END
 
 	// 登录执行完成！
