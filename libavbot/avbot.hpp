@@ -113,32 +113,45 @@ public:
 		return init.result.get();
 	}
 
+	static bool always_false(boost::system::error_code)
+	{
+		return false;
+	}
+
 	avbot_account()
-	{}
+	{
+		is_error_fatal = always_false;
+	}
 
 #ifdef BOOST_NO_RVALUE_REFERENCES
 	template<typename T>
 	avbot_account(const T & wrapee)
 	{
+		is_error_fatal = always_false;
 		_impl.reset(new implementation::avbot_account_adapter<boost::remove_reference<T>::type>(wrapee));
 	}
 
 	avbot_account(const avbot_account & other)
 	{
 		_impl = other._impl;
+		is_error_fatal = other.is_error_fatal;
 	}
 #else
 	template<typename T>
 	avbot_account(T && wrapee)
 	{
+		is_error_fatal = always_false;
 		_impl.reset(new implementation::avbot_account_adapter<typename boost::remove_reference<T>::type>(wrapee));
 	}
 
 	avbot_account(avbot_account && other)
 	{
 		_impl = std::move(other._impl);
+		is_error_fatal = std::move(other.is_error_fatal);
 	}
 #endif
+	// 致命错误不能恢复，只能禁用这个 account 。
+	boost::function<bool(boost::system::error_code)> is_error_fatal;
 };
 
 }
@@ -151,7 +164,7 @@ private:
 	boost::asio::io_service & m_io_service;
 
 	// 把帐户放到 STL 容器里
-	std::vector<concepts::avbot_account> m_accouts;
+	std::vector<concepts::avbot_account*> m_accouts;
 
 	boost::shared_ptr<webqq::webqq> m_qq_account;
 	boost::shared_ptr<irc::client> m_irc_account;
