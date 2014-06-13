@@ -360,7 +360,7 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::sessi
 			);
 
 			// 如果最好的办法就是遍历组里的所有QQ群，都记录一次.
-			avbot::av_chanel_map channelmap = mybot.get_channel_map(channel_name);
+			avbot::av_chanels_t channelmap = mybot.get_channel_map(channel_name);
 
 			// 如果没有Q群，诶，只好，嘻嘻.
 			logfile.add_log(channel_name, linemessage, rowid);
