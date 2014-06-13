@@ -118,7 +118,7 @@ private:
 
 
 }}
-#enfif
+#endif
 
 #ifdef  _WIN32
 static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr< boost::function<void()> > closer)
