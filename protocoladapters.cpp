@@ -1,8 +1,8 @@
-
+ï»¿
 /************************************************************************
-  protocol adapters, ½« libwebqq/libirc/libxmpp 
-  Åª³É¼æÈİ avbot_accounts ½Ó¿Ú
-  Ä¿Ç°ÕâÖÖ×ö·¨Ö»ÊÇÔİÊ±µÄ£¬×îÖÕ»¹ÊÇÒª°ÑÕâ¼¸¸öÀàÈ«¸ÄĞ´ÁË
+  protocol adapters, å°† libwebqq/libirc/libxmpp
+  å¼„æˆå…¼å®¹ avbot_accounts æ¥å£
+  ç›®å‰è¿™ç§åšæ³•åªæ˜¯æš‚æ—¶çš„ï¼Œæœ€ç»ˆè¿˜æ˜¯è¦æŠŠè¿™å‡ ä¸ªç±»å…¨æ”¹å†™äº†
  ************************************************************************/
 #include <boost/system/error_code.hpp>
 #include <boost/function.hpp>
@@ -16,12 +16,12 @@ std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
 static std::string	preamble_formater(std::string preamble_irc_fmt, irc::irc_msg pmsg)
 {
-	// ¸ñÊ½»¯ÉñÆ÷, Å¶Ò®.
-	// »ñÈ¡¸ñÊ½»¯ÃèÊö×Ö·û´®.
+	// æ ¼å¼åŒ–ç¥å™¨, å“¦è€¶.
+	// è·å–æ ¼å¼åŒ–æè¿°å­—ç¬¦ä¸².
 	std::string preamble = preamble_irc_fmt;
 
-	// Ö§³ÖµÄ¸ñÊ½»¯ÀàĞÍÓĞ %u UID,  %q QQºÅ, %n êÇ³Æ,  %c ÈºÃûÆ¬ %a ×Ô¶¯ %r irc ·¿¼ä.
-	// Ä¬ÈÏÎª qq(%a) Ëµ:.
+	// æ”¯æŒçš„æ ¼å¼åŒ–ç±»å‹æœ‰ %u UID,  %q QQå·, %n æ˜µç§°,  %c ç¾¤åç‰‡ %a è‡ªåŠ¨ %r irc æˆ¿é—´.
+	// é»˜è®¤ä¸º qq(%a) è¯´:.
 	boost::replace_all(preamble, "%a", pmsg.whom);
 	boost::replace_all(preamble, "%r", pmsg.from);
 	boost::replace_all(preamble, "%n", pmsg.whom);
@@ -39,19 +39,19 @@ public:
 	template<typename Handler>
 	void async_login(Handler handler)
 	{
-		// Ö´ĞĞÒì²½µÇÂ¼
+		// æ‰§è¡Œå¼‚æ­¥ç™»å½•
 		boost::system::error_code ec;
-		// ¼Ù×°ÒÑ¾­µÇÂ¼ÁË
+		// å‡è£…å·²ç»ç™»å½•äº†
 		handler(ec);
 	}
 
 	template<typename Handler>
 	void async_recv_message(Handler handler)
 	{
-		// ´Ó irc ½ÓÊÕÏûÏ¢
+		// ä» irc æ¥æ”¶æ¶ˆæ¯
 		m_handlers.push_back(handler);
 
-		m_irc.on_privmsg_message(boost::bind(&avirc, callback_on_irc_message, this, _1));
+		m_irc.on_privmsg_message(boost::bind(&avirc::callback_on_irc_message, this, _1));
 	}
 
 	template<typename Handler>
