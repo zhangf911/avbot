@@ -58,7 +58,7 @@ class update_buddy_list_op : boost::asio::coroutine
 {
     static std::string hashP(std::string uin,std::string ptwebqq)
 	{
-		return hash_func_P(uin, ptwebqq);
+		return hash_func_u(uin, ptwebqq);
 	}
 
 	std::string create_post_data(std::string vfwebqq)

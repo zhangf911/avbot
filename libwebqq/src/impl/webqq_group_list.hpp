@@ -56,9 +56,9 @@ namespace detail {
 template<class Handler>
 class update_group_list_op : boost::asio::coroutine
 {
-	static std::string create_post_data(std::string selfuin, std::string vfwebqq )
+	static std::string create_post_data(std::string selfuin, std::string ptwebqq, std::string vfwebqq )
 	{
-		std::string qqhash = hash_func_P(selfuin, vfwebqq);
+		std::string qqhash = hash_func_u(selfuin, ptwebqq);
 		std::string m = boost::str(boost::format("{\"vfwebqq\":\"%s\", \"hash\":\"%s\"}") % vfwebqq % qqhash);
 		return std::string("r=") + avhttp::detail::escape_string(m);
 	}
@@ -71,7 +71,7 @@ class update_group_list_op : boost::asio::coroutine
 		AVLOG_DBG << "getting group list";
 
 		/* Create post data: {"vfwebqq":"4354j53h45j34", "hash";"xxxxxx"} */
-		std::string postdata = create_post_data(m_webqq->m_myself_uin, m_webqq->m_vfwebqq);
+		std::string postdata = create_post_data(m_webqq->m_myself_uin, m_webqq->m_cookie_mgr.get_cookie(WEBQQ_S_HOST "/api/get_user_friends2")["ptwebqq"], m_webqq->m_vfwebqq);
 		std::string url = WEBQQ_S_HOST "/api/get_group_name_list_mask2";
 
 		m_webqq->m_cookie_mgr.get_cookie(url, *m_stream);
