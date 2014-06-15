@@ -58,7 +58,7 @@ class update_group_list_op : boost::asio::coroutine
 {
 	static std::string create_post_data(std::string selfuin, std::string vfwebqq )
 	{
-		std::string hash_func_P(selfuin, vfwebqq);
+		std::string qqhash = hash_func_P(selfuin, vfwebqq);
 		std::string m = boost::str(boost::format("{\"vfwebqq\":\"%s\", \"hash\":\"%s\"}") % vfwebqq % qqhash);
 		return std::string("r=") + avhttp::detail::escape_string(m);
 	}
@@ -105,7 +105,6 @@ public:
 
 		try{
 			js::read_json(jsondata, jsonobj);
-			js::write_json(std::cout, jsonobj)
 
 			if(jsonobj.get<int>("retcode") == 0)
 			{
