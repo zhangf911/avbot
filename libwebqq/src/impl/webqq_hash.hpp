@@ -56,7 +56,7 @@ namespace detail {
 u = function(uin, ptwebqq) {
 	for (var N = ptwebqq + "password error", T = "", V = [];;)
 		if (T.length <= N.length) {
-		T += ptwebqq;
+		T += uin;
 		if (T.length == N.length) break
 		}
 		else {
@@ -79,12 +79,12 @@ template<typename var>
 std::string hash_func_u(var uin, var ptwebqq)
 {
 	var T;
-	var V;
+	std::vector<unsigned char> V;
 	var N = ptwebqq + "password error";
 	for (;;)
 	{
 		if (T.length() <= N.length()) {
-			T += ptwebqq;
+			T += uin;
 			if (T.length() == N.length())
 				break;
 		}
@@ -94,12 +94,14 @@ std::string hash_func_u(var uin, var ptwebqq)
 		}
 	}
 
+	V.resize(T.length());
+
 	for (int U = 0; U < T.length(); U++)
 	{
-		V += T[U] ^ N[U];
+		V[U] = (unsigned)(T[U]) ^ (unsigned)(N[U]);
 	}
 
-	return avhttp::detail::to_hex(V);
+	return avhttp::detail::to_hex(std::string((const char*)V.data(), V.size()));
 }
 
 } // namespace detail
