@@ -47,6 +47,7 @@ namespace pt = boost::property_tree;
 #include "constant.hpp"
 #include "lwqq_status.hpp"
 #include "webqq_group_qqnumber.hpp"
+#include "webqq_hash.hpp"
 
 namespace webqq {
 namespace qqimpl {
@@ -55,9 +56,10 @@ namespace detail {
 template<class Handler>
 class update_group_list_op : boost::asio::coroutine
 {
-	static std::string create_post_data( std::string vfwebqq )
+	static std::string create_post_data(std::string selfuin, std::string vfwebqq )
 	{
-		std::string m = boost::str( boost::format( "{\"vfwebqq\":\"%s\"}" ) % vfwebqq );
+		std::string hash_func_P(selfuin, vfwebqq);
+		std::string m = boost::str(boost::format("{\"vfwebqq\":\"%s\", \"hash\":\"%s\"}") % vfwebqq % qqhash);
 		return std::string("r=") + avhttp::detail::escape_string(m);
 	}
 
@@ -68,8 +70,8 @@ class update_group_list_op : boost::asio::coroutine
 
 		AVLOG_DBG << "getting group list";
 
-		/* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
-		std::string postdata = create_post_data(m_webqq->m_vfwebqq);
+		/* Create post data: {"vfwebqq":"4354j53h45j34", "hash";"xxxxxx"} */
+		std::string postdata = create_post_data(m_webqq->m_myself_uin, m_webqq->m_vfwebqq);
 		std::string url = WEBQQ_S_HOST "/api/get_group_name_list_mask2";
 
 		m_webqq->m_cookie_mgr.get_cookie(url, *m_stream);
@@ -103,6 +105,7 @@ public:
 
 		try{
 			js::read_json(jsondata, jsonobj);
+			js::write_json(std::cout, jsonobj)
 
 			if(jsonobj.get<int>("retcode") == 0)
 			{
