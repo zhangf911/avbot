@@ -169,7 +169,7 @@ static inline void avloop_run(boost::asio::io_service& io_service)
 	if (!boost::asio::has_service<IdleService>(io_service))
 		boost::asio::add_service(io_service, new IdleService(io_service));
 
-	while (!io_service.stopped())
+	while (boost::asio::use_service<IdleService>(io_service).has_idle() || !io_service.stopped())
 	{
 		if(!boost::asio::use_service<IdleService>(io_service).has_idle())
 		{
@@ -178,7 +178,7 @@ static inline void avloop_run(boost::asio::io_service& io_service)
 		}
 		else
 		{
-			while (io_service.poll());
+			while (!io_service.stopped() && io_service.poll());
 			// 执行 idle handler!
 			boost::asio::use_service<IdleService>(io_service).poll_one();
 		}
@@ -199,10 +199,10 @@ static inline void avloop_run_gui(boost::asio::io_service& io_service)
 	if (!boost::asio::has_service<Win32MsgLoopService>(io_service))
 		boost::asio::add_service(io_service, new Win32MsgLoopService(io_service));
 
-	while (!io_service.stopped())
+	while (boost::asio::use_service<IdleService>(io_service).has_idle() || !io_service.stopped())
 	{
 		// 首先处理 asio 的消息.
-		while (io_service.poll())
+		while (!io_service.stopped() && io_service.poll())
 		{
 			// 然后执行 gui 循环，看有没有 gui 事件.
 			if (boost::asio::use_service<Win32MsgLoopService>(io_service).has_message())
