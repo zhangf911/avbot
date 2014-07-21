@@ -189,6 +189,7 @@ void send_rcpt_tos( socket_type & socket,
 class smtp
 {
 	boost::asio::io_service & io_service;
+	boost::asio::io_service::work m_work;
 	std::string m_mailaddr, m_passwd, m_mailserver;
 	std::string m_AUTH;
 	InternetMailFormat m_imf;
@@ -209,7 +210,7 @@ class smtp
 	int retry_count;
 
 public:
-	smtp( ::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver = "" );
+	smtp(boost::asio::io_service &, std::string user, std::string passwd, std::string _mailserver = "");
 
 	void async_sendmail( const InternetMailFormat &imf, boost::function<void ( const boost::system::error_code & )> handler )
 	{
@@ -471,7 +472,7 @@ private:
 
 class smtp
 {
-	detail::smtp	impl_smtp;
+	detail::smtp impl_smtp;
 public:
 	smtp( ::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver = "" );
 	// ---------------------------------------------
