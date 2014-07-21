@@ -80,8 +80,10 @@ static void play_thread(const Chunk_fmt* fmt_chunk = NULL, const Chunk * pcm_chu
 
 	if (ret)
 	{
+		std::cerr << "unable to open sound card, you won't be able to hear any sound!" << std::endl;
 		return;
 	}
+
 	ret = snd_pcm_set_params(pcm.get(), format, SND_PCM_ACCESS_RW_INTERLEAVED, le16toh(fmt_chunk->channels), le16toh(fmt_chunk->samplebits), 1, 1000000);
 	ret = snd_pcm_wait(pcm.get(), 1000);
 	if (ret )

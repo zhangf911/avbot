@@ -8,9 +8,12 @@
 #include <boost/function.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/asio/coroutine.hpp>
 #include <vector>
 #include <string>
 #include <libirc/irc.hpp>
+#include <libwebqq/webqq.hpp>
+#include <libavbot/avbot_accounts.hpp>
 
 std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
 
@@ -28,7 +31,45 @@ static std::string	preamble_formater(std::string preamble_irc_fmt, irc::irc_msg 
 	return preamble;
 }
 
-class avwebqq{};
+class example
+{
+public:
+	void async_login(boost::function<void(boost::system::error_code)> handler) {};
+	void async_recv_message(boost::function<void(boost::system::error_code, boost::property_tree::ptree)> handler) {};
+	void async_send_message(std::string target, std::string message, boost::function<void(boost::system::error_code)> handler) {};
+	void async_join_group(std::string groupname, boost::function<void(boost::system::error_code)> handler){};
+};
+
+class avwebqq
+{
+	template<typename Handler>
+	class async_login_op
+	{
+		avwebqq * _caller;
+
+
+		void operator()(boost::system::error_code ec)
+		{
+			BOOST_ASIO_CORO_REENTER(this)
+			{
+				BOOST_ASIO_CORO_YIELD _caller->m_webqq.async_login(*this);
+			}
+		}
+	};
+
+	template<typename>
+	friend class async_login_op;
+
+	webqq::webqq m_webqq;
+public:
+	template<typename Handler>
+	void async_login(Handler handler)
+	{
+		// 登录 qq, 调用 deCAPTCHA
+		async_login_op<Handler>()(handler);
+	}
+
+};
 
 class avxmpp{};
 
@@ -89,3 +130,34 @@ public:
 		boost::function<void(boost::system::error_code, boost::property_tree::ptree)>
 	>m_handlers;
 };
+
+namespace concepts{
+namespace implementation{
+
+template<>
+class avbot_account_adapter<webqq::webqq> : public avbot_account_indrector
+{
+	webqq::webqq m_webqq;
+public:
+
+#ifdef BOOST_ASIO_HAS_MOVE
+	avbot_account_adapter(webqq::webqq && _webqq)
+		:m_webqq(_webqq)
+	{
+	}
+#endif // BOOST_ASIO_HAS_MOVE
+
+	avbot_account_adapter(const webqq::webqq & _webqq)
+		:m_webqq(_webqq)
+	{
+	}
+private:
+
+	virtual void async_login(boost::function<void(boost::system::error_code)> handler)
+	{
+	}
+};
+
+
+}}
+

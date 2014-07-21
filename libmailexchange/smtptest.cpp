@@ -21,9 +21,12 @@ namespace po = boost::program_options;
 
 #include "smtp.hpp"
 
+static boost::asio::io_service io;
 static void sended( const boost::system::error_code & ec )
 {
 	std::cout <<  ec.message() <<  std::endl;
+
+	io.stop();
 }
 
 #include "fsconfig.ipp"
@@ -69,12 +72,11 @@ int main( int argc, char * argv[] )
 		}
 	}
 
-	boost::asio::io_service io;
 	mx::smtp smtp( io, mailaddr, mailpasswd, mailserver );
 	InternetMailFormat imf;
 
 	imf.header["from"] = mailaddr;
-	imf.header["to"] = "\"晕菜\" <beansoft@qq.com>";
+	imf.header["to"] = "\"晕菜\" <406679186@qq.com>";
 	imf.header["subject"] = "test mail";
 	imf.header["content-type"] = "text/plain; charset=utf8";
 
@@ -86,7 +88,7 @@ int main( int argc, char * argv[] )
 
 	std::string _mdata = boost::asio::buffer_cast<const char*>( buf.data() );
 
-	smtp.async_sendmail( imf, sended );
-
+	smtp.async_sendmail( imf, sended);
+	boost::asio::io_service::work work(io);
 	avloop_run(io);
 }

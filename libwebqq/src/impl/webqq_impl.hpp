@@ -103,6 +103,7 @@ public:
 public:
 	WebQQ(boost::asio::io_service & asioservice, std::string qqnum, std::string passwd, bool no_persistent_db=false);
 
+	void async_login(webqq::webqq_handler_t handler);
 	// called by webqq.hpp
 	void start();
 	// called by webqq.hpp distructor

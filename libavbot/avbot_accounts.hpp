@@ -130,19 +130,22 @@ public:
 		return false;
 	}
 
-	avbot_account()
+	avbot_account(std::string _protocol)
+		:protocol(_protocol)
 	{
 		is_error_fatal = always_false;
 	}
 
 	avbot_account(const avbot_account & other)
+		:protocol(other.protocol)
 	{
 		_impl = other._impl;
 		is_error_fatal = other.is_error_fatal;
 	}
 
 	template<typename T>
-	avbot_account(const T & wrapee)
+	avbot_account(std::string _protocol, const T & wrapee)
+		:protocol(_protocol)
 	{
 		is_error_fatal = always_false;
 		_impl.reset(new implementation::avbot_account_adapter<typename boost::remove_reference<T>::type>(wrapee));
@@ -151,13 +154,15 @@ public:
 #if BOOST_ASIO_HAS_MOVE
 
 	avbot_account(avbot_account && other)
+		:protocol(other.protocol)
 	{
 		_impl = std::move(other._impl);
 		is_error_fatal = std::move(other.is_error_fatal);
 	}
 
 	template<typename T>
-	avbot_account(T && wrapee)
+	avbot_account(std::string _protocol, T && wrapee)
+		:protocol(_protocol)
 	{
 		is_error_fatal = always_false;
 		_impl.reset(new implementation::avbot_account_adapter<typename boost::remove_reference<T>::type>(wrapee));
@@ -167,6 +172,7 @@ public:
 
 	// 致命错误不能恢复，只能禁用这个 account 。
 	boost::function<bool(boost::system::error_code)> is_error_fatal;
+	std::string protocol;
 };
 
 }
