@@ -123,12 +123,11 @@ public:
 		boost::asio::async_write(m_stream, *m_headers, *this);
 	};
 
-	void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
+	void operator()(boost::system::error_code ec, size_t bytes_transfered)
 	{
-		m_stream.get_io_service().post(
-			boost::asio::detail::bind_handler(m_handler, ec)
-		);
+		m_handler(ec, bytes_transfered);
 	}
+
 private:
 	// 传入的变量.
 	Stream & m_stream;
@@ -140,7 +139,7 @@ private:
 
 template<class Stream, class Handler>
 async_write_response_op<Stream, Handler>
-make_async_write_response_op(Stream & s, int status, const response_opts & opts,Handler handler)
+make_async_write_response_op(Stream & s, int status, const response_opts & opts, Handler handler)
 {
 	return async_write_response_op<Stream, Handler>(s, status, opts, handler);
 }
@@ -164,7 +163,12 @@ public:
 
 	void operator()(boost::system::error_code ec)
 	{
-		boost::asio::async_write(m_stream, m_buffers, m_handler);
+		boost::asio::async_write(m_stream, m_buffers, *this);
+	}
+
+	void operator()(boost::system::error_code ec, size_t bytes_transfered)
+	{
+		m_handler(ec, bytes_transfered);
 	}
 private:
 	// 传入的变量.
@@ -188,15 +192,24 @@ public:
 		: m_stream(stream)
 		, m_streambuf(streambuf)
 		, m_handler(handler)
+		, coro(false)
 	{
 		make_async_write_response_op(m_stream, status, opts, *this);
 	};
 
-	void operator()(boost::system::error_code ec)
+	void operator()(boost::system::error_code ec, size_t bytes_transfered)
 	{
-		boost::asio::async_write(m_stream, m_streambuf.data(), m_handler);
+		if(coro=!coro)
+		{
+			boost::asio::async_write(m_stream, m_streambuf.data(), *this);
+		}
+		else
+		{
+			m_handler(ec, bytes_transfered);
+		}
 	}
 private:
+	bool coro;
 	// 传入的变量.
 	Stream & m_stream;
 	Handler m_handler;
@@ -278,10 +291,21 @@ make_async_write_response_op(Stream & s, int status, const response_opts & opts,
  */
 
 template<class Stream, class Handler>
-void async_write_response(Stream & s, int status, Handler handler)
+inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code, size_t))
+async_write_response(Stream & s, int status, BOOST_ASIO_MOVE_ARG(Handler) handler)
 {
 	response_opts opts;
-	detail::make_async_write_response_op(s, status, opts, handler);
+	using namespace boost::asio;
+
+	boost::asio::detail::async_result_init<Handler, void(boost::system::error_code, size_t)>
+		init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+
+	detail::async_write_response_op<
+		Stream, BOOST_ASIO_HANDLER_TYPE(Handler, void(boost::system::error_code, size_t))
+	>(s, status, opts, init.handler);
+
+	return init.result.get();
 }
 
 
@@ -336,10 +360,18 @@ void async_write_response(Stream & s, int status, Handler handler)
  */
 
 template<class Stream, class Handler>
-void async_write_response(Stream & s, int status, const response_opts & opts,
-						Handler handler)
+inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code, size_t))
+async_write_response(Stream & s, int status,
+	const response_opts & opts, BOOST_ASIO_MOVE_ARG(Handler) handler)
 {
-	detail::make_async_write_response_op(s, status, opts, handler);
+	using namespace boost::asio;
+
+	boost::asio::detail::async_result_init<Handler, void(boost::system::error_code, size_t)>
+		init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+	detail::make_async_write_response_op(s, status, opts, init.handler);
+
+	return init.result.get();
 }
 
 /*@}*/
@@ -396,19 +428,34 @@ void async_write_response(Stream & s, int status, const response_opts & opts,
  */
 
 template<class Stream, class ConstBufferSequence, class Handler>
-void async_write_response(Stream & s, int status, const response_opts & opts,
-						const ConstBufferSequence& buffers, Handler handler)
+inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code, size_t))
+async_write_response(Stream & s, int status, const response_opts & opts,
+	const ConstBufferSequence& buffers, BOOST_ASIO_MOVE_ARG(Handler) handler)
 {
-	detail::make_async_write_response_op(s, status, opts, buffers, handler);
-}
+	using namespace boost::asio;
 
+	boost::asio::detail::async_result_init<Handler, void(boost::system::error_code, size_t)>
+		init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+	detail::make_async_write_response_op(s, status, opts, buffers, init.handler);
+
+	return init.result.get();
+}
 
 template<class Stream, class Allocator, class Handler>
-void async_write_response(Stream & s, int status, const response_opts & opts,
-						const boost::asio::basic_streambuf<Allocator> & streambuf, Handler handler)
+inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code, size_t))
+async_write_response(Stream & s, int status, const response_opts & opts,
+	const boost::asio::basic_streambuf<Allocator> & streambuf, BOOST_ASIO_MOVE_ARG(Handler) handler)
 {
-	detail::make_async_write_response_op(s, status, opts, streambuf, handler);
-}
 
+	using namespace boost::asio;
+
+	boost::asio::detail::async_result_init<Handler, void(boost::system::error_code, size_t)>
+		init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+	detail::make_async_write_response_op(s, status, opts, streambuf, init.handler);
+
+	return init.result.get();
+}
 
 }
