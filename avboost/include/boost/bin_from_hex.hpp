@@ -64,27 +64,19 @@ struct  bin_from_hex   :  public boost::iterator_adaptor <
 };
 
 template<typename Base>
-struct  hex_from_bin   :  public boost::iterator_adaptor <
-	hex_from_bin<Base>,
-	Base,
-	char,
-	boost::single_pass_traversal_tag,
-	char
->
+struct  hex_from_bin
 {
-	friend class boost::iterator_core_access;
-	typedef BOOST_DEDUCED_TYPENAME boost::iterator_adaptor <
-		hex_from_bin<Base>,
-		Base,
-		char,
-		boost::single_pass_traversal_tag,
-		char
-	> super_t;
-
 	typedef hex_from_bin<Base> this_t;
 	typedef char CharType;
 
 	typedef typename boost::iterator_value<Base>::type base_value_type;
+
+	typedef std::input_iterator_tag iterator_category;
+	typedef char value_type;
+
+	typedef typename Base::difference_type difference_type;
+	typedef typename Base::reference reference;
+	typedef typename Base::pointer pointer;
 
 	Base m_base;
 
@@ -98,16 +90,37 @@ struct  hex_from_bin   :  public boost::iterator_adaptor <
 		return char_to_hex(*m_base);
 	}
 
+	CharType operator * ()
+	{
+		return dereference();
+	}
+
 	// standard iterator interface
 	bool equal(const this_t & rhs) const {
 		return m_base == rhs.m_base;
 	}
 
+	bool operator == (const this_t & rhs)
+	{
+		return equal(rhs);
+	}
+
+	bool operator != (const this_t & rhs)
+	{
+		return ! equal(rhs);
+	}
+
+
 	void increment(){
 		++m_base;
 	}
 
-	hex_from_bin(const Base & _base)
+	void operator ++ ()
+	{
+		increment();
+	}
+
+	hex_from_bin(Base const & _base)
 		: m_base(_base)
 	{
 	}
