@@ -1,3 +1,7 @@
+env:
+  global:
+  - secure: "Ja4fsh6GHywIxlgMDWg5LwmRPkbph0AyhgoEZSme3kGpU3KNc6dze5w5GL98b4DNNil/x3ziTzCK8zUe8+G6oSHtHWjYGgaXFILd2ICz2O8CmDTl6K5Mm3k4/lois9xZbmpa/CvZwsmOeaAIF7oCgSErzrRfzLZ3a/zUwsmzJQw="
+
 language: cpp
 compiler:
   - gcc
@@ -25,3 +29,13 @@ notifications:
     on_success: change
     on_failure: always
 
+
+addons:
+  coverity_scan:
+    project:
+      name: "avplayer/avbot"
+      description: "Build submitted via Travis CI"
+    notification_email: microcaicai@gmail.com
+    build_command_prepend: "cmake . ; make clean"
+    build_command:   "make -j 4"
+    branch_pattern: coverity_scan
