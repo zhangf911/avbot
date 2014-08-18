@@ -2,7 +2,7 @@
 
 avbot 连通 IRC、XMPP 和  QQ群，并能实时记录聊天信息。每日自动生成新的日志文件。
 
-使用方法和介绍参考 [社区维基的avbot介绍](http://wiki.avplayer.org/Avbot)
+使用方法和介绍参考 [社区维基的avbot介绍](http://wiki.avplayer.org/avbot)
 
 编译请参考 [社区维基的avbot编译指导](http://wiki.avplayer.org/%E7%BC%96%E8%AF%91avbot)
 
