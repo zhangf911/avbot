@@ -47,6 +47,10 @@ namespace po = boost::program_options;
 #include <time.h>
 #include <wchar.h>
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
+
 #include <soci-sqlite3.h>
 #include <boost-optional.h>
 #include <boost-tuple.h>
@@ -432,6 +436,26 @@ void sighandler(boost::asio::io_service & io)
 	io.stop();
 	std::cout << "Quiting..." << std::endl;
 }
+
+#ifdef HAVE_SYSTEMD
+struct watchdog_feeder
+{
+	uint64_t watchdog_usec;
+	boost::asio::io_service & io_service;
+
+	watchdog_feeder(boost::asio::io_service & _io_service, uint64_t _watchdog_usec)
+		: io_service(_io_service)
+		, watchdog_usec(_watchdog_usec)
+	{
+	}
+
+	void operator()()
+	{
+		sd_notify(0, "WATCHDOG=1");
+		boost::delayedcallus(io_service, watchdog_usec, *this);
+	}
+};
+#endif
 
 int main(int argc, char * argv[])
 {
@@ -833,6 +857,21 @@ rungui:
 	terminator_signal.add(SIGQUIT);
 #endif // defined(SIGQUIT)
 	terminator_signal.async_wait(boost::bind(&sighandler, boost::ref(io_service)));
+
+#ifdef HAVE_SYSTEMD
+	// watchdog timer logic
+
+	// check WATCHDOG_USEC environment variable
+	uint64_t watchdog_usec;
+	if(sd_watchdog_enabled(1, &watchdog_usec))
+	{
+		// 以 watchdog_usec 为定时器开启看门狗
+		watchdog_feeder(io_service, watchdog_usec/2)();
+	};
+
+	avloop_idle_post(io_service, boost::bind(&sd_notify,0, "READY=1"));
+#endif
+
 	avloop_run_gui(io_service);
 	return 0;
 }
