@@ -120,6 +120,7 @@ if(WIN32)
 	add_definitions(-DNOMINMAX)
 endif()
 
+find_package(systemd)
 
 add_definitions(-DAVHTTP_ENABLE_OPENSSL -DAVHTTP_DISABLE_MULTI_DOWNLOAD -DDISABLE_LOGGER)
 
@@ -181,23 +182,6 @@ add_subdirectory(libavlog)
 add_subdirectory(extension)
 
 configure_file(version.c.in version.c @ONLY)
-
-# check for systemd
-if(SYSTEMD_INCLUDE_DIR)
-  set(SYSTEMD_FIND_QUIETLY TRUE)
-endif()
-
-find_library(SYSTEMD_LIBRARY NAMES systemd)
-find_path(SYSTEMD_INCLUDE_DIR systemd/sd-daemon.h)
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SYSTEMD REQUIRED_VARS SYSTEMD_LIBRARY SYSTEMD_INCLUDE_DIR)
-mark_as_advanced(SYSTEMD_LIBRARY SYSTEMD_INCLUDE_DIR)
-
-if(SYSTEMD_FOUND)
-link_libraries(${SYSTEMD_LIBRARY})
-add_definitions(-DHAVE_SYSTEMD)
-endif()
 
 set(AVBOT_SOURCES
 	auto_welcome.hpp
@@ -318,6 +302,11 @@ endif()
 
 if (ALSA_FOUND)
 	target_link_libraries(avbot ${ALSA_LIBRARY})
+endif()
+
+if(SYSTEMD_FOUND)
+	target_link_libraries(avbot ${SYSTEMD_LIBRARY})
+	add_definitions(-DHAVE_SYSTEMD)
 endif()
 
 install(TARGETS avbot RUNTIME DESTINATION bin)
