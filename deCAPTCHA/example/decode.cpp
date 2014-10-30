@@ -130,7 +130,7 @@ int main( int argc, char *argv[] )
 	if(!antigate_key.empty())
 	{
 		decaptcha.add_decoder(
-			decaptcha::decoder::antigate_decoder(io_service, antigate_key, antigate_host)
+			decaptcha::decoder::anticaptcha_decoder(io_service, antigate_key, antigate_host)
 		);
 	}
 

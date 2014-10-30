@@ -41,7 +41,7 @@ namespace js = boost::property_tree::json_parser;
 
 namespace decaptcha{
 namespace decoder{
-namespace antigate{
+namespace anticaptcha{
 namespace detail {
 	class error_category_impl;
 }
@@ -88,7 +88,7 @@ namespace boost {
 namespace system {
 
 template <>
-struct is_error_code_enum<decaptcha::decoder::antigate::error::errc_t>
+struct is_error_code_enum<decaptcha::decoder::anticaptcha::error::errc_t>
 {
   static const bool value = true;
 };
@@ -98,7 +98,7 @@ struct is_error_code_enum<decaptcha::decoder::antigate::error::errc_t>
 
 namespace decaptcha{
 namespace decoder{
-namespace antigate{
+namespace anticaptcha{
 namespace detail{
 
 class error_category_impl
@@ -205,7 +205,7 @@ inline boost::system::error_code process_error_result(std::string result)
 }
 
 template<class Handler>
-class antigate_decoder_op : boost::asio::coroutine
+class anticaptcha_decoder_op : boost::asio::coroutine
 {
 	const std::string provider;
 	std::string generate_boundary() const
@@ -214,7 +214,7 @@ class antigate_decoder_op : boost::asio::coroutine
 		return  boost::str(boost::format("%06x%06x") % p() %  p()  ).substr(0, 12);
 	}
 public:
-	antigate_decoder_op(boost::asio::io_service & io_service,
+	anticaptcha_decoder_op(boost::asio::io_service & io_service,
 			std::string key, std::string host,
 			const std::string &buffer, Handler handler)
 		: m_io_service(io_service),
@@ -406,10 +406,10 @@ private:
 } // namespace detail
 } // namespace antigate
 
-class antigate_decoder{
+class anticaptcha_decoder{
 public:
-	antigate_decoder(boost::asio::io_service & io_service,
-		const std::string &key, const std::string & host = "http://antigate.com/")
+	anticaptcha_decoder(boost::asio::io_service & io_service,
+		const std::string &key, const std::string & host = "http://anti-captcha.com/")
 	  : m_io_service(io_service), m_key(key), m_host(host)
 	{
 		if ( * m_host.rbegin() != '/' ){
@@ -420,7 +420,7 @@ public:
 	template <class Handler>
 	void operator()(const std::string &buffer, Handler handler)
 	{
-		antigate::detail::antigate_decoder_op<Handler>
+		anticaptcha::detail::anticaptcha_decoder_op<Handler>
 				op(m_io_service, m_key, m_host, buffer, handler);
 	}
 private:

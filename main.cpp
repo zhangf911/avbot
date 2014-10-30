@@ -79,7 +79,7 @@ namespace po = boost::program_options;
 #include "deCAPTCHA/decaptcha.hpp"
 #include "deCAPTCHA/deathbycaptcha_decoder.hpp"
 #include "deCAPTCHA/channel_friend_decoder.hpp"
-#include "deCAPTCHA/antigate_decoder.hpp"
+#include "deCAPTCHA/anticaptcha_decoder.hpp"
 #include "deCAPTCHA/avplayer_free_decoder.hpp"
 #include "deCAPTCHA/jsdati_decoder.hpp"
 #include "deCAPTCHA/hydati_decoder.hpp"
@@ -706,7 +706,7 @@ rungui:
 
 	init_database(avlogdb);
 
-	decaptcha::deCAPTCHA decaptcha(io_service);
+	decaptcha::deCAPTCHA decaptcha_agent(io_service);
 
 	avbot_vc_feed_input vcinput(io_service);
 
@@ -717,7 +717,7 @@ rungui:
 
 	if (!hydati_key.empty())
 	{
-		decaptcha.add_decoder(
+		decaptcha_agent.add_decoder(
 			decaptcha::decoder::hydati_decoder(
 				io_service, hydati_key
 			)
@@ -726,7 +726,7 @@ rungui:
 
 	if (!jsdati_username.empty() && !jsdati_password.empty())
 	{
-		decaptcha.add_decoder(
+		decaptcha_agent.add_decoder(
 			decaptcha::decoder::jsdati_decoder(
 				io_service, jsdati_username, jsdati_password
 			)
@@ -735,7 +735,7 @@ rungui:
 
 	if (!deathbycaptcha_username.empty() && !deathbycaptcha_password.empty())
 	{
-		decaptcha.add_decoder(
+		decaptcha_agent.add_decoder(
 			decaptcha::decoder::deathbycaptcha_decoder(
 				io_service, deathbycaptcha_username, deathbycaptcha_password
 			)
@@ -744,19 +744,19 @@ rungui:
 
 	if (!antigate_key.empty())
 	{
-		decaptcha.add_decoder(
-			decaptcha::decoder::antigate_decoder(io_service, antigate_key, antigate_host)
+		decaptcha_agent.add_decoder(
+			decaptcha::decoder::anticaptcha_decoder(io_service, antigate_key, antigate_host)
 		);
 	}
 
 	if (use_avplayer_free_vercode_decoder)
 	{
-		decaptcha.add_decoder(
+		decaptcha_agent.add_decoder(
 			decaptcha::decoder::avplayer_free_decoder(io_service)
 		);
 	}
 
-	decaptcha.add_decoder(
+	decaptcha_agent.add_decoder(
 		decaptcha::decoder::channel_friend_decoder(
 			io_service,
 			boost::bind(&avbot::broadcast_message, &mybot, _1),
@@ -779,7 +779,7 @@ rungui:
 
 	mybot.set_qq_account(
 		qqnumber, qqpwd,
-		boost::bind(on_verify_code, _1, boost::ref(mybot), boost::ref(decaptcha)),
+		boost::bind(on_verify_code, _1, boost::ref(mybot), boost::ref(decaptcha_agent)),
 		no_persistent_db
 	);
 
