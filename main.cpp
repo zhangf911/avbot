@@ -437,26 +437,6 @@ void sighandler(boost::asio::io_service & io)
 	std::cout << "Quiting..." << std::endl;
 }
 
-#ifdef HAVE_SYSTEMD
-struct watchdog_feeder
-{
-	uint64_t watchdog_usec;
-	boost::asio::io_service & io_service;
-
-	watchdog_feeder(boost::asio::io_service & _io_service, uint64_t _watchdog_usec)
-		: io_service(_io_service)
-		, watchdog_usec(_watchdog_usec)
-	{
-	}
-
-	void operator()()
-	{
-		sd_notify(0, "WATCHDOG=1");
-		boost::delayedcallus(io_service, watchdog_usec, *this);
-	}
-};
-#endif
-
 int main(int argc, char * argv[])
 {
 #ifdef _WIN32
@@ -865,8 +845,10 @@ rungui:
 	uint64_t watchdog_usec;
 	if(sd_watchdog_enabled(1, &watchdog_usec))
 	{
-		// 以 watchdog_usec 为定时器开启看门狗
-		watchdog_feeder(io_service, watchdog_usec/2)();
+		mybot.on_message.connect([]()
+		{
+			sd_notify(0, "WATCHDOG=1");
+		});
 	};
 
 	avloop_idle_post(io_service, boost::bind(&sd_notify,0, "READY=1"));
