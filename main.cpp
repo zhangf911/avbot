@@ -845,7 +845,7 @@ rungui:
 	uint64_t watchdog_usec;
 	if(sd_watchdog_enabled(1, &watchdog_usec))
 	{
-		mybot.on_message.connect([]()
+		mybot.on_message.connect([](avbot::av_message_tree)
 		{
 			sd_notify(0, "WATCHDOG=1");
 		});
