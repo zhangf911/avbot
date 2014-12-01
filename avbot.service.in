@@ -9,7 +9,7 @@ RestartSec=1s
 Restart=on-failure
 Environment=LANG=en_US.UTF-8
 Environment=TZ=Asia/Shanghai
-WatchdogSec=30s
+WatchdogSec=12h
 NotifyAccess=all
 
 [Install]
