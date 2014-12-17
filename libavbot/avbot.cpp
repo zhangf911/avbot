@@ -1,10 +1,12 @@
-﻿#include <boost/regex.hpp>
+﻿#include <boost/range/algorithm/remove_if.hpp>
+#include <boost/regex.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 #include <boost/format.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/scope_exit.hpp>
 #include <fstream>
 
 #include "boost/urlencode.hpp"
@@ -97,7 +99,9 @@ static std::string room_name( const avbot::av_message_tree& message )
 }
 
 avbot::avbot( boost::asio::io_service& io_service )
-  : m_io_service(io_service), fetch_img(false)
+	: m_io_service(io_service)
+	, fetch_img(false)
+	, m_quit(boost::make_shared< boost::atomic<bool> >(false))
 {
 	preamble_irc_fmt = "%a 说：";
 	preamble_qq_fmt = "qq(%a)说：";
@@ -106,30 +110,35 @@ avbot::avbot( boost::asio::io_service& io_service )
 	on_message.connect(boost::bind(&avbot::forward_message, this, _1));
 }
 
+avbot::~avbot()
+{
+	*m_quit = true;
+	// then all coroutine will go die
+}
+
 void avbot::add_to_channel( std::string channel_name, std::string room_name )
 {
-	if( m_channels.find( channel_name ) != m_channels.end() )
+	if( m_channel_map.find( channel_name ) != m_channel_map.end() )
 	{
-		av_chanel_map c = m_channels[channel_name];
+		auto c = m_channel_map[channel_name];
 
 		if( std::find( c.begin(), c.end(), room_name ) == c.end() )
 		{
-			m_channels[channel_name].push_back( room_name );
+			m_channel_map[channel_name].push_back( room_name );
 		}
 	}
 	else
 	{
-		av_chanel_map c;
+		av_chanels_t c;
 		c.push_back( room_name );
-		m_channels.insert( std::make_pair( channel_name, c ) );
+		m_channel_map.insert( std::make_pair( channel_name, c ) );
 		signal_new_channel(channel_name);
 	}
 }
 
 std::string avbot::get_channel_name( std::string room_name )
 {
-	typedef std::pair<std::string, av_chanel_map> avbot_channel_item;
-	BOOST_FOREACH(avbot_channel_item c, m_channels)
+	BOOST_FOREACH(auto c, m_channel_map)
 	{
 		if (std::find(c.second.begin(), c.second.end(), room_name)!=c.second.end())
 		{
@@ -141,10 +150,8 @@ std::string avbot::get_channel_name( std::string room_name )
 
 void avbot::broadcast_message( std::string msg)
 {
-	typedef std::pair<std::string, av_chanel_map> avbot_channel_item;
-
 	// 广播消息到所有的频道.
-	BOOST_FOREACH(avbot_channel_item c, m_channels)
+	BOOST_FOREACH(auto c, m_channel_map)
 	{
 		// 好，发消息!
 		broadcast_message(c.first, msg);
@@ -158,7 +165,7 @@ void avbot::broadcast_message( std::string channel_name, std::string msg )
 
 void avbot::broadcast_message(std::string channel_name, std::string exclude_room, std::string msg )
 {
-	BOOST_FOREACH(std::string chatgroupmember, m_channels[channel_name])
+	BOOST_FOREACH(std::string chatgroupmember, m_channel_map[channel_name])
 	{
 		if (chatgroupmember == exclude_room)
 			continue;
@@ -434,7 +441,7 @@ void avbot::set_qq_account( std::string qqnumber, std::string password, avbot::n
 
 void avbot::relogin_qq_account()
 {
-// 	m_qq_account->login();
+	feed_login_verify_code("", boost::function<void()>());
 }
 
 void avbot::feed_login_verify_code( std::string vcode, boost::function<void()> badvcreporter)
@@ -500,7 +507,7 @@ void avbot::forward_message( const boost::property_tree::ptree& message )
 	}
 	else
 	{
-		if( m_channels.find( channel_name ) != m_channels.end() )
+		if( m_channel_map.find( channel_name ) != m_channel_map.end() )
 		{
 			// 好，发消息!
 			broadcast_message( channel_name, room_name( message ), formated );
@@ -517,7 +524,7 @@ std::string avbot::format_message( const avbot::av_message_tree& message )
 	{
 		linermessage += message.get<std::string>("preamble", "");
 
-		BOOST_FOREACH(const avbot::av_message_tree::value_type & v, message.get_child("message"))
+		BOOST_FOREACH(const auto & v, message.get_child("message"))
 		{
 			if (v.first == "text")
 			{
@@ -555,4 +562,61 @@ std::string avbot::image_subdir_name( std::string cface )
 	boost::replace_all( cface, "}", "" );
 	boost::replace_all( cface, "-", "" );
 	return cface.substr(0, 2);
+}
+
+
+void avbot::add_account(BOOST_ASIO_MOVE_ARG(concepts::avbot_account) accounts)
+{
+	// 创建只属于它的专属协程
+	boost::asio::spawn(get_io_service(), boost::bind(&avbot::accountsroutine, this, m_quit, accounts, _1));
+}
+
+void avbot::accountsroutine(boost::shared_ptr<boost::atomic<bool> > flag_quit, concepts::avbot_account accounts, boost::asio::yield_context yield)
+{
+#define  flag_check() do { if (*flag_quit){return;} } while(false)
+
+	boost::system::error_code ec;
+	// 添加到 m_accounts 里.
+	m_accouts.push_back(&accounts);
+	
+	BOOST_SCOPE_EXIT(&m_accouts, &accounts, flag_quit)
+	{
+		using namespace boost::lambda;
+		// 如果 flag_quit是真的，那么 this 其实是不能访问的，因为已经析构了。
+		if (!*flag_quit)
+		{
+			std::remove(m_accouts.begin(), m_accouts.end(), &accounts);
+		}
+	}BOOST_SCOPE_EXIT_END
+
+	// 登录执行完成！
+	// 开始读取消息
+	for(;;)
+	{
+		// 执行登录!
+		flag_check();
+		do{
+			accounts.async_login(yield[ec]);
+			flag_check();
+			if (accounts.is_error_fatal(ec))
+			{
+				// 帐号有严重的问题，只能删除这一帐号，没有别的选择
+				return;
+			}
+		} while (ec);
+
+		do 
+		{
+			// 等待并解析协议的消息
+			boost::property_tree::ptree message = accounts.async_recv_message(yield[ec]);
+			flag_check();
+
+			// 调用 broadcast message, 如果没要求退出的话
+			if (!ec)
+				on_message(message);
+			// 掉线了？重登录！
+		// 只有遇到了必须要重登录的错误才重登录
+		// 一时半会的网络错误可没事，再获取一下就可以了
+		} while (!accounts.is_error_fatal(ec));
+	}
 }

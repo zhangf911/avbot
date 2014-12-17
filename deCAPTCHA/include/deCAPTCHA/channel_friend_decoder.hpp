@@ -45,7 +45,11 @@ public:
 	channel_friend_decoder_op(boost::asio::io_service & io_service,
 			Sender sender, AsyncInputer async_inputer,
 			const std::string & buffer, Handler handler)
-		: m_io_service(io_service), m_sender(sender), m_async_inputer(async_inputer), m_handler(handler)
+		: m_io_service(io_service)
+		, m_sender(sender)
+		, m_async_inputer(async_inputer)
+		, m_handler(handler)
+		, m_buffer(buffer)
 	{
 		m_io_service.post(
 			boost::asio::detail::bind_handler(*this, boost::system::error_code(), std::string())
@@ -59,9 +63,13 @@ public:
 		{
 			m_io_service.post(
 				boost::asio::detail::bind_handler(
-				m_handler, ec, std::string("IRC/XMPP 好友辅助验证码解码器"), std::string(), boost::function<void()>()
+					m_handler,
+					ec,
+					std::string("IRC/XMPP 好友辅助验证码解码器"),
+					std::string(),
+					boost::function<void()>()
 				)
-				);
+			);
 			return;
 		}
 
@@ -76,7 +84,12 @@ public:
 			std::cerr.flush();
 
 			// 等待输入
-			BOOST_ASIO_CORO_YIELD m_async_inputer(*this);
+			BOOST_ASIO_CORO_YIELD m_async_inputer(m_buffer, *this);
+			if (ec == boost::asio::error::timed_out)
+			{
+				// 控制台输入超时，转向irc
+			}
+			str = boost::trim_copy(str);
 			// 检查 str
 			if(str.length() == 4 && is_vc(str))
 			{
@@ -97,6 +110,15 @@ public:
 				);
 				return;
 			}
+			m_io_service.post(
+				boost::asio::detail::bind_handler(
+					m_handler,
+					ec,
+					std::string("IRC/XMPP 好友辅助验证码解码器"),
+					std::string(),
+					boost::function<void()>()
+				)
+			);
 		}
 	}
 private:
@@ -122,6 +144,7 @@ private:
 private:
 	boost::asio::io_service & m_io_service;
 	Sender m_sender;
+	std::string m_buffer;
 	AsyncInputer m_async_inputer;
 	Handler m_handler;
 };

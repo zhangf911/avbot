@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <string>
-#include <boost/log/trivial.hpp>
+
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/bind.hpp>
@@ -11,6 +11,7 @@
 #include "boost/timedcall.hpp"
 #include "boost/avloop.hpp"
 #include "boost/avproxy.hpp"
+#include "boost/logging.hpp"
 
 #include "internet_mail_format.hpp"
 
@@ -37,7 +38,7 @@ public:
 			boost::trim_right( line );
 			boost::cmatch what;
 
-			BOOST_LOG_TRIVIAL(debug) <<  line <<  std::endl;
+			AVLOG_DBG <<  line;
 			std::string ex1 = boost::str( boost::format( "%d (.*)?" ) % response_code );
 			std::string ex2 = boost::str( boost::format( "%d-(.*)?" ) % response_code );
 
@@ -188,6 +189,7 @@ void send_rcpt_tos( socket_type & socket,
 class smtp
 {
 	boost::asio::io_service & io_service;
+	boost::asio::io_service::work m_work;
 	std::string m_mailaddr, m_passwd, m_mailserver;
 	std::string m_AUTH;
 	InternetMailFormat m_imf;
@@ -208,7 +210,7 @@ class smtp
 	int retry_count;
 
 public:
-	smtp( ::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver = "" );
+	smtp(boost::asio::io_service &, std::string user, std::string passwd, std::string _mailserver = "");
 
 	void async_sendmail( const InternetMailFormat &imf, boost::function<void ( const boost::system::error_code & )> handler )
 	{
@@ -470,7 +472,7 @@ private:
 
 class smtp
 {
-	detail::smtp	impl_smtp;
+	detail::smtp impl_smtp;
 public:
 	smtp( ::boost::asio::io_service & _io_service, std::string user, std::string passwd, std::string _mailserver = "" );
 	// ---------------------------------------------

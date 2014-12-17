@@ -22,7 +22,6 @@
 #include <string>
 #include <iostream>
 
-#include <boost/log/trivial.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
@@ -52,7 +51,7 @@ public:
 		stream = boost::make_shared<avhttp::http_stream>( boost::ref(m_webqq->get_ioservice()));
 		m_buffer = boost::make_shared<boost::asio::streambuf>();
 
-		BOOST_LOG_TRIVIAL(debug) << "go w.qq.com";
+		AVLOG_DBG << "go w.qq.com";
 
 		avhttp::async_read_body( *stream, "http://w.qq.com", * m_buffer,  *this );
 	}
@@ -64,7 +63,7 @@ public:
 		response.resize(bytes_transfered);
 		m_buffer->sgetn(&response[0], bytes_transfered);
 
-		boost::regex ex;
+		boost::regex ex, ex2;
 		boost::smatch what;
 		std::string url;
 
@@ -76,7 +75,7 @@ public:
 	  		stream = boost::make_shared<avhttp::http_stream>( boost::ref(m_webqq->get_ioservice()));
 			m_buffer = boost::make_shared<boost::asio::streambuf>();
 
-	  		BOOST_LOG_TRIVIAL(debug) << "Get webqq version from " <<  LWQQ_URL_VERSION ;
+	  		AVLOG_DBG << "Get webqq version from " <<  LWQQ_URL_VERSION ;
 			BOOST_ASIO_CORO_YIELD avhttp::async_read_body(
 				*stream, LWQQ_URL_VERSION, *m_buffer, *this
 			);
@@ -88,7 +87,7 @@ public:
 				m_webqq->m_version = what[1];
 			}
 
-			BOOST_LOG_TRIVIAL(info) << "Get webqq version: " << m_webqq->m_version;
+			AVLOG_INFO << "Get webqq version: " << m_webqq->m_version;
 
 			// 接着获得验证码.
 			m_webqq->m_clientid.clear();
@@ -116,9 +115,17 @@ public:
 			// 是一个正常的 HTML 文件，　但是内容包含
 			// g_login_sig=encodeURIComponent("PpbBnX213jzzSH8*xXyySm9qq1jAnP2uo1fXkGaC5t0ZDaxE5MzSR59qh1EhmjqA");
 
-			boost::regex_search(response, what, boost::regex("g_login_sig *= *encodeURIComponent\\(\"([^\"]*)\"\\);"));
+			if (boost::regex_search(response, what, boost::regex("g_login_sig *= *encodeURIComponent\\(\"([^\"]*)\"\\);")))
+			{
+				m_webqq->m_login_sig = what[1];
+			}
+			else if (boost::regex_search(response, what, boost::regex("g_login_sig=encodeURIComponent\\(\"([^\"]*)\"\\);")))
+			{
+				m_webqq->m_login_sig = what[1];
+			}
 
-			m_webqq->m_login_sig = what[1];
+			AVLOG_INFO << "Get g_login_sig: " << m_webqq->m_login_sig;
+
 			//获取验证码.
 
 			stream = boost::make_shared<avhttp::http_stream>(boost::ref(m_webqq->get_ioservice()));
@@ -148,6 +155,7 @@ public:
 			* The http message body has two format:
 			*
 			* ptui_checkVC('1','9ed32e3f644d968809e8cbeaaf2cce42de62dfee12c14b74', '\x00\x00\x00\x00\x54\xb3\x3c\x53');
+			* ptui_checkVC('1','6kn6cK_Xz9skMLUNbxNq3RcG9uYR7-H2','\\x00\\x00\\x00\\x00\\x68\\xe9\\x0b\\x58');
 			* ptui_checkVC('0','!IJG', '\x00\x00\x00\x00\x54\xb3\x3c\x53');
 			* The former means we need verify code image and the second
 			* parameter is vc_type.
@@ -155,10 +163,10 @@ public:
 			* parameter is the verify code. The vc_type is in the header
 			* "Set-Cookie".
 			*/
-
 			ex.set_expression("ptui_checkVC\\('([0-9])',[ ]?'([0-9a-zA-Z!]*)',[ ]?'([0-9a-zA-Z\\\\]*)'");
+			ex2.set_expression("ptui_checkVC\\('([0-9])','([_\\-0-9a-zA-Z!]*)','([0-9a-zA-Z\\\\]*)'");
 
-			if(boost::regex_search(response, what, ex))
+			if (boost::regex_search(response, what, ex) || boost::regex_search(response, what, ex2))
 			{
 				std::string type = what[1];
 				std::string vc = what[2];

@@ -286,7 +286,6 @@ inline void imf_decode_multipart( InternetMailFormat &imf )
 template<class OutputStream>
 void imf_write_stream( InternetMailFormat imf, OutputStream &out )
 {
-	typedef InternetMailFormat::header_type::value_type kvtype;
 
 	// 暂时不支持 MIME 格式.
 	BOOST_ASSERT( imf.have_multipart == false );
@@ -294,7 +293,7 @@ void imf_write_stream( InternetMailFormat imf, OutputStream &out )
 	std::string headerdata;
 
 	// 遍历头部.
-	BOOST_FOREACH( kvtype hl, imf.header ) {
+	BOOST_FOREACH( auto hl, imf.header ) {
 		headerdata += hl.first + ": ";
 
 		if( hl.first == "from" || hl.first == "to" ) {

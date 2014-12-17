@@ -5,13 +5,14 @@
 #pragma GCC diagnostic ignored "-Wdangling-else"
 #endif
 
-#include <boost/log/trivial.hpp>
+
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include "boost/timedcall.hpp"
 #include "boost/avproxy.hpp"
+#include "boost/logging.hpp"
 
 #include "internet_mail_format.hpp"
 
@@ -165,7 +166,7 @@ public:
 					// 解析是不是　OK.
 					if( status != "+OK" ) {
 						// 失败，但是并不是啥大问题.
-						BOOST_LOG_TRIVIAL(error) << "deleting mail failed" << std::endl;
+						AVLOG_ERR << "deleting mail failed";
 
 						// but 如果是连接出问题那还是要重启的.
 						if( ec ) goto restart;

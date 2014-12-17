@@ -1,5 +1,4 @@
 
-#include <boost/log/trivial.hpp>
 #include <boost/asio.hpp>
 #include <boost/format.hpp>
 #include <boost/base64.hpp>
@@ -8,9 +7,12 @@
 namespace mx {
 namespace detail {
 smtp::smtp( boost::asio::io_service& _io_service, std::string user, std::string passwd, std::string _mailserver )
-	: io_service( _io_service ),
-	  m_mailaddr( user ), m_passwd( passwd ),
-	  m_mailserver( _mailserver ), m_mailserver_query( "smtp.qq.com", "25" )
+	: io_service( _io_service )
+	, m_work(io_service)
+	, m_mailaddr( user )
+	, m_passwd( passwd )
+	, m_mailserver( _mailserver )
+	, m_mailserver_query( "smtp.qq.com", "25" )
 {
 	// 计算 m_AUTH
 	std::vector<char> authtoken( user.length() + passwd.length() + 2 );

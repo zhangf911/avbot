@@ -6,7 +6,13 @@
 #endif
 
 #include <boost/bind.hpp>
-#include <boost/asio.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/detail/handler_alloc_helpers.hpp>
+#include <boost/asio/detail/handler_cont_helpers.hpp>
+#include <boost/asio/detail/handler_invoke_helpers.hpp>
+#include <boost/asio/detail/handler_type_requirements.hpp>
+#include <boost/asio/async_result.hpp>
 
 #include "detail/proxy_chain.hpp"
 
@@ -64,32 +70,52 @@ private:
 };
 
 // 带　proxy 执行连接.
-class async_proxy_connect : boost::asio::coroutine{
+template<typename Handler>
+class async_proxy_connect_op : boost::asio::coroutine
+{
 public:
 	typedef void result_type; // for boost::bind_handler
 public:
-	template<class Handler>
-	async_proxy_connect(const proxy_chain &proxy_chain, BOOST_ASIO_MOVE_ARG(Handler) handler)
-		:proxy_chain_(proxy_chain)
+	async_proxy_connect_op(const proxy_chain &proxy_chain, Handler &handler)
+		: proxy_chain_(proxy_chain)
+		, m_handler(handler)
 	{
-		boost::function<void (const boost::system::error_code&)> _handler(handler);
-		proxy_chain_.get_io_service().post(boost::bind(*this,boost::system::error_code(), _handler));
 	}
 
-	template <class Handler>
-	void operator()(const boost::system::error_code & ec, Handler  handler)//, typename Socket::protocol_type::resolver::iterator begin, Socket & socket, boost::shared_ptr<typename Socket::protocol_type::resolver> resolver)
+	void operator()(boost::system::error_code ec)
 	{
 		BOOST_ASIO_CORO_REENTER(this)
 		{
 			// resolve
-			BOOST_ASIO_CORO_YIELD proxy_chain_.back()->resolve(boost::bind(*this,_1, handler), proxy_chain_.clone_poped());
+			BOOST_ASIO_CORO_YIELD proxy_chain_.back()->resolve(*this, proxy_chain_.clone_poped());
 			if(! ec)
-				BOOST_ASIO_CORO_YIELD proxy_chain_.back()->handshake(boost::bind(*this,_1, handler), proxy_chain_.clone_poped());
-			proxy_chain_.get_io_service().post(boost::asio::detail::bind_handler(handler,ec));
+				BOOST_ASIO_CORO_YIELD proxy_chain_.back()->handshake(*this, proxy_chain_.clone_poped());
+			m_handler(ec);
 		}
 	}
 private:
 	proxy_chain proxy_chain_;
+	Handler m_handler;
 };
+
+template <typename RealHandler>
+inline BOOST_ASIO_INITFN_RESULT_TYPE(RealHandler,
+	void(boost::system::error_code))
+	async_proxy_connect(const proxy_chain &proxy_chain, BOOST_ASIO_MOVE_ARG(RealHandler) handler)
+{
+	using namespace boost::asio;
+
+	BOOST_ASIO_CONNECT_HANDLER_CHECK(RealHandler, handler) type_check;
+
+	boost::asio::detail::async_result_init<
+		RealHandler, void(boost::system::error_code)> init(
+		BOOST_ASIO_MOVE_CAST(RealHandler)(handler));
+
+	async_proxy_connect_op<BOOST_ASIO_HANDLER_TYPE(
+		RealHandler, void(boost::system::error_code))>(proxy_chain, init.handler)
+		(boost::system::error_code());
+	return init.result.get();
+
+}
 
 }

@@ -417,3 +417,13 @@ void on_bot_command(avbot::av_message_tree jsonmessage, avbot & mybot)
 		return;
 	}
 }
+
+void set_do_vc(boost::function<void(std::string)> f)
+{
+	do_vc_code = f;
+}
+
+void set_do_vc()
+{
+	do_vc_code.clear();
+}

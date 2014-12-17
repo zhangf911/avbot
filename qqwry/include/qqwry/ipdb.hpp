@@ -720,7 +720,7 @@ std::string decodeQQWryDat(std::string copywrite_rar, std::string qqwry_rar, Unc
 	std::string deflated;
 	deflated.resize(20 * 1024 * 1024);
 	unsigned long deflated_size = deflated.size();
-	uncompress(
+	uncompressfunc(
 		reinterpret_cast<unsigned char*>(&deflated[0]),
 		&deflated_size,
 		(const unsigned char*) qqwry_rar.data(),

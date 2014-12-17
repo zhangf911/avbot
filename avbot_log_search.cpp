@@ -1,7 +1,5 @@
-#include <string>
+﻿#include <string>
 #include <vector>
-
-#include <boost/log/trivial.hpp>
 
 #include <boost/function.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -16,6 +14,7 @@ namespace pt = boost::property_tree;
 #include <boost-gregorian-date.h>
 #include <soci.h>
 
+#include "boost/logging.hpp"
 #include <avhttp/detail/escape_string.hpp>
 
 void avlog_do_search(boost::asio::io_service & io_service,
@@ -26,7 +25,7 @@ void avlog_do_search(boost::asio::io_service & io_service,
 	pt::ptree outjson;
 	std::string q_escaped;
 	// 根据 channel_name , query string , date 像数据库查找
-	BOOST_LOG_TRIVIAL(debug) << " c = " << c << " q =  " << q << " date= " << date ;
+	AVLOG_DBG << " c = " << c << " q =  " << q << " date= " << date ;
 
 	std::vector<std::string>	r_date(1000);
 	std::vector<std::string>	r_channel(1000);

@@ -28,7 +28,18 @@ add_library(libluascript STATIC luascript.cpp
 		)
 target_link_libraries(libluascript ${LUAJIT_LIBRARIES})
 
-add_custom_command(TARGET avbot POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory libs $<TARGET_FILE_DIR:avbot>)
+if(MSVC)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DELAYLOAD:lua51.dll" )
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DELAYLOAD:lua51.dll" PARENT_SCOPE)
+target_link_libraries(libluascript delayimp.lib)
+
+set_target_properties(libluascript PROPERTIES LINK_FLAGS "/DELAYLOAD:lua51.dll")
+endif()
+
+add_custom_command(TARGET libluascript POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory libs ${CMAKE_BINARY_DIR})
 
 endif()
+
+target_include_directories(libluascript PRIVATE
+    $<TARGET_PROPERTY:xmpp,INTERFACE_INCLUDE_DIRECTORIES>)

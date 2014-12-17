@@ -12,6 +12,7 @@
 #endif
 #ifdef _WIN32
 #include <Windows.h>
+#include <commctrl.h>
 #include <mmsystem.h>
 #endif
 #include <string>
@@ -19,14 +20,6 @@
 #include <vector>
 #include <signal.h>
 #include <fstream>
-
-#define BOOST_LOG_USE_NATIVE_SYSLOG
-
-#include <boost/log/trivial.hpp>
-#include <boost/log/sinks.hpp>
-#include <boost/log/sinks/sink.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/core.hpp>
 
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
@@ -45,6 +38,7 @@ namespace po = boost::program_options;
 #include <boost/locale.hpp>
 #include <boost/signals2.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/preprocessor.hpp>
 #include <locale.h>
 #include <cstring>
 #include <stdlib.h>
@@ -52,6 +46,10 @@ namespace po = boost::program_options;
 #include <stdio.h>
 #include <time.h>
 #include <wchar.h>
+
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
 
 #include <soci-sqlite3.h>
 #include <boost-optional.h>
@@ -63,9 +61,12 @@ namespace po = boost::program_options;
 
 #include "boost/stringencodings.hpp"
 #include "boost/avloop.hpp"
+#include <boost/invoke_wrapper.hpp>
 
 #include "libavbot/avbot.hpp"
 #include "libavlog/avlog.hpp"
+
+#include "libwebqq/webqq.hpp"
 
 #include "counter.hpp"
 
@@ -78,10 +79,12 @@ namespace po = boost::program_options;
 #include "deCAPTCHA/decaptcha.hpp"
 #include "deCAPTCHA/deathbycaptcha_decoder.hpp"
 #include "deCAPTCHA/channel_friend_decoder.hpp"
-#include "deCAPTCHA/antigate_decoder.hpp"
+#include "deCAPTCHA/anticaptcha_decoder.hpp"
 #include "deCAPTCHA/avplayer_free_decoder.hpp"
 #include "deCAPTCHA/jsdati_decoder.hpp"
 #include "deCAPTCHA/hydati_decoder.hpp"
+
+#include "gui/avbotgui.hpp"
 
 extern "C" void avbot_setup_seghandler();
 extern "C" const char * avbot_version();
@@ -94,30 +97,67 @@ avlog logfile;			// 用于记录日志文件.
 static counter cnt;				// 用于统计发言信息.
 static std::string progname;
 static bool need_vc = false;
-static std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
+extern std::string preamble_qq_fmt, preamble_irc_fmt, preamble_xmpp_fmt;
+
+#ifdef  _WIN32
+static void wrappered_hander(boost::system::error_code ec, std::string str, boost::function<void(boost::system::error_code, std::string)> handler, boost::shared_ptr< boost::function<void()> > closer)
+{
+	if (*closer)
+	{
+		(*closer)();
+	}
+	handler(ec, str);
+}
+#endif
+
+static void channel_friend_decoder_vc_inputer(std::string vcimagebuffer, boost::function<void(boost::system::error_code, std::string)> handler, avbot_vc_feed_input &vcinput)
+{
+#ifdef  _WIN32
+	boost::shared_ptr< boost::function<void()> > closer(new boost::function<void()>);
+	boost::invoke_wrapper::invoke_once<void( boost::system::error_code, std::string)> wraper( handler);
+	boost::function<void(boost::system::error_code, std::string)> secondwrapper = boost::bind(wrappered_hander, _1, _2, wraper, closer);
+#else
+	boost::invoke_wrapper::invoke_once<void(boost::system::error_code, std::string)> secondwrapper(handler);
+#endif
+	vcinput.async_input_read_timeout(35, secondwrapper);
+	set_do_vc(boost::bind(secondwrapper, boost::system::error_code(), _1));
+
+#ifdef _WIN32
+	// also fire up an input box and the the input there!
+	*closer = async_input_box_get_input_with_image(vcinput.get_io_service(), vcimagebuffer, boost::bind(secondwrapper, _1, _2));
+#endif // _WIN32
+}
 
 static void vc_code_decoded(boost::system::error_code ec, std::string provider,
 	std::string vccode, boost::function<void()> reportbadvc, avbot & mybot)
 {
+	set_do_vc();
+	need_vc = false;
+
+	// 关闭 settings 对话框 ，如果还没关闭的话
+
 	if (ec)
 	{
+		printf("\r");
+		fflush(stdout);
+		AVLOG_ERR << literal_to_localstr("解码出错，重登录 ...");
+		mybot.broadcast_message("验证码有错，重新登录QQ");
 		mybot.relogin_qq_account();
 		return;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << literal_to_localstr("使用 ") 	<<  utf8_to_local_encode(provider)
+	AVLOG_INFO << literal_to_localstr("使用 ") 	<<  utf8_to_local_encode(provider)
 		<< literal_to_localstr(" 成功解码验证码!");
 
 	if (provider == "IRC/XMPP 好友辅助验证码解码器")
 		mybot.broadcast_message("验证码已输入");
 
 	mybot.feed_login_verify_code(vccode, reportbadvc);
-	need_vc = false;
 }
 
 static void on_verify_code(std::string imgbuf, avbot & mybot, decaptcha::deCAPTCHA & decaptcha)
 {
-	BOOST_LOG_TRIVIAL(info) << "got vercode from TX, now try to auto resovle it ... ...";
+	AVLOG_INFO << "got vercode from TX, now try to auto resovle it ... ...";
 
 	need_vc = true;
 	// 保存文件.
@@ -202,12 +242,14 @@ static std::string imgurlformater(avbot::av_message_tree qqmessage, std::string 
 {
 	std::string cface = qqmessage.get<std::string>("name");
 
-	return boost::str(
-		boost::format("%s/images/%s/%s")
-		% baseurl
-		% avbot::image_subdir_name(cface)
-		% cface
-   );
+	return avhttp::detail::escape_path(
+		boost::str(
+			boost::format("%s/images/%s/%s")
+			% baseurl
+			% avbot::image_subdir_name(cface)
+			% cface
+		)
+	);
 }
 
 static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::session & db)
@@ -298,7 +340,7 @@ static void avbot_log(avbot::av_message_tree message, avbot & mybot, soci::sessi
 			);
 
 			// 如果最好的办法就是遍历组里的所有QQ群，都记录一次.
-			avbot::av_chanel_map channelmap = mybot.get_channel_map(channel_name);
+			avbot::av_chanels_t channelmap = mybot.get_channel_map(channel_name);
 
 			// 如果没有Q群，诶，只好，嘻嘻.
 			logfile.add_log(channel_name, linemessage, rowid);
@@ -379,37 +421,6 @@ static void my_on_bot_command(avbot::av_message_tree message, avbot & mybot)
 	{}
 }
 
-#ifndef _WIN32
-static void init_native_syslog()
-{
-	namespace logging = boost::log;
-	namespace sinks = boost::log::sinks;
-	namespace keywords = boost::log::keywords;
-	typedef sinks::synchronous_sink<sinks::syslog_backend> sink_t;
-
-	boost::shared_ptr<logging::core> core = logging::core::get();
-
-	// Create a backend
-	boost::shared_ptr<sinks::syslog_backend> backend(
-				new sinks::syslog_backend(
-					keywords::facility = sinks::syslog::user,
-					keywords::use_impl = sinks::syslog::native
-				)
-	);
-
-	// Set the straightforward level translator for the "Severity" attribute of type int
-	backend->set_severity_mapper(
-		sinks::syslog::direct_severity_mapping<int>("Severity")
-	);
-
-	// Wrap it into the frontend and register in the core.
-	// The backend requires synchronization in the frontend.
-	core->add_sink(boost::make_shared< sink_t >(backend));
-}
-#else
-static void init_native_syslog() {}
-#endif
-
 #ifdef WIN32
 int daemon(int nochdir, int noclose)
 {
@@ -420,8 +431,18 @@ int daemon(int nochdir, int noclose)
 
 #include "fsconfig.ipp"
 
+void sighandler(boost::asio::io_service & io)
+{
+	io.stop();
+	std::cout << "Quiting..." << std::endl;
+}
+
 int main(int argc, char * argv[])
 {
+#ifdef _WIN32
+	::InitCommonControls();
+#endif
+
 	std::string qqnumber, qqpwd;
 	std::string ircnick, ircroom, ircroom_pass, ircpwd, ircserver;
 	std::string xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick;
@@ -461,7 +482,8 @@ int main(int argc, char * argv[])
 	("version,v", 	"output version")
 	("help,h", 	"produce help message")
 	("daemon,d", 	"go to background")
-#ifdef WIN32
+	("nostdin", 	"don't read from stdin (systemd daemon mode)")
+#if defined(WIN32) || defined(WITH_QT_GUI)
 	("gui,g",	 	"pop up settings dialog")
 #endif
 
@@ -582,16 +604,16 @@ int main(int argc, char * argv[])
 				config = configfilepath();
 			}
 
-			BOOST_LOG_TRIVIAL(info) << "loading config from: " << config.string();
+			AVLOG_INFO << "loading config from: " << config.string();
 			po::store(po::parse_config_file<char>(config.string().c_str(), desc), vm);
 			po::notify(vm);
 		}
 		catch (char const * e)
 		{
-			BOOST_LOG_TRIVIAL(fatal) <<  "no command line arg and config file not found neither.";
-			BOOST_LOG_TRIVIAL(fatal) <<  "try to add command line arg "
+			AVLOG_ERR <<  "no command line arg and config file not found neither.";
+			AVLOG_ERR <<  "try to add command line arg "
 				"or put config file in /etc/qqbotrc or ~/.qqbotrc";
-#ifdef WIN32
+#if defined(WIN32) || defined(WITH_QT_GUI)
 			goto rungui;
 #endif
 			exit(1);
@@ -604,7 +626,7 @@ int main(int argc, char * argv[])
 		io_service.notify_fork(boost::asio::io_service::fork_prepare);
 		daemon(0, 0);
 		io_service.notify_fork(boost::asio::io_service::fork_child);
-		init_native_syslog();
+		AVLOG_INIT_LOGGER("/tmp");
 	}
 
 	if (!logdir.empty())
@@ -616,22 +638,17 @@ int main(int argc, char * argv[])
 #ifndef _WIN32
 	// 设置到中国的时区，否则 qq 消息时间不对啊.
 	setenv("TZ", "Asia/Shanghai", 1);
+# endif
 
 	// 设置 BackTrace
 	avbot_setup_seghandler();
-# endif
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(WITH_QT_GUI)
 rungui:
 
 	if (qqnumber.empty() || qqpwd.empty() || vm.count("gui") > 0)
 	{
-		void show_dialog(std::string & qqnumer, std::string & qqpwd,
-			std::string & ircnick, std::string & ircroom, std::string & ircpwd,
-			std::string & xmppuser, std::string & xmppserver, std::string & xmpppwd,
-			std::string & xmpproom, std::string & xmppnick);
-
-		show_dialog(qqnumber, qqpwd, ircnick, ircroom, ircpwd,
+		setup_dialog(qqnumber, qqpwd, ircnick, ircroom, ircpwd,
 			xmppuser, xmppserver, xmpppwd, xmpproom, xmppnick);
 	}
 
@@ -652,12 +669,16 @@ rungui:
 	if (! logdir.empty())
 	{
 		logfile.log_path(logdir);
+#ifdef _WIN32
+		SetCurrentDirectoryW(avhttp::detail::utf8_wide(logdir).c_str());
+#else
 		chdir(logdir.c_str());
+#endif // _WIN32
 	}
 
 	if (qqnumber.empty() || qqpwd.empty())
 	{
-		BOOST_LOG_TRIVIAL(fatal) << literal_to_localstr("请设置qq号码和密码.");
+		AVLOG_ERR << literal_to_localstr("请设置qq号码和密码.");
 		exit(1);
 	}
 
@@ -665,7 +686,7 @@ rungui:
 
 	init_database(avlogdb);
 
-	decaptcha::deCAPTCHA decaptcha(io_service);
+	decaptcha::deCAPTCHA decaptcha_agent(io_service);
 
 	avbot_vc_feed_input vcinput(io_service);
 
@@ -673,13 +694,10 @@ rungui:
 	connect_stdinput(
 		boost::bind(&avbot_vc_feed_input::call_this_to_feed_line, &vcinput, _1)
 	);
-	mybot.on_message.connect(
-		boost::bind(&avbot_vc_feed_input::call_this_to_feed_message, &vcinput, _1)
-	);
 
 	if (!hydati_key.empty())
 	{
-		decaptcha.add_decoder(
+		decaptcha_agent.add_decoder(
 			decaptcha::decoder::hydati_decoder(
 				io_service, hydati_key
 			)
@@ -688,7 +706,7 @@ rungui:
 
 	if (!jsdati_username.empty() && !jsdati_password.empty())
 	{
-		decaptcha.add_decoder(
+		decaptcha_agent.add_decoder(
 			decaptcha::decoder::jsdati_decoder(
 				io_service, jsdati_username, jsdati_password
 			)
@@ -697,7 +715,7 @@ rungui:
 
 	if (!deathbycaptcha_username.empty() && !deathbycaptcha_password.empty())
 	{
-		decaptcha.add_decoder(
+		decaptcha_agent.add_decoder(
 			decaptcha::decoder::deathbycaptcha_decoder(
 				io_service, deathbycaptcha_username, deathbycaptcha_password
 			)
@@ -706,22 +724,23 @@ rungui:
 
 	if (!antigate_key.empty())
 	{
-		decaptcha.add_decoder(
-			decaptcha::decoder::antigate_decoder(io_service, antigate_key, antigate_host)
+		decaptcha_agent.add_decoder(
+			decaptcha::decoder::anticaptcha_decoder(io_service, antigate_key, antigate_host)
 		);
 	}
 
 	if (use_avplayer_free_vercode_decoder)
 	{
-		decaptcha.add_decoder(
+		decaptcha_agent.add_decoder(
 			decaptcha::decoder::avplayer_free_decoder(io_service)
 		);
 	}
 
-	decaptcha.add_decoder(
+	decaptcha_agent.add_decoder(
 		decaptcha::decoder::channel_friend_decoder(
-			io_service, boost::bind(&avbot::broadcast_message, &mybot, _1),
-			boost::bind(&avbot_vc_feed_input::async_input_read_timeout, &vcinput, 45, _1)
+			io_service,
+			boost::bind(&avbot::broadcast_message, &mybot, _1),
+			boost::bind(&channel_friend_decoder_vc_inputer, _1, _2, boost::ref(vcinput))
 		)
 	);
 
@@ -740,7 +759,7 @@ rungui:
 
 	mybot.set_qq_account(
 		qqnumber, qqpwd,
-		boost::bind(on_verify_code, _1, boost::ref(mybot), boost::ref(decaptcha)),
+		boost::bind(on_verify_code, _1, boost::ref(mybot), boost::ref(decaptcha_agent)),
 		no_persistent_db
 	);
 
@@ -748,7 +767,7 @@ rungui:
 		mybot.set_irc_account(ircnick, ircpwd, ircserver);
 
 	if (!xmppuser.empty())
-		mybot.set_xmpp_account(xmppuser, xmpppwd, xmppserver, xmppnick);
+		mybot.set_xmpp_account(xmppuser, xmpppwd, xmppnick, xmppserver);
 
 	if (!mailaddr.empty())
 		mybot.set_mail_account(mailaddr, mailpasswd, pop3server, smtpserver);
@@ -782,7 +801,7 @@ rungui:
 
 	boost::asio::io_service::work work(io_service);
 
-	if (!vm.count("daemon"))
+	if (!vm.count("daemon") && !vm.count("nostdin"))
 	{
 		start_stdinput(io_service);
 		connect_stdinput(boost::bind(stdin_feed_broadcast , boost::ref(mybot), _1));
@@ -797,9 +816,9 @@ rungui:
 	{
 		if (!avbot_start_rpc(io_service, rpcport, mybot, avlogdb))
 		{
-			BOOST_LOG_TRIVIAL(warning) <<  "bind to port " <<  rpcport <<  " failed!";
-			BOOST_LOG_TRIVIAL(warning) <<  "Did you happened to already run an avbot? ";
-			BOOST_LOG_TRIVIAL(warning) <<  "Now avbot will run without RPC support. ";
+			AVLOG_WARN <<  "bind to port " <<  rpcport <<  " failed!";
+			AVLOG_WARN <<  "Did you happened to already run an avbot? ";
+			AVLOG_WARN <<  "Now avbot will run without RPC support. ";
 		};
 	}
 
@@ -808,9 +827,33 @@ rungui:
 		"https://avlog.avplayer.org/cache/tj.php",
 		boost::bind(&avhttp::http_stream::close, &s)
 	);
-#ifdef _WIN32
+
 	avloop_idle_post(io_service, playsound);
+
+	boost::asio::signal_set terminator_signal(io_service);
+	terminator_signal.add(SIGINT);
+	terminator_signal.add(SIGTERM);
+#if defined(SIGQUIT)
+	terminator_signal.add(SIGQUIT);
+#endif // defined(SIGQUIT)
+	terminator_signal.async_wait(boost::bind(&sighandler, boost::ref(io_service)));
+
+#ifdef HAVE_SYSTEMD
+	// watchdog timer logic
+
+	// check WATCHDOG_USEC environment variable
+	uint64_t watchdog_usec;
+	if(sd_watchdog_enabled(1, &watchdog_usec))
+	{
+		mybot.on_message.connect([](avbot::av_message_tree)
+		{
+			sd_notify(0, "WATCHDOG=1");
+		});
+	};
+
+	avloop_idle_post(io_service, boost::bind(&sd_notify,0, "READY=1"));
 #endif
-	avloop_run(io_service);
+
+	avloop_run_gui(io_service);
 	return 0;
 }

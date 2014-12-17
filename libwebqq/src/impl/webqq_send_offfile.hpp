@@ -1,7 +1,6 @@
 ﻿
 #pragma once
 
-#include <boost/log/trivial.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
@@ -16,7 +15,6 @@ namespace js = boost::property_tree::json_parser;
 #include "webqq_impl.hpp"
 
 #include "constant.hpp"
-#include "utf8.hpp"
 
 namespace webqq{
 namespace qqimpl{

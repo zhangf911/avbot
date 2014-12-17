@@ -1,7 +1,9 @@
 project(libpop3)
 find_package(Boost 1.54 COMPONENTS regex system locale)
 
-add_library(mailexchange STATIC pop3.cpp smtp.cpp)
+file(GLOB MAILEXCHANGE_IMPL_HEADERS "*.hpp")
+
+add_library(mailexchange STATIC pop3.cpp smtp.cpp ${MAILEXCHANGE_IMPL_HEADERS})
 target_link_libraries(mailexchange ${Boost_LIBRARIES})
 
 if(ENABLE_STATIC)
@@ -18,7 +20,11 @@ if(ENABLE_STATIC)
 endif()
 
 if(WIN32 AND WITH_ICONV)
+	if(MSVC)
+	target_link_libraries(mailexchange crypt32.lib ws2_32.lib)
+	else()
 	target_link_libraries(mailexchange -liconv -lcrypt32 -lws2_32 )
+	endif()
 endif()
 
 if( ENABLE_TEST )

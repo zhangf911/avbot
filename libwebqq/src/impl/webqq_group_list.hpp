@@ -1,4 +1,4 @@
-﻿ 
+﻿
 /*
  * Copyright (C) 2012 - 2013  微蔡 <microcai@fedoraproject.org>
  *
@@ -21,7 +21,6 @@
 
 #include <iostream>
 
-#include <boost/log/trivial.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/foreach.hpp>
 #include <boost/function.hpp>
@@ -48,6 +47,7 @@ namespace pt = boost::property_tree;
 #include "constant.hpp"
 #include "lwqq_status.hpp"
 #include "webqq_group_qqnumber.hpp"
+#include "webqq_hash.hpp"
 
 namespace webqq {
 namespace qqimpl {
@@ -56,9 +56,10 @@ namespace detail {
 template<class Handler>
 class update_group_list_op : boost::asio::coroutine
 {
-	static std::string create_post_data( std::string vfwebqq )
+	static std::string create_post_data(std::string selfuin, std::string ptwebqq, std::string vfwebqq )
 	{
-		std::string m = boost::str( boost::format( "{\"vfwebqq\":\"%s\"}" ) % vfwebqq );
+		std::string qqhash = hash_func_u(selfuin, ptwebqq);
+		std::string m = boost::str(boost::format("{\"vfwebqq\":\"%s\", \"hash\":\"%s\"}") % vfwebqq % qqhash);
 		return std::string("r=") + avhttp::detail::escape_string(m);
 	}
 
@@ -67,10 +68,10 @@ class update_group_list_op : boost::asio::coroutine
 		m_stream = boost::make_shared<avhttp::http_stream>(boost::ref(m_webqq->get_ioservice()));
 		m_buffer = boost::make_shared<boost::asio::streambuf>();
 
-		BOOST_LOG_TRIVIAL(debug) << "getting group list";
+		AVLOG_DBG << "getting group list";
 
-		/* Create post data: {"h":"hello","vfwebqq":"4354j53h45j34"} */
-		std::string postdata = create_post_data(m_webqq->m_vfwebqq);
+		/* Create post data: {"vfwebqq":"4354j53h45j34", "hash";"xxxxxx"} */
+		std::string postdata = create_post_data(m_webqq->m_myself_uin, m_webqq->m_cookie_mgr.get_cookie(WEBQQ_S_HOST "/api/get_user_friends2")["ptwebqq"], m_webqq->m_vfwebqq);
 		std::string url = WEBQQ_S_HOST "/api/get_group_name_list_mask2";
 
 		m_webqq->m_cookie_mgr.get_cookie(url, *m_stream);
@@ -124,7 +125,7 @@ public:
 					if(newgroup->gid[0] == '-')
 					{
 						retry = true;
-						BOOST_LOG_TRIVIAL(error) <<  "qqGroup get error" << std::endl;
+						AVLOG_ERR <<  "qqGroup get error" ;
 
 					}else{
 
@@ -139,7 +140,7 @@ public:
 
 						newlist.insert(std::make_pair(newgroup->gid, newgroup));
 						m_webqq->m_groups.insert(std::make_pair(newgroup->gid, newgroup));
-						BOOST_LOG_TRIVIAL(info) << literal_to_localstr("qq群 ") << utf8_to_local_encode(newgroup->gid) << " " <<  utf8_to_local_encode(newgroup->name);
+						AVLOG_INFO << literal_to_localstr("qq群 ") << utf8_to_local_encode(newgroup->gid) << " " <<  utf8_to_local_encode(newgroup->name);
 					}
 				}
 				if (replace_list){

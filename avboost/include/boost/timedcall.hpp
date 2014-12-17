@@ -52,6 +52,14 @@ make_delayedcallms_op(boost::asio::io_service &_io_service, int timeunitcount, H
 	return base_delayedcall_op<boost::posix_time::milliseconds, Handler>(_io_service, timeunitcount, handler);
 }
 
+template<class Handler>
+base_delayedcall_op<boost::posix_time::microseconds, Handler>
+make_delayedcallus_op(boost::asio::io_service &_io_service, int timeunitcount, Handler handler)
+{
+	return base_delayedcall_op<boost::posix_time::microseconds, Handler>(_io_service, timeunitcount, handler);
+}
+
+
 } // namespace detail
 
 template<class Handler>
@@ -64,6 +72,12 @@ template<class Handler>
 void delayedcallms(boost::asio::io_service &_io_service, int timeunitcount, Handler handler)
 {
 	detail::make_delayedcallms_op(_io_service, timeunitcount, handler);
+}
+
+template<class Handler>
+void delayedcallus(boost::asio::io_service &_io_service, int timeunitcount, Handler handler)
+{
+	detail::make_delayedcallus_op(_io_service, timeunitcount, handler);
 }
 
 } // namespace boost

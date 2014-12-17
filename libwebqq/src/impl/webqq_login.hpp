@@ -1,6 +1,6 @@
 ﻿
 /*
- * Copyright (C) 2012 - 2013  微蔡 <microcai@fedoraproject.org>
+ * Copyright (C) 2012 - 2014  微蔡 <microcai@fedoraproject.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 
 #include <iostream>
 
-#include <boost/log/trivial.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
@@ -37,6 +36,7 @@ namespace js = boost::property_tree::json_parser;
 #include "boost/timedcall.hpp"
 #include "boost/urlencode.hpp"
 #include "boost/stringencodings.hpp"
+#include "boost/bin_from_hex.hpp"
 
 #include "webqq_impl.hpp"
 
@@ -148,7 +148,7 @@ public:
 		{
 			if( ( check_login( ec, bytes_transfered ) == 0 ) && ( m_webqq->m_status == LWQQ_STATUS_ONLINE ) )
 			{
-				BOOST_LOG_TRIVIAL(info) <<  "redirecting to " << m_next_url;
+				AVLOG_INFO <<  "redirecting to " << m_next_url;
 
 				// 再次　login
 				m_stream = boost::make_shared<avhttp::http_stream>(boost::ref(m_webqq->get_ioservice()));
@@ -182,12 +182,12 @@ public:
 						(avhttp::http_options::user_agent, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.32 Safari/537.36")
 					);
 
-					BOOST_LOG_TRIVIAL(info) <<  "redirected again to " <<  m_stream->location();
+					AVLOG_INFO <<  "redirected again to " <<  m_stream->location();
 					BOOST_ASIO_CORO_YIELD avhttp::async_read_body(*m_stream, m_stream->location(), *m_buffer, *this);
 					m_webqq->m_cookie_mgr.save_cookie(*m_stream);
 				}
 
-				BOOST_LOG_TRIVIAL(info) <<  "redirecting success!!";
+				AVLOG_INFO <<  "redirecting success!!";
 
 				if (m_webqq->m_clientid.empty())
 				{
@@ -202,7 +202,7 @@ public:
 				//  get vfwebqq
 				BOOST_ASIO_CORO_YIELD async_update_vfwebqq(m_webqq, boost::bind<void>(*this, _1, 0));
 
-				BOOST_LOG_TRIVIAL(info) <<  "changing status...";
+				AVLOG_INFO <<  "changing status...";
 
 				BOOST_ASIO_CORO_YIELD async_change_status(
 					m_webqq, LWQQ_STATUS_ONLINE,
@@ -211,23 +211,23 @@ public:
 
 				if(ec)
 				{
-					BOOST_LOG_TRIVIAL(error) <<  "change online status failed!";
+					AVLOG_ERR <<  "change online status failed!";
 
 					// 修改在线状态失败!
 					m_webqq->get_ioservice().post(boost::asio::detail::bind_handler(m_handler, ec));
 					return;
 				}
 
-				BOOST_LOG_TRIVIAL(info) <<  "status => online";
+				AVLOG_INFO <<  "status => online";
 
 				// 先是 刷新 buddy 列表
-				BOOST_LOG_TRIVIAL(info) <<  "fetching buddy list";
+				AVLOG_INFO <<  "fetching buddy list";
 				BOOST_ASIO_CORO_YIELD async_update_buddy_list(m_webqq, *this);
-				BOOST_LOG_TRIVIAL(info) <<  "fetching buddy complete";
+				AVLOG_INFO <<  "fetching buddy complete";
 
 				if (!m_webqq->m_fetch_groups)
 				{
-					BOOST_LOG_TRIVIAL(info) <<  "group fetching disable.";
+					AVLOG_INFO <<  "group fetching disable.";
 					return m_webqq->get_ioservice().post(
 						boost::asio::detail::bind_handler(m_handler, ec)
 					);
@@ -240,7 +240,7 @@ public:
 					BOOST_ASIO_CORO_YIELD update_group_list(m_webqq, boost::bind<void>(*this, _1, 0));
 					if ( ec )
 					{
-						BOOST_LOG_TRIVIAL(warning) << literal_to_localstr("刷新群列表失败，第 ")
+						AVLOG_WARN << literal_to_localstr("刷新群列表失败，第 ")
 							<< i << literal_to_localstr(" 次重试中(共五次)...") ;
 
 						BOOST_ASIO_CORO_YIELD boost::delayedcallsec(
@@ -257,7 +257,7 @@ public:
 					);
 				}
 
-				BOOST_LOG_TRIVIAL(info) <<  "group fetching numbers......";
+				AVLOG_INFO <<  "group fetching numbers......";
 
 				// 接着是刷新群成员列表.
 				for (iter = m_webqq->m_groups.begin(); iter != m_webqq->m_groups.end(); ++iter)
@@ -266,10 +266,10 @@ public:
 						m_webqq->update_group_member(iter->second , boost::bind<void>(*this, _1, 0));
 
 					BOOST_ASIO_CORO_YIELD
-						boost::delayedcallms(m_webqq->get_ioservice(), 530, boost::bind<void>(*this, ec, 0));
+						boost::delayedcallms(m_webqq->get_ioservice(), 130, boost::bind<void>(*this, ec, 0));
 				}
 
-				BOOST_LOG_TRIVIAL(info) <<  "group numbers fetched";
+				AVLOG_INFO <<  "group numbers fetched";
 			}
 			return m_webqq->get_ioservice().post(
 				boost::asio::detail::bind_handler(m_handler, ec)
@@ -278,6 +278,25 @@ public:
 	}
 
 private:
+	bool is_md5(std::string s)
+	{
+		if (s.length() != 32)
+			return false;
+		// check for non hex code
+		if (std::find_if_not(s.begin(), s.end(), boost::is_any_of("0123456789abcdefABCDEF")) != s.end())
+			return false;
+		return true;
+	}
+
+	std::string hexstring_to_bin(std::string md5string)
+	{
+		typedef boost::archive::iterators::transform_width<
+			boost::bin_from_hex<std::string::iterator>,
+			8, 4, uint8_t> bin_from_hex_iterator;
+
+		return std::string(bin_from_hex_iterator(md5string.begin()),
+			bin_from_hex_iterator(md5string.end()));
+	}
 
 	/**
 	* I hacked the javascript file named comm.js, which received from tencent
@@ -299,7 +318,15 @@ private:
 	std::string webqq_password_encode( const std::string & pwd, const std::string & vc, const std::string & uin)
 	{
 		/* Equal to "var I=hexchar2bin(md5(M));" */
-		std::string I =  lutil_md5_digest(pwd);
+		std::string I;
+		if (is_md5(pwd))
+		{
+			I = hexstring_to_bin(pwd);
+		}
+		else
+		{
+			I = lutil_md5_digest(pwd);
+		}
 
 		/* Equal to "var H=md5(I+pt.uin);" */
 		std::string H = lutil_md5_data( I + uin_decode(uin));
@@ -316,11 +343,11 @@ private:
 		response.resize(bytes_transfered);
 		m_buffer->sgetn(&response[0], bytes_transfered);
 
-		BOOST_LOG_TRIVIAL(debug) << utf8_to_local_encode(response);
+		AVLOG_DBG << utf8_to_local_encode(response);
 
 		int status;
 		boost::cmatch what;
-		boost::regex ex("ptuiCB\\('([0-9])',[ ]?'([0-9])',[ ]?'([^']*)',[ ]?'([0-9])',[ ]?'([^']*)',[ ]?'([^']*)'[ ]*\\);");
+		boost::regex ex("ptuiCB\\('([0-9]+)',[ ]?'([0-9])',[ ]?'([^']*)',[ ]?'([0-9])',[ ]?'([^']*)',[ ]?'([^']*)'[ ]*\\);");
 
 		if(boost::regex_search(response.c_str(), what, ex))
 		{
@@ -340,10 +367,10 @@ private:
 		if (!ec){
 			m_webqq->m_status = LWQQ_STATUS_ONLINE;
 			m_webqq->m_cookie_mgr.save_cookie(*m_stream);
-			BOOST_LOG_TRIVIAL(info) <<  "login success!";
+			AVLOG_INFO <<  "login success!";
 		}else{
 			status = LWQQ_STATUS_OFFLINE;
-			BOOST_LOG_TRIVIAL(info) <<  "login failed!!!!  " <<  ec.message();
+			AVLOG_INFO <<  "login failed!!!!  " <<  ec.message();
 		}
 
 		return status;

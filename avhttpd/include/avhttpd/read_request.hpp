@@ -202,11 +202,19 @@ make_async_read_request_op(Stream & s,
  */
 
 template<class Stream, class Allocator,  class Handler>
-void async_read_request(Stream & s,
-					boost::asio::basic_streambuf<Allocator> &streambuf,
-					request_opts & opts, Handler handler)
+	inline BOOST_ASIO_INITFN_RESULT_TYPE(Handler, void(boost::system::error_code))
+async_read_request(Stream & s,
+	boost::asio::basic_streambuf<Allocator> &streambuf,
+		request_opts & opts, BOOST_ASIO_MOVE_ARG(Handler) handler)
 {
-	detail::make_async_read_request_op(s, streambuf, opts, handler);
+	using namespace boost::asio;
+
+	boost::asio::detail::async_result_init<Handler, void(boost::system::error_code)>
+		init(BOOST_ASIO_MOVE_CAST(Handler)(handler));
+
+	detail::make_async_read_request_op(s, streambuf, opts, init.handler);
+
+	return init.result.get();
 }
 
 }

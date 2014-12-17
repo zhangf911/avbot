@@ -21,6 +21,19 @@
 #include "stockprice.hpp"
 #include "exchangerate.hpp"
 #include "iplocation.hpp"
+#include "staticcontent.hpp"
+
+#ifdef ENABLE_PYTHON
+#include "pythonscriptengine.hpp"
+#endif // ENABLE_PYTHON
+
+#ifdef ENABLE_ZMQ
+#include "zmqpublisher.hpp"
+#endif
+
+#ifdef _WIN32
+#include "dllextension.hpp"
+#endif
 
 // dummy file
 
@@ -58,11 +71,10 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 	);
 #ifdef ENABLE_LUA
 	mybot.on_message.connect(
-		avbot_extension(
+		make_luascript(
 			channel_name,
-			callluascript(io_service,
-				io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
-			)
+			io_service,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 1))
 		)
 	);
 #endif
@@ -125,4 +137,42 @@ void new_channel_set_extension(boost::asio::io_service &io_service, avbot & mybo
 			)
 		)
 	);
+
+	mybot.on_message.connect(
+		make_static_content(
+			io_service,
+			channel_name,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
+		)
+	);
+
+#ifdef ENABLE_PYTHON
+	mybot.on_message.connect(
+		make_python_script_engine(
+			io_service,
+			channel_name,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
+		)
+	);
+#endif
+
+#ifdef ENABLE_ZMQ
+	mybot.on_message.connect(
+		make_zmq_publisher(
+			io_service,
+			channel_name,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
+		)
+	);
+#endif 
+
+#ifdef _WIN32
+	mybot.on_message.connect(
+		make_dllextention(
+			io_service,
+			channel_name,
+			io_service.wrap(boost::bind(sender, boost::ref(mybot), channel_name, _1, 0))
+		)
+	);
+#endif
 }

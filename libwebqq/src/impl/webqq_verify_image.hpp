@@ -21,7 +21,6 @@
 
 #include <iostream>
 
-#include <boost/log/trivial.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
@@ -48,8 +47,8 @@ public:
 	{
 		BOOST_ASSERT(vcimgid.length() > 8);
 		std::string url = boost::str(
-							boost::format( LWQQ_URL_VERIFY_IMG ) % APPID % m_webqq->m_qqnum
-						);
+			boost::format( LWQQ_URL_VERIFY_IMG ) % APPID % m_webqq->m_qqnum
+		);
 
 		m_stream->request_options(
 			avhttp::request_opts()

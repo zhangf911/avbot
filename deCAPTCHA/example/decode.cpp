@@ -1,6 +1,4 @@
 
-#include <boost/log/trivial.hpp>
-
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
@@ -40,9 +38,9 @@ namespace po = boost::program_options;
 
 static void vc_code_decoded(boost::system::error_code ec, std::string provider, std::string vccode, boost::function<void()> reportbadvc)
 {
-	BOOST_LOG_TRIVIAL(info) << console_out_str("使用 ") <<  console_out_str(provider) << console_out_str(" 成功解码验证码!");
+	AVLOG_INFO << console_out_str("使用 ") <<  console_out_str(provider) << console_out_str(" 成功解码验证码!");
 
-	BOOST_LOG_TRIVIAL(info) << console_out_str("验证码是 ") << vccode;
+	AVLOG_INFO << console_out_str("验证码是 ") << vccode;
 }
 
 static void decode_verify_code(boost::asio::io_service & io_service, const boost::filesystem::path vcodeimgfile, decaptcha::deCAPTCHA & decaptcha)
@@ -132,7 +130,7 @@ int main( int argc, char *argv[] )
 	if(!antigate_key.empty())
 	{
 		decaptcha.add_decoder(
-			decaptcha::decoder::antigate_decoder(io_service, antigate_key, antigate_host)
+			decaptcha::decoder::anticaptcha_decoder(io_service, antigate_key, antigate_host)
 		);
 	}
 

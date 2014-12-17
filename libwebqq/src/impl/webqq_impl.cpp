@@ -19,7 +19,6 @@
 #include <string>
 #include <iostream>
 
-#include <boost/log/trivial.hpp>
 #include <boost/random.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/bind.hpp>
@@ -43,13 +42,16 @@ namespace js = boost::property_tree::json_parser;
 #include "webqq_impl.hpp"
 #include "constant.hpp"
 
-#include "utf8.hpp"
 #include "webqq_status.hpp"
 #include "webqq_verify_image.hpp"
 #include "webqq_keepalive.hpp"
 #include "group_message_sender.hpp"
 #include "webqq_loop.hpp"
+
 #include "webqq_send_offfile.hpp"
+#include "webqq_check_login.hpp"
+#include "webqq_login.hpp"
+#include "webqq_poll_message.hpp"
 
 #ifdef WIN32
 
@@ -114,6 +116,108 @@ WebQQ::WebQQ( boost::asio::io_service& _io_service,
 	init_face_map();
 
 	m_fetch_groups = true;
+}
+
+template<typename Handler>
+class async_login_op
+{
+	Handler m_handler;
+	boost::shared_ptr<WebQQ> m_webqq;
+	int m_counted_network_error;
+public:
+
+	async_login_op(boost::shared_ptr<WebQQ> _webqq, Handler handler)
+		: m_handler(handler), m_webqq(_webqq)
+	{
+		m_counted_network_error = 0;
+	}
+
+	void operator()(boost::system::error_code ec, std::string str)
+	{
+		AVLOG_INFO << "libwebqq: use cached cookie to avoid login...";
+		BOOST_ASIO_CORO_REENTER(this)
+		{
+			BOOST_ASIO_CORO_YIELD async_poll_message(m_webqq,
+				boost::bind<void>(*this, _1, std::string())
+			);
+
+			if (!ec)
+			{
+				AVLOG_INFO
+					<< "libwebqq: GOOD NEWS! The cached cookies accepted by TX!";
+
+				// login success!
+				m_handler(ec);
+			}
+
+			// now, try do real login here
+			// 判断消息处理结果
+
+			if (ec == error::poll_failed_need_login || ec == error::poll_failed_user_kicked_off)
+			{
+				// 重新登录
+				m_webqq->m_status = LWQQ_STATUS_OFFLINE;
+
+				// 延时 60s  第一次的话不延时,  立即登录.
+				BOOST_ASIO_CORO_YIELD boost::delayedcallms(m_webqq->get_ioservice(), 200,
+					boost::asio::detail::bind_handler(*this, ec, str)
+				);
+
+				AVLOG_INFO << "libwebqq: failed with last cookies, doing full login";
+			}
+			else if ( ec == error::poll_failed_network_error )
+			{
+				// 网络错误计数 +1 遇到连续的多次错误就要重新登录.
+				m_counted_network_error ++;
+
+				if (m_counted_network_error >= 3)
+				{
+					m_webqq->m_status = LWQQ_STATUS_OFFLINE;
+
+					AVLOG_INFO
+						<< "libwebqq: too many network errors, try relogin later...";
+				}
+				// 等待等待就好了，等待 12s
+				BOOST_ASIO_CORO_YIELD boost::delayedcallsec(m_webqq->get_ioservice(), 12,
+					boost::asio::detail::bind_handler(*this, ec, str)
+				);
+			}
+			else if (ec == error::poll_failed_need_refresh)
+			{
+				// 重新刷新列表.
+
+				// 就目前来说, 重新登录是最快的实现办法
+				// TODO 使用更好的办法.
+				m_webqq->m_status = LWQQ_STATUS_OFFLINE;
+
+				AVLOG_INFO
+					<< "libwebqq: group uin changed, try relogin...";
+
+				// 等待等待就好了，等待 15s
+				BOOST_ASIO_CORO_YIELD boost::delayedcallsec(m_webqq->get_ioservice(), 12,
+					boost::asio::detail::bind_handler(*this, ec, str)
+				);
+			}
+
+		}
+	}
+
+
+
+};
+
+void WebQQ::async_login(webqq::webqq_handler_t handler)
+{
+	// 读取 一些 cookie
+	avhttp::cookies webqqcookie = m_cookie_mgr.get_cookie("http://psession.qq.com/");
+
+	// load 缓存的 一些信息
+	m_vfwebqq = webqqcookie["vfwebqq"];
+	m_psessionid = webqqcookie["psessionid"];
+	m_clientid = webqqcookie["clientid"];
+
+	// 开启登录协程
+	async_login_op<webqq::webqq_handler_t>(shared_from_this(), handler);
 }
 
 void WebQQ::start()
@@ -217,9 +321,9 @@ public:
 		}
 		catch(const pt::ptree_error & badpath)
 		{
-			BOOST_LOG_TRIVIAL(error) <<  __FILE__ << " : " << __LINE__ << " : " <<  "bad path" <<  badpath.what();
+			AVLOG_ERR <<  __FILE__ << " : " << __LINE__ << " : " <<  "bad path" <<  badpath.what();
 		}
-
+		// 判断是否执行了太久，太久的话，先刷一次消息，来更新下vfwebqq这个cookie
 		_io_service.post( boost::asio::detail::bind_handler( handler, std::string( "" ) ) );
 	}
 private:
@@ -435,7 +539,7 @@ void WebQQ::cb_join_group( qqGroup_ptr group, const boost::system::error_code& e
 void WebQQ::join_group(qqGroup_ptr group, std::string vfcode, webqq::join_group_handler handler )
 {
 	std::string url = "http://s.web2.qq.com/api/apply_join_group2";
-	
+
 	std::string postdata =	boost::str(
 								boost::format(
 									"{\"gcode\":%s,"
